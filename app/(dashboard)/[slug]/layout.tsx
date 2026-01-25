@@ -48,7 +48,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar salonSlug={params.slug} />
+      <Sidebar salonSlug={params.slug} userName={profile?.full_name} />
       
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar salonName={salon.name} />

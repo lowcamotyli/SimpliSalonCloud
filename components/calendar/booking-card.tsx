@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/constants'
+import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS, getServiceCategoryColor } from '@/lib/constants'
 import { Clock, User, DollarSign } from 'lucide-react'
 
 type Booking = {
@@ -36,6 +36,7 @@ type Booking = {
 interface BookingCardProps {
   booking: Booking
   onClick?: () => void
+  serviceCategory?: string
 }
 
 const statusColors = {
@@ -45,28 +46,31 @@ const statusColors = {
   cancelled: 'bg-red-100 text-red-800',
 }
 
-export function BookingCard({ booking, onClick }: BookingCardProps) {
+export function BookingCard({ booking, onClick, serviceCategory }: BookingCardProps) {
+  const categoryColor = getServiceCategoryColor(serviceCategory)
+
   return (
     <Card 
-      className="p-3 hover:shadow-md transition-shadow cursor-pointer"
+      className={`p-3 hover:shadow-lg transition-all cursor-pointer border-l-4 ${categoryColor.border} ${categoryColor.bg}`}
       onClick={onClick}
     >
       <div className="space-y-2">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="font-medium">{booking.client.full_name}</p>
-            <p className="text-sm text-muted-foreground">{booking.service.name}</p>
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{booking.client.full_name}</p>
+            <p className={`text-xs font-medium ${categoryColor.text}`}>{booking.service.name}</p>
           </div>
-          <Badge className={statusColors[booking.status as keyof typeof statusColors]}>
+          <Badge className={statusColors[booking.status as keyof typeof statusColors]} variant="secondary">
             {BOOKING_STATUS_LABELS[booking.status]}
           </Badge>
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-gray-600">
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            {booking.booking_time} ({booking.duration}min)
+            {booking.booking_time}
           </div>
+          <span>•</span>
           <div className="flex items-center gap-1">
             <User className="h-3 w-3" />
             {booking.employee.first_name}
@@ -74,14 +78,9 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
         </div>
 
         {booking.total_price > 0 && (
-          <div className="flex items-center gap-1 text-sm font-medium">
+          <div className="flex items-center gap-1 text-xs font-semibold text-gray-700">
             <DollarSign className="h-3 w-3" />
             {booking.total_price.toFixed(2)} zł
-            {booking.payment_method && (
-              <span className="text-muted-foreground ml-2">
-                ({PAYMENT_METHOD_LABELS[booking.payment_method]})
-              </span>
-            )}
           </div>
         )}
       </div>
