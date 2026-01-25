@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -52,10 +52,25 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
 
-  // Oblicz domyślne wartości na podstawie props
-  const getDefaultValues = (): BookingFormData => {
+  const form = useForm<BookingFormData>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: {
+      employeeId: employees?.[0]?.id || '',
+      serviceId: '',
+      clientName: '',
+      clientPhone: '',
+      bookingDate: new Date().toISOString().split('T')[0],
+      bookingTime: '10:00',
+      notes: '',
+    },
+  })
+
+  // Synchronizuj formularz z prefilledSlot PRZED renderowaniem
+  useLayoutEffect(() => {
+    if (!isOpen) return
+
     if (booking) {
-      return {
+      form.reset({
         employeeId: booking.employee.id,
         serviceId: booking.service.id,
         clientName: booking.client.full_name,
@@ -63,9 +78,10 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: booking.booking_date,
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
-      }
+      })
     } else if (prefilledSlot) {
-      return {
+      // WAŻNE: prefilledSlot ma priorytet
+      form.reset({
         employeeId: prefilledSlot.employeeId || employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
@@ -73,9 +89,9 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: prefilledSlot.date,
         bookingTime: prefilledSlot.time,
         notes: '',
-      }
+      })
     } else {
-      return {
+      form.reset({
         employeeId: employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
@@ -83,14 +99,9 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: new Date().toISOString().split('T')[0],
         bookingTime: '10:00',
         notes: '',
-      }
+      })
     }
-  }
-
-  const form = useForm<BookingFormData>({
-    resolver: zodResolver(bookingFormSchema),
-    defaultValues: getDefaultValues(),
-  })
+  }, [isOpen, booking, prefilledSlot, form, employees])
 
   // Client autocomplete
   const clientNameValue = form.watch('clientName')

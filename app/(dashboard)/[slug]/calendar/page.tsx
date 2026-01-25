@@ -78,19 +78,12 @@ export default function CalendarPage() {
   }
 
   const handleTimeSlotClick = (date: string, time: string, employeeId?: string) => {
-    console.log('[Calendar] handleTimeSlotClick:', { date, time, employeeId })
     setSelectedSlot({ date, time, employeeId })
     setSelectedBooking(null)
     setIsDialogOpen(true)
   }
 
   const handleDayClick = (day: Date) => {
-    const formattedDate = formatDate(day)
-    console.log('[Calendar] handleDayClick:', { 
-      day: day.toString(), 
-      formattedDate,
-      dayOfMonth: day.getDate()
-    })
     setCurrentDate(day)
     setViewType('week')
   }
@@ -222,7 +215,6 @@ export default function CalendarPage() {
 
       {/* Booking Dialog */}
       <BookingDialog
-        key={`${selectedBooking?.id || 'new'}-${selectedSlot?.date}-${selectedSlot?.time}`}
         isOpen={isDialogOpen}
         onClose={() => {
           setIsDialogOpen(false)
@@ -441,10 +433,7 @@ function MonthView({ currentDate, bookings, onDayClick }: any) {
           return (
             <div
               key={dateStr}
-              onClick={() => {
-                console.log('[MonthView] Clicked day:', { day: day.toString(), dateStr, dayOfMonth: day.getDate() })
-                onDayClick(day)
-              }}
+              onClick={() => onDayClick(day)}
               className={`min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${
                 isToday
                   ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
