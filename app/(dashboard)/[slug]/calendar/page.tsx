@@ -78,9 +78,21 @@ export default function CalendarPage() {
   }
 
   const handleTimeSlotClick = (date: string, time: string, employeeId?: string) => {
+    console.log('[Calendar] handleTimeSlotClick:', { date, time, employeeId })
     setSelectedSlot({ date, time, employeeId })
     setSelectedBooking(null)
     setIsDialogOpen(true)
+  }
+
+  const handleDayClick = (day: Date) => {
+    const formattedDate = formatDate(day)
+    console.log('[Calendar] handleDayClick:', { 
+      day: day.toString(), 
+      formattedDate,
+      dayOfMonth: day.getDate()
+    })
+    setCurrentDate(day)
+    setViewType('week')
   }
 
   const toggleEmployee = (employeeId: string) => {
@@ -205,7 +217,7 @@ export default function CalendarPage() {
       <Card className="flex-1 overflow-hidden glass rounded-2xl">
         {viewType === 'day' && <DayView currentDate={currentDate} timeSlots={timeSlots} bookingsByEmployeeAndDate={bookingsByEmployeeAndDate} employees={employees} visibleEmployees={visibleEmployees} onTimeSlotClick={handleTimeSlotClick} onBookingClick={handleBookingClick} />}
         {viewType === 'week' && <WeekView currentDate={currentDate} timeSlots={timeSlots} bookingsByEmployeeAndDate={bookingsByEmployeeAndDate} employees={employees} visibleEmployees={visibleEmployees} onTimeSlotClick={handleTimeSlotClick} onBookingClick={handleBookingClick} />}
-        {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={(date: Date) => { setCurrentDate(new Date(date)); setViewType('week'); }} />}
+        {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} />}
       </Card>
 
       {/* Booking Dialog */}
@@ -428,7 +440,10 @@ function MonthView({ currentDate, bookings, onDayClick }: any) {
           return (
             <div
               key={dateStr}
-              onClick={() => onDayClick(day)}
+              onClick={() => {
+                console.log('[MonthView] Clicked day:', { day: day.toString(), dateStr, dayOfMonth: day.getDate() })
+                onDayClick(day)
+              }}
               className={`min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${
                 isToday
                   ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'

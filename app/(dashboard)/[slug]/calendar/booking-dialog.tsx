@@ -66,7 +66,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   })
 
   useEffect(() => {
+    console.log('[BookingDialog] Dialog opened:', { isOpen, booking: booking?.id, prefilledSlot })
+  }, [isOpen, booking?.id, prefilledSlot])
+
+  useEffect(() => {
+    console.log('[BookingDialog] useEffect triggered:', { booking: booking?.id, prefilledSlot })
     if (booking) {
+      console.log('[BookingDialog] Resetting with booking')
       form.reset({
         employeeId: booking.employee.id,
         serviceId: booking.service.id,
@@ -77,7 +83,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         notes: booking.notes || '',
       })
     } else if (prefilledSlot) {
-      // Smart defaults from clicked time slot
+      console.log('[BookingDialog] Resetting with prefilledSlot:', prefilledSlot)
       form.reset({
         employeeId: prefilledSlot.employeeId || employees?.[0]?.id || '',
         serviceId: '',
@@ -88,18 +94,19 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         notes: '',
       })
     } else {
-      // Smart defaults: first employee, today's date
+      const todayDate = new Date().toISOString().split('T')[0]
+      console.log('[BookingDialog] Resetting with defaults, today:', todayDate)
       form.reset({
         employeeId: employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
         clientPhone: '',
-        bookingDate: new Date().toISOString().split('T')[0],
+        bookingDate: todayDate,
         bookingTime: '10:00',
         notes: '',
       })
     }
-  }, [booking, prefilledSlot, form, employees])
+  }, [booking, booking?.id, prefilledSlot, form, employees])
 
   // Client autocomplete
   const clientNameValue = form.watch('clientName')
