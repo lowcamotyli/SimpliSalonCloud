@@ -1,0 +1,91 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { BooksyProcessor } from '@/lib/booksy/processor'
+import { GmailClient } from '@/lib/booksy/gmail-client'
+
+/**
+ * Cron job to process Booksy emails
+ * Runs every 15 minutes (configured in vercel.json)
+ * 
+ * Auth: Vercel Cron Secret
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Verify cron secret
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const supabase = createAdminClient()
+
+    // Get all active salons with Booksy integration
+    const { data: salons } = await supabase
+      .from('salons')
+      .select('id, slug, settings')
+      .eq('subscription_status', 'active')
+
+    if (!salons || salons.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No active salons' 
+      })
+    }
+
+    const results = []
+
+    for (const salon of salons) {
+      // Check if Booksy is enabled for this salon
+      const settings = salon.settings as any
+      if (!settings?.booksyEnabled || !settings?.booksyGmailToken) {
+        continue
+      }
+
+      try {
+        // Initialize Gmail client
+        const gmailClient = new GmailClient(settings.booksyGmailToken)
+        
+        // Search for new Booksy emails
+        const messages = await gmailClient.searchBooksyEmails(20)
+
+        // Process each message
+        const processor = new BooksyProcessor(supabase, salon.id)
+        
+        for (const message of messages) {
+          try {
+            const result = await processor.processEmail(
+              message.subject,
+              message.body
+            )
+
+            // Mark as processed
+            await gmailClient.markAsProcessed(message.id, result.success)
+
+            results.push({
+              salon: salon.slug,
+              messageId: message.id,
+              result,
+            })
+          } catch (error: any) {
+            console.error('Error processing message:', error)
+            await gmailClient.markAsProcessed(message.id, false)
+          }
+        }
+      } catch (error: any) {
+        console.error(`Error processing salon ${salon.slug}:`, error)
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      processed: results.length,
+      results 
+    })
+  } catch (error: any) {
+    console.error('Booksy cron error:', error)
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+}
