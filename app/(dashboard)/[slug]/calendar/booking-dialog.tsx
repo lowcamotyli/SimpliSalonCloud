@@ -40,9 +40,10 @@ interface BookingDialogProps {
   isOpen: boolean
   onClose: () => void
   booking?: any
+  prefilledSlot?: { date: string; time: string; employeeId?: string } | null
 }
 
-export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) {
+export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: BookingDialogProps) {
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
   const { data: clients } = useClients()
@@ -75,6 +76,17 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
       })
+    } else if (prefilledSlot) {
+      // Smart defaults from clicked time slot
+      form.reset({
+        employeeId: prefilledSlot.employeeId || employees?.[0]?.id || '',
+        serviceId: '',
+        clientName: '',
+        clientPhone: '',
+        bookingDate: prefilledSlot.date,
+        bookingTime: prefilledSlot.time,
+        notes: '',
+      })
     } else {
       // Smart defaults: first employee, today's date
       form.reset({
@@ -87,7 +99,7 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         notes: '',
       })
     }
-  }, [booking, form, employees])
+  }, [booking, prefilledSlot, form, employees])
 
   // Client autocomplete
   const clientNameValue = form.watch('clientName')
