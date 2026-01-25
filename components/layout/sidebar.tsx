@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   Sparkles,
+  Scissors,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -34,6 +35,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     { href: `/${salonSlug}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { href: `/${salonSlug}/calendar`, label: 'Kalendarz', icon: Calendar },
     { href: `/${salonSlug}/bookings`, label: 'Rezerwacje', icon: FileText },
+    { href: `/${salonSlug}/services`, label: 'Usługi', icon: Scissors },
     { href: `/${salonSlug}/employees`, label: 'Pracownicy', icon: Users },
     { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle },
     { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign },

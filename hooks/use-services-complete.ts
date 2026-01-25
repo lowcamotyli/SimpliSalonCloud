@@ -1,21 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
 
-type Service = {
+const supabase = createClient()
+
+interface Service {
   id: string
+  salon_id: string
+  category: string
+  subcategory: string
   name: string
   price: number
   duration: number
-  surchargeAllowed: boolean
-}
-
-type Subcategory = {
-  name: string
-  services: Service[]
-}
-
-type ServiceCategory = {
-  category: string
-  subcategories: Subcategory[]
+  is_active: boolean
+  created_at: string
 }
 
 interface CreateServiceData {
@@ -24,7 +21,7 @@ interface CreateServiceData {
   name: string
   price: number
   duration: number
-  active?: boolean
+  is_active?: boolean
 }
 
 interface UpdateServiceData {
@@ -34,7 +31,7 @@ interface UpdateServiceData {
   name?: string
   price?: number
   duration?: number
-  active?: boolean
+  is_active?: boolean
 }
 
 // GET all services
@@ -42,10 +39,12 @@ export function useServices() {
   return useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      const res = await fetch('/api/services')
-      if (!res.ok) throw new Error('Failed to fetch services')
-      const data = await res.json()
-      return data.services as ServiceCategory[]
+      const response = await fetch('/api/services')
+      if (!response.ok) {
+        throw new Error('Failed to fetch services')
+      }
+      const data = await response.json()
+      return data
     },
   })
 }

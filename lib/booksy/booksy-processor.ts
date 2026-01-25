@@ -23,38 +23,28 @@ export class BooksyProcessor {
    */
   async processEmail(subject: string, body: string): Promise<any> {
     try {
-      console.log('=== PROCESS EMAIL START ===')
-      
       // 1. Parse email
       const parsed = this.parseEmail(subject, body)
       if (!parsed) {
         throw new Error('Could not parse email format')
       }
-      console.log('✅ Step 1: Email parsed successfully')
 
       // 2. Find or create client
-      console.log('⏳ Step 2: Finding/creating client...')
       const client = await this.findOrCreateClient(parsed)
-      console.log('✅ Step 2: Client found/created:', client.id, client.full_name)
 
       // 3. Find employee
-      console.log('⏳ Step 3: Finding employee:', parsed.employeeName)
       const employee = await this.findEmployeeByName(parsed.employeeName)
       if (!employee) {
         throw new Error(`Employee not found: ${parsed.employeeName}`)
       }
-      console.log('✅ Step 3: Employee found:', employee.id, employee.first_name, employee.last_name)
 
       // 4. Find service
-      console.log('⏳ Step 4: Finding service:', parsed.serviceName)
       const service = await this.findServiceByName(parsed.serviceName)
       if (!service) {
         throw new Error(`Service not found: ${parsed.serviceName}`)
       }
-      console.log('✅ Step 4: Service found:', service.id, service.name)
 
       // 5. Create booking
-      console.log('⏳ Step 5: Creating booking...')
       const booking = await this.createBooking({
         clientId: client.id,
         employeeId: employee.id,
@@ -64,8 +54,6 @@ export class BooksyProcessor {
         duration: parsed.duration || service.duration,
         price: parsed.price || service.price,
       })
-      console.log('✅ Step 5: Booking created:', booking.id)
-      console.log('=== PROCESS EMAIL SUCCESS ===')
 
       return {
         success: true,
@@ -73,7 +61,6 @@ export class BooksyProcessor {
         parsed,
       }
     } catch (error: any) {
-      console.error('=== PROCESS EMAIL FAILED ===')
       console.error('BooksyProcessor error:', error)
       return {
         success: false,
@@ -96,11 +83,9 @@ export class BooksyProcessor {
         return null
       }
 
-      // Clean body text (remove special characters and normalize)
+      // Clean body text (remove special characters)
       const cleanBody = body
         .replace(/â€"/g, '-')
-        .replace(/—/g, '-')  // em-dash
-        .replace(/–/g, '-')  // en-dash
         .replace(/Å‚/g, 'ł')
         .replace(/Å›/g, 'ś')
         .replace(/Ä…/g, 'ą')
@@ -110,10 +95,6 @@ export class BooksyProcessor {
         .replace(/Ã³/g, 'ó')
         .replace(/Åº/g, 'ź')
         .replace(/Å¼/g, 'ż')
-      
-      console.log('=== PARSING EMAIL ===')
-      console.log('Subject:', subject)
-      console.log('Body (cleaned):', cleanBody)
 
       // Extract phone (9 digits, might have spaces)
       const phoneMatch = cleanBody.match(/(\d{3}\s?\d{3}\s?\d{3})/m)
@@ -131,15 +112,11 @@ export class BooksyProcessor {
       const price = parseFloat(priceStr)
 
       // Extract date and time
-      // Format: "27 października 2024, 16:00 - 17:00" (after cleaning, it's a simple dash)
-      // Use .+? instead of \w+ to match Polish characters (ą, ć, ę, ł, ń, ó, ś, ź, ż)
-      const dateMatch = cleanBody.match(/(\d{1,2})\s+(.+?)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/m)
-
-      console.log('Date regex match:', dateMatch)
+      // Format: "27 października 2024, 16:00 – 17:00"
+      const dateMatch = cleanBody.match(/(\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–]\s*(\d{2}):(\d{2})/m)
 
       if (!dateMatch) {
         console.error('Could not extract date/time from body')
-        console.error('Searching for pattern: DD MONTH YYYY, HH:MM - HH:MM')
         return null
       }
 
@@ -181,14 +158,12 @@ export class BooksyProcessor {
       const employeeMatch = cleanBody.match(/Pracownik:\s*\n\s*(.+?)(?:\n|$)/m)
       const employeeName = employeeMatch ? employeeMatch[1].trim() : ''
 
-      console.log('Employee name extracted:', employeeName)
-
       if (!employeeName) {
         console.error('Could not extract employee name')
         return null
       }
 
-      const parsed = {
+      return {
         clientName,
         clientPhone,
         clientEmail,
@@ -199,11 +174,6 @@ export class BooksyProcessor {
         employeeName,
         duration,
       }
-
-      console.log('=== PARSED DATA ===')
-      console.log(JSON.stringify(parsed, null, 2))
-
-      return parsed
     } catch (error) {
       console.error('Parse error:', error)
       return null
