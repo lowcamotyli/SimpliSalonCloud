@@ -52,28 +52,10 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
 
-  const form = useForm<BookingFormData>({
-    resolver: zodResolver(bookingFormSchema),
-    defaultValues: {
-      employeeId: employees?.[0]?.id || '',
-      serviceId: '',
-      clientName: '',
-      clientPhone: '',
-      bookingDate: new Date().toISOString().split('T')[0],
-      bookingTime: '10:00',
-      notes: '',
-    },
-  })
-
-  // Obsługa zmiany prefilledSlot - bezpośrednia aktualizacja pól
-  useEffect(() => {
-    if (!isOpen) return
-
-    console.log('[BookingDialog] Updating form with prefilledSlot:', prefilledSlot)
-
+  // Oblicz domyślne wartości na podstawie props
+  const getDefaultValues = (): BookingFormData => {
     if (booking) {
-      console.log('[BookingDialog] Setting form from booking')
-      form.reset({
+      return {
         employeeId: booking.employee.id,
         serviceId: booking.service.id,
         clientName: booking.client.full_name,
@@ -81,33 +63,34 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: booking.booking_date,
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
-      })
-    } else if (prefilledSlot) {
-      console.log('[BookingDialog] Setting form from prefilledSlot:', prefilledSlot)
-      // Bezpośrednia aktualizacja każdego pola
-      form.setValue('bookingDate', prefilledSlot.date, { shouldValidate: true, shouldDirty: true })
-      form.setValue('bookingTime', prefilledSlot.time, { shouldValidate: true, shouldDirty: true })
-      if (prefilledSlot.employeeId) {
-        form.setValue('employeeId', prefilledSlot.employeeId, { shouldValidate: true, shouldDirty: true })
       }
-      form.setValue('serviceId', '', { shouldValidate: true, shouldDirty: true })
-      form.setValue('clientName', '', { shouldValidate: true, shouldDirty: true })
-      form.setValue('clientPhone', '', { shouldValidate: true, shouldDirty: true })
-      form.setValue('notes', '', { shouldValidate: true, shouldDirty: true })
+    } else if (prefilledSlot) {
+      return {
+        employeeId: prefilledSlot.employeeId || employees?.[0]?.id || '',
+        serviceId: '',
+        clientName: '',
+        clientPhone: '',
+        bookingDate: prefilledSlot.date,
+        bookingTime: prefilledSlot.time,
+        notes: '',
+      }
     } else {
-      console.log('[BookingDialog] Setting form to defaults')
-      const todayDate = new Date().toISOString().split('T')[0]
-      form.reset({
+      return {
         employeeId: employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
         clientPhone: '',
-        bookingDate: todayDate,
+        bookingDate: new Date().toISOString().split('T')[0],
         bookingTime: '10:00',
         notes: '',
-      })
+      }
     }
-  }, [isOpen, booking, prefilledSlot, form, employees])
+  }
+
+  const form = useForm<BookingFormData>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: getDefaultValues(),
+  })
 
   // Client autocomplete
   const clientNameValue = form.watch('clientName')

@@ -222,6 +222,7 @@ export default function CalendarPage() {
 
       {/* Booking Dialog */}
       <BookingDialog
+        key={`${selectedBooking?.id || 'new'}-${selectedSlot?.date}-${selectedSlot?.time}`}
         isOpen={isDialogOpen}
         onClose={() => {
           setIsDialogOpen(false)
