@@ -214,15 +214,17 @@ export default function CalendarPage() {
       </Card>
 
       {/* Booking Dialog */}
-      <BookingDialog
-        isOpen={isDialogOpen}
-        onClose={() => {
-          setIsDialogOpen(false)
-          setSelectedSlot(null)
-        }}
-        booking={selectedBooking}
-        prefilledSlot={selectedSlot}
-      />
+      {isDialogOpen && (
+        <BookingDialog
+          isOpen={isDialogOpen}
+          onClose={() => {
+            setIsDialogOpen(false)
+            setSelectedSlot(null)
+          }}
+          booking={selectedBooking}
+          prefilledSlot={selectedSlot}
+        />
+      )}
     </div>
   )
 }

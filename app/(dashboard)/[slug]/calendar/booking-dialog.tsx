@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -52,25 +52,12 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
 
-  const form = useForm<BookingFormData>({
-    resolver: zodResolver(bookingFormSchema),
-    defaultValues: {
-      employeeId: employees?.[0]?.id || '',
-      serviceId: '',
-      clientName: '',
-      clientPhone: '',
-      bookingDate: new Date().toISOString().split('T')[0],
-      bookingTime: '10:00',
-      notes: '',
-    },
-  })
-
-  // Synchronizuj formularz z prefilledSlot PRZED renderowaniem
-  useLayoutEffect(() => {
-    if (!isOpen) return
-
+  // Oblicz defaultValues na podstawie props
+  const getDefaultValues = (): BookingFormData => {
+    console.log('[BookingDialog] Computing defaultValues. booking:', booking, 'prefilledSlot:', prefilledSlot)
+    
     if (booking) {
-      form.reset({
+      const defaults = {
         employeeId: booking.employee.id,
         serviceId: booking.service.id,
         clientName: booking.client.full_name,
@@ -78,10 +65,11 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: booking.booking_date,
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
-      })
+      }
+      console.log('[BookingDialog] Using booking defaults:', defaults)
+      return defaults
     } else if (prefilledSlot) {
-      // WAŻNE: prefilledSlot ma priorytet
-      form.reset({
+      const defaults = {
         employeeId: prefilledSlot.employeeId || employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
@@ -89,9 +77,11 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: prefilledSlot.date,
         bookingTime: prefilledSlot.time,
         notes: '',
-      })
+      }
+      console.log('[BookingDialog] Using prefilledSlot defaults:', defaults)
+      return defaults
     } else {
-      form.reset({
+      const defaults = {
         employeeId: employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
@@ -99,9 +89,16 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         bookingDate: new Date().toISOString().split('T')[0],
         bookingTime: '10:00',
         notes: '',
-      })
+      }
+      console.log('[BookingDialog] Using empty defaults:', defaults)
+      return defaults
     }
-  }, [isOpen, booking, prefilledSlot, form, employees])
+  }
+
+  const form = useForm<BookingFormData>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: getDefaultValues(),
+  })
 
   // Client autocomplete
   const clientNameValue = form.watch('clientName')
@@ -353,11 +350,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               <div className="space-y-2">
                 <Label className="font-semibold">Data *</Label>
                 <Input type="date" {...form.register('bookingDate')} className="glass rounded-lg" />
+                <p className="text-xs text-gray-500">[DEBUG] Wartość: {form.watch('bookingDate')}</p>
               </div>
 
               <div className="space-y-2">
                 <Label className="font-semibold">Godzina *</Label>
                 <Input type="time" {...form.register('bookingTime')} className="glass rounded-lg" />
+                <p className="text-xs text-gray-500">[DEBUG] Wartość: {form.watch('bookingTime')}</p>
               </div>
             </div>
 
