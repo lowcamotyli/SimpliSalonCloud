@@ -205,7 +205,7 @@ export default function CalendarPage() {
       <Card className="flex-1 overflow-hidden glass rounded-2xl">
         {viewType === 'day' && <DayView currentDate={currentDate} timeSlots={timeSlots} bookingsByEmployeeAndDate={bookingsByEmployeeAndDate} employees={employees} visibleEmployees={visibleEmployees} onTimeSlotClick={handleTimeSlotClick} onBookingClick={handleBookingClick} />}
         {viewType === 'week' && <WeekView currentDate={currentDate} timeSlots={timeSlots} bookingsByEmployeeAndDate={bookingsByEmployeeAndDate} employees={employees} visibleEmployees={visibleEmployees} onTimeSlotClick={handleTimeSlotClick} onBookingClick={handleBookingClick} />}
-        {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={(date: Date) => { setCurrentDate(date); setViewType('week'); }} />}
+        {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={(date: Date) => { setCurrentDate(new Date(date)); setViewType('week'); }} />}
       </Card>
 
       {/* Booking Dialog */}
