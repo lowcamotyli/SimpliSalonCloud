@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,12 +20,15 @@ import { useEmployees } from '@/hooks/use-employees'
 import { useServices } from '@/hooks/use-services'
 import { useClients } from '@/hooks/use-clients'
 import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/constants'
+import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from '@/lib/formatters'
+import { toast } from 'sonner'
+import { Clock, DollarSign, AlertCircle } from 'lucide-react'
 
 const bookingFormSchema = z.object({
   employeeId: z.string().min(1, 'Wybierz pracownika'),
   serviceId: z.string().min(1, 'Wybierz usługę'),
   clientName: z.string().min(2, 'Minimum 2 znaki'),
-  clientPhone: z.string().regex(/^\d{9}$/, 'Telefon: 9 cyfr'),
+  clientPhone: z.string().regex(/^[\d\s\-\+()]*$/, 'Nieprawidłowy format telefonu'),
   bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data: YYYY-MM-DD'),
   bookingTime: z.string().regex(/^\d{2}:\d{2}$/, 'Godzina: HH:mm'),
   notes: z.string().optional(),
@@ -42,6 +45,8 @@ interface BookingDialogProps {
 export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) {
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
+  const { data: clients } = useClients()
+  const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
   
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -49,7 +54,7 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      employeeId: '',
+      employeeId: employees?.[0]?.id || '',
       serviceId: '',
       clientName: '',
       clientPhone: '',
@@ -71,8 +76,9 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         notes: booking.notes || '',
       })
     } else {
+      // Smart defaults: first employee, today's date
       form.reset({
-        employeeId: '',
+        employeeId: employees?.[0]?.id || '',
         serviceId: '',
         clientName: '',
         clientPhone: '',
@@ -81,50 +87,84 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         notes: '',
       })
     }
-  }, [booking, form])
+  }, [booking, form, employees])
+
+  // Client autocomplete
+  const clientNameValue = form.watch('clientName')
+  useEffect(() => {
+    if (clientNameValue && clientNameValue.length > 1) {
+      const filtered = clients?.filter(c =>
+        c.full_name.toLowerCase().includes(clientNameValue.toLowerCase())
+      ) || []
+      setClientSuggestions(filtered.slice(0, 5))
+    } else {
+      setClientSuggestions([])
+    }
+  }, [clientNameValue, clients])
 
   const selectedService = services
     ?.flatMap((cat) => cat.subcategories)
     .flatMap((sub) => sub.services)
     .find((svc) => svc.id === form.watch('serviceId'))
 
+  const handleSelectClient = (client: any) => {
+    form.setValue('clientName', client.full_name)
+    form.setValue('clientPhone', client.phone)
+    setClientSuggestions([])
+  }
+
   const handleSubmit = async (data: BookingFormData) => {
-    if (booking) {
-      // Update existing booking (status change only for now)
-      await updateMutation.mutateAsync({
-        notes: data.notes,
-      })
-    } else {
-      // Create new booking
-      await createMutation.mutateAsync({
-        ...data,
-        duration: selectedService?.duration || 60,
-        source: 'manual',
-      })
+    try {
+      if (booking) {
+        await updateMutation.mutateAsync({
+          notes: data.notes,
+        })
+        toast.success('Wizyta zaktualizowana')
+      } else {
+        await createMutation.mutateAsync({
+          ...data,
+          clientPhone: parsePhoneNumber(data.clientPhone),
+          duration: selectedService?.duration || 60,
+          source: 'manual',
+        })
+        toast.success('Wizyta dodana')
+      }
+      onClose()
+    } catch (error) {
+      toast.error('Błąd podczas zapisywania wizyty')
     }
-    onClose()
   }
 
   const handleCompleteBooking = async (paymentMethod: string) => {
-    await updateMutation.mutateAsync({
-      status: 'completed',
-      paymentMethod,
-    })
-    onClose()
+    try {
+      await updateMutation.mutateAsync({
+        status: 'completed',
+        paymentMethod,
+      })
+      toast.success('Wizyta zakończona')
+      onClose()
+    } catch (error) {
+      toast.error('Błąd podczas kończenia wizyty')
+    }
   }
 
   const handleCancelBooking = async () => {
     if (confirm('Czy na pewno chcesz anulować tę wizytę?')) {
-      await updateMutation.mutateAsync({ status: 'cancelled' })
-      onClose()
+      try {
+        await updateMutation.mutateAsync({ status: 'cancelled' })
+        toast.success('Wizyta anulowana')
+        onClose()
+      } catch (error) {
+        toast.error('Błąd podczas anulowania wizyty')
+      }
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl glass rounded-2xl">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="gradient-text">
             {booking ? 'Szczegóły wizyty' : 'Nowa wizyta'}
           </DialogTitle>
         </DialogHeader>
@@ -133,86 +173,82 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
           // View mode
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label className="text-gray-600">Klient</Label>
-                <p className="font-medium">{booking.client.full_name}</p>
-                <p className="text-sm text-gray-600">{booking.client.phone}</p>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Klient</Label>
+                <p className="font-bold text-gray-900">{booking.client.full_name}</p>
+                <p className="text-sm text-gray-600">{formatPhoneNumber(booking.client.phone)}</p>
               </div>
 
-              <div>
-                <Label className="text-gray-600">Data i godzina</Label>
-                <p className="font-medium">
-                  {booking.booking_date} {booking.booking_time}
-                </p>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Data i godzina</Label>
+                <p className="font-bold text-gray-900">{formatDateTime(booking.booking_date, booking.booking_time)}</p>
               </div>
 
-              <div>
-                <Label className="text-gray-600">Usługa</Label>
-                <p className="font-medium">{booking.service.name}</p>
-                <p className="text-sm text-gray-600">{booking.duration} min</p>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Usługa</Label>
+                <p className="font-bold text-gray-900">{booking.service.name}</p>
+                <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                  <Clock className="h-3 w-3" />
+                  {booking.duration} min
+                </div>
               </div>
 
-              <div>
-                <Label className="text-gray-600">Pracownik</Label>
-                <p className="font-medium">
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Pracownik</Label>
+                <p className="font-bold text-gray-900">
                   {booking.employee.first_name} {booking.employee.last_name}
                 </p>
               </div>
 
-              <div>
-                <Label className="text-gray-600">Status</Label>
-                <div>
-                  <Badge
-                    variant={
-                      booking.status === 'completed'
-                        ? 'success'
-                        : booking.status === 'cancelled'
-                        ? 'destructive'
-                        : 'secondary'
-                    }
-                  >
-                    {BOOKING_STATUS_LABELS[booking.status]}
-                  </Badge>
-                </div>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Status</Label>
+                <Badge className="mt-1" variant={booking.status === 'completed' ? 'success' : booking.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                  {BOOKING_STATUS_LABELS[booking.status]}
+                </Badge>
               </div>
 
-              <div>
-                <Label className="text-gray-600">Cena</Label>
-                <p className="font-medium">{booking.total_price.toFixed(2)} zł</p>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Cena</Label>
+                <p className="font-bold text-purple-600 text-lg">{formatPrice(booking.total_price)}</p>
                 {booking.surcharge > 0 && (
-                  <p className="text-sm text-gray-600">
-                    (baza: {booking.base_price.toFixed(2)} + dopłata: {booking.surcharge.toFixed(2)})
+                  <p className="text-xs text-gray-600 mt-1">
+                    Baza: {formatPrice(booking.base_price)} + Dopłata: {formatPrice(booking.surcharge)}
                   </p>
                 )}
               </div>
             </div>
 
             {booking.notes && (
-              <div>
-                <Label className="text-gray-600">Notatki</Label>
-                <p className="text-sm">{booking.notes}</p>
+              <div className="glass p-3 rounded-lg">
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Notatki</Label>
+                <p className="text-sm text-gray-700 mt-1">{booking.notes}</p>
               </div>
             )}
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="gap-2 flex-wrap">
               {booking.status === 'scheduled' && (
                 <>
                   <Button
                     variant="destructive"
                     onClick={handleCancelBooking}
+                    className="rounded-lg"
                   >
                     Anuluj wizytę
                   </Button>
-                  <Button
-                    onClick={() => handleCompleteBooking('cash')}
-                  >
-                    Gotówka
-                  </Button>
-                  <Button
-                    onClick={() => handleCompleteBooking('card')}
-                  >
-                    Karta
-                  </Button>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      onClick={() => handleCompleteBooking('cash')}
+                      className="gradient-button rounded-lg flex-1"
+                    >
+                      Gotówka
+                    </Button>
+                    <Button
+                      onClick={() => handleCompleteBooking('card')}
+                      className="gradient-button rounded-lg flex-1"
+                    >
+                      Karta
+                    </Button>
+                  </div>
                 </>
               )}
             </DialogFooter>
@@ -220,20 +256,12 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         ) : (
           // Create mode
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            {/* TODO: Use GPT to expand this form with:
-                 - Employee select dropdown
-                 - Service category/subcategory/service cascading selects
-                 - Client autocomplete (search existing clients)
-                 - Date picker
-                 - Time picker
-                 - Notes textarea
-            */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Pracownik *</Label>
+                <Label className="font-semibold">Pracownik *</Label>
                 <select
                   {...form.register('employeeId')}
-                  className="w-full rounded-md border px-3 py-2"
+                  className="w-full glass rounded-lg px-3 py-2"
                 >
                   <option value="">Wybierz pracownika</option>
                   {employees?.map((emp) => (
@@ -243,24 +271,25 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
                   ))}
                 </select>
                 {form.formState.errors.employeeId && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.employeeId.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label>Usługa *</Label>
+                <Label className="font-semibold">Usługa *</Label>
                 <select
                   {...form.register('serviceId')}
-                  className="w-full rounded-md border px-3 py-2"
+                  className="w-full glass rounded-lg px-3 py-2"
                 >
                   <option value="">Wybierz usługę</option>
                   {services?.map((cat) =>
                     cat.subcategories.map((sub) =>
                       sub.services.map((svc) => (
                         <option key={svc.id} value={svc.id}>
-                          {svc.name} - {svc.price} zł ({svc.duration} min)
+                          {svc.name} - {formatPrice(svc.price)} ({svc.duration} min)
                         </option>
                       ))
                     )
@@ -268,48 +297,80 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Imię i nazwisko klienta *</Label>
-                <Input {...form.register('clientName')} />
+              <div className="space-y-2 relative">
+                <Label className="font-semibold">Imię i nazwisko klienta *</Label>
+                <Input
+                  {...form.register('clientName')}
+                  placeholder="Wpisz imię lub nazwisko"
+                  className="glass rounded-lg"
+                />
+                {clientSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 glass rounded-lg overflow-hidden z-50">
+                    {clientSuggestions.map((client) => (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => handleSelectClient(client)}
+                        className="w-full text-left px-3 py-2 hover:bg-purple-100 transition-colors"
+                      >
+                        <p className="font-medium text-gray-900">{client.full_name}</p>
+                        <p className="text-xs text-gray-600">{formatPhoneNumber(client.phone)}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {form.formState.errors.clientName && (
-                  <p className="text-sm text-red-600">
-                    {form.formState.errors.clientName.message}
-                  </p>
+                  <p className="text-sm text-red-600">{form.formState.errors.clientName.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label>Telefon klienta *</Label>
-                <Input {...form.register('clientPhone')} />
+                <Label className="font-semibold">Telefon klienta *</Label>
+                <Input
+                  {...form.register('clientPhone')}
+                  placeholder="+48 123 456 789"
+                  className="glass rounded-lg"
+                />
                 {form.formState.errors.clientPhone && (
-                  <p className="text-sm text-red-600">
-                    {form.formState.errors.clientPhone.message}
-                  </p>
+                  <p className="text-sm text-red-600">{form.formState.errors.clientPhone.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label>Data *</Label>
-                <Input type="date" {...form.register('bookingDate')} />
+                <Label className="font-semibold">Data *</Label>
+                <Input type="date" {...form.register('bookingDate')} className="glass rounded-lg" />
               </div>
 
               <div className="space-y-2">
-                <Label>Godzina *</Label>
-                <Input type="time" {...form.register('bookingTime')} />
+                <Label className="font-semibold">Godzina *</Label>
+                <Input type="time" {...form.register('bookingTime')} className="glass rounded-lg" />
               </div>
             </div>
 
+            {selectedService && (
+              <div className="glass p-3 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Cena usługi</p>
+                  <p className="font-bold text-purple-600">{formatPrice(selectedService.price)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Czas trwania</p>
+                  <p className="font-bold text-gray-900">{selectedService.duration} min</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label>Notatki</Label>
-              <Input {...form.register('notes')} />
+              <Label className="font-semibold">Notatki</Label>
+              <Input {...form.register('notes')} placeholder="Dodatkowe informacje..." className="glass rounded-lg" />
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} className="rounded-lg">
                 Anuluj
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                Zapisz
+              <Button type="submit" disabled={createMutation.isPending} className="gradient-button rounded-lg">
+                Zapisz wizytę
               </Button>
             </DialogFooter>
           </form>
