@@ -37,7 +37,7 @@ export default function SettingsPage() {
 
   const baseUrl = `/${slug}/settings`
   const activeIntegrations = integrations.filter((i: any) => i.is_active).length
-  const theme = THEMES[settings.theme]
+  const theme = THEMES[settings.theme] || THEMES.beauty_salon
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
