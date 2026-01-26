@@ -18,11 +18,11 @@ export function Navbar({ salonName }: { salonName: string }) {
   }
 
   return (
-    <nav className="glass border-b border-white/20 sticky top-0 z-40">
+    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold gradient-text">{salonName}</h1>
+            <h1 className="text-xl font-bold text-primary">{salonName}</h1>
             <p className="text-xs text-gray-500">Zarządzaj swoim salonem</p>
           </div>
         </div>
@@ -31,13 +31,13 @@ export function Navbar({ salonName }: { salonName: string }) {
           <Button 
             variant="ghost" 
             size="icon"
-            className="hover:bg-purple-100/50 hover:text-purple-600 transition-all"
+            className="hover:bg-primary/10 hover:text-primary transition-all"
           >
             <Bell className="h-5 w-5" />
           </Button>
           <Button 
             onClick={handleLogout}
-            className="gradient-button rounded-lg"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-md transition-all"
             size="sm"
           >
             <LogOut className="mr-2 h-4 w-4" />

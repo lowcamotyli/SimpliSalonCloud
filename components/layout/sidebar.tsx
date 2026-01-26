@@ -51,14 +51,14 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
   }
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-white/95 to-purple-50/95 backdrop-blur-xl border-r border-white/20 flex flex-col shadow-2xl">
+    <aside className="w-64 bg-background/95 backdrop-blur-xl border-r border-border flex flex-col shadow-2xl">
       {/* Logo Section */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-2xl font-bold gradient-text">SimpliSalon</h2>
+          <h2 className="text-2xl font-bold text-primary">SimpliSalon</h2>
         </div>
         <p className="text-xs text-gray-500 ml-12">Premium Salon Manager</p>
       </div>
@@ -79,35 +79,35 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
                 isActive
-                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-700 shadow-lg border border-purple-200/50'
-                  : 'text-gray-700 hover:bg-white/50 hover:shadow-md border border-transparent'
+                  ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
+                  : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
               )}
             >
-              <Icon className={cn('h-5 w-5 transition-all', isActive ? 'text-purple-600' : 'text-gray-400 group-hover:text-purple-600')} />
+              <Icon className={cn('h-5 w-5 transition-all', isActive ? 'text-primary' : 'text-foreground/40 group-hover:text-primary')} />
               <span>{item.label}</span>
-              {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 animate-glow" />}
+              {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-glow" />}
             </Link>
           )
         })}
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t border-white/10 p-4 space-y-3 bg-gradient-to-t from-purple-100/30 to-transparent">
+      <div className="border-t border-border p-4 space-y-3 bg-primary/5">
         <div className="flex items-center gap-3 px-3 py-3 rounded-xl glass">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
-            <User className="h-5 w-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-lg">
+            <User className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-foreground truncate">
               {userName || 'Użytkownik'}
             </p>
-            <p className="text-xs text-purple-600 font-medium">Właściciel</p>
+            <p className="text-xs text-primary font-medium">Właściciel</p>
           </div>
         </div>
 
         <Button
           onClick={handleLogout}
-          className="w-full justify-start gradient-button rounded-xl"
+          className="w-full justify-start bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg transition-all"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Wyloguj
