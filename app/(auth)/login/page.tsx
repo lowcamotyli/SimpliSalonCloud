@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -29,10 +29,10 @@ export default function LoginPage() {
 
       if (error) throw error
 
-      // Get user's salon
+      // Get user's salon (use specific FK to avoid ambiguity with deleted_by)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('salon_id, salons(slug)')
+        .select('salon_id, salons!profiles_salon_id_fkey(slug)')
         .eq('user_id', data.user.id)
         .single()
 

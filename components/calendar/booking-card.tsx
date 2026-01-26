@@ -1,9 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS, getServiceCategoryColor } from '@/lib/constants'
-import { Clock, User, DollarSign, Sparkles } from 'lucide-react'
+import { Clock, User, DollarSign, Sparkles, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 type Booking = {
   id: string
@@ -37,6 +40,7 @@ interface BookingCardProps {
   booking: Booking
   onClick?: () => void
   serviceCategory?: string
+  onDelete?: () => void
 }
 
 const statusColors = {
@@ -46,14 +50,67 @@ const statusColors = {
   cancelled: 'bg-red-100 text-red-800 border-red-200',
 }
 
-export function BookingCard({ booking, onClick, serviceCategory }: BookingCardProps) {
+export function BookingCard({ booking, onClick, serviceCategory, onDelete }: BookingCardProps) {
+  const router = useRouter()
+  const [isDeleting, setIsDeleting] = useState(false)
   const categoryColor = getServiceCategoryColor(serviceCategory)
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+
+    const confirmed = window.confirm(
+      `Czy na pewno chcesz usunąć wizytę?\n\n` +
+      `Klient: ${booking.client.full_name}\n` +
+      `Data: ${booking.booking_date} ${booking.booking_time}\n` +
+      `Usługa: ${booking.service.name}\n\n` +
+      `Ta operacja może być cofnięta przez administratora.`
+    )
+
+    if (!confirmed) return
+
+    setIsDeleting(true)
+
+    try {
+      const response = await fetch(`/api/bookings/${booking.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete booking')
+      }
+
+      // Call onDelete callback if provided
+      if (onDelete) {
+        onDelete()
+      } else {
+        // Refresh the page to show updated list
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Nie udało się usunąć wizyty. Spróbuj ponownie.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
-    <Card 
-      className={`p-4 glass rounded-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 border-l-4 ${categoryColor.border}`}
+    <Card
+      className={`p-4 glass rounded-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 border-l-4 ${categoryColor.border} relative`}
       onClick={onClick}
     >
+      {/* Delete Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="absolute top-2 right-2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600"
+        title="Usuń wizytę"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+
       <div className="space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">

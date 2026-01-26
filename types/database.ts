@@ -9,406 +9,500 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      salons: {
+      bookings: {
         Row: {
-          id: string
-          slug: string
-          name: string
-          owner_email: string
-          settings: Json | null
-          subscription_plan: string
-          subscription_status: string
+          base_price: number
+          booking_date: string
+          booking_time: string
+          client_id: string
           created_at: string
+          created_by: string | null
+          duration: number
+          employee_id: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          salon_id: string
+          service_id: string
+          source: string
+          status: string
+          surcharge: number
+          total_price: number | null
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
-          id?: string
-          slug: string
-          name: string
-          owner_email: string
-          settings?: Json | null
-          subscription_plan?: string
-          subscription_status?: string
+          base_price: number
+          booking_date: string
+          booking_time: string
+          client_id: string
           created_at?: string
+          created_by?: string | null
+          duration: number
+          employee_id: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          salon_id: string
+          service_id: string
+          source?: string
+          status?: string
+          surcharge?: number
+          total_price?: number | null
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
-          id?: string
-          slug?: string
-          name?: string
-          owner_email?: string
-          settings?: Json | null
-          subscription_plan?: string
-          subscription_status?: string
+          base_price?: number
+          booking_date?: string
+          booking_time?: string
+          client_id?: string
           created_at?: string
-          updated_at?: string
-        }
-      }
-      salon_settings: {
-        Row: {
-          id: string
-          salon_id: string
-          theme: string
-          font_family: string
-          business_type: string
-          operating_hours: Json
-          notification_settings: Json
-          booksy_enabled: boolean
-          booksy_gmail_email: string | null
-          booksy_gmail_tokens: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
+          created_by?: string | null
+          duration?: number
+          employee_id?: string
           id?: string
-          salon_id: string
-          theme?: string
-          font_family?: string
-          business_type?: string
-          operating_hours?: Json
-          notification_settings?: Json
-          booksy_enabled?: boolean
-          booksy_gmail_email?: string | null
-          booksy_gmail_tokens?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
+          notes?: string | null
+          payment_method?: string | null
           salon_id?: string
-          theme?: string
-          font_family?: string
-          business_type?: string
-          operating_hours?: Json
-          notification_settings?: Json
-          booksy_enabled?: boolean
-          booksy_gmail_email?: string | null
-          booksy_gmail_tokens?: Json | null
-          created_at?: string
+          service_id?: string
+          source?: string
+          status?: string
+          surcharge?: number
+          total_price?: number | null
           updated_at?: string
+          updated_by?: string | null
         }
-      }
-      profiles: {
-        Row: {
-          id: string
-          user_id: string
-          salon_id: string
-          full_name: string
-          role: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          salon_id: string
-          full_name: string
-          role?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          salon_id?: string
-          full_name?: string
-          role?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      employees: {
-        Row: {
-          id: string
-          salon_id: string
-          employee_code: string
-          first_name: string
-          last_name: string | null
-          email: string | null
-          phone: string | null
-          base_threshold: number
-          base_salary: number
-          commission_rate: number
-          active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          salon_id: string
-          employee_code: string
-          first_name: string
-          last_name?: string | null
-          email?: string | null
-          phone?: string | null
-          base_threshold?: number
-          base_salary?: number
-          commission_rate?: number
-          active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          salon_id?: string
-          employee_code?: string
-          first_name?: string
-          last_name?: string | null
-          email?: string | null
-          phone?: string | null
-          base_threshold?: number
-          base_salary?: number
-          commission_rate?: number
-          active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
-          id: string
-          salon_id: string
           client_code: string
-          full_name: string
-          phone: string
-          email: string | null
-          notes: string | null
-          visit_count: number
           created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string
+          salon_id: string
+          updated_at: string
+          visit_count: number
+        }
+        Insert: {
+          client_code: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone: string
+          salon_id: string
+          updated_at?: string
+          visit_count?: number
+        }
+        Update: {
+          client_code?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+          salon_id?: string
+          updated_at?: string
+          visit_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          active: boolean
+          base_salary: number
+          base_threshold: number
+          commission_rate: number
+          created_at: string
+          email: string | null
+          employee_code: string
+          first_name: string
+          id: string
+          last_name: string | null
+          phone: string | null
+          salon_id: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          salon_id: string
-          client_code: string
-          full_name: string
-          phone: string
-          email?: string | null
-          notes?: string | null
-          visit_count?: number
+          active?: boolean
+          base_salary?: number
+          base_threshold?: number
+          commission_rate?: number
           created_at?: string
+          email?: string | null
+          employee_code: string
+          first_name: string
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          salon_id: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          salon_id?: string
-          client_code?: string
-          full_name?: string
-          phone?: string
-          email?: string | null
-          notes?: string | null
-          visit_count?: number
+          active?: boolean
+          base_salary?: number
+          base_threshold?: number
+          commission_rate?: number
           created_at?: string
+          email?: string | null
+          employee_code?: string
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          salon_id?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "employees_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
-          id: string
-          salon_id: string
+          active: boolean
           category: string
-          subcategory: string
+          description: string | null
+          duration: number
+          id: string
           name: string
           price: number
-          duration: number
+          salon_id: string
+          subcategory: string
           surcharge_allowed: boolean
-          active: boolean
-          created_at: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          salon_id: string
+          active?: boolean
           category: string
-          subcategory: string
+          description?: string | null
+          duration: number
+          id?: string
           name: string
           price: number
-          duration: number
+          salon_id: string
+          subcategory: string
           surcharge_allowed?: boolean
-          active?: boolean
-          created_at?: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          salon_id?: string
+          active?: boolean
           category?: string
-          subcategory?: string
+          description?: string | null
+          duration?: number
+          id?: string
           name?: string
           price?: number
-          duration?: number
+          salon_id?: string
+          subcategory?: string
           surcharge_allowed?: boolean
-          active?: boolean
-          created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "services_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      bookings: {
+      salon_integrations: {
         Row: {
+          access_token: string | null
+          created_at: string | null
+          gmail_email: string | null
           id: string
+          integration_type: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          refresh_token: string | null
           salon_id: string
-          employee_id: string
-          client_id: string
-          service_id: string
-          booking_date: string
-          booking_time: string
-          duration: number
-          status: string
-          payment_method: string | null
-          base_price: number
-          surcharge: number
-          total_price: number
-          notes: string | null
-          source: string
-          created_by: string | null
-          updated_by: string | null
-          created_at: string
-          updated_at: string
+          sync_error: string | null
+          sync_status: string | null
+          token_expires_at: string | null
+          updated_at: string | null
         }
         Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          gmail_email?: string | null
           id?: string
+          integration_type: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          refresh_token?: string | null
           salon_id: string
-          employee_id: string
-          client_id: string
-          service_id: string
-          booking_date: string
-          booking_time: string
-          duration: number
-          status?: string
-          payment_method?: string | null
-          base_price: number
-          surcharge?: number
-          notes?: string | null
-          source?: string
-          created_by?: string | null
-          updated_by?: string | null
-          created_at?: string
-          updated_at?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
         }
         Update: {
+          access_token?: string | null
+          created_at?: string | null
+          gmail_email?: string | null
           id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          refresh_token?: string | null
           salon_id?: string
-          employee_id?: string
-          client_id?: string
-          service_id?: string
-          booking_date?: string
-          booking_time?: string
-          duration?: number
-          status?: string
-          payment_method?: string | null
-          base_price?: number
-          surcharge?: number
-          notes?: string | null
-          source?: string
-          created_by?: string | null
-          updated_by?: string | null
-          created_at?: string
-          updated_at?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "salon_integrations_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      payroll_runs: {
+      salon_settings: {
         Row: {
+          address: Json | null
+          allow_waitlist: boolean | null
+          booking_window_days: number | null
+          booksy_enabled: boolean | null
+          booksy_gmail_email: string | null
+          booksy_gmail_tokens: Json | null
+          business_type: string | null
+          closures: Json | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          currency: string | null
+          custom_colors: Json | null
+          deposit_amount: number | null
+          description: string | null
+          font_family: string | null
           id: string
+          language: string | null
+          logo_url: string | null
+          min_notice_hours: number | null
+          notification_settings: Json | null
+          operating_hours: Json
+          require_deposit: boolean | null
           salon_id: string
-          period_start: string
-          period_end: string
-          period_month: string
-          total_revenue: number
-          total_payroll: number
-          status: string
-          generated_by: string
-          created_at: string
-          updated_at: string
+          slot_duration_minutes: number | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string | null
+          website_url: string | null
         }
         Insert: {
+          address?: Json | null
+          allow_waitlist?: boolean | null
+          booking_window_days?: number | null
+          booksy_enabled?: boolean | null
+          booksy_gmail_email?: string | null
+          booksy_gmail_tokens?: Json | null
+          business_type?: string | null
+          closures?: Json | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          custom_colors?: Json | null
+          deposit_amount?: number | null
+          description?: string | null
+          font_family?: string | null
           id?: string
+          language?: string | null
+          logo_url?: string | null
+          min_notice_hours?: number | null
+          notification_settings?: Json | null
+          operating_hours?: Json
+          require_deposit?: boolean | null
           salon_id: string
-          period_start: string
-          period_end: string
-          period_month: string
-          total_revenue: number
-          total_payroll: number
-          status?: string
-          generated_by: string
-          created_at?: string
-          updated_at?: string
+          slot_duration_minutes?: number | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          website_url?: string | null
         }
         Update: {
+          address?: Json | null
+          allow_waitlist?: boolean | null
+          booking_window_days?: number | null
+          booksy_enabled?: boolean | null
+          booksy_gmail_email?: string | null
+          booksy_gmail_tokens?: Json | null
+          business_type?: string | null
+          closures?: Json | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          custom_colors?: Json | null
+          deposit_amount?: number | null
+          description?: string | null
+          font_family?: string | null
           id?: string
+          language?: string | null
+          logo_url?: string | null
+          min_notice_hours?: number | null
+          notification_settings?: Json | null
+          operating_hours?: Json
+          require_deposit?: boolean | null
           salon_id?: string
-          period_start?: string
-          period_end?: string
-          period_month?: string
-          total_revenue?: number
-          total_payroll?: number
-          status?: string
-          generated_by?: string
-          created_at?: string
-          updated_at?: string
+          slot_duration_minutes?: number | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          website_url?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "salon_settings_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: true
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      payroll_entries: {
+      salons: {
         Row: {
-          id: string
-          payroll_run_id: string
-          employee_id: string
-          visit_count: number
-          total_revenue: number
-          base_threshold: number
-          base_salary: number
-          commission_rate: number
-          commission_amount: number
-          total_payout: number
-          pdf_url: string | null
-          email_sent_at: string | null
           created_at: string
+          id: string
+          name: string
+          owner_email: string
+          settings: Json | null
+          slug: string
+          subscription_plan: string
+          subscription_status: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          payroll_run_id: string
-          employee_id: string
-          visit_count: number
-          total_revenue: number
-          base_threshold: number
-          base_salary: number
-          commission_rate: number
-          commission_amount: number
-          total_payout: number
-          pdf_url?: string | null
-          email_sent_at?: string | null
           created_at?: string
+          id?: string
+          name: string
+          owner_email: string
+          settings?: Json | null
+          slug: string
+          subscription_plan?: string
+          subscription_status?: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          payroll_run_id?: string
-          employee_id?: string
-          visit_count?: number
-          total_revenue?: number
-          base_threshold?: number
-          base_salary?: number
-          commission_rate?: number
-          commission_amount?: number
-          total_payout?: number
-          pdf_url?: string | null
-          email_sent_at?: string | null
           created_at?: string
+          id?: string
+          name?: string
+          owner_email?: string
+          settings?: Json | null
+          slug?: string
+          subscription_plan?: string
+          subscription_status?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          role: string
+          salon_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          role?: string
+          salon_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+          salon_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      generate_employee_code: {
+      generate_client_code: {
         Args: {
           salon_uuid: string
         }
         Returns: string
       }
-      generate_client_code: {
+      generate_employee_code: {
         Args: {
           salon_uuid: string
         }
@@ -418,11 +512,94 @@ export interface Database {
         Args: {
           client_uuid: string
         }
-        Returns: void
+        Returns: undefined
       }
     }
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+  | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+  | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+  ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+    Database[PublicTableNameOrOptions["schema"]]["Views"])
+  : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+    Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+    Database["public"]["Views"])
+  ? (Database["public"]["Tables"] &
+    Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+  | keyof Database["public"]["Tables"]
+  | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+  | keyof Database["public"]["Tables"]
+  | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+  | keyof Database["public"]["Enums"]
+  | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  : never = never
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+  : never

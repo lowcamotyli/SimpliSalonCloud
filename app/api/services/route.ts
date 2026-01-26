@@ -1,146 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { z } from 'zod'
-
-const createServiceSchema = z.object({
-  category: z.string().min(2, 'Kategoria: minimum 2 znaki'),
-  subcategory: z.string().min(2, 'Podkategoria: minimum 2 znaki'),
-  name: z.string().min(2, 'Nazwa: minimum 2 znaki'),
-  price: z.number().positive('Cena musi być większa od 0'),
-  duration: z.number().int().min(15, 'Czas trwania: minimum 15 minut'),
-  active: z.boolean().default(true),
-})
+import { createServiceSchema } from '@/lib/validators/service.validators'
+import { withErrorHandling } from '@/lib/error-handler'
+import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // GET /api/services - List all services
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createServerSupabaseClient()
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await createServerSupabaseClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('salon_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
-
-    // Fetch services grouped by category
-    const { data: services, error } = await supabase
-      .from('services')
-      .select('*')
-      .eq('salon_id', profile.salon_id)
-      .eq('active', true)
-      .order('category')
-      .order('subcategory')
-      .order('name')
-
-    if (error) throw error
-
-    // Group services by category and subcategory
-    const grouped: any = {}
-
-    services?.forEach((service) => {
-      if (!grouped[service.category]) {
-        grouped[service.category] = {
-          category: service.category,
-          subcategories: {},
-        }
-      }
-
-      if (!grouped[service.category].subcategories[service.subcategory]) {
-        grouped[service.category].subcategories[service.subcategory] = {
-          name: service.subcategory,
-          services: [],
-        }
-      }
-
-      grouped[service.category].subcategories[service.subcategory].services.push({
-        id: service.id,
-        name: service.name,
-        price: service.price,
-        duration: service.duration,
-        surchargeAllowed: service.surcharge_allowed,
-      })
-    })
-
-    // Convert to array format
-    const servicesTree = Object.values(grouped).map((cat: any) => ({
-      category: cat.category,
-      subcategories: Object.values(cat.subcategories),
-    }))
-
-    return NextResponse.json({ services: servicesTree })
-  } catch (error: any) {
-    console.error('GET /api/services error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new UnauthorizedError()
   }
-}
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('salon_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile) {
+    throw new NotFoundError('Profile')
+  }
+
+  const { data: services, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('salon_id', profile.salon_id)
+    .eq('active', true)
+    .is('deleted_at', null)
+    .order('category')
+    .order('subcategory')
+    .order('name')
+
+  if (error) throw error
+
+  // Group services by category and subcategory
+  const grouped: any = {}
+
+  services?.forEach((service) => {
+    if (!grouped[service.category]) {
+      grouped[service.category] = {
+        category: service.category,
+        subcategories: {},
+      }
+    }
+
+    if (!grouped[service.category].subcategories[service.subcategory]) {
+      grouped[service.category].subcategories[service.subcategory] = {
+        name: service.subcategory,
+        services: [],
+      }
+    }
+
+    grouped[service.category].subcategories[service.subcategory].services.push({
+      id: service.id,
+      name: service.name,
+      price: service.price,
+      duration: service.duration,
+      surchargeAllowed: service.surcharge_allowed,
+    })
+  })
+
+  // Convert to array format
+  const servicesTree = Object.values(grouped).map((cat: any) => ({
+    category: cat.category,
+    subcategories: Object.values(cat.subcategories),
+  }))
+
+  return NextResponse.json({ services: servicesTree })
+})
 
 // POST /api/services - Create new service
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createServerSupabaseClient()
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await createServerSupabaseClient()
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('salon_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
-
-    const body = await request.json()
-    const validatedData = createServiceSchema.parse(body)
-
-    const { data: service, error } = await supabase
-      .from('services')
-      .insert({
-        salon_id: profile.salon_id,
-        category: validatedData.category,
-        subcategory: validatedData.subcategory,
-        name: validatedData.name,
-        price: validatedData.price,
-        duration: validatedData.duration,
-        active: validatedData.active,
-      })
-      .select()
-      .single()
-
-    if (error) throw error
-
-    return NextResponse.json({ service }, { status: 201 })
-  } catch (error: any) {
-    console.error('POST /api/services error:', error)
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      )
-    }
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new UnauthorizedError()
   }
-}
+
+  const body = await request.json()
+  const validatedData = createServiceSchema.parse(body)
+
+  const { data: service, error } = await supabase
+    .from('services')
+    .insert({
+      salon_id: validatedData.salon_id,
+      category: validatedData.category,
+      subcategory: validatedData.subcategory,
+      name: validatedData.name,
+      description: validatedData.description || null,
+      duration: validatedData.duration,
+      price: validatedData.price,
+      active: validatedData.active ?? true,
+      surcharge_allowed: validatedData.surcharge_allowed ?? true,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return NextResponse.json({ service }, { status: 201 })
+})

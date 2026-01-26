@@ -87,7 +87,10 @@ export function useCreateBooking() {
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.error || 'Failed to create booking')
+        const message = error.details
+          ? error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ')
+          : error.error || 'Failed to create booking'
+        throw new Error(message)
       }
 
       return res.json()

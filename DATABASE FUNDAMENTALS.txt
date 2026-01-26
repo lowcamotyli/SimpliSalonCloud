@@ -1,0 +1,587 @@
+DATABASE FUNDAMENTALS
+Cel
+Przyspieszyć zapytania do bazy danych i dodać podstawowe zabezpieczenia na poziomie bazy.
+Co musisz zrobić
+Krok 3.1: Setup Supabase Migrations (30 min)
+WAŻNE: Migracje to sposób na śledzenie zmian w bazie danych.
+
+Zaloguj się do Supabase CLI:
+
+bashnpx supabase login
+
+Połącz lokalny projekt z Supabase:
+
+bashnpx supabase link --project-ref ubkueiwelarplnbhqmoa
+
+Utwórz folder dla migracji:
+
+bashmkdir -p supabase/migrations
+Krok 3.2: Dodaj indeksy do bazy (1 godz)
+Co to jest indeks?
+Indeks to jak zakładka w książce - pozwala bazie danych szybko znaleźć dane bez czytania całej tabeli.
+Kiedy dodać indeks?
+
+Na kolumnach używanych w WHERE (np. WHERE salon_id = 'xxx')
+Na kolumnach używanych w JOIN
+Na kolumnach używanych w ORDER BY
+
+Utwórz plik supabase/migrations/20250127000000_add_critical_indexes.sql:
+sql-- ========================================
+-- INDEKSY DLA BOOKINGS
+-- ========================================
+
+-- Indeks 1: Listing bookings dla salonu na konkretny dzień
+-- Używane w: Dashboard pokazujący dzisiejsze/jutrzejsze wizyty
+-- Query: SELECT * FROM bookings WHERE salon_id = ? AND date = ? ORDER BY start_time
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_salon_date 
+ON bookings(salon_id, date, start_time);
+
+-- Indeks 2: Booking history dla klienta
+-- Używane w: Profil klienta - historia wizyt
+-- Query: SELECT * FROM bookings WHERE salon_id = ? AND client_id = ? ORDER BY date DESC
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_salon_client 
+ON bookings(salon_id, client_id, date DESC);
+
+-- Indeks 3: Schedule pracownika
+-- Używane w: Kalendarz pracownika
+-- Query: SELECT * FROM bookings WHERE employee_id = ? AND date BETWEEN ? AND ?
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_employee_date 
+ON bookings(employee_id, date);
+
+-- Indeks 4: Szukanie wolnych slotów (tylko aktywne bookings)
+-- Używane w: Sprawdzanie dostępności przed utworzeniem bookingu
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_employee_date_active 
+ON bookings(employee_id, date, start_time, end_time)
+WHERE status NOT IN ('cancelled', 'no_show');
+
+-- ========================================
+-- INDEKSY DLA CLIENTS
+-- ========================================
+
+-- Indeks 5: Wyszukiwanie klienta po telefonie (unique)
+-- Używane w: Booksy integration - znajdź lub utwórz klienta
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_salon_phone 
+ON clients(salon_id, phone)
+WHERE deleted_at IS NULL;
+
+-- Indeks 6: Wyszukiwanie klienta po emailu
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_salon_email 
+ON clients(salon_id, email)
+WHERE deleted_at IS NULL AND email IS NOT NULL;
+
+-- ========================================
+-- INDEKSY DLA SERVICES
+-- ========================================
+
+-- Indeks 7: Tylko aktywne usługi
+-- Używane w: Formularz tworzenia bookingu - dropdown usług
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_services_salon_active 
+ON services(salon_id, active)
+WHERE active = true AND deleted_at IS NULL;
+
+-- ========================================
+-- INDEKSY DLA EMPLOYEES
+-- ========================================
+
+-- Indeks 8: Tylko aktywni pracownicy
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_employees_salon_active 
+ON employees(salon_id, active)
+WHERE active = true AND deleted_at IS NULL;
+
+-- ========================================
+-- INDEKSY DLA FOREIGN KEYS (przyspiesza JOINy)
+-- ========================================
+
+-- Te indeksy pomagają gdy robisz JOIN lub sprawdzasz referencje
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_client_id 
+ON bookings(client_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_service_id 
+ON bookings(service_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_employee_id 
+ON bookings(employee_id);
+
+-- ========================================
+-- OPTYMALIZACJA - Analyze tables
+-- ========================================
+
+-- To mówi PostgreSQL żeby zaktualizował statystyki
+-- Dzięki temu baza lepiej wybiera indeksy
+ANALYZE bookings;
+ANALYZE clients;
+ANALYZE services;
+ANALYZE employees;
+Zastosuj migrację:
+bashnpx supabase db push
+Sprawdź czy indeksy zostały utworzone:
+
+Otwórz Supabase Dashboard: https://supabase.com/dashboard/project/ubkueiwelarplnbhqmoa
+Idź do SQL Editor
+Wykonaj:
+
+sqlSELECT 
+  schemaname,
+  tablename,
+  indexname
+FROM pg_indexes
+WHERE schemaname = 'public'
+ORDER BY tablename, indexname;
+Powinieneś zobaczyć wszystkie nowe indeksy z prefiksem idx_.
+Krok 3.3: Dodaj Soft Deletes (1.5 godz)
+Co to jest soft delete?
+Zamiast usuwać rekord z bazy (DELETE), oznaczasz go jako usunięty (UPDATE deleted_at = NOW()). Dzięki temu możesz odzyskać dane.
+Utwórz plik supabase/migrations/20250127000001_add_soft_deletes.sql:
+sql-- ========================================
+-- DODAJ KOLUMNY SOFT DELETE DO WSZYSTKICH TABEL
+-- ========================================
+
+-- Dodaj do salons
+ALTER TABLE salons 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- Dodaj do clients
+ALTER TABLE clients 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- Dodaj do employees
+ALTER TABLE employees 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- Dodaj do services
+ALTER TABLE services 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- Dodaj do bookings
+ALTER TABLE bookings 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- Dodaj do payroll_runs
+ALTER TABLE payroll_runs 
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES profiles(id);
+
+-- ========================================
+-- INDEKSY DLA DELETED_AT
+-- ========================================
+
+-- Często filtrujemy WHERE deleted_at IS NULL
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_deleted_at 
+ON bookings(deleted_at) WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_deleted_at 
+ON clients(deleted_at) WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_services_deleted_at 
+ON services(deleted_at) WHERE deleted_at IS NULL;
+
+-- ========================================
+-- FUNKCJA SOFT DELETE
+-- ========================================
+
+CREATE OR REPLACE FUNCTION soft_delete_booking()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Zamiast DELETE, robimy UPDATE
+  UPDATE bookings 
+  SET 
+    deleted_at = NOW(),
+    deleted_by = auth.uid() -- Funkcja Supabase zwracająca aktualnego usera
+  WHERE id = OLD.id;
+  
+  -- Zwróć NULL żeby zapobiec faktycznemu DELETE
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ========================================
+-- TRIGGERY SOFT DELETE
+-- ========================================
+
+-- Trigger dla bookings
+DROP TRIGGER IF EXISTS soft_delete_bookings_trigger ON bookings;
+CREATE TRIGGER soft_delete_bookings_trigger
+  BEFORE DELETE ON bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION soft_delete_booking();
+
+-- Powtórz dla innych tabel (clients, services, employees)
+-- Najpierw skopiuj funkcję i zmień nazwę tabeli
+
+CREATE OR REPLACE FUNCTION soft_delete_client()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE clients 
+  SET 
+    deleted_at = NOW(),
+    deleted_by = auth.uid()
+  WHERE id = OLD.id;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS soft_delete_clients_trigger ON clients;
+CREATE TRIGGER soft_delete_clients_trigger
+  BEFORE DELETE ON clients
+  FOR EACH ROW
+  EXECUTE FUNCTION soft_delete_client();
+
+-- Services
+CREATE OR REPLACE FUNCTION soft_delete_service()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE services 
+  SET 
+    deleted_at = NOW(),
+    deleted_by = auth.uid()
+  WHERE id = OLD.id;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS soft_delete_services_trigger ON services;
+CREATE TRIGGER soft_delete_services_trigger
+  BEFORE DELETE ON services
+  FOR EACH ROW
+  EXECUTE FUNCTION soft_delete_service();
+Zastosuj migrację:
+bashnpx supabase db push
+Zaktualizuj kod aplikacji żeby respektował deleted_at:
+W każdym query dodaj .is('deleted_at', null):
+typescript// PRZED:
+const { data } = await supabase
+  .from('bookings')
+  .select()
+  .eq('salon_id', salonId)
+
+// PO:
+const { data } = await supabase
+  .from('bookings')
+  .select()
+  .eq('salon_id', salonId)
+  .is('deleted_at', null) // <-- DODAJ TO!
+Znajdź i zaktualizuj wszystkie queries w:
+
+app/api/bookings/route.ts
+app/api/clients/route.ts
+app/api/services/route.ts
+app/api/employees/route.ts
+Komponenty React które fetchują dane
+
+Test soft delete:
+typescript// W dowolnym API route:
+const { error } = await supabase
+  .from('bookings')
+  .delete() // To już NIE usunie rekordu!
+  .eq('id', bookingId)
+
+// Sprawdź w bazie - rekord nadal tam jest ale ma deleted_at
+Krok 3.4: Dodaj Optimistic Locking (1 godz)
+Co to jest optimistic locking?
+Zapobiega sytuacji gdzie 2 osoby edytują ten sam rekord jednocześnie. Każdy rekord ma version - jeśli ktoś go zmienił, Twój update się nie powiedzie.
+Utwórz plik supabase/migrations/20250127000002_add_version_control.sql:
+sql-- ========================================
+-- DODAJ KOLUMNY VERSION I UPDATED_AT
+-- ========================================
+
+ALTER TABLE bookings 
+  ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE clients 
+  ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE employees 
+  ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE services 
+  ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- ========================================
+-- FUNKCJA SPRAWDZANIA WERSJI
+-- ========================================
+
+CREATE OR REPLACE FUNCTION check_version()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Tylko dla UPDATE
+  IF TG_OP = 'UPDATE' THEN
+    -- Sprawdź czy wersja się zgadza
+    -- OLD.version to wersja w bazie
+    -- NEW.version to wersja którą wysłał user
+    IF OLD.version != NEW.version THEN
+      RAISE EXCEPTION 'Record has been modified by another user (expected version %, got %)', 
+        OLD.version, NEW.version
+        USING ERRCODE = 'P0001';
+    END IF;
+    
+    -- Zwiększ wersję
+    NEW.version := OLD.version + 1;
+    
+    -- Zaktualizuj timestamp
+    NEW.updated_at := NOW();
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ========================================
+-- TRIGGERY
+-- ========================================
+
+DROP TRIGGER IF EXISTS bookings_version_check ON bookings;
+CREATE TRIGGER bookings_version_check
+  BEFORE UPDATE ON bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION check_version();
+
+DROP TRIGGER IF EXISTS clients_version_check ON clients;
+CREATE TRIGGER clients_version_check
+  BEFORE UPDATE ON clients
+  FOR EACH ROW
+  EXECUTE FUNCTION check_version();
+
+DROP TRIGGER IF EXISTS services_version_check ON services;
+CREATE TRIGGER services_version_check
+  BEFORE UPDATE ON services
+  FOR EACH ROW
+  EXECUTE FUNCTION check_version();
+Zastosuj migrację:
+bashnpx supabase db push
+Zaktualizuj kod aplikacji:
+W API route dla UPDATE:
+typescript// app/api/bookings/[id]/route.ts
+
+export const PUT = withErrorHandling(async (
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) => {
+  const body = await request.json()
+  const { version, ...updates } = body // Wyciągnij version z body
+  
+  logger.info('Updating booking', { 
+    bookingId: params.id,
+    version 
+  })
+  
+  // Walidacja
+  const validatedData = updateBookingSchema.parse(updates)
+  
+  // Update Z WARUNKIEM NA VERSION
+  const { data, error } = await supabase
+    .from('bookings')
+    .update(validatedData)
+    .eq('id', params.id)
+    .eq('version', version) // <-- BARDZO WAŻNE!
+    .select()
+    .single()
+  
+  if (error) {
+    // Sprawdź czy to błąd wersji
+    if (error.code === 'P0001') {
+      throw new ConflictError(
+        'Record has been modified by another user. Please refresh and try again.'
+      )
+    }
+    throw error
+  }
+  
+  if (!data) {
+    // Jeśli nie znaleziono - może version się nie zgadzał
+    throw new ConflictError(
+      'Record has been modified. Please refresh.'
+    )
+  }
+  
+  logger.info('Booking updated', { 
+    bookingId: data.id,
+    newVersion: data.version 
+  })
+  
+  return NextResponse.json({ data })
+})
+W komponencie React - dodaj version do formularza:
+typescript// components/edit-booking-form.tsx
+
+interface EditBookingFormProps {
+  booking: Booking // Zawiera version
+}
+
+function EditBookingForm({ booking }: EditBookingFormProps) {
+  const updateMutation = useMutation({
+    mutationFn: async (updates) => {
+      const response = await fetch(`/api/bookings/${booking.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...updates,
+          version: booking.version // <-- Wyślij version
+        })
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message)
+      }
+      
+      return response.json()
+    },
+    onError: (error) => {
+      if (error.message.includes('modified')) {
+        toast.error('Ten booking został zmieniony przez inną osobę. Odśwież stronę.')
+      }
+    }
+  })
+  
+  // ... reszta komponentu
+}
+Krok 3.5: Dodaj Database Constraints (45 min)
+Co to są constraints?
+Zasady na poziomie bazy danych - np. "cena nie może być ujemna", "end_time musi być po start_time".
+Utwórz plik supabase/migrations/20250127000003_add_constraints.sql:
+sql-- ========================================
+-- CONSTRAINTS DLA BOOKINGS
+-- ========================================
+
+-- Sprawdź czy end_time jest po start_time
+ALTER TABLE bookings
+  ADD CONSTRAINT bookings_times_check 
+    CHECK (
+      (date || ' ' || end_time)::timestamp > 
+      (date || ' ' || start_time)::timestamp
+    );
+
+-- Data nie może być więcej niż rok w przyszłość
+ALTER TABLE bookings
+  ADD CONSTRAINT bookings_date_future_check 
+    CHECK (date <= CURRENT_DATE + INTERVAL '1 year');
+
+-- Status musi być z listy
+ALTER TABLE bookings
+  DROP CONSTRAINT IF EXISTS bookings_status_check,
+  ADD CONSTRAINT bookings_status_check
+    CHECK (status IN (
+      'pending', 
+      'confirmed', 
+      'completed', 
+      'cancelled', 
+      'no_show'
+    ));
+
+-- ========================================
+-- CONSTRAINTS DLA CLIENTS
+-- ========================================
+
+-- Telefon musi być w poprawnym formacie
+-- Format: +48123456789 lub 123456789 (9-15 cyfr)
+ALTER TABLE clients
+  ADD CONSTRAINT clients_phone_format 
+    CHECK (phone ~ '^\+?[0-9]{9,15}$');
+
+-- Email musi być poprawny (jeśli podany)
+ALTER TABLE clients
+  ADD CONSTRAINT clients_email_format
+    CHECK (
+      email IS NULL OR 
+      email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'
+    );
+
+-- Imię i nazwisko nie mogą być puste
+ALTER TABLE clients
+  ADD CONSTRAINT clients_first_name_not_empty 
+    CHECK (length(trim(first_name)) > 0);
+
+ALTER TABLE clients
+  ADD CONSTRAINT clients_last_name_not_empty 
+    CHECK (length(trim(last_name)) > 0);
+
+-- ========================================
+-- CONSTRAINTS DLA SERVICES
+-- ========================================
+
+-- Duration musi być dodatnie
+ALTER TABLE services
+  ADD CONSTRAINT services_duration_positive 
+    CHECK (duration > 0);
+
+-- Cena nie może być ujemna
+ALTER TABLE services
+  ADD CONSTRAINT services_price_non_negative
+    CHECK (price >= 0);
+
+-- Nazwa nie może być pusta
+ALTER TABLE services
+  ADD CONSTRAINT services_name_not_empty 
+    CHECK (length(trim(name)) > 0);
+
+-- ========================================
+-- CONSTRAINTS DLA EMPLOYEES
+-- ========================================
+
+-- Telefon w poprawnym formacie
+ALTER TABLE employees
+  ADD CONSTRAINT employees_phone_format 
+    CHECK (phone ~ '^\+?[0-9]{9,15}$');
+
+-- Email poprawny (jeśli podany)
+ALTER TABLE employees
+  ADD CONSTRAINT employees_email_format
+    CHECK (
+      email IS NULL OR 
+      email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'
+    );
+Zastosuj migrację:
+bashnpx supabase db push
+WAŻNE: Po dodaniu constraints, niektóre istniejące dane mogą być niepoprawne. Sprawdź:
+sql-- Sprawdź czy są bookings z złymi godzinami
+SELECT * FROM bookings 
+WHERE (date || ' ' || end_time)::timestamp <= (date || ' ' || start_time)::timestamp;
+
+-- Sprawdź czy są clients ze złym telefonem
+SELECT * FROM clients 
+WHERE phone !~ '^\+?[0-9]{9,15}$';
+
+-- Jeśli znajdziesz błędne dane, popraw je ręcznie przed dodaniem constraintów
+Checklist przed ukończeniem Paczki 3
+
+ Folder supabase/migrations utworzony
+ Migracja 20250127000000_add_critical_indexes.sql zastosowana
+ Sprawdzone w Supabase Dashboard - indeksy widoczne
+ Migracja 20250127000001_add_soft_deletes.sql zastosowana
+ Wszystkie tabele mają kolumny deleted_at, deleted_by
+ Wszystkie queries w aplikacji mają .is('deleted_at', null)
+ Migracja 20250127000002_add_version_control.sql zastosowana
+ API route UPDATE wysyła i sprawdza version
+ Migracja 20250127000003_add_constraints.sql zastosowana
+ Przetestowane: constraints działają (spróbuj zapisać end_time < start_time)
+
+Test końcowy:
+sql-- Test 1: Sprawdź indeksy
+EXPLAIN ANALYZE
+SELECT * FROM bookings 
+WHERE salon_id = 'your-salon-id' 
+AND date = '2025-01-27';
+-- Powinieneś zobaczyć "Index Scan using idx_bookings_salon_date"
+
+-- Test 2: Sprawdź soft delete
+DELETE FROM bookings WHERE id = 'some-id';
+SELECT deleted_at FROM bookings WHERE id = 'some-id';
+-- deleted_at powinno być ustawione
+
+-- Test 3: Sprawdź version
+UPDATE bookings SET notes = 'test' WHERE id = 'some-id' AND version = 999;
+-- Powinno rzucić błąd o niepoprawnej wersji
+
+-- Test 4: Sprawdź constraints
+INSERT INTO bookings (salon_id, client_id, service_id, employee_id, date, start_time, end_time, status)
+VALUES ('...', '...', '...', '...', '2025-01-27', '14:00', '13:00', 'confirmed');
+-- Powinno rzucić błąd: end_time musi być po start_time

@@ -48,14 +48,14 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const { data: services } = useServices()
   const { data: clients } = useClients()
   const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
-  
+
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
 
   // Oblicz defaultValues na podstawie props
   const getDefaultValues = (): BookingFormData => {
     console.log('[BookingDialog] Computing defaultValues. booking:', booking, 'prefilledSlot:', prefilledSlot)
-    
+
     if (booking) {
       const defaults = {
         employeeId: booking.employee.id,
@@ -171,6 +171,30 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     }
   }
 
+  const handleDeleteBooking = async () => {
+    if (confirm(
+      'Czy na pewno chcesz USUNĄĆ tę wizytę?\n\n' +
+      'Wizyta zostanie przeniesiona do archiwum i nie będzie widoczna w kalendarzu.\n' +
+      'Administrator może ją przywrócić.\n\n' +
+      'Jeśli chcesz tylko anulować wizytę (bez usuwania), użyj przycisku "Anuluj wizytę".'
+    )) {
+      try {
+        const response = await fetch(`/api/bookings/${booking.id}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to delete booking')
+        }
+
+        toast.success('Wizyta usunięta')
+        onClose()
+      } catch (error) {
+        toast.error('Błąd podczas usuwania wizyty')
+      }
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl glass rounded-2xl">
@@ -239,13 +263,22 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
             <DialogFooter className="gap-2 flex-wrap">
               {booking.status === 'scheduled' && (
                 <>
-                  <Button
-                    variant="destructive"
-                    onClick={handleCancelBooking}
-                    className="rounded-lg"
-                  >
-                    Anuluj wizytę
-                  </Button>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={handleDeleteBooking}
+                      className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      Usuń wizytę
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleCancelBooking}
+                      className="rounded-lg"
+                    >
+                      Anuluj wizytę
+                    </Button>
+                  </div>
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       onClick={() => handleCompleteBooking('cash')}

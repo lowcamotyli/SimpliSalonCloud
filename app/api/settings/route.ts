@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { updateSettingsSchema } from '@/lib/validators/settings.validators'
+import { z } from 'zod'
 
 export async function GET(request: Request) {
   console.log('=== SETTINGS API GET START ===')
@@ -82,14 +84,15 @@ export async function PATCH(request: Request) {
   try {
     const supabase = await createServerSupabaseClient()
     const body = await request.json()
-    const { salonId, ...updates } = body
-
-    console.log('PATCH salonId:', salonId)
-    console.log('PATCH updates:', Object.keys(updates))
+    const salonId = body.salonId as string
+    const updates = { ...body }
+    delete updates.salonId
 
     if (!salonId) {
       return NextResponse.json({ error: 'salonId required' }, { status: 400 })
     }
+
+    const validatedUpdates = updateSettingsSchema.parse(updates)
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     console.log('PATCH User ID:', user?.id)
@@ -102,7 +105,7 @@ export async function PATCH(request: Request) {
       .from('salon_settings')
       .upsert({
         salon_id: salonId,
-        ...updates,
+        ...validatedUpdates,
         updated_at: new Date().toISOString()
       }, { onConflict: 'salon_id' })
       .select()
@@ -118,7 +121,12 @@ export async function PATCH(request: Request) {
     console.log('PATCH Success confirmed')
     return NextResponse.json(data)
   } catch (err) {
-    console.log('PATCH CATCH ERROR:', err)
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: err.errors },
+        { status: 400 }
+      )
+    }
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

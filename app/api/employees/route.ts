@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createEmployeeSchema } from '@/lib/validators/employee.validators'
 import { z } from 'zod'
-
-const createEmployeeSchema = z.object({
-  firstName: z.string().min(2, 'Imię musi mieć minimum 2 znaki'),
-  lastName: z.string().optional(),
-  email: z.string().email('Nieprawidłowy email').optional().or(z.literal('')),
-  phone: z.string().regex(/^\d{9}$/, 'Telefon: 9 cyfr').optional().or(z.literal('')),
-  baseThreshold: z.number().min(0).default(0),
-  baseSalary: z.number().min(0).default(0),
-  commissionRate: z.number().min(0).max(1).default(0),
-})
 
 // GET /api/employees - List all employees
 export async function GET(request: NextRequest) {
@@ -40,6 +31,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('salon_id', profile.salon_id)
       .eq('active', true)
+      .is('deleted_at', null)
       .order('first_name')
 
     if (error) throw error
@@ -107,6 +99,7 @@ export async function POST(request: NextRequest) {
         base_threshold: validatedData.baseThreshold,
         base_salary: validatedData.baseSalary,
         commission_rate: validatedData.commissionRate,
+        active: validatedData.active ?? true,
       })
       .select()
       .single()
