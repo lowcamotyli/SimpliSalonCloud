@@ -1,4 +1,3 @@
-// hooks/use-salon.ts
 import { useQuery } from '@tanstack/react-query'
 
 export function useSalon(slug: string) {
@@ -7,8 +6,10 @@ export function useSalon(slug: string) {
     queryFn: async () => {
       const res = await fetch(`/api/salons/${slug}`)
       if (!res.ok) throw new Error('Failed to fetch salon')
-      return res.json()
+      const json = await res.json()
+      return json
     },
-    enabled: !!slug
+    enabled: !!slug,
+    select: (data) => ({ salon: data }) // <-- DODAJ TO
   })
 }

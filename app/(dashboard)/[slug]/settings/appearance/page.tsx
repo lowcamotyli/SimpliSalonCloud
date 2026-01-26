@@ -1,8 +1,7 @@
-// app/(dashboard)/[slug]/settings/appearance/page.tsx
 'use client'
 
-import { useState } from 'react'
-import { useSalon } from '@/hooks/use-salon'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
 import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
@@ -11,16 +10,41 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import type { ThemeKey } from '@/lib/types/settings'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
 
-export default function AppearancePage({ params }: { params: { slug: string } }) {
-  const { salon } = useSalon(params.slug)
+export default function AppearancePage() {
+  const params = useParams()
+  const slug = params.slug as string
+
+  const { data: salon } = useQuery({
+    queryKey: ['salon', slug],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('salons')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: settings } = useSettings(salon?.id || '')
   const updateSettings = useUpdateSettings(salon?.id || '')
   
-  const [theme, setTheme] = useState<ThemeKey>(settings?.theme || 'beauty_salon')
-  const [logoUrl, setLogoUrl] = useState(settings?.logo_url || '')
+  const [theme, setTheme] = useState<ThemeKey>('beauty_salon')
+  const [logoUrl, setLogoUrl] = useState('')
 
-  if (!salon || !settings) return <div>Ładowanie...</div>
+  useEffect(() => {
+    if (settings) {
+      setTheme(settings.theme)
+      setLogoUrl(settings.logo_url || '')
+    }
+  }, [settings])
+
+  if (!salon || !settings) return <div className="p-6">Ładowanie...</div>
 
   const handleSave = () => {
     updateSettings.mutate({ theme, logo_url: logoUrl })
@@ -38,7 +62,7 @@ export default function AppearancePage({ params }: { params: { slug: string } })
         </Button>
       </div>
 
-      <SettingsNav baseUrl={`/${params.slug}/settings`} />
+      <SettingsNav baseUrl={`/${slug}/settings`} />
 
       <div className="space-y-6">
         <SettingsCard title="Motyw" description="Wybierz predefiniowany motyw">

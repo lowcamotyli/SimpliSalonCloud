@@ -1,7 +1,6 @@
-// app/(dashboard)/[slug]/settings/page.tsx
 'use client'
 
-import { useSalon } from '@/hooks/use-salon'
+import { useParams } from 'next/navigation'
 import { useSettings, useIntegrations } from '@/hooks/use-settings'
 import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
@@ -9,15 +8,34 @@ import { Button } from '@/components/ui/button'
 import { Palette, Building2, Bell, Link as LinkIcon, CheckCircle, Circle } from 'lucide-react'
 import Link from 'next/link'
 import { THEMES } from '@/lib/types/settings'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
 
-export default function SettingsPage({ params }: { params: { slug: string } }) {
-  const { salon } = useSalon(params.slug)
+export default function SettingsPage() {
+  const params = useParams()
+  const slug = params.slug as string
+
+  // Get salon from database
+  const { data: salon } = useQuery({
+    queryKey: ['salon', slug],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('salons')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: settings } = useSettings(salon?.id || '')
   const { data: integrations = [] } = useIntegrations(salon?.id || '')
 
-  if (!salon || !settings) return <div>Ładowanie...</div>
+  if (!salon || !settings) return <div className="p-6">Ładowanie...</div>
 
-  const baseUrl = `/${params.slug}/settings`
+  const baseUrl = `/${slug}/settings`
   const activeIntegrations = integrations.filter((i: any) => i.is_active).length
   const theme = THEMES[settings.theme]
 

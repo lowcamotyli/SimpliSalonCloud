@@ -1,7 +1,6 @@
-// app/(dashboard)/[slug]/settings/integrations/page.tsx
 'use client'
 
-import { useSalon } from '@/hooks/use-salon'
+import { useParams } from 'next/navigation'
 import { useIntegrations } from '@/hooks/use-settings'
 import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
@@ -10,12 +9,30 @@ import { Badge } from '@/components/ui/badge'
 import { INTEGRATIONS } from '@/lib/types/settings'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
 
-export default function IntegrationsPage({ params }: { params: { slug: string } }) {
-  const { salon } = useSalon(params.slug)
+export default function IntegrationsPage() {
+  const params = useParams()
+  const slug = params.slug as string
+
+  const { data: salon } = useQuery({
+    queryKey: ['salon', slug],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('salons')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: activeIntegrations = [] } = useIntegrations(salon?.id || '')
 
-  if (!salon) return <div>Ładowanie...</div>
+  if (!salon) return <div className="p-6">Ładowanie...</div>
 
   const isActive = (type: string) => {
     return activeIntegrations.some((i: any) => i.integration_type === type && i.is_active)
@@ -28,7 +45,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
         <p className="text-muted-foreground">Połącz zewnętrzne usługi</p>
       </div>
 
-      <SettingsNav baseUrl={`/${params.slug}/settings`} />
+      <SettingsNav baseUrl={`/${slug}/settings`} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {INTEGRATIONS.map(integration => {
@@ -51,7 +68,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
                 <div className="text-4xl">{integration.icon}</div>
                 
                 {integration.config ? (
-                  <Link href={`/${params.slug}${integration.config}`}>
+                  <Link href={`/${slug}${integration.config}`}>
                     <Button variant={connected ? "outline" : "default"}>
                       {connected ? 'Zarządzaj' : 'Połącz'}
                       <ExternalLink className="ml-2 h-4 w-4" />
