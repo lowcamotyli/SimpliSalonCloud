@@ -19,38 +19,45 @@ export async function GET(request: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Get all active salons with Booksy integration
+    // Get all active salons with Booksy integration enabled
     const { data: salons } = await supabase
       .from('salons')
-      .select('id, slug, settings')
+      .select(`
+        id, 
+        slug, 
+        salon_settings!inner(
+          booksy_enabled,
+          booksy_gmail_tokens
+        )
+      `)
       .eq('subscription_status', 'active')
+      .eq('salon_settings.booksy_enabled', true)
 
     if (!salons || salons.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'No active salons' 
+      return NextResponse.json({
+        success: true,
+        message: 'No active salons with Booksy enabled'
       })
     }
 
     const results = []
 
     for (const salon of salons) {
-      // Check if Booksy is enabled for this salon
-      const settings = salon.settings as any
-      if (!settings?.booksyEnabled || !settings?.booksyGmailToken) {
+      const settings = (salon as any).salon_settings
+      if (!settings?.booksy_gmail_tokens) {
         continue
       }
 
       try {
-        // Initialize Gmail client
-        const gmailClient = new GmailClient(settings.booksyGmailToken)
-        
+        // Initialize Gmail client with tokens (handles refresh automatically if set up)
+        const gmailClient = new GmailClient(settings.booksy_gmail_tokens)
+
         // Search for new Booksy emails
         const messages = await gmailClient.searchBooksyEmails(20)
 
         // Process each message
         const processor = new BooksyProcessor(supabase, salon.id)
-        
+
         for (const message of messages) {
           try {
             const result = await processor.processEmail(
@@ -76,10 +83,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       processed: results.length,
-      results 
+      results
     })
   } catch (error: any) {
     console.error('Booksy cron error:', error)

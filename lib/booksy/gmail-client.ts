@@ -1,8 +1,3 @@
-/**
- * Gmail API Client for Booksy emails
- * Requires OAuth2 setup in GCP
- */
-
 import { google } from 'googleapis'
 
 interface GmailMessage {
@@ -16,12 +11,67 @@ interface GmailMessage {
 
 export class GmailClient {
   private gmail: any
+  private oauth2Client: any
 
-  constructor(accessToken: string) {
-    const auth = new google.auth.OAuth2()
-    auth.setCredentials({ access_token: accessToken })
-    
-    this.gmail = google.gmail({ version: 'v1', auth })
+  constructor(credentials: { access_token?: string; refresh_token?: string }) {
+    this.oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    )
+
+    this.oauth2Client.setCredentials(credentials)
+    this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client })
+  }
+
+  /**
+   * Static helper to get OAuth URL
+   */
+  static getAuthUrl(state?: string) {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    )
+
+    return oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.labels',
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ],
+      prompt: 'consent',
+      state,
+    })
+  }
+
+  /**
+   * Static helper to get tokens from code
+   */
+  static async getTokens(code: string) {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    )
+
+    const { tokens } = await oauth2Client.getToken(code)
+    return tokens
+  }
+
+  /**
+   * Get user's email address
+   */
+  async getUserEmail(): Promise<string | null> {
+    try {
+      const response = await this.gmail.users.getProfile({ userId: 'me' })
+      return response.data.emailAddress || null
+    } catch (error) {
+      console.error('Error getting user email:', error)
+      return null
+    }
   }
 
   /**
@@ -29,7 +79,6 @@ export class GmailClient {
    */
   async searchBooksyEmails(maxResults = 20): Promise<GmailMessage[]> {
     try {
-      // Search query for Booksy emails
       const query = [
         'from:@booksy.com',
         'OR subject:"nowa rezerwacja"',
@@ -48,7 +97,6 @@ export class GmailClient {
       const messages = response.data.messages || []
       const fullMessages: GmailMessage[] = []
 
-      // Fetch full message details
       for (const message of messages) {
         const fullMessage = await this.getFullMessage(message.id)
         if (fullMessage) {
@@ -75,29 +123,32 @@ export class GmailClient {
       })
 
       const message = response.data
-      const headers = message.payload.headers
+      const headers = message.payload?.headers || []
 
-      const subject = headers.find((h: any) => h.name === 'Subject')?.value || ''
-      const from = headers.find((h: any) => h.name === 'From')?.value || ''
-      const date = headers.find((h: any) => h.name === 'Date')?.value || ''
+      const subject = headers.find((h: any) => h.name.toLowerCase() === 'subject')?.value || ''
+      const from = headers.find((h: any) => h.name.toLowerCase() === 'from')?.value || ''
+      const date = headers.find((h: any) => h.name.toLowerCase() === 'date')?.value || ''
 
-      // Extract body (plain text or HTML)
       let body = ''
-      
-      if (message.payload.body?.data) {
-        body = Buffer.from(message.payload.body.data, 'base64').toString('utf-8')
-      } else if (message.payload.parts) {
-        const textPart = message.payload.parts.find((p: any) => 
-          p.mimeType === 'text/plain' || p.mimeType === 'text/html'
-        )
-        if (textPart?.body?.data) {
-          body = Buffer.from(textPart.body.data, 'base64').toString('utf-8')
+
+      const extractBody = (part: any): string => {
+        if (part.body?.data) {
+          return Buffer.from(part.body.data, 'base64').toString('utf-8')
         }
+        if (part.parts) {
+          for (const p of part.parts) {
+            const b = extractBody(p)
+            if (b) return b
+          }
+        }
+        return ''
       }
+
+      body = extractBody(message.payload)
 
       return {
         id: messageId,
-        threadId: message.threadId,
+        threadId: message.threadId || '',
         subject,
         from,
         body,
@@ -115,11 +166,11 @@ export class GmailClient {
   async markAsProcessed(messageId: string, success = true): Promise<void> {
     try {
       const labelName = success ? 'booksy/processed' : 'booksy/error'
-      
-      // Get or create label
+
       const labelsResponse = await this.gmail.users.labels.list({ userId: 'me' })
-      let label = labelsResponse.data.labels.find((l: any) => l.name === labelName)
-      
+      const labels = labelsResponse.data.labels || []
+      let label = labels.find((l: any) => l.name === labelName)
+
       if (!label) {
         const createResponse = await this.gmail.users.labels.create({
           userId: 'me',
@@ -132,12 +183,11 @@ export class GmailClient {
         label = createResponse.data
       }
 
-      // Add label to message
       await this.gmail.users.messages.modify({
         userId: 'me',
         id: messageId,
         requestBody: {
-          addLabelIds: [label.id],
+          addLabelIds: [label!.id!],
         },
       })
     } catch (error) {

@@ -55,7 +55,10 @@ export default function SettingsPage() {
             description="Motywy i branding"
           >
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+              <div
+                className="h-12 w-12 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: theme.primary }}
+              >
                 <Palette className="h-6 w-6 text-white" />
               </div>
               <div>

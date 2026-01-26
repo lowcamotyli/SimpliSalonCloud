@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-gradient-to-br from-white via-purple-50 to-pink-50 text-foreground;
+    @apply bg-[var(--background-hex)] text-foreground;
     background-attachment: fixed;
   }
 }
@@ -47,11 +47,13 @@
   }
   
   .gradient-text {
-    @apply bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to r, var(--primary-hex), var(--primary-hex));
   }
   
   .gradient-button {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300;
+    background-image: linear-gradient(to r, var(--primary-hex), var(--primary-hex));
+    @apply text-white shadow-lg hover:shadow-xl transition-all duration-300 opacity-90 hover:opacity-100;
   }
   
   .card-hover {

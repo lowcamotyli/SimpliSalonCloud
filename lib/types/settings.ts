@@ -77,6 +77,10 @@ export interface SalonSettings {
   language: string
   timezone: string
   notification_settings: NotificationSettings
+  // Booksy Integration
+  booksy_enabled?: boolean
+  booksy_gmail_email?: string
+  booksy_gmail_tokens?: any
 }
 
 export interface NotificationSettings {

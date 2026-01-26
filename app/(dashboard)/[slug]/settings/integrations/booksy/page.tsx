@@ -1,6 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { useSettings } from '@/hooks/use-settings'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,30 +14,37 @@ import { toast } from 'sonner'
 import { Mail, CheckCircle, XCircle } from 'lucide-react'
 
 export default function BooksySettingsPage() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [gmailEmail, setGmailEmail] = useState('')
+  const params = useParams()
+  const slug = params.slug as string
+
+  const { data: salon } = useQuery({
+    queryKey: ['salon', slug],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('salons')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+  const { data: settings } = useSettings(salon?.id || '')
   const [lastSync, setLastSync] = useState<string | null>(null)
 
+  const isConnected = !!settings?.booksy_enabled && !!settings?.booksy_gmail_email
+  const gmailEmail = settings?.booksy_gmail_email || ''
+
   const handleConnectGmail = async () => {
-    // TODO: Implement Gmail OAuth2 flow
-    // 1. Redirect to Google OAuth consent screen
-    // 2. Get authorization code
-    // 3. Exchange for access token + refresh token
-    // 4. Save to salon settings
-    
-    toast.info('Gmail OAuth flow - to be implemented')
-    
-    // Placeholder
-    setIsConnected(true)
-    setGmailEmail('salon@example.com')
+    // Redirect to our OAuth initiation route
+    window.location.href = '/api/integrations/booksy/auth'
   }
 
   const handleDisconnect = async () => {
     if (confirm('Czy na pewno chcesz odłączyć integrację Booksy?')) {
-      // TODO: Remove tokens from settings
-      setIsConnected(false)
-      setGmailEmail('')
-      toast.success('Integracja Booksy odłączona')
+      // TODO: Implement disconnect API
+      toast.info('Disconnect API to be implemented')
     }
   }
 
@@ -129,7 +140,7 @@ export default function BooksySettingsPage() {
           <div>
             <h4 className="font-medium text-gray-900 mb-2">1. Połącz Gmail</h4>
             <p>
-              System uzyskuje dostęp do Twojej skrzynki Gmail, gdzie Booksy wysyła 
+              System uzyskuje dostęp do Twojej skrzynki Gmail, gdzie Booksy wysyła
               powiadomienia o rezerwacjach.
             </p>
           </div>
@@ -137,7 +148,7 @@ export default function BooksySettingsPage() {
           <div>
             <h4 className="font-medium text-gray-900 mb-2">2. Automatyczna synchronizacja</h4>
             <p>
-              Co 15 minut system sprawdza nowe emaile z Booksy i automatycznie 
+              Co 15 minut system sprawdza nowe emaile z Booksy i automatycznie
               tworzy rezerwacje w kalendarzu.
             </p>
           </div>
@@ -174,16 +185,16 @@ export default function BooksySettingsPage() {
           <div>
             <Badge variant="secondary" className="mb-2">Nowa rezerwacja</Badge>
             <code className="block bg-gray-100 p-3 rounded text-xs">
-              Temat: Anna Kowalska: nowa rezerwacja<br/>
-              <br/>
-              Anna Kowalska<br/>
-              123 456 789<br/>
-              <br/>
-              Strzyżenie damskie<br/>
-              150,00 zł<br/>
-              <br/>
-              27 października 2024, 10:00 — 11:00<br/>
-              <br/>
+              Temat: Anna Kowalska: nowa rezerwacja<br />
+              <br />
+              Anna Kowalska<br />
+              123 456 789<br />
+              <br />
+              Strzyżenie damskie<br />
+              150,00 zł<br />
+              <br />
+              27 października 2024, 10:00 — 11:00<br />
+              <br />
               Pracownik: Kasia
             </code>
           </div>
@@ -191,9 +202,9 @@ export default function BooksySettingsPage() {
           <div>
             <Badge variant="secondary" className="mb-2">Zmiana terminu</Badge>
             <code className="block bg-gray-100 p-3 rounded text-xs">
-              Temat: Jan Nowak: zmienił rezerwację<br/>
-              <br/>
-              z dnia 27 października 2024 10:00<br/>
+              Temat: Jan Nowak: zmienił rezerwację<br />
+              <br />
+              z dnia 27 października 2024 10:00<br />
               na 28 października 2024, 14:00 — 15:00
             </code>
           </div>
@@ -201,8 +212,8 @@ export default function BooksySettingsPage() {
           <div>
             <Badge variant="secondary" className="mb-2">Anulowanie</Badge>
             <code className="block bg-gray-100 p-3 rounded text-xs">
-              Temat: Maria Wiśniewska: odwołała wizytę<br/>
-              <br/>
+              Temat: Maria Wiśniewska: odwołała wizytę<br />
+              <br />
               27 października 2024, 16:00 — 17:00
             </code>
           </div>

@@ -1,25 +1,29 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
 interface ParsedBooking {
+  type: 'new' | 'reschedule' | 'cancel'
   clientName: string
-  clientPhone: string
+  clientPhone?: string
   clientEmail?: string
-  serviceName: string
-  price: number
+  serviceName?: string
+  price?: number
   bookingDate: string // YYYY-MM-DD
   bookingTime: string // HH:mm
-  employeeName: string
+  employeeName?: string
   duration?: number
+  // For rescheduling
+  oldDate?: string
+  oldTime?: string
 }
 
 export class BooksyProcessor {
   constructor(
     private supabase: SupabaseClient,
     private salonId: string
-  ) {}
+  ) { }
 
   /**
-   * Parse Booksy email and create booking
+   * Parse Booksy email and create/update/cancel booking
    */
   async processEmail(subject: string, body: string): Promise<any> {
     try {
@@ -29,17 +33,26 @@ export class BooksyProcessor {
         throw new Error('Could not parse email format')
       }
 
+      if (parsed.type === 'cancel') {
+        return await this.handleCancellation(parsed)
+      }
+
+      if (parsed.type === 'reschedule') {
+        return await this.handleReschedule(parsed)
+      }
+
+      // Handle 'new' booking
       // 2. Find or create client
       const client = await this.findOrCreateClient(parsed)
 
       // 3. Find employee
-      const employee = await this.findEmployeeByName(parsed.employeeName)
+      const employee = await this.findEmployeeByName(parsed.employeeName!)
       if (!employee) {
         throw new Error(`Employee not found: ${parsed.employeeName}`)
       }
 
       // 4. Find service
-      const service = await this.findServiceByName(parsed.serviceName)
+      const service = await this.findServiceByName(parsed.serviceName!)
       if (!service) {
         throw new Error(`Service not found: ${parsed.serviceName}`)
       }
@@ -57,6 +70,7 @@ export class BooksyProcessor {
 
       return {
         success: true,
+        type: 'new',
         booking,
         parsed,
       }
@@ -70,18 +84,113 @@ export class BooksyProcessor {
   }
 
   /**
+   * Handle booking cancellation
+   */
+  private async handleCancellation(parsed: ParsedBooking) {
+    // Find existing booking
+    // Note: Since we don't have many identifiers, we match by client name (approx) + date + time
+    const { data: bookings, error: findError } = await this.supabase
+      .from('bookings')
+      .select('*, clients!inner(full_name)')
+      .eq('salon_id', this.salonId)
+      .eq('booking_date', parsed.bookingDate)
+      .eq('booking_time', parsed.bookingTime)
+      .eq('status', 'scheduled')
+
+    if (findError) throw findError
+
+    // Filter by client name match
+    const booking = bookings?.find(b =>
+      b.clients.full_name.toLowerCase().includes(parsed.clientName.toLowerCase())
+    )
+
+    if (!booking) {
+      throw new Error(`Original booking not found to cancel: ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`)
+    }
+
+    const { data: updated, error: updateError } = await this.supabase
+      .from('bookings')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', booking.id)
+      .select()
+      .single()
+
+    if (updateError) throw updateError
+
+    return { success: true, type: 'cancel', booking: updated }
+  }
+
+  /**
+   * Handle booking reschedule
+   */
+  private async handleReschedule(parsed: ParsedBooking) {
+    if (!parsed.oldDate || !parsed.oldTime) {
+      throw new Error('Missing old date/time for rescheduling')
+    }
+
+    // Find existing booking at OLD date/time
+    const { data: bookings, error: findError } = await this.supabase
+      .from('bookings')
+      .select('*, clients!inner(full_name)')
+      .eq('salon_id', this.salonId)
+      .eq('booking_date', parsed.oldDate)
+      .eq('booking_time', parsed.oldTime)
+      .eq('status', 'scheduled')
+
+    if (findError) throw findError
+
+    const booking = bookings?.find(b =>
+      b.clients.full_name.toLowerCase().includes(parsed.clientName.toLowerCase())
+    )
+
+    if (!booking) {
+      throw new Error(`Original booking not found to reschedule: ${parsed.clientName} at ${parsed.oldDate} ${parsed.oldTime}`)
+    }
+
+    // Update to NEW date/time
+    const { data: updated, error: updateError } = await this.supabase
+      .from('bookings')
+      .update({
+        booking_date: parsed.bookingDate,
+        booking_time: parsed.bookingTime,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', booking.id)
+      .select()
+      .single()
+
+    if (updateError) throw updateError
+
+    return { success: true, type: 'reschedule', booking: updated }
+  }
+
+  /**
    * Parse Booksy email format
    */
   private parseEmail(subject: string, body: string): ParsedBooking | null {
     try {
-      // Extract client name from subject: "Anna Kowalska: nowa rezerwacja"
-      const nameMatch = subject.match(/^(.+?):\s*nowa rezerwacja/i)
-      const clientName = nameMatch ? nameMatch[1].trim() : ''
+      // Determine type from subject
+      let type: 'new' | 'reschedule' | 'cancel' = 'new'
+      let clientName = ''
+
+      if (subject.match(/nowa rezerwacja/i)) {
+        type = 'new'
+        clientName = subject.match(/^(.+?):\s*nowa rezerwacja/i)?.[1].trim() || ''
+      } else if (subject.match(/zmienił rezerwację/i)) {
+        type = 'reschedule'
+        clientName = subject.match(/^(.+?):\s*zmienił/i)?.[1].trim() || ''
+      } else if (subject.match(/odwołała wizytę|odwołał wizytę/i)) {
+        type = 'cancel'
+        clientName = subject.match(/^(.+?):\s*odwołał/i)?.[1].trim() || ''
+      }
 
       if (!clientName) {
-        console.error('Could not extract client name from subject')
-        return null
+        // Try fallback parsing from body if subject failed
+        const nameInBody = body.match(/^(.+?)\n/m)
+        clientName = nameInBody ? nameInBody[1].trim() : ''
       }
+
+      if (!clientName) return null
 
       // Clean body text (remove special characters)
       const cleanBody = body
@@ -96,83 +205,78 @@ export class BooksyProcessor {
         .replace(/Åº/g, 'ź')
         .replace(/Å¼/g, 'ż')
 
-      // Extract phone (9 digits, might have spaces)
+      if (type === 'cancel') {
+        const dateMatch = this.extractDateAndTime(cleanBody)
+        if (!dateMatch) return null
+        return {
+          type: 'cancel',
+          clientName,
+          bookingDate: dateMatch.date,
+          bookingTime: dateMatch.time,
+        }
+      }
+
+      if (type === 'reschedule') {
+        // Reschedule format:
+        // z dnia 27 października 2024 10:00
+        // na 28 października 2024, 14:00 — 15:00
+        const oldMatch = cleanBody.match(/z dnia (\d{1,2})\s+(\w+)\s+(\d{4})\s+(\d{2}):(\d{2})/i)
+        const newMatch = cleanBody.match(/na (\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})/i)
+
+        if (!oldMatch || !newMatch) return null
+
+        const oldDate = this.formatDate(oldMatch[1], oldMatch[2], oldMatch[3])
+        const oldTime = `${oldMatch[4]}:${oldMatch[5]}`
+
+        const newDate = this.formatDate(newMatch[1], newMatch[2], newMatch[3])
+        const newTime = `${newMatch[4]}:${newMatch[5]}`
+
+        return {
+          type: 'reschedule',
+          clientName,
+          bookingDate: newDate,
+          bookingTime: newTime,
+          oldDate,
+          oldTime,
+        }
+      }
+
+      // Handle 'new'
+      // Extract phone
       const phoneMatch = cleanBody.match(/(\d{3}\s?\d{3}\s?\d{3})/m)
       const clientPhone = phoneMatch ? phoneMatch[1].replace(/\s/g, '') : ''
 
-      // Extract email (optional)
+      // Extract email
       const emailMatch = cleanBody.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/m)
       const clientEmail = emailMatch ? emailMatch[1] : undefined
 
       // Extract service name and price
-      // Format: "Strzyżenie damskie wł. średnie\n250,00 zł"
-      const serviceMatch = cleanBody.match(/\n\n(.+?)\n([\d,]+)\s*zł/ms)
+      const serviceMatch = cleanBody.match(/\n\n([\s\S]+?)\n([\d,]+)\s*zł/i)
       const serviceName = serviceMatch ? serviceMatch[1].trim() : ''
       const priceStr = serviceMatch ? serviceMatch[2].replace(',', '.') : '0'
       const price = parseFloat(priceStr)
 
       // Extract date and time
-      // Format: "27 października 2024, 16:00 – 17:00"
-      const dateMatch = cleanBody.match(/(\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–]\s*(\d{2}):(\d{2})/m)
-
-      if (!dateMatch) {
-        console.error('Could not extract date/time from body')
-        return null
-      }
-
-      const day = dateMatch[1].padStart(2, '0')
-      const monthName = dateMatch[2]
-      const year = dateMatch[3]
-      const startHour = dateMatch[4]
-      const startMinute = dateMatch[5]
-      const endHour = dateMatch[6]
-      const endMinute = dateMatch[7]
-
-      // Convert Polish month name to number
-      const monthMap: Record<string, string> = {
-        'stycznia': '01',
-        'lutego': '02',
-        'marca': '03',
-        'kwietnia': '04',
-        'maja': '05',
-        'czerwca': '06',
-        'lipca': '07',
-        'sierpnia': '08',
-        'września': '09',
-        'października': '10',
-        'listopada': '11',
-        'grudnia': '12',
-      }
-      const month = monthMap[monthName.toLowerCase()] || '01'
-
-      const bookingDate = `${year}-${month}-${day}`
-      const bookingTime = `${startHour}:${startMinute}`
-
-      // Calculate duration in minutes
-      const startMins = parseInt(startHour) * 60 + parseInt(startMinute)
-      const endMins = parseInt(endHour) * 60 + parseInt(endMinute)
-      const duration = endMins - startMins
+      const dateMatch = this.extractDateAndTime(cleanBody)
+      if (!dateMatch) return null
 
       // Extract employee name
-      // Format: "Pracownik:\nKasia"
       const employeeMatch = cleanBody.match(/Pracownik:\s*\n\s*(.+?)(?:\n|$)/m)
       const employeeName = employeeMatch ? employeeMatch[1].trim() : ''
 
-      if (!employeeName) {
-        console.error('Could not extract employee name')
-        return null
-      }
+      if (!employeeName) return null
 
       return {
+        type: 'new',
         clientName,
         clientPhone,
         clientEmail,
         serviceName,
         price,
-        bookingDate,
-        bookingTime,
+        bookingDate: dateMatch.date,
+        bookingTime: dateMatch.time,
         employeeName,
-        duration,
+        duration: dateMatch.duration,
       }
     } catch (error) {
       console.error('Parse error:', error)
@@ -180,17 +284,43 @@ export class BooksyProcessor {
     }
   }
 
+  private extractDateAndTime(body: string) {
+    const dateMatch = body.match(/(\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–—]\s*(\d{2}):(\d{2})/m)
+    if (!dateMatch) return null
+
+    const date = this.formatDate(dateMatch[1], dateMatch[2], dateMatch[3])
+    const time = `${dateMatch[4]}:${dateMatch[5]}`
+
+    const startMins = parseInt(dateMatch[4]) * 60 + parseInt(dateMatch[5])
+    const endMins = parseInt(dateMatch[6]) * 60 + parseInt(dateMatch[7])
+    const duration = endMins - startMins
+
+    return { date, time, duration }
+  }
+
+  private formatDate(day: string, monthName: string, year: string) {
+    const monthMap: Record<string, string> = {
+      'stycznia': '01', 'lutego': '02', 'marca': '03', 'kwietnia': '04',
+      'maja': '05', 'czerwca': '06', 'lipca': '07', 'sierpnia': '08',
+      'września': '09', 'października': '10', 'listopada': '11', 'grudnia': '12'
+    }
+    const month = monthMap[monthName.toLowerCase()] || '01'
+    return `${year}-${month}-${day.padStart(2, '0')}`
+  }
+
   /**
    * Find or create client by phone
    */
   private async findOrCreateClient(parsed: ParsedBooking) {
+    if (!parsed.clientPhone) throw new Error('Client phone is required for new bookings')
+
     // Try to find existing client by phone
     const { data: existingClient } = await this.supabase
       .from('clients')
       .select('*')
       .eq('salon_id', this.salonId)
       .eq('phone', parsed.clientPhone)
-      .single()
+      .maybeSingle()
 
     if (existingClient) {
       return existingClient

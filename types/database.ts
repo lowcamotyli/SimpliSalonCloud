@@ -44,6 +44,50 @@ export interface Database {
           updated_at?: string
         }
       }
+      salon_settings: {
+        Row: {
+          id: string
+          salon_id: string
+          theme: string
+          font_family: string
+          business_type: string
+          operating_hours: Json
+          notification_settings: Json
+          booksy_enabled: boolean
+          booksy_gmail_email: string | null
+          booksy_gmail_tokens: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          salon_id: string
+          theme?: string
+          font_family?: string
+          business_type?: string
+          operating_hours?: Json
+          notification_settings?: Json
+          booksy_enabled?: boolean
+          booksy_gmail_email?: string | null
+          booksy_gmail_tokens?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          salon_id?: string
+          theme?: string
+          font_family?: string
+          business_type?: string
+          operating_hours?: Json
+          notification_settings?: Json
+          booksy_enabled?: boolean
+          booksy_gmail_email?: string | null
+          booksy_gmail_tokens?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       profiles: {
         Row: {
           id: string
