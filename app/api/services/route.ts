@@ -80,8 +80,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new UnauthorizedError()
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('salon_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile) {
+    throw new NotFoundError('Profile')
+  }
+
   const body = await request.json()
-  const validatedData = createServiceSchema.parse(body)
+  const validatedData = createServiceSchema.parse({
+    ...body,
+    salon_id: (profile as any).salon_id, // Auto-add salon_id from user profile
+  })
 
   const { data: service, error } = await supabase
     .from('services')
@@ -90,7 +103,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       category: validatedData.category,
       subcategory: validatedData.subcategory,
       name: validatedData.name,
-      description: validatedData.description || null,
       duration: validatedData.duration,
       price: validatedData.price,
       active: validatedData.active ?? true,

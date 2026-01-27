@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check permission (only owner can create employees)
-    if (profile.role !== 'owner') {
+    if ((profile as any).role !== 'owner') {
       return NextResponse.json(
         { error: 'Permission denied' },
         { status: 403 }
@@ -78,20 +78,27 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate body
     const body = await request.json()
+
+    console.log('Employee body received:', body)
+
     const validatedData = createEmployeeSchema.parse(body)
 
     // Generate employee code
     const { data: codeData, error: codeError } = await supabase
-      .rpc('generate_employee_code', { salon_uuid: profile.salon_id })
+      .rpc('generate_employee_code', { salon_uuid: (profile as any).salon_id })
 
-    if (codeError) throw codeError
+    const employeeCode = codeData || `E${Date.now().toString().slice(-6)}`
+
+    if (codeError) {
+      console.warn('Failed to generate employee code, using fallback:', codeError)
+    }
 
     // Insert employee
     const { data: employee, error: insertError } = await supabase
       .from('employees')
       .insert({
-        salon_id: profile.salon_id,
-        employee_code: codeData,
+        salon_id: (profile as any).salon_id,
+        employee_code: employeeCode,
         first_name: validatedData.firstName,
         last_name: validatedData.lastName || null,
         email: validatedData.email || null,
@@ -104,7 +111,10 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (insertError) throw insertError
+    if (insertError) {
+      console.error('Failed to insert employee:', insertError)
+      throw insertError
+    }
 
     return NextResponse.json({ employee }, { status: 201 })
   } catch (error: any) {

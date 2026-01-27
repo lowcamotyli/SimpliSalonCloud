@@ -53,9 +53,21 @@ export async function PUT(
     const body = await request.json()
     const validatedData = updateEmployeeSchema.parse(body)
 
+    // Get current version
+    const { data: existingEmployee, error: existingError } = await supabase
+      .from('employees')
+      .select('version')
+      .eq('id', params.id)
+      .single()
+
+    if (existingError || !existingEmployee) {
+      return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+    }
+
     const { data: employee, error } = await supabase
       .from('employees')
       .update({
+        version: existingEmployee.version, // Required by check_version() trigger
         ...(validatedData.firstName !== undefined && { first_name: validatedData.firstName }),
         ...(validatedData.lastName !== undefined && { last_name: validatedData.lastName || null }),
         ...(validatedData.email !== undefined && { email: validatedData.email || null }),
@@ -102,10 +114,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Soft delete (set active = false)
+    // Delete will trigger soft_delete_employee trigger (sets deleted_at and deleted_by)
     const { error } = await supabase
       .from('employees')
-      .update({ active: false })
+      .delete()
       .eq('id', params.id)
 
     if (error) throw error

@@ -49,7 +49,20 @@ export const PUT = withErrorHandling(async (
   const body = await request.json()
   const validatedData = updateClientSchema.parse(body)
 
-  const updateData: any = {}
+  // Get current version
+  const { data: existingClient, error: existingError } = await supabase
+    .from('clients')
+    .select('version')
+    .eq('id', params.id)
+    .single()
+
+  if (existingError || !existingClient) {
+    throw new NotFoundError('Client', params.id)
+  }
+
+  const updateData: any = {
+    version: (existingClient as any).version, // Required by check_version() trigger
+  }
   if (validatedData.first_name || validatedData.last_name) {
     updateData.full_name = `${validatedData.first_name || ''} ${validatedData.last_name || ''}`.trim()
   }

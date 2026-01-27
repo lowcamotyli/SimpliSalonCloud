@@ -55,11 +55,37 @@ class Logger {
 
     error(message: string, error?: unknown, context?: LogContext) {
         if (this.shouldLog('error')) {
-            const errorObj = error instanceof Error ? error : new Error(String(error))
+            let errorInfo: any = {}
+
+            if (error instanceof Error) {
+                errorInfo = {
+                    error: error.message,
+                    stack: error.stack,
+                    name: error.name
+                }
+            } else if (error && typeof error === 'object') {
+                // Handle Supabase/PostgrestError and other objects
+                errorInfo = {
+                    error: (error as any).message || String(error),
+                    code: (error as any).code,
+                    details: (error as any).details,
+                    hint: (error as any).hint,
+                    // Include all enumerable properties for debugging
+                    ...Object.fromEntries(
+                        Object.entries(error).filter(([key]) =>
+                            !['stack'].includes(key) // Exclude stack trace from object errors
+                        )
+                    )
+                }
+            } else if (error) {
+                errorInfo = {
+                    error: String(error)
+                }
+            }
+
             console.error(this.format('error', message, {
                 ...context,
-                error: errorObj.message,
-                stack: errorObj.stack
+                ...errorInfo
             }))
         }
     }

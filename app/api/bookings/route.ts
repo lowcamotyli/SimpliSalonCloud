@@ -105,7 +105,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     start_time: body.start_time || body.bookingTime,
   }
 
-  const validatedData = createBookingSchema.parse(normalizedBody)
+  let validatedData
+  try {
+    validatedData = createBookingSchema.parse(normalizedBody)
+  } catch (error: any) {
+    logger.error('Validation failed', error, {
+      errors: error.errors,
+      body: normalizedBody
+    })
+    throw error
+  }
 
   // 1. Check slot availability
   const { data: existingBooking } = await supabase
@@ -137,14 +146,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (existingClient) {
       clientId = (existingClient as any).id
     } else {
-      const { data: codeData } = await supabase
+      const { data: codeData, error: codeError } = await supabase
         .rpc('generate_client_code', { salon_uuid: salonProfile.salon_id } as any)
+
+      // Fallback if RPC returns null or fails
+      const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
+
+      if (codeError) {
+        logger.warn('Failed to generate client code via RPC, using fallback', codeError)
+      }
 
       const { data: newClient, error: clientError } = await supabase
         .from('clients')
         .insert({
           salon_id: salonProfile.salon_id,
-          client_code: (codeData as unknown) as string,
+          client_code: clientCode,
           full_name: validatedData.clientName,
           phone: validatedData.clientPhone,
           visit_count: 0
@@ -152,7 +168,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .select('id')
         .single()
 
-      if (clientError) throw clientError
+      if (clientError) {
+        logger.error('Failed to create client', clientError, {
+          code: clientError.code,
+          message: clientError.message,
+          hint: clientError.hint,
+          details: clientError.details
+        })
+        throw clientError
+      }
       clientId = (newClient as any).id
     }
   }
@@ -192,7 +216,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     .select()
     .single()
 
-  if (bookingError) throw bookingError
+  if (bookingError) {
+    logger.error('Failed to create booking', bookingError, {
+      code: bookingError.code,
+      message: bookingError.message,
+      details: bookingError.details,
+      hint: bookingError.hint
+    })
+    throw bookingError
+  }
   if (!bookingData) throw new Error('Failed to create booking')
 
   const booking = bookingData as any

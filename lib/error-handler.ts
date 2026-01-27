@@ -47,7 +47,10 @@ export function handleApiError(error: unknown): NextResponse {
 
         // Foreign key violation (23503)
         if (pgError.code === '23503') {
-            logger.error('Database reference error', error)
+            logger.error('Database reference error', error, {
+                code: pgError.code,
+                details: pgError.details
+            })
             return NextResponse.json(
                 {
                     name: 'ReferenceError',
@@ -61,7 +64,10 @@ export function handleApiError(error: unknown): NextResponse {
 
         // Unique constraint violation (23505) - duplikat
         if (pgError.code === '23505') {
-            logger.error('Database conflict error', error)
+            logger.error('Database conflict error', error, {
+                code: pgError.code,
+                details: pgError.details
+            })
             return NextResponse.json(
                 {
                     name: 'ConflictError',
@@ -75,7 +81,10 @@ export function handleApiError(error: unknown): NextResponse {
 
         // Check constraint violation (23514)
         if (pgError.code === '23514') {
-            logger.error('Database constraint error', error)
+            logger.error('Database constraint error', error, {
+                code: pgError.code,
+                details: pgError.details
+            })
             return NextResponse.json(
                 {
                     name: 'ValidationError',
@@ -89,7 +98,10 @@ export function handleApiError(error: unknown): NextResponse {
     }
 
     // 3. Nieznany błąd
-    logger.error('Unhandled error', error)
+    logger.error('Unhandled error', error, {
+        errorType: error?.constructor?.name,
+        errorString: String(error)
+    })
 
     const isDevelopment = process.env.NODE_ENV === 'development'
 

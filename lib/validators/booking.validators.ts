@@ -36,7 +36,9 @@ const baseBookingSchema = z.object({
 // Schema dla tworzenia nowego bookingu
 export const createBookingSchema = baseBookingSchema.refine(
     (data) => {
-        if (!data.start_time || !data.end_time) return true
+        // Skip validation if end_time is not provided or empty
+        if (!data.start_time || !data.end_time || data.end_time === '') return true
+
         // Sprawdź czy end_time jest po start_time
         const start = new Date(`2000-01-01T${data.start_time}`)
         const end = new Date(`2000-01-01T${data.end_time}`)

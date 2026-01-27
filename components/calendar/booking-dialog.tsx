@@ -37,9 +37,10 @@ interface BookingDialogProps {
   isOpen: boolean
   onClose: () => void
   booking?: any
+  prefilledSlot?: { date: string; time: string; employeeId?: string } | null
 }
 
-export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) {
+export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: BookingDialogProps) {
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
 
@@ -70,6 +71,16 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
       })
+    } else if (prefilledSlot) {
+      form.reset({
+        employeeId: prefilledSlot.employeeId || '',
+        serviceId: '',
+        clientName: '',
+        clientPhone: '',
+        bookingDate: prefilledSlot.date,
+        bookingTime: prefilledSlot.time,
+        notes: '',
+      })
     } else {
       form.reset({
         employeeId: '',
@@ -81,7 +92,7 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
         notes: '',
       })
     }
-  }, [booking, form])
+  }, [booking, prefilledSlot, form])
 
   const selectedService = services
     ?.flatMap((cat) => cat.subcategories)
@@ -160,8 +171,8 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
                       booking.status === 'completed'
                         ? 'success'
                         : booking.status === 'cancelled'
-                        ? 'destructive'
-                        : 'secondary'
+                          ? 'destructive'
+                          : 'secondary'
                     }
                   >
                     {BOOKING_STATUS_LABELS[booking.status]}
@@ -170,11 +181,11 @@ export function BookingDialog({ isOpen, onClose, booking }: BookingDialogProps) 
               </div>
               <div>
                 <Label className="text-gray-600">Cena</Label>
-                <p className="font-medium">{booking.total_price.toFixed(2)} zł</p>
-                {booking.surcharge > 0 && (
+                <p className="font-medium">{(booking.total_price || 0).toFixed(2)} zł</p>
+                {(booking.surcharge || 0) > 0 && (
                   <p className="text-sm text-gray-600">
-                    (baza: {booking.base_price.toFixed(2)} + dopłata:{' '}
-                    {booking.surcharge.toFixed(2)})
+                    (baza: {(booking.base_price || 0).toFixed(2)} + dopłata:{' '}
+                    {(booking.surcharge || 0).toFixed(2)})
                   </p>
                 )}
               </div>

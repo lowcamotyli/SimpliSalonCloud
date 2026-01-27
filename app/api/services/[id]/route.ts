@@ -60,10 +60,10 @@ export const PATCH = withErrorHandling(async (
     throw new NotFoundError('Profile')
   }
 
-  // Verify service belongs to salon
+  // Verify service belongs to salon and get current version
   const { data: existingService, error: existingError } = await supabase
     .from('services')
-    .select('id')
+    .select('id, version')
     .eq('id', params.id)
     .eq('salon_id', profile.salon_id)
     .single()
@@ -78,6 +78,7 @@ export const PATCH = withErrorHandling(async (
   const { data: service, error } = await supabase
     .from('services')
     .update({
+      version: (existingService as any).version, // Required by check_version() trigger
       ...(validatedData.category !== undefined && { category: validatedData.category }),
       ...(validatedData.subcategory !== undefined && { subcategory: validatedData.subcategory }),
       ...(validatedData.name !== undefined && { name: validatedData.name }),

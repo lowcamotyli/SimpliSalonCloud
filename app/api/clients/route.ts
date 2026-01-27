@@ -60,20 +60,45 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new UnauthorizedError()
   }
 
-  const body = await request.json()
-  const validatedData = createClientSchema.parse(body)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('salon_id')
+    .eq('user_id', user.id)
+    .single()
 
-  // Generate client code
+  if (!profile) {
+    throw new NotFoundError('Profile')
+  }
+
+  const body = await request.json()
+
+  console.log('Client body received:', body)
+
+  // Map frontend fields and add salon_id
+  const mappedBody = {
+    ...body,
+    salon_id: (profile as any).salon_id,
+    first_name: body.first_name || body.firstName || (body.fullName ? body.fullName.split(' ')[0] : ''),
+    last_name: body.last_name || body.lastName || (body.fullName ? body.fullName.split(' ').slice(1).join(' ') : ''),
+  }
+
+  const validatedData = createClientSchema.parse(mappedBody)
+
+  // Generate client code with fallback
   const { data: codeData, error: codeError } = await supabase
     .rpc('generate_client_code', { salon_uuid: validatedData.salon_id })
 
-  if (codeError) throw codeError
+  const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
+
+  if (codeError) {
+    console.warn('Failed to generate client code, using fallback:', codeError)
+  }
 
   const { data: client, error } = await supabase
     .from('clients')
     .insert({
       salon_id: validatedData.salon_id,
-      client_code: codeData,
+      client_code: clientCode,
       full_name: `${validatedData.first_name} ${validatedData.last_name}`,
       phone: validatedData.phone,
       email: validatedData.email || null,
@@ -83,7 +108,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error('Failed to create client:', error)
+    throw error
+  }
 
   return NextResponse.json({ client }, { status: 201 })
 })

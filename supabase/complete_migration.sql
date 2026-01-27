@@ -162,6 +162,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION soft_delete_employee()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE employees 
+  SET 
+    deleted_at = NOW(),
+    deleted_by = auth.uid()
+  WHERE id = OLD.id;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Soft delete triggers
 DROP TRIGGER IF EXISTS soft_delete_bookings_trigger ON bookings;
 CREATE TRIGGER soft_delete_bookings_trigger
@@ -180,6 +192,12 @@ CREATE TRIGGER soft_delete_services_trigger
   BEFORE DELETE ON services
   FOR EACH ROW
   EXECUTE FUNCTION soft_delete_service();
+
+DROP TRIGGER IF EXISTS soft_delete_employees_trigger ON employees;
+CREATE TRIGGER soft_delete_employees_trigger
+  BEFORE DELETE ON employees
+  FOR EACH ROW
+  EXECUTE FUNCTION soft_delete_employee();
 
 -- ========================================
 -- STEP 5: ADD VERSION CONTROL FUNCTIONS & TRIGGERS

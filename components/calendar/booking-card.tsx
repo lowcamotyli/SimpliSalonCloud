@@ -41,6 +41,7 @@ interface BookingCardProps {
   onClick?: () => void
   serviceCategory?: string
   onDelete?: () => void
+  employeeColors?: any
 }
 
 const statusColors = {
@@ -50,7 +51,7 @@ const statusColors = {
   cancelled: 'bg-red-100 text-red-800 border-red-200',
 }
 
-export function BookingCard({ booking, onClick, serviceCategory, onDelete }: BookingCardProps) {
+export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors }: BookingCardProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const categoryColor = getServiceCategoryColor(serviceCategory)
@@ -96,7 +97,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete }: Boo
 
   return (
     <Card
-      className={`p-4 glass rounded-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 border-l-4 ${categoryColor.border} relative`}
+      className={`h-full w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
       onClick={onClick}
     >
       {/* Delete Button */}
@@ -105,49 +106,48 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete }: Boo
         size="sm"
         onClick={handleDelete}
         disabled={isDeleting}
-        className="absolute top-2 right-2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600"
+        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
         title="Usuń wizytę"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-3 w-3" />
       </Button>
 
-      <div className="space-y-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{booking.client.full_name}</p>
-            <p className={`text-xs font-semibold ${categoryColor.text} mt-1`}>{booking.service.name}</p>
+      <div className="flex-1 flex flex-col justify-between min-h-0">
+        <div className="flex items-start justify-between gap-1 overflow-hidden">
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
+              {booking.client.full_name}
+            </p>
+            <p className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+              {booking.service.name}
+            </p>
           </div>
-          <Badge className={`${statusColors[booking.status as keyof typeof statusColors]} border`}>
-            {BOOKING_STATUS_LABELS[booking.status]}
-          </Badge>
+          {booking.duration >= 45 && (
+            <Badge className={`${statusColors[booking.status as keyof typeof statusColors]} border text-[9px] px-1 h-4 shrink-0`}>
+              {BOOKING_STATUS_LABELS[booking.status].substring(0, 3)}
+            </Badge>
+          )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <div className="flex items-center gap-1 text-gray-600">
-            <Clock className="h-3 w-3 text-purple-600" />
-            <span className="font-medium">{booking.booking_time}</span>
+        {booking.duration >= 60 && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto overflow-hidden">
+            <div className="flex items-center gap-1 text-gray-600">
+              <Clock className="h-2.5 w-2.5 text-purple-600" />
+              <span className="text-[10px] font-medium">{booking.booking_time.substring(0, 5)}</span>
+            </div>
+            {booking.duration >= 90 && (
+              <div className="flex items-center gap-1 text-gray-600">
+                <DollarSign className="h-2.5 w-2.5 text-purple-600" />
+                <span className="text-[10px] font-bold text-purple-600">{(booking.total_price || 0).toFixed(0)} zł</span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1 text-gray-600">
-            <User className="h-3 w-3 text-purple-600" />
-            <span className="font-medium truncate">{booking.employee.first_name}</span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-600">
-            <DollarSign className="h-3 w-3 text-purple-600" />
-            <span className="font-bold text-purple-600">{booking.total_price.toFixed(2)} zł</span>
-          </div>
-        </div>
-
-        {booking.notes && (
-          <p className="text-xs text-gray-500 italic border-t border-white/20 pt-2">
-            {booking.notes}
-          </p>
         )}
 
-        {booking.status === 'confirmed' && (
-          <div className="flex items-center gap-1 text-xs text-green-600 font-semibold">
-            <Sparkles className="h-3 w-3" />
-            Potwierdzona
-          </div>
+        {booking.notes && booking.duration >= 90 && (
+          <p className="text-[9px] text-gray-500 italic mt-1 truncate border-t border-black/5 pt-1">
+            {booking.notes}
+          </p>
         )}
       </div>
     </Card>

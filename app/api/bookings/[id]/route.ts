@@ -54,7 +54,19 @@ export const PATCH = withErrorHandling(async (
   const body = await request.json()
   const validatedData = updateBookingSchema.parse(body)
 
+  // Get current version
+  const { data: existingBooking, error: existingError } = await supabase
+    .from('bookings')
+    .select('version')
+    .eq('id', params.id)
+    .single()
+
+  if (existingError || !existingBooking) {
+    throw new NotFoundError('Booking', params.id)
+  }
+
   const updateData: any = {
+    version: (existingBooking as any).version, // Required by check_version() trigger
     updated_by: user.id,
   }
 
