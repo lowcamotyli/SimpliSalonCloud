@@ -33,7 +33,7 @@ export default function AppearancePage() {
 
   const { data: settings } = useSettings(salon?.id || '')
   const updateSettings = useUpdateSettings(salon?.id || '')
-  
+
   const [theme, setTheme] = useState<ThemeKey>('beauty_salon')
   const [logoUrl, setLogoUrl] = useState('')
 
@@ -54,8 +54,8 @@ export default function AppearancePage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Wygląd</h1>
-          <p className="text-muted-foreground">Personalizuj wygląd aplikacji</p>
+          <h1 className="text-3xl font-bold">Wygląd (Ustawienia wizualne)</h1>
+          <p className="text-muted-foreground">Personalizuj wygląd swojej aplikacji</p>
         </div>
         <Button onClick={handleSave} disabled={updateSettings.isPending}>
           {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
