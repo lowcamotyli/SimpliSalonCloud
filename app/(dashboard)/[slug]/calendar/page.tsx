@@ -9,8 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate, getCurrentWeek, generateWeekDays } from '@/lib/utils/date'
 import { addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, format } from 'date-fns'
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock } from 'lucide-react'
-import { BookingDialog } from '@/components/calendar/booking-dialog'
+import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
+
+const BookingDialog = dynamic(() => import('@/components/calendar/booking-dialog').then(mod => mod.BookingDialog), {
+  ssr: false
+})
 import { BUSINESS_HOURS } from '@/lib/constants'
 
 type ViewType = 'day' | 'week' | 'month'
@@ -33,6 +37,7 @@ export default function CalendarPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const { data: employees } = useEmployees()
 
@@ -55,10 +60,13 @@ export default function CalendarPage() {
 
   // Initialize visible employees
   useEffect(() => {
-    if (employees && visibleEmployees.size === 0) {
-      setVisibleEmployees(new Set(employees.map(e => e.id)))
+    if (employees && !isInitialized) {
+      if (employees.length > 0) {
+        setVisibleEmployees(new Set(employees.map(e => e.id)))
+      }
+      setIsInitialized(true)
     }
-  }, [employees])
+  }, [employees, isInitialized])
 
   const handlePrevPeriod = () => {
     if (viewType === 'day') setCurrentDate(addDays(currentDate, -1))
@@ -149,56 +157,56 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold gradient-text pb-1">Kalendarz</h1>
-            <p className="mt-2 text-gray-600">{getPeriodLabel()}</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewType === 'day' ? 'default' : 'outline'}
-              onClick={() => setViewType('day')}
-              className="rounded-lg"
-            >
-              Dzień
-            </Button>
-            <Button
-              variant={viewType === 'week' ? 'default' : 'outline'}
-              onClick={() => setViewType('week')}
-              className="rounded-lg"
-            >
-              Tydzień
-            </Button>
-            <Button
-              variant={viewType === 'month' ? 'default' : 'outline'}
-              onClick={() => setViewType('month')}
-              className="rounded-lg"
-            >
-              Miesiąc
-            </Button>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Kalendarz
+          </h1>
+          <p className="text-gray-500 text-base font-medium">{getPeriodLabel()}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleToday} className="rounded-lg">
-            Dziś
+          <Button
+            variant={viewType === 'day' ? 'default' : 'outline'}
+            onClick={() => setViewType('day')}
+            className="rounded-lg"
+          >
+            Dzień
           </Button>
-          <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="rounded-lg">
-            <ChevronLeft className="h-4 w-4" />
+          <Button
+            variant={viewType === 'week' ? 'default' : 'outline'}
+            onClick={() => setViewType('week')}
+            className="rounded-lg"
+          >
+            Tydzień
           </Button>
-          <Button variant="outline" size="icon" onClick={handleNextPeriod} className="rounded-lg">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <div className="flex-1" />
-          <Button onClick={handleAddBooking} className="gradient-button rounded-lg shadow-lg">
-            <Plus className="mr-2 h-4 w-4" />
-            Nowa wizyta
+          <Button
+            variant={viewType === 'month' ? 'default' : 'outline'}
+            onClick={() => setViewType('month')}
+            className="rounded-lg"
+          >
+            Miesiąc
           </Button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={handleToday} className="rounded-lg">
+          Dziś
+        </Button>
+        <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="rounded-lg">
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon" onClick={handleNextPeriod} className="rounded-lg">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <div className="flex-1" />
+        <Button onClick={handleAddBooking} className="gradient-button rounded-lg shadow-lg">
+          <Plus className="mr-2 h-4 w-4" />
+          Nowa wizyta
+        </Button>
       </div>
 
       {/* Employee Filter */}
@@ -369,6 +377,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                     >
                       <BookingCard
                         booking={booking}
+                        serviceCategory={booking.service.category}
                         employeeColors={colors}
                       />
                     </div>
@@ -499,6 +508,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                       >
                         <BookingCard
                           booking={booking}
+                          serviceCategory={booking.service.category}
                           employeeColors={getEmployeeColor(employees.findIndex((e: any) => e.id === employee.id))}
                         />
                       </div>

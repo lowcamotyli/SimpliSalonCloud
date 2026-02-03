@@ -90,3 +90,4 @@ ALTER TABLE employees
       email IS NULL OR 
       email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'
     );
+

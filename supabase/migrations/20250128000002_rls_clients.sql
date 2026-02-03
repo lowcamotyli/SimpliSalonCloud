@@ -7,45 +7,49 @@
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 
 -- POLICY 1: Wszyscy z salonu mogą CZYTAĆ klientów
+DROP POLICY IF EXISTS "Salon members can view clients" ON public.clients;
 CREATE POLICY "Salon members can view clients"
-  ON public.clients 
+  ON public.clients
   FOR SELECT
   TO authenticated
   USING (
-    salon_id = auth.get_user_salon_id()
+    salon_id = public.get_user_salon_id()
     AND deleted_at IS NULL -- Tylko nieusunięci
   );
 
 -- POLICY 2: Wszyscy z salonu mogą TWORZYĆ klientów
+DROP POLICY IF EXISTS "Salon members can create clients" ON public.clients;
 CREATE POLICY "Salon members can create clients"
-  ON public.clients 
+  ON public.clients
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    salon_id = auth.get_user_salon_id()
+    salon_id = public.get_user_salon_id()
   );
 
 -- POLICY 3: Wszyscy z salonu mogą EDYTOWAĆ klientów
+DROP POLICY IF EXISTS "Salon members can update clients" ON public.clients;
 CREATE POLICY "Salon members can update clients"
-  ON public.clients 
+  ON public.clients
   FOR UPDATE
   TO authenticated
   USING (
-    salon_id = auth.get_user_salon_id()
+    salon_id = public.get_user_salon_id()
     AND deleted_at IS NULL
   )
   WITH CHECK (
-    salon_id = auth.get_user_salon_id() -- Nie można zmienić salon_id
+    salon_id = public.get_user_salon_id() -- Nie można zmienić salon_id
   );
 
 -- POLICY 4: Tylko owner i manager mogą USUWAĆ klientów
+DROP POLICY IF EXISTS "Owners and managers can delete clients" ON public.clients;
 CREATE POLICY "Owners and managers can delete clients"
-  ON public.clients 
+  ON public.clients
   FOR DELETE
   TO authenticated
   USING (
-    salon_id = auth.get_user_salon_id()
-    AND auth.has_any_salon_role(ARRAY['owner', 'manager'])
+    salon_id = public.get_user_salon_id()
+    AND public.has_any_salon_role(ARRAY['owner', 'manager'])
   );
 
 -- ========================================
@@ -63,3 +67,4 @@ COMMENT ON POLICY "Salon members can update clients" ON public.clients IS
 
 COMMENT ON POLICY "Owners and managers can delete clients" ON public.clients IS 
 'Tylko właściciele i menedżerowie mogą usuwać klientów (soft delete).';
+

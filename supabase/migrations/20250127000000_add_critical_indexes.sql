@@ -85,3 +85,4 @@ ANALYZE bookings;
 ANALYZE clients;
 ANALYZE services;
 ANALYZE employees;
+

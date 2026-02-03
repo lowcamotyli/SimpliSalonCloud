@@ -18,6 +18,7 @@ export const updateSettingsSchema = z.object({
     logo_url: z.string().url().optional().or(z.literal('')),
     website_url: z.string().url().optional().or(z.literal('')),
     contact_email: z.string().email().optional().or(z.literal('')),
+    accounting_email: z.string().email().optional().or(z.literal('')),
     contact_phone: z.string().optional().or(z.literal('')),
     description: z.string().max(1000).optional(),
 })

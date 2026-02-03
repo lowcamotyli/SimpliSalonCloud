@@ -30,11 +30,15 @@ export default function LoginPage() {
       if (error) throw error
 
       // Get user's salon (use specific FK to avoid ambiguity with deleted_by)
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('salon_id, salons!profiles_salon_id_fkey(slug)')
         .eq('user_id', data.user.id)
         .single()
+
+      console.log('Profile query result:', { profile, profileError })
+
+      if (profileError) throw profileError
 
       if (!profile) {
         throw new Error('Profil użytkownika nie został znaleziony')
@@ -43,9 +47,17 @@ export default function LoginPage() {
       // @ts-ignore - TS doesn't know about nested select
       const salonSlug = profile.salons?.slug
 
+      console.log('Salon slug:', salonSlug)
+      console.log('Redirecting to:', `/${salonSlug}/dashboard`)
+
+      if (!salonSlug) {
+        throw new Error('Nie znaleziono salonu dla użytkownika')
+      }
+
       toast.success('Zalogowano pomyślnie')
-      router.push(`/${salonSlug}/dashboard`)
-      router.refresh()
+
+      // Use window.location instead of router.push for more reliable redirect
+      window.location.href = `/${salonSlug}/dashboard`
     } catch (error: any) {
       toast.error(error.message || 'Błąd logowania')
     } finally {

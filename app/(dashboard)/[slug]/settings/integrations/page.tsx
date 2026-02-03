@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { ServiceImport } from '@/components/settings/service-import'
 
 export default function IntegrationsPage() {
   const params = useParams()
@@ -26,7 +27,7 @@ export default function IntegrationsPage() {
         .eq('slug', slug)
         .single()
       if (error) throw error
-      return data
+      return data as { id: string }
     }
   })
 
@@ -47,10 +48,14 @@ export default function IntegrationsPage() {
 
       <SettingsNav baseUrl={`/${slug}/settings`} />
 
+      <div className="mb-8">
+        <ServiceImport />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {INTEGRATIONS.map(integration => {
           const connected = isActive(integration.type)
-          
+
           return (
             <SettingsCard
               key={integration.id}
@@ -66,7 +71,7 @@ export default function IntegrationsPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="text-4xl">{integration.icon}</div>
-                
+
                 {integration.config ? (
                   <Link href={`/${slug}${integration.config}`}>
                     <Button variant={connected ? "outline" : "default"}>

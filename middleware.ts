@@ -58,25 +58,59 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Only protect dashboard routes - let root page handle its own logic
-  const isDashboardRoute = request.nextUrl.pathname.includes('/dashboard') ||
-    request.nextUrl.pathname.includes('/calendar') ||
-    request.nextUrl.pathname.includes('/clients') ||
-    request.nextUrl.pathname.includes('/services') ||
-    request.nextUrl.pathname.includes('/employees')
+  const userPermissions = (user?.app_metadata as { permissions?: string[] })?.permissions || [];
+  const pathname = request.nextUrl.pathname;
+  
+  // Funkcja pomocnicza do sprawdzania uprawnień
+  const hasPermission = (requiredPermission: string): boolean => {
+    if (userPermissions.includes('*')) return true;
+    return userPermissions.includes(requiredPermission);
+  };
 
-  // Redirect to login if not authenticated and trying to access protected routes
+  // Mapowanie ścieżek do wymaganych uprawnień
+  const PATH_PERMISSIONS: { regex: RegExp; permission: string }[] = [
+    // /dashboard/[slug]/settings/*
+    { regex: /\/settings\//, permission: 'settings:manage' }, 
+    // /dashboard/[slug]/payroll
+    { regex: /\/payroll(\/|$)/, permission: 'finance:view' },
+    // /dashboard/[slug]/employees
+    { regex: /\/employees(\/|$)/, permission: 'employees:manage' }, 
+  ];
+
+  // 1. Walidacja uwierzytelnienia (Niezalogowany użytkownik na chronionej trasie)
+  // Oczekiwana struktura URL: /[slug]/... lub /auth/...
+  const isDashboardRoute = pathname.match(/^\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+/);
+
   if (!user && isDashboardRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+  // 2. Walidacja autoryzacji (Zalogowany użytkownik bez uprawnień)
+  if (user) {
+    const requiredPath = PATH_PERMISSIONS.find(map => pathname.match(map.regex));
+
+    if (requiredPath && !hasPermission(requiredPath.permission)) {
+      // Użytkownik nie ma wymaganego uprawnienia -> przekierowanie na pulpit
+      const parts = pathname.split('/').filter(p => p.length > 0);
+      // Oczekiwana struktura: [slug, page, ...]
+      const slug = parts[0] || 'dashboard'; // Bierzemy slug z pierwszego segmentu
+      
+      const url = request.nextUrl.clone();
+      url.pathname = `/${slug}/dashboard`; // Przekierowanie do /<slug>/dashboard
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 3. Redirect authenticated users away from auth pages
+  if (user && (pathname === '/login' || pathname === '/signup')) {
+    // Domyślne przekierowanie dla zalogowanych użytkowników z powrotem na pulpit
+    const parts = pathname.split('/').filter(p => p.length > 0);
+    const slug = parts[0] || 'dashboard'; 
+    const url = request.nextUrl.clone();
+    url.pathname = `/${slug}/dashboard`;
+    return NextResponse.redirect(url);
   }
 
   return response

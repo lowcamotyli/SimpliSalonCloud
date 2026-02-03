@@ -23,7 +23,7 @@ export default function SignupPage() {
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
-    
+
     // Auto-generate slug from salon name
     if (field === 'salonName') {
       const slug = e.target.value
@@ -72,7 +72,7 @@ export default function SignupPage() {
           slug: formData.salonSlug,
           name: formData.salonName,
           owner_email: formData.email,
-        })
+        } as any)
         .select()
         .single()
 
@@ -83,15 +83,15 @@ export default function SignupPage() {
         .from('profiles')
         .insert({
           user_id: authData.user.id,
-          salon_id: salonData.id,
+          salon_id: (salonData as any).id,
           full_name: formData.fullName,
           role: 'owner',
-        })
+        } as any)
 
       if (profileError) throw profileError
 
       toast.success('Konto zostało utworzone! Sprawdź email w celu weryfikacji.')
-      
+
       // Redirect to login
       router.push('/login')
     } catch (error: any) {

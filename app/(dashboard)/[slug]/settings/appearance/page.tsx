@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
 import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
@@ -81,8 +82,14 @@ export default function AppearancePage() {
               />
             </div>
             {logoUrl && (
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <img src={logoUrl} alt="Logo preview" className="h-16 object-contain" />
+              <div className="border rounded-lg p-4 bg-muted/50 relative h-24 w-full flex items-center justify-center">
+                <Image
+                  src={logoUrl}
+                  alt="Logo preview"
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
               </div>
             )}
           </div>

@@ -16,6 +16,7 @@ type Booking = {
     id: string
     first_name: string
     last_name: string | null
+    avatar_url: string | null
   }
   client: {
     id: string
@@ -25,7 +26,7 @@ type Booking = {
   service: {
     id: string
     name: string
-    price: number
+    category: string
   }
 }
 
@@ -34,6 +35,7 @@ type BookingFilters = {
   endDate?: string
   employeeId?: string
   status?: string
+  limit?: number
 }
 
 type CreateBookingData = {
@@ -62,6 +64,7 @@ export function useBookings(filters?: BookingFilters) {
   if (filters?.endDate) params.set('endDate', filters.endDate)
   if (filters?.employeeId) params.set('employeeId', filters.employeeId)
   if (filters?.status) params.set('status', filters.status)
+  if (filters?.limit) params.set('limit', filters.limit.toString())
 
   return useQuery({
     queryKey: ['bookings', filters],

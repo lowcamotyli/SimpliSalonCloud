@@ -115,3 +115,4 @@ CREATE TRIGGER soft_delete_services_trigger
   BEFORE DELETE ON services
   FOR EACH ROW
   EXECUTE FUNCTION soft_delete_service();
+

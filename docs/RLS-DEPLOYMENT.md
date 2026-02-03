@@ -10,6 +10,14 @@ This guide will walk you through deploying Row Level Security to your SimpliSalo
 
 ## 🚀 Quick Start (Recommended Method)
 
+> [!WARNING]
+> **CRITICAL PREREQUISITE: Employee User Link**
+>
+> Migration `20250127000004_add_employee_user_link.sql` MUST be applied BEFORE any RLS migrations.
+> This adds the `user_id` column to the `employees` table, which is required by RLS helper functions.
+> 
+> **If you skip this migration, all RLS migrations will FAIL!**
+
 ### Option 1: Apply via Supabase Dashboard (Easiest)
 
 1. **Open Supabase Dashboard**
@@ -24,16 +32,20 @@ This guide will walk you through deploying Row Level Security to your SimpliSalo
    Execute the following files **ONE BY ONE** in this exact order:
 
    ```
-   ✅ Step 1: supabase/migrations/20250128000000_rls_helper_functions.sql
-   ✅ Step 2: supabase/migrations/20250128000001_rls_salons.sql
-   ✅ Step 3: supabase/migrations/20250128000002_rls_clients.sql
-   ✅ Step 4: supabase/migrations/20250128000003_rls_bookings.sql
-   ✅ Step 5: supabase/migrations/20250128000004_rls_services.sql
-   ✅ Step 6: supabase/migrations/20250128000005_rls_employees.sql
-   ✅ Step 7: supabase/migrations/20250128000006_rls_settings_integrations.sql
-   ✅ Step 8: supabase/migrations/20250128000007_rls_profiles.sql
+   ✅ Step 1: supabase/migrations/20250127000004_add_employee_user_link.sql (CRITICAL - must run first!)
+   ✅ Step 2: supabase/migrations/20250128000000_rls_helper_functions.sql
+   ✅ Step 3: supabase/migrations/20250128000001_rls_salons.sql
+   ✅ Step 4: supabase/migrations/20250128000002_rls_clients.sql
+   ✅ Step 5: supabase/migrations/20250128000003_rls_bookings.sql
+   ✅ Step 6: supabase/migrations/20250128000004_rls_services.sql
+   ✅ Step 7: supabase/migrations/20250128000005_rls_employees.sql
+   ✅ Step 8: supabase/migrations/20250128000006_rls_settings_integrations.sql
+   ✅ Step 9: supabase/migrations/20250128000007_rls_profiles.sql
+   ✅ Step 10: supabase/migrations/20250128000008_rls_payroll.sql
    ```
 
+   **IMPORTANT:** Migration 20250127000004 MUST run before any RLS migrations!
+   
    For each file:
    - Copy the entire content
    - Paste into SQL Editor
@@ -81,7 +93,12 @@ For a full test suite, run `supabase/test_rls.sql` in the SQL Editor.
 
 ## 📊 What Each Migration Does
 
-### 🔧 Migration 000000: Helper Functions
+### 🔗 Migration 000004 (20250127): Employee User Link (PREREQUISITE)
+Adds `user_id` column to employees table, linking employees to auth.users.
+**CRITICAL:** Must run before any RLS migrations!
+**NOTE:** The script attempts to link existing employees by email. If emails don't match, you must link them manually.
+
+### 🔧 Migration 000000 (20250128): Helper Functions
 Creates 4 SQL functions that RLS policies use:
 - `auth.get_user_salon_id()` - Gets user's salon
 - `auth.has_salon_role()` - Checks specific role
@@ -121,17 +138,25 @@ Creates 4 SQL functions that RLS policies use:
 - Users can update only their own profile
 - Cannot change salon_id
 
+### 💰 Migration 000008: Payroll RLS
+- Only owner can view/create/update payroll runs
+- Only owner can manage payroll entries
+- Employees can view only their own payroll entries
+- All operations filtered by salon_id
+
 ---
 
 ## ✅ Post-Deployment Checklist
 
 After applying all migrations, verify:
 
-- [ ] All 8 migrations applied successfully (no errors)
+- [ ] Employee user_id column exists (run `\d employees` in SQL Editor)
+- [ ] All 10 migrations applied successfully (no errors)
 - [ ] RLS enabled on all tables (run verification query above)
 - [ ] Helper functions exist (run `\df auth.*` in SQL Editor)
 - [ ] Test basic queries work (SELECT from clients, bookings, etc.)
 - [ ] Application still works (check frontend)
+- [ ] Employee bookings editing works (test as employee user)
 
 ---
 

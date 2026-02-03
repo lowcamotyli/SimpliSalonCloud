@@ -48,6 +48,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const { data: services } = useServices()
   const { data: clients } = useClients()
   const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
+  const [surcharge, setSurcharge] = useState<number>(booking?.surcharge || 0)
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -151,6 +152,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       await updateMutation.mutateAsync({
         status: 'completed',
         paymentMethod,
+        surcharge: surcharge || 0,
       })
       toast.success('Wizyta zakończona')
       onClose()
@@ -243,13 +245,28 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               </div>
 
               <div className="glass p-3 rounded-lg">
-                <Label className="text-xs text-gray-600 uppercase font-semibold">Cena</Label>
-                <p className="font-bold text-purple-600 text-lg">{formatPrice(booking.total_price)}</p>
-                {booking.surcharge > 0 && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    Baza: {formatPrice(booking.base_price)} + Dopłata: {formatPrice(booking.surcharge)}
-                  </p>
-                )}
+                <Label className="text-xs text-gray-600 uppercase font-semibold">Cena końcowa</Label>
+                <p className="font-bold text-purple-600 text-lg">{formatPrice(booking.base_price + surcharge)}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-600">Baza: {formatPrice(booking.base_price)}</span>
+                  {booking.status === 'scheduled' ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-600">+ Dopłata:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={surcharge}
+                        onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                        className="h-6 w-20 text-xs px-1"
+                      />
+                    </div>
+                  ) : (
+                    booking.surcharge > 0 && (
+                      <span className="text-xs text-gray-600">+ Dopłata: {formatPrice(booking.surcharge)}</span>
+                    )
+                  )}
+                </div>
               </div>
             </div>
 

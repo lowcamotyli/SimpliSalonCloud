@@ -11,17 +11,21 @@ type Employee = {
   base_threshold: number
   base_salary: number
   commission_rate: number
+  avatar_url: string | null
   active: boolean
+  role?: string | null
+  user_id?: string | null
 }
 
 type CreateEmployeeData = {
   firstName: string
   lastName?: string
-  email?: string
+  email: string
   phone?: string
   baseThreshold?: number
   baseSalary?: number
   commissionRate?: number
+  avatarUrl?: string
 }
 
 export function useEmployees() {
@@ -85,6 +89,62 @@ export function useUpdateEmployee(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] })
       toast.success('Pracownik zaktualizowany')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message)
+    },
+  })
+}
+
+export function useUpdateEmployeeRole(id: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (role: string) => {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to update employee role')
+      }
+
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      toast.success('Rola pracownika zaktualizowana')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message)
+    },
+  })
+}
+
+export function useLinkEmployeeUser(id: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (email: string) => {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to link employee account')
+      }
+
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      toast.success('Konto pracownika powiązane')
     },
     onError: (error: Error) => {
       toast.error(error.message)

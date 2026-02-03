@@ -51,6 +51,7 @@ export interface SalonSettings {
   description?: string
   contact_phone?: string
   contact_email?: string
+  accounting_email?: string
   website_url?: string
   address?: {
     street: string

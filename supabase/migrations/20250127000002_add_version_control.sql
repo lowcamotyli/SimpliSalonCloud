@@ -68,3 +68,4 @@ CREATE TRIGGER services_version_check
   BEFORE UPDATE ON services
   FOR EACH ROW
   EXECUTE FUNCTION check_version();
+

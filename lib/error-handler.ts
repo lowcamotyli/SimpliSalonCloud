@@ -95,6 +95,35 @@ export function handleApiError(error: unknown): NextResponse {
                 { status: 400 }
             )
         }
+
+        // Version conflict - optimistic locking failure (P0001)
+        if (pgError.code === 'P0001' && pgError.message.includes('modified by another user')) {
+            // Parse expected and actual version from error message
+            // Message format: "Record has been modified by another user (expected version X, got Y)"
+            const versionMatch = pgError.message.match(/expected version (\d+), got (\d+)/)
+            const expectedVersion = versionMatch ? parseInt(versionMatch[1]) : undefined
+            const providedVersion = versionMatch ? parseInt(versionMatch[2]) : undefined
+
+            logger.warn('Version conflict detected', {
+                code: pgError.code,
+                expectedVersion,
+                providedVersion
+            })
+
+            return NextResponse.json(
+                {
+                    name: 'ConflictError',
+                    message: 'This record has been modified by another user. Please refresh and try again.',
+                    code: 'STALE_VERSION',
+                    details: {
+                        expectedVersion,
+                        providedVersion,
+                        hint: 'Reload the record to get the latest version before updating'
+                    }
+                },
+                { status: 409 }
+            )
+        }
     }
 
     // 3. Nieznany błąd

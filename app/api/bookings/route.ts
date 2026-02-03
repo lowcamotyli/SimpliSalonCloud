@@ -31,6 +31,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const endDate = searchParams.get('endDate')
   const employeeId = searchParams.get('employeeId')
   const status = searchParams.get('status')
+  const limit = searchParams.get('limit')
 
   let query = supabase
     .from('bookings')
@@ -38,7 +39,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       *,
       employee:employees(id, employee_code, first_name, last_name),
       client:clients(id, client_code, full_name, phone),
-      service:services(id, name, price, duration)
+      service:services(id, name, price, duration, category)
     `)
     .eq('salon_id', salonProfile.salon_id)
     .is('deleted_at', null)
@@ -58,7 +59,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     query = query.eq('status', status)
   }
 
-  const { data: bookings, error } = await query.limit(200)
+  const { data: bookings, error } = await query.limit(limit ? parseInt(limit) : 200)
 
   if (error) throw error
 

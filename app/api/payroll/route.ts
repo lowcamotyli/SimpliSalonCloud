@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('salon_id, role')
+      .select('salon_id, role, salons!profiles_salon_id_fkey(id)')
       .eq('user_id', user.id)
-      .single()
+      .single() as any
 
     if (!profile || profile.role !== 'owner') {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     bookings?.forEach((booking: any) => {
       const empId = booking.employee_id
-      
+
       if (!employeeData[empId]) {
         employeeData[empId] = {
           employee: booking.employees,
@@ -128,9 +128,9 @@ export async function POST(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('salon_id, role')
+      .select('salon_id, role, salons!profiles_salon_id_fkey(id)')
       .eq('user_id', user.id)
-      .single()
+      .single() as any
 
     if (!profile || profile.role !== 'owner') {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
@@ -158,8 +158,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payroll run
-    const { data: payrollRun, error: runError } = await supabase
-      .from('payroll_runs')
+    const { data: payrollRun, error: runError } = await (supabase
+      .from('payroll_runs') as any)
       .insert({
         salon_id: profile.salon_id,
         period_start: payrollData.periodStart,
@@ -171,11 +171,12 @@ export async function POST(request: NextRequest) {
         generated_by: user.id,
       })
       .select()
-      .single()
+      .single() as any
 
     if (runError) throw runError
 
     // Create payroll entries
+    // Note: total_payout is a GENERATED column, so we don't insert it
     const entries = payrollData.entries.map((entry: any) => ({
       payroll_run_id: payrollRun.id,
       employee_id: entry.employeeId,
@@ -185,18 +186,32 @@ export async function POST(request: NextRequest) {
       base_salary: entry.baseSalary,
       commission_rate: entry.commissionRate,
       commission_amount: entry.commissionAmount,
-      total_payout: entry.totalPayout,
+      // total_payout is auto-calculated: base_salary + commission_amount
     }))
 
-    const { error: entriesError } = await supabase
-      .from('payroll_entries')
+    const { error: entriesError } = await (supabase
+      .from('payroll_entries') as any)
       .insert(entries)
 
     if (entriesError) throw entriesError
 
+    // Send summary to owner
+    const { data: settings } = await supabase
+      .from('salon_settings')
+      .select('contact_email, accounting_email')
+      .eq('salon_id', profile.salon_id)
+      .maybeSingle() as any
+
+    const targetEmail = settings?.accounting_email || settings?.contact_email
+
+    if (targetEmail) {
+      console.log(`[MOCK EMAIL] Auto-sending payroll summary to owner at ${targetEmail} for period ${month}. Total: ${payrollData.totalPayroll} zł`)
+    }
+
     return NextResponse.json({
       payrollRun,
       entriesCount: entries.length,
+      ownerEmailSent: !!targetEmail
     }, { status: 201 })
   } catch (error: any) {
     console.error('POST /api/payroll error:', error)

@@ -22,13 +22,13 @@ export default async function DashboardLayout({
   }
 
   // Get user's salon
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select(`
       salon_id,
       role,
       full_name,
-      salons (
+      salons!profiles_salon_id_fkey (
         id,
         slug,
         name
@@ -37,8 +37,16 @@ export default async function DashboardLayout({
     .eq('user_id', user.id)
     .single()
 
+  console.log('[Dashboard Layout] Profile query:', { profile, profileError, userId: user.id })
+
+  if (profileError) {
+    console.error('[Dashboard Layout] Profile query failed:', profileError)
+    redirect('/login?error=dashboard_profile_query_failed')
+  }
+
   if (!profile) {
-    redirect('/login')
+    console.error('[Dashboard Layout] No profile found for user:', user.id)
+    redirect('/login?error=no_profile')
   }
 
   // @ts-ignore

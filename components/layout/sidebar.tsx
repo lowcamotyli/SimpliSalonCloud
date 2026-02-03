@@ -15,32 +15,45 @@ import {
   User,
   Sparkles,
   Scissors,
+  BarChart3,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useCurrentRole } from '@/hooks/use-current-role'
+import { RBAC_ROLES } from '@/lib/rbac/role-maps'
 
 interface NavItem {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  requiredPermission?: 'employees:manage' | 'finance:view'
 }
 
 export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?: string }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { currentRole, hasPermission, isOwnerOrManager } = useCurrentRole()
 
   const navItems: NavItem[] = [
     { href: `/${salonSlug}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { href: `/${salonSlug}/calendar`, label: 'Kalendarz', icon: Calendar },
     { href: `/${salonSlug}/bookings`, label: 'Rezerwacje', icon: FileText },
     { href: `/${salonSlug}/services`, label: 'Usługi', icon: Scissors },
-    { href: `/${salonSlug}/employees`, label: 'Pracownicy', icon: Users },
+    { href: `/${salonSlug}/employees`, label: 'Pracownicy', icon: Users, requiredPermission: 'employees:manage' },
     { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle },
-    { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign },
+    { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign, requiredPermission: 'finance:view' },
+    { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3 },
     { href: `/${salonSlug}/settings`, label: 'Ustawienia', icon: Settings },
   ]
+
+  const roleLabel = (() => {
+    if (currentRole === RBAC_ROLES.OWNER) return 'Właściciel'
+    if (currentRole === RBAC_ROLES.MANAGER) return 'Manager'
+    if (currentRole === RBAC_ROLES.EMPLOYEE) return 'Pracownik'
+    return 'Użytkownik'
+  })()
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -65,7 +78,15 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        {navItems.map((item, index) => {
+        {navItems
+          .filter((item) => {
+            if (!item.requiredPermission) return true
+            if (item.requiredPermission === 'employees:manage') {
+              return isOwnerOrManager()
+            }
+            return hasPermission(item.requiredPermission)
+          })
+          .map((item, index) => {
           const Icon = item.icon
           const isActive = pathname === item.href
 
@@ -101,7 +122,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
             <p className="text-sm font-semibold text-foreground truncate">
               {userName || 'Użytkownik'}
             </p>
-            <p className="text-xs text-primary font-medium">Właściciel</p>
+            <p className="text-xs text-primary font-medium">{roleLabel}</p>
           </div>
         </div>
 

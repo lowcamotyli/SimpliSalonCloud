@@ -40,10 +40,14 @@ export default function SettingsPage() {
   const theme = THEMES[settings.theme] || THEMES.beauty_salon
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Ustawienia</h1>
-        <p className="text-muted-foreground">Zarządzaj konfiguracją salonu</p>
+    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Ustawienia
+          </h1>
+          <p className="text-gray-500 text-base font-medium">Zarządzaj konfiguracją salonu</p>
+        </div>
       </div>
 
       <SettingsNav baseUrl={baseUrl} />

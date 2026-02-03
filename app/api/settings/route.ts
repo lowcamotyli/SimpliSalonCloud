@@ -49,6 +49,9 @@ export async function GET(request: Request) {
         currency: 'PLN',
         language: 'pl',
         timezone: 'Europe/Warsaw',
+        contact_email: '',
+        accounting_email: '',
+        contact_phone: '',
         operating_hours: {
           monday: { open: '09:00', close: '17:00', closed: false },
           tuesday: { open: '09:00', close: '17:00', closed: false },
@@ -101,15 +104,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
-      .from('salon_settings')
+    const { data, error } = await (supabase
+      .from('salon_settings') as any)
       .upsert({
         salon_id: salonId,
         ...validatedUpdates,
         updated_at: new Date().toISOString()
       }, { onConflict: 'salon_id' })
       .select()
-      .maybeSingle()
+      .maybeSingle() as any
 
     console.log('PATCH Result Data:', data)
 

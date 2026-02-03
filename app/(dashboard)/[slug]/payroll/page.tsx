@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePayroll, useGeneratePayroll } from '@/hooks/use-payroll'
+import { usePayroll, useGeneratePayroll, useDownloadPayrollPDF, useSendPayrollEmail } from '@/hooks/use-payroll'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,13 +9,33 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DollarSign, Download, Send } from 'lucide-react'
 import { format } from 'date-fns'
+import { useCurrentRole } from '@/hooks/use-current-role'
 
 export default function PayrollPage() {
   const currentMonth = format(new Date(), 'yyyy-MM')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
+  const { hasPermission } = useCurrentRole()
 
   const { data: payroll, isLoading } = usePayroll(selectedMonth)
   const generateMutation = useGeneratePayroll()
+  const { downloadPDF } = useDownloadPayrollPDF()
+  const sendEmailMutation = useSendPayrollEmail()
+
+  if (!hasPermission('finance:view')) {
+    return (
+      <div className="max-w-[1600px] mx-auto space-y-6 pb-8 px-4 sm:px-0">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-medium text-gray-900">Brak dostępu</h3>
+            <p className="mt-2 text-gray-600">
+              Nie masz uprawnień do przeglądania wynagrodzeń.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const handleGenerate = async () => {
     if (confirm(`Czy na pewno chcesz wygenerować wynagrodzenia za ${selectedMonth}?`)) {
@@ -24,11 +44,13 @@ export default function PayrollPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Wynagrodzenia</h1>
-          <p className="mt-2 text-gray-600">Rozliczenia pracowników</p>
+    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Wynagrodzenia
+          </h1>
+          <p className="text-gray-500 text-base font-medium">Rozliczenia pracowników</p>
         </div>
       </div>
 
@@ -134,13 +156,27 @@ export default function PayrollPage() {
                   </div>
 
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadPDF(entry, selectedMonth)}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       PDF
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={sendEmailMutation.isPending}
+                      onClick={() => sendEmailMutation.mutate({
+                        employeeId: entry.employeeId,
+                        employeeName: entry.employeeName,
+                        month: selectedMonth,
+                        totalPayout: entry.totalPayout
+                      })}
+                    >
                       <Send className="mr-2 h-4 w-4" />
-                      Wyślij email
+                      {sendEmailMutation.isPending ? 'Wysyłanie...' : 'Wyślij email'}
                     </Button>
                   </div>
                 </CardContent>
