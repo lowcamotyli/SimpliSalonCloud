@@ -43,3 +43,5 @@ Thumbs.db
 # Temporary files
 Nowy\ Dokument\ tekstowy*.txt
 *.tmp
+test-output.txt
+test-results/
