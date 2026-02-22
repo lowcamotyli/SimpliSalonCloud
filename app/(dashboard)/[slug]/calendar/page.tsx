@@ -161,10 +161,10 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Kalendarz
           </h1>
-          <p className="text-gray-500 text-base font-medium">{getPeriodLabel()}</p>
+          <p className="text-muted-foreground text-base font-medium">{getPeriodLabel()}</p>
         </div>
 
         <div className="flex items-center gap-2">

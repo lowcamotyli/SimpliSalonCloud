@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
  * GET /api/test-db-fundamentals
  */
 export async function GET() {
-    const supabase = await createServerSupabaseClient()
+    const supabase = (await createServerSupabaseClient()) as any
     const results: any = {
         timestamp: new Date().toISOString(),
         tests: [],
@@ -67,7 +67,7 @@ export async function GET() {
       `
         } as any)
 
-        const indexCount = indexes?.[0]?.count || 0
+        const indexCount = (indexes as any)?.[0]?.count || 0
         addTest(
             'Indexes created',
             indexCount >= 14,
@@ -93,7 +93,7 @@ export async function GET() {
       `
         } as any)
 
-        const constraintCount = constraints?.[0]?.count || 0
+        const constraintCount = (constraints as any)?.[0]?.count || 0
         addTest(
             'Constraints created',
             constraintCount >= 8,
@@ -115,7 +115,7 @@ export async function GET() {
       `
         } as any)
 
-        const triggerCount = triggers?.[0]?.count || 0
+        const triggerCount = (triggers as any)?.[0]?.count || 0
         addTest(
             'Triggers created',
             triggerCount >= 6,

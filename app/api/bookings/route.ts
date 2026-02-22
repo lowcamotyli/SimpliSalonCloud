@@ -63,7 +63,29 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   if (error) throw error
 
-  return NextResponse.json({ bookings })
+  const safeBookings = (bookings || []).map((booking: any) => ({
+    ...booking,
+    employee: booking.employee ?? {
+      id: booking.employee_id,
+      first_name: 'Nieznany',
+      last_name: 'pracownik',
+      avatar_url: null,
+    },
+    client: booking.client ?? {
+      id: booking.client_id,
+      full_name: 'Nieznany klient',
+      phone: '',
+    },
+    service: booking.service ?? {
+      id: booking.service_id,
+      name: 'Usunięta usługa',
+      price: 0,
+      duration: booking.duration ?? 0,
+      category: 'other',
+    },
+  }))
+
+  return NextResponse.json({ bookings: safeBookings })
 })
 
 // POST /api/bookings - Create new booking

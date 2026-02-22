@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
+import type { Database } from '@/types/supabase'
 
 export function createAdminSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -14,7 +14,7 @@ export function createAdminSupabaseClient() {
       autoRefreshToken: false,
       persistSession: false
     }
-  })
+  }) as any
 }
 
 // Alias — backward compat dla cron/booksy i webhooks/booksy

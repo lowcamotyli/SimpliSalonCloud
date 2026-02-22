@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
           return { user: null, error }
         }
 
-        const user = data.users.find((candidate) => candidate.email?.toLowerCase() === email)
+        const user = data.users.find((candidate: any) => candidate.email?.toLowerCase() === email)
 
         if (user) {
           return { user, error: null }

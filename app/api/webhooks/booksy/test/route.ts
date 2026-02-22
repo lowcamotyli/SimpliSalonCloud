@@ -8,7 +8,7 @@ import { BooksyProcessor } from '@/lib/booksy/processor'
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = (await createServerSupabaseClient()) as any
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
+
+    const typedProfile = profile as { salon_id: string }
 
     // Test email data
     const testEmails = [
@@ -47,7 +49,7 @@ Zarządzaj swoimi rezerwacjami w aplikacji Booksy
       }
     ]
 
-    const processor = new BooksyProcessor(supabase, profile.salon_id)
+    const processor = new BooksyProcessor(supabase, typedProfile.salon_id)
     const results = []
 
     for (const email of testEmails) {

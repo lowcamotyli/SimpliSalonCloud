@@ -12,12 +12,15 @@ import { Checkbox } from '@/components/ui/checkbox'
 import type { NotificationSettings } from '@/lib/types/settings'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import type { Database } from '@/types/supabase'
+
+type SalonRow = Database['public']['Tables']['salons']['Row']
 
 export default function NotificationsPage() {
   const params = useParams()
   const slug = params.slug as string
 
-  const { data: salon } = useQuery({
+  const { data: salon } = useQuery<SalonRow | null>({
     queryKey: ['salon', slug],
     queryFn: async () => {
       const supabase = createClient()
@@ -31,8 +34,9 @@ export default function NotificationsPage() {
     }
   })
 
-  const { data: settings } = useSettings(salon?.id || '')
-  const updateSettings = useUpdateSettings(salon?.id || '')
+  const salonId = salon?.id ?? ''
+  const { data: settings } = useSettings(salonId)
+  const updateSettings = useUpdateSettings(salonId)
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     clientReminders: { enabled: true, timing: [24, 2], channels: ['sms', 'email'] },
@@ -61,10 +65,13 @@ export default function NotificationsPage() {
     }))
   }
 
-  const toggleChannel = (key: keyof NotificationSettings, channel: string) => {
-    const current = notifications[key].channels || []
+  const toggleChannel = (
+    key: 'clientReminders' | 'clientConfirmations' | 'newBooking' | 'cancellation',
+    channel: string
+  ) => {
+    const current: string[] = notifications[key].channels || []
     const updated = current.includes(channel)
-      ? current.filter(c => c !== channel)
+      ? current.filter((c: string) => c !== channel)
       : [...current, channel]
     
     updateNotification(key, { channels: updated })

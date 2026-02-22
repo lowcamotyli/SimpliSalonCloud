@@ -59,7 +59,8 @@ export default function InvitePage() {
         return
       }
 
-      const slug = (profile?.salons as { slug?: string } | null)?.slug
+      const profileWithSalon = profile as { salons: { slug: string } | null } | null
+      const slug = profileWithSalon?.salons?.slug
       setSalonSlug(slug || null)
       setState('ready')
     } catch (error: any) {

@@ -1,4 +1,4 @@
-import { Database } from './database'
+import { Database } from './supabase'
 
 // Helper do wyciągania typów z database.ts
 type Tables = Database['public']['Tables']
@@ -43,7 +43,7 @@ export type PaginatedResponse<T> = {
 
 // Typ dla booking z relacjami (JOIN)
 export type BookingWithRelations = Booking & {
-    client: Pick<Client, 'id' | 'first_name' | 'last_name' | 'phone'>
+    client: Pick<Client, 'id' | 'full_name' | 'phone'>
     service: Pick<Service, 'id' | 'name' | 'duration' | 'price'>
     employee: Pick<Employee, 'id' | 'first_name' | 'last_name'>
 }

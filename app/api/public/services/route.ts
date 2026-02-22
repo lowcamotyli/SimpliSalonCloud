@@ -2,30 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { getSalonId } from '@/lib/utils/salon'
+import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
 
 export async function OPTIONS(request: NextRequest) {
-    return new NextResponse(null, {
-        status: 200,
-        headers: {
-            'Access-Control-Allow-Origin': 'http://localhost:5173',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
-        },
-    })
+    return handleCorsPreflightRequest(request) || new NextResponse(null, { status: 200 })
 }
 
 export async function GET(request: NextRequest) {
-    // CORS headers
-    const headers = {
-        'Access-Control-Allow-Origin': 'http://localhost:5173',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
-    }
-
     const authError = validateApiKey(request)
     if (authError) {
-        Object.entries(headers).forEach(([key, value]) => authError.headers.set(key, value))
-        return authError
+        return setCorsHeaders(request, authError)
     }
 
     const supabase = createAdminSupabaseClient()
@@ -40,7 +26,11 @@ export async function GET(request: NextRequest) {
         .order('category')
         .order('name')
 
-    if (error) return NextResponse.json({ error: 'DB error' }, { status: 500, headers })
+    if (error) {
+        const response = NextResponse.json({ error: 'DB error' }, { status: 500 })
+        return setCorsHeaders(request, response)
+    }
 
-    return NextResponse.json({ services: data }, { headers })
+    const response = NextResponse.json({ services: data })
+    return setCorsHeaders(request, response)
 }

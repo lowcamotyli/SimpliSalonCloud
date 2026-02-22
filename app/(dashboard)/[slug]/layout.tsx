@@ -5,6 +5,21 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { ThemeKey } from '@/lib/types/settings'
 
+type ProfileWithSalon = {
+  salon_id: string
+  role: string
+  full_name: string | null
+  salons: {
+    id: string
+    slug: string
+    name: string
+  } | null
+}
+
+type SalonThemeSettings = {
+  theme: ThemeKey | null
+}
+
 export default async function DashboardLayout({
   children,
   params,
@@ -49,8 +64,12 @@ export default async function DashboardLayout({
     redirect('/login?error=no_profile')
   }
 
-  // @ts-ignore
-  const salon = profile.salons
+  const typedProfile = profile as ProfileWithSalon | null
+  const salon = typedProfile?.salons
+
+  if (!salon) {
+    redirect('/login?error=no_salon')
+  }
 
   // Check if user has access to this salon
   if (salon.slug !== params.slug) {
@@ -64,12 +83,13 @@ export default async function DashboardLayout({
     .eq('salon_id', salon.id)
     .maybeSingle()
 
-  const themeKey = (settings?.theme as ThemeKey) || 'beauty_salon'
+  const typedSettings = settings as SalonThemeSettings | null
+  const themeKey = typedSettings?.theme || 'beauty_salon'
 
   return (
     <ThemeProvider themeKey={themeKey}>
       <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar salonSlug={params.slug} userName={profile?.full_name} />
+        <Sidebar salonSlug={params.slug} userName={typedProfile?.full_name ?? undefined} />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar salonName={salon.name} />

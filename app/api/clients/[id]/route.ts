@@ -3,6 +3,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { updateClientSchema } from '@/lib/validators/client.validators'
 import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import type { Database } from '@/types/supabase'
+
+type ClientUpdate = Database['public']['Tables']['clients']['Update']
 
 // GET /api/clients/[id]
 export const GET = withErrorHandling(async (
@@ -60,8 +63,8 @@ export const PUT = withErrorHandling(async (
     throw new NotFoundError('Client', params.id)
   }
 
-  const updateData: any = {
-    version: (existingClient as any).version, // Required by check_version() trigger
+  const updateData: ClientUpdate = {
+    version: (existingClient as { version: number }).version, // Required by check_version() trigger
   }
   if (validatedData.first_name || validatedData.last_name) {
     updateData.full_name = `${validatedData.first_name || ''} ${validatedData.last_name || ''}`.trim()
@@ -70,7 +73,7 @@ export const PUT = withErrorHandling(async (
   if (validatedData.email !== undefined) updateData.email = validatedData.email || null
   if (validatedData.notes !== undefined) updateData.notes = validatedData.notes || null
 
-  const { data: client, error } = await supabase
+  const { data: client, error } = await (supabase as any)
     .from('clients')
     .update(updateData)
     .eq('id', params.id)

@@ -22,20 +22,20 @@ export function Navbar({ salonName }: { salonName: string }) {
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-primary">{salonName}</h1>
-            <p className="text-xs text-gray-500">Zarządzaj swoim salonem</p>
+            <h1 className="text-xl font-bold text-foreground">{salonName}</h1>
+            <p className="text-xs text-muted-foreground">Zarządzaj swoim salonem</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             className="hover:bg-primary/10 hover:text-primary transition-all"
           >
             <Bell className="h-5 w-5" />
           </Button>
-          <Button 
+          <Button
             onClick={handleLogout}
             className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-md transition-all"
             size="sm"

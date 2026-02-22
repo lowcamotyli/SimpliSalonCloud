@@ -246,10 +246,10 @@ export default function ServicesPage() {
       {/* Header & Main Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Usługi
           </h1>
-          <p className="text-gray-500 text-base font-medium">Zarządzaj ofertą swojego salonu</p>
+          <p className="text-muted-foreground text-base font-medium">Zarządzaj ofertą swojego salonu</p>
         </div>
         <Button
           size="lg"
@@ -363,14 +363,14 @@ export default function ServicesPage() {
               <motion.div key={category} layout variants={itemVariants} className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-1 bg-primary rounded-full" />
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">{category}</h2>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">{category}</h2>
                 </div>
 
                 <div className="grid gap-8">
                   {Object.entries(subcategories).map(([subcategory, services]) => (
                     <div key={subcategory} className="space-y-4">
                       <div className="flex items-center justify-between px-2">
-                        <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                           <ChevronRight className="h-4 w-4 text-primary/60" />
                           {subcategory}
                         </h3>
@@ -391,7 +391,7 @@ export default function ServicesPage() {
                             <div className="flex items-start justify-between gap-4">
                               <div className="space-y-2 flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-gray-900 group-hover:text-primary transition-colors truncate">
+                                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
                                     {service.name}
                                   </h4>
                                   {!service.active && (

@@ -3,6 +3,7 @@ export const BOOKING_STATUSES = {
   CONFIRMED: 'confirmed',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  PENDING: 'pending',
 } as const
 
 export const BOOKING_STATUS_LABELS: Record<string, string> = {
@@ -10,6 +11,7 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   confirmed: 'Potwierdzona',
   completed: 'Zakończona',
   cancelled: 'Anulowana',
+  pending: 'Oczekująca',
 }
 
 export const PAYMENT_METHODS = {

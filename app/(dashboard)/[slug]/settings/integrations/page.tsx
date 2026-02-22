@@ -12,12 +12,15 @@ import { ExternalLink } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { ServiceImport } from '@/components/settings/service-import'
+import type { Database } from '@/types/supabase'
+
+type SalonRow = Database['public']['Tables']['salons']['Row']
 
 export default function IntegrationsPage() {
   const params = useParams()
   const slug = params.slug as string
 
-  const { data: salon } = useQuery({
+  const { data: salon } = useQuery<SalonRow | null>({
     queryKey: ['salon', slug],
     queryFn: async () => {
       const supabase = createClient()
@@ -27,11 +30,12 @@ export default function IntegrationsPage() {
         .eq('slug', slug)
         .single()
       if (error) throw error
-      return data as { id: string }
+      return data
     }
   })
 
-  const { data: activeIntegrations = [] } = useIntegrations(salon?.id || '')
+  const salonId = salon?.id ?? ''
+  const { data: activeIntegrations = [] } = useIntegrations(salonId)
 
   if (!salon) return <div className="p-6">Ładowanie...</div>
 

@@ -161,10 +161,10 @@ export default function ClientsPage() {
       {/* Header & Main Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Klienci
           </h1>
-          <p className="text-gray-500 text-base font-medium">Buduj trwałe relacje ze swoimi klientami</p>
+          <p className="text-muted-foreground text-base font-medium">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
         <Button
           size="lg"
@@ -255,10 +255,10 @@ export default function ClientsPage() {
                           <User className="h-6 w-6" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors truncate">
+                          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
                             {client.full_name}
                           </h3>
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             ID: {client.id.slice(0, 8)}
                           </p>
                         </div>

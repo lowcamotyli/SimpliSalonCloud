@@ -60,12 +60,14 @@ export const PATCH = withErrorHandling(async (
     throw new NotFoundError('Profile')
   }
 
+  const typedProfile = profile as { salon_id: string }
+
   // Verify service belongs to salon and get current version
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id, version')
     .eq('id', params.id)
-    .eq('salon_id', profile.salon_id)
+    .eq('salon_id', typedProfile.salon_id)
     .single()
 
   if (existingError || !existingService) {
@@ -75,14 +77,13 @@ export const PATCH = withErrorHandling(async (
   const body = await request.json()
   const validatedData = updateServiceSchema.parse(body)
 
-  const { data: service, error } = await supabase
+  const { data: service, error } = await (supabase as any)
     .from('services')
     .update({
       version: (existingService as any).version, // Required by check_version() trigger
       ...(validatedData.category !== undefined && { category: validatedData.category }),
       ...(validatedData.subcategory !== undefined && { subcategory: validatedData.subcategory }),
       ...(validatedData.name !== undefined && { name: validatedData.name }),
-      ...(validatedData.description !== undefined && { description: validatedData.description }),
       ...(validatedData.duration !== undefined && { duration: validatedData.duration }),
       ...(validatedData.price !== undefined && { price: validatedData.price }),
       ...(validatedData.active !== undefined && { active: validatedData.active }),
@@ -123,12 +124,14 @@ export const DELETE = withErrorHandling(async (
     throw new NotFoundError('Profile')
   }
 
+  const typedProfile = profile as { salon_id: string }
+
   // Verify service belongs to salon
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id')
     .eq('id', params.id)
-    .eq('salon_id', profile.salon_id)
+    .eq('salon_id', typedProfile.salon_id)
     .single()
 
   if (existingError || !existingService) {

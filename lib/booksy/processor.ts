@@ -12,6 +12,10 @@ interface ParsedBooking {
   duration?: number
 }
 
+interface ProcessEmailOptions {
+  eventId?: string
+}
+
 export class BooksyProcessor {
   constructor(
     private supabase: SupabaseClient,
@@ -21,9 +25,22 @@ export class BooksyProcessor {
   /**
    * Parse Booksy email and create booking
    */
-  async processEmail(subject: string, body: string): Promise<any> {
+  async processEmail(subject: string, body: string, options?: ProcessEmailOptions): Promise<any> {
     try {
       console.log('=== PROCESS EMAIL START ===')
+
+      const eventMarker = options?.eventId ? `[booksy_event_id:${options.eventId}]` : null
+
+      if (eventMarker) {
+        const existingByEvent = await this.findBookingByEventMarker(eventMarker)
+        if (existingByEvent) {
+          return {
+            success: true,
+            deduplicated: true,
+            booking: existingByEvent,
+          }
+        }
+      }
       
       // 1. Parse email
       const parsed = this.parseEmail(subject, body)
@@ -63,6 +80,7 @@ export class BooksyProcessor {
         bookingTime: parsed.bookingTime,
         duration: parsed.duration || service.duration,
         price: parsed.price || service.price,
+        notes: eventMarker,
       })
       console.log('✅ Step 5: Booking created:', booking.id)
       console.log('=== PROCESS EMAIL SUCCESS ===')
@@ -220,7 +238,7 @@ export class BooksyProcessor {
       .select('*')
       .eq('salon_id', this.salonId)
       .eq('phone', parsed.clientPhone)
-      .single()
+      .maybeSingle()
 
     if (existingClient) {
       return existingClient
@@ -312,7 +330,25 @@ export class BooksyProcessor {
     bookingTime: string
     duration: number
     price: number
+    notes?: string | null
   }) {
+    const { data: existing } = await this.supabase
+      .from('bookings')
+      .select('*')
+      .eq('salon_id', this.salonId)
+      .eq('client_id', data.clientId)
+      .eq('employee_id', data.employeeId)
+      .eq('service_id', data.serviceId)
+      .eq('booking_date', data.bookingDate)
+      .eq('booking_time', data.bookingTime)
+      .eq('source', 'booksy')
+      .neq('status', 'cancelled')
+      .maybeSingle()
+
+    if (existing) {
+      return existing
+    }
+
     const { data: booking, error } = await this.supabase
       .from('bookings')
       .insert({
@@ -324,6 +360,7 @@ export class BooksyProcessor {
         booking_time: data.bookingTime,
         duration: data.duration,
         base_price: data.price,
+        notes: data.notes ?? null,
         status: 'scheduled',
         source: 'booksy',
       })
@@ -332,5 +369,17 @@ export class BooksyProcessor {
 
     if (error) throw error
     return booking
+  }
+
+  private async findBookingByEventMarker(eventMarker: string) {
+    const { data: booking } = await this.supabase
+      .from('bookings')
+      .select('*')
+      .eq('salon_id', this.salonId)
+      .eq('source', 'booksy')
+      .eq('notes', eventMarker)
+      .maybeSingle()
+
+    return booking ?? null
   }
 }

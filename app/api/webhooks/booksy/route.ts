@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { BooksyProcessor } from '@/lib/booksy/processor'
+import { handleBooksyWebhook } from '@/app/api/webhooks/booksy/handler'
 
 /**
  * Main Booksy webhook endpoint
@@ -11,44 +10,13 @@ import { BooksyProcessor } from '@/lib/booksy/processor'
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    
-    // Validate webhook data
-    if (!body.salonId || !body.emails) {
-      return NextResponse.json(
-        { error: 'Missing salonId or emails' },
-        { status: 400 }
-      )
-    }
-
-    const supabase = createAdminClient()
-    const processor = new BooksyProcessor(supabase, body.salonId)
-
-    const results = []
-
-    for (const email of body.emails) {
-      if (!email.subject || !email.body) {
-        continue
-      }
-
-      const result = await processor.processEmail(email.subject, email.body)
-      results.push(result)
-    }
-
-    const successCount = results.filter((r) => r.success).length
-    const errorCount = results.filter((r) => !r.success).length
-
-    return NextResponse.json({
-      success: true,
-      processed: results.length,
-      successful: successCount,
-      errors: errorCount,
-      results,
-    })
-  } catch (error: any) {
+    return await handleBooksyWebhook(request)
+  } catch (error: unknown) {
     console.error('Booksy webhook error:', error)
+    const message = error instanceof Error ? error.message : 'Internal server error'
+
     return NextResponse.json(
-      { error: error.message },
+      { error: message },
       { status: 500 }
     )
   }

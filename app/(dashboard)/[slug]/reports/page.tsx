@@ -34,8 +34,8 @@ export default function ReportsPage({ params }: { params: { slug: string } }) {
     const [activeTab, setActiveTab] = useState(initialTab)
 
     // Last 30 days range
-    const today = new Date()
-    const thirtyDaysAgo = subDays(today, 29)
+    const today = useMemo(() => new Date(), [])
+    const thirtyDaysAgo = useMemo(() => subDays(today, 29), [today])
     const filters = {
         startDate: format(thirtyDaysAgo, 'yyyy-MM-dd'),
         endDate: format(today, 'yyyy-MM-dd')
@@ -206,10 +206,10 @@ export default function ReportsPage({ params }: { params: { slug: string } }) {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
                         Raporty i Analizy
                     </h1>
-                    <p className="text-gray-500 text-base font-medium">Ostatnie 30 dni: {format(thirtyDaysAgo, 'd MMM', { locale: pl })} - {format(today, 'd MMM yyyy', { locale: pl })}</p>
+                    <p className="text-muted-foreground text-base font-medium">Ostatnie 30 dni: {format(thirtyDaysAgo, 'd MMM', { locale: pl })} - {format(today, 'd MMM yyyy', { locale: pl })}</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" className="glass rounded-xl h-12 px-6 font-bold flex gap-2">

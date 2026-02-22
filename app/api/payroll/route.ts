@@ -1,6 +1,114 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { startOfMonth, endOfMonth, format } from 'date-fns'
+import { format } from 'date-fns'
+import { payrollMonthSchema } from '@/lib/validators/payroll.validators'
+import { canGeneratePayroll, canViewPayroll } from '@/lib/payroll/access'
+import { parsePayrollMonth } from '@/lib/payroll/period'
+
+async function buildPayrollData(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  salonId: string,
+  monthInput: string
+) {
+  const { month, periodStart, periodEnd } = parsePayrollMonth(monthInput)
+
+  // Fetch completed bookings for the month with details
+  const { data: bookings, error: bookingsError } = await supabase
+    .from('bookings')
+    .select(`
+      id,
+      booking_date,
+      total_price,
+      employee_id,
+      client_id,
+      client:clients (
+        full_name
+      ),
+      service:services (
+        name
+      ),
+      employee:employees (
+        id,
+        employee_code,
+        first_name,
+        last_name,
+        base_threshold,
+        base_salary,
+        commission_rate
+      )
+    `)
+    .eq('salon_id', salonId)
+    .eq('status', 'completed')
+    .gte('booking_date', format(periodStart, 'yyyy-MM-dd'))
+    .lte('booking_date', format(periodEnd, 'yyyy-MM-dd'))
+    .order('booking_date', { ascending: true })
+
+  if (bookingsError) throw bookingsError
+
+  // Group by employee
+  const employeeData: Record<string, any> = {}
+
+  bookings?.forEach((booking: any) => {
+    const empId = booking.employee_id
+    const serviceName = booking.service?.name || 'Usługa'
+    const clientName = booking.client?.full_name || 'Klient'
+
+    if (!employeeData[empId]) {
+      employeeData[empId] = {
+        employee: booking.employee,
+        visits: [],
+        totalRevenue: 0,
+      }
+    }
+
+    employeeData[empId].visits.push({
+      id: booking.id,
+      date: booking.booking_date,
+      price: booking.total_price,
+      serviceName,
+      clientName
+    })
+    employeeData[empId].totalRevenue += booking.total_price
+  })
+
+  // Calculate payroll for each employee
+  const payrollEntries = Object.values(employeeData).map((data) => {
+    const emp = data.employee
+    const totalRevenue = data.totalRevenue
+    const visitCount = data.visits.length
+
+    const baseThreshold = emp.base_threshold || 0
+    const baseSalary = emp.base_salary || 0
+    const commissionRate = emp.commission_rate || 0
+
+    const excess = Math.max(0, totalRevenue - baseThreshold)
+    const commissionAmount = excess * commissionRate
+    const totalPayout = baseSalary + commissionAmount
+
+    return {
+      employeeId: emp.id,
+      employeeCode: emp.employee_code,
+      employeeName: `${emp.first_name} ${emp.last_name || ''}`.trim(),
+      visitCount,
+      totalRevenue,
+      baseThreshold,
+      baseSalary,
+      commissionRate,
+      commissionAmount,
+      totalPayout,
+      visits: data.visits,
+    }
+  })
+
+  return {
+    period: month,
+    periodStart: format(periodStart, 'yyyy-MM-dd'),
+    periodEnd: format(periodEnd, 'yyyy-MM-dd'),
+    entries: payrollEntries,
+    totalRevenue: payrollEntries.reduce((sum, e) => sum + e.totalRevenue, 0),
+    totalPayroll: payrollEntries.reduce((sum, e) => sum + e.totalPayout, 0),
+  }
+}
 
 // GET /api/payroll?month=YYYY-MM
 export async function GET(request: NextRequest) {
@@ -18,95 +126,14 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .single() as any
 
-    if (!profile || profile.role !== 'owner') {
+    if (!profile || !canViewPayroll(profile.role)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
     const monthParam = searchParams.get('month') || format(new Date(), 'yyyy-MM')
-
-    // Parse month
-    const [year, month] = monthParam.split('-').map(Number)
-    const periodStart = startOfMonth(new Date(year, month - 1))
-    const periodEnd = endOfMonth(new Date(year, month - 1))
-
-    // Fetch completed bookings for the month
-    const { data: bookings, error: bookingsError } = await supabase
-      .from('bookings')
-      .select(`
-        employee_id,
-        total_price,
-        employees (
-          id,
-          employee_code,
-          first_name,
-          last_name,
-          base_threshold,
-          base_salary,
-          commission_rate
-        )
-      `)
-      .eq('salon_id', profile.salon_id)
-      .eq('status', 'completed')
-      .gte('booking_date', format(periodStart, 'yyyy-MM-dd'))
-      .lte('booking_date', format(periodEnd, 'yyyy-MM-dd'))
-
-    if (bookingsError) throw bookingsError
-
-    // Group by employee
-    const employeeData: Record<string, any> = {}
-
-    bookings?.forEach((booking: any) => {
-      const empId = booking.employee_id
-
-      if (!employeeData[empId]) {
-        employeeData[empId] = {
-          employee: booking.employees,
-          visits: [],
-          totalRevenue: 0,
-        }
-      }
-
-      employeeData[empId].visits.push(booking)
-      employeeData[empId].totalRevenue += booking.total_price
-    })
-
-    // Calculate payroll for each employee
-    const payrollEntries = Object.values(employeeData).map((data) => {
-      const emp = data.employee
-      const totalRevenue = data.totalRevenue
-      const visitCount = data.visits.length
-
-      const baseThreshold = emp.base_threshold || 0
-      const baseSalary = emp.base_salary || 0
-      const commissionRate = emp.commission_rate || 0
-
-      const excess = Math.max(0, totalRevenue - baseThreshold)
-      const commissionAmount = excess * commissionRate
-      const totalPayout = baseSalary + commissionAmount
-
-      return {
-        employeeId: emp.id,
-        employeeCode: emp.employee_code,
-        employeeName: `${emp.first_name} ${emp.last_name || ''}`.trim(),
-        visitCount,
-        totalRevenue,
-        baseThreshold,
-        baseSalary,
-        commissionRate,
-        commissionAmount,
-        totalPayout,
-      }
-    })
-
-    return NextResponse.json({
-      period: monthParam,
-      periodStart: format(periodStart, 'yyyy-MM-dd'),
-      periodEnd: format(periodEnd, 'yyyy-MM-dd'),
-      entries: payrollEntries,
-      totalRevenue: payrollEntries.reduce((sum, e) => sum + e.totalRevenue, 0),
-      totalPayroll: payrollEntries.reduce((sum, e) => sum + e.totalPayout, 0),
-    })
+    const payrollData = await buildPayrollData(supabase, profile.salon_id, monthParam)
+    return NextResponse.json(payrollData)
   } catch (error: any) {
     console.error('GET /api/payroll error:', error)
     return NextResponse.json(
@@ -132,23 +159,13 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .single() as any
 
-    if (!profile || profile.role !== 'owner') {
+    if (!profile || !canGeneratePayroll(profile.role)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
     }
 
     const body = await request.json()
-    const { month } = body // YYYY-MM
-
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-      return NextResponse.json(
-        { error: 'Invalid month format (expected YYYY-MM)' },
-        { status: 400 }
-      )
-    }
-
-    // Get payroll data (reuse GET logic)
-    const getResponse = await GET(request)
-    const payrollData = await getResponse.json()
+    const month = payrollMonthSchema.parse(body?.month)
+    const payrollData = await buildPayrollData(supabase, profile.salon_id, month)
 
     if (!payrollData.entries || payrollData.entries.length === 0) {
       return NextResponse.json(
@@ -215,6 +232,14 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
   } catch (error: any) {
     console.error('POST /api/payroll error:', error)
+
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

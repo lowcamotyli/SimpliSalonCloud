@@ -1,11 +1,31 @@
 import { NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 import { ZodError } from 'zod'
 import { AppError } from './errors'
 import { logger } from './logger'
 
+function captureExceptionIfConfigured(error: unknown, context: Record<string, unknown>) {
+    if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
+        return
+    }
+
+    Sentry.withScope((scope) => {
+        for (const [key, value] of Object.entries(context)) {
+            scope.setExtra(key, value)
+        }
+        Sentry.captureException(error)
+    })
+}
+
 export function handleApiError(error: unknown): NextResponse {
     // 1. Loguj błąd
     if (error instanceof AppError) {
+        captureExceptionIfConfigured(error, {
+            kind: 'AppError',
+            code: error.code,
+            statusCode: error.statusCode,
+        })
+
         logger.error('Application error', error, {
             code: error.code,
             statusCode: error.statusCode,
@@ -20,6 +40,11 @@ export function handleApiError(error: unknown): NextResponse {
 
     // Błędy walidacji z Zod
     if (error instanceof ZodError) {
+        captureExceptionIfConfigured(error, {
+            kind: 'ZodError',
+            errorCount: error.errors.length,
+        })
+
         logger.warn('Validation error', {
             details: error.errors.map(e => ({
                 field: e.path.join('.'),
@@ -44,6 +69,10 @@ export function handleApiError(error: unknown): NextResponse {
     // Błędy z PostgreSQL/Supabase
     if (error && typeof error === 'object' && 'code' in error) {
         const pgError = error as { code: string; message: string; details?: string }
+        captureExceptionIfConfigured(error, {
+            kind: 'DatabaseError',
+            code: pgError.code,
+        })
 
         // Foreign key violation (23503)
         if (pgError.code === '23503') {
@@ -127,6 +156,10 @@ export function handleApiError(error: unknown): NextResponse {
     }
 
     // 3. Nieznany błąd
+    captureExceptionIfConfigured(error, {
+        kind: 'UnhandledError',
+    })
+
     logger.error('Unhandled error', error, {
         errorType: error?.constructor?.name,
         errorString: String(error)

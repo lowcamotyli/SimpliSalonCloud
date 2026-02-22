@@ -281,6 +281,47 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          expires_at: string | null
+          feature_name: string
+          id: string
+          limit_value: number | null
+          salon_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          expires_at?: string | null
+          feature_name: string
+          id?: string
+          limit_value?: number | null
+          salon_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          expires_at?: string | null
+          feature_name?: string
+          id?: string
+          limit_value?: number | null
+          salon_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_configs: {
         Row: {
           created_at: string | null
@@ -321,6 +362,146 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "integration_configs_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          billing_address: Json | null
+          billing_email: string
+          billing_name: string
+          created_at: string | null
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_number: string
+          line_items: Json
+          p24_order_id: string | null
+          p24_transaction_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          pdf_url: string | null
+          salon_id: string
+          status: string
+          subscription_id: string | null
+          subtotal_cents: number
+          tax_cents: number | null
+          total_cents: number
+          updated_at: string | null
+        }
+        Insert: {
+          billing_address?: Json | null
+          billing_email: string
+          billing_name: string
+          created_at?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          line_items?: Json
+          p24_order_id?: string | null
+          p24_transaction_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          salon_id: string
+          status?: string
+          subscription_id?: string | null
+          subtotal_cents: number
+          tax_cents?: number | null
+          total_cents: number
+          updated_at?: string | null
+        }
+        Update: {
+          billing_address?: Json | null
+          billing_email?: string
+          billing_name?: string
+          created_at?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          line_items?: Json
+          p24_order_id?: string | null
+          p24_transaction_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          salon_id?: string
+          status?: string
+          subscription_id?: string | null
+          subtotal_cents?: number
+          tax_cents?: number | null
+          total_cents?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          p24_payment_method_id: string | null
+          salon_id: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          p24_payment_method_id?: string | null
+          salon_id: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          p24_payment_method_id?: string | null
+          salon_id?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -653,6 +834,7 @@ export type Database = {
       }
       salons: {
         Row: {
+          billing_email: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -662,10 +844,14 @@ export type Database = {
           settings: Json | null
           slug: string
           subscription_plan: string
+          subscription_started_at: string | null
           subscription_status: string
+          tax_id: string | null
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          billing_email?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -675,10 +861,14 @@ export type Database = {
           settings?: Json | null
           slug: string
           subscription_plan?: string
+          subscription_started_at?: string | null
           subscription_status?: string
+          tax_id?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          billing_email?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -688,7 +878,10 @@ export type Database = {
           settings?: Json | null
           slug?: string
           subscription_plan?: string
+          subscription_started_at?: string | null
           subscription_status?: string
+          tax_id?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -752,13 +945,136 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          amount_cents: number
+          billing_interval: string
+          canceled_at: string | null
+          created_at: string | null
+          currency: string
+          current_period_end: string
+          current_period_start: string
+          ended_at: string | null
+          id: string
+          metadata: Json | null
+          p24_order_id: string | null
+          p24_transaction_id: string | null
+          plan_type: string
+          salon_id: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          billing_interval: string
+          canceled_at?: string | null
+          created_at?: string | null
+          currency?: string
+          current_period_end: string
+          current_period_start: string
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          p24_order_id?: string | null
+          p24_transaction_id?: string | null
+          plan_type: string
+          salon_id: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          billing_interval?: string
+          canceled_at?: string | null
+          created_at?: string | null
+          currency?: string
+          current_period_end?: string
+          current_period_start?: string
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          p24_order_id?: string | null
+          p24_transaction_id?: string | null
+          plan_type?: string
+          salon_id?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_tracking: {
+        Row: {
+          api_calls_count: number | null
+          bookings_count: number | null
+          bookings_limit_exceeded: boolean | null
+          clients_count: number | null
+          clients_limit_exceeded: boolean | null
+          created_at: string | null
+          employees_count: number | null
+          employees_limit_exceeded: boolean | null
+          id: string
+          period_month: string
+          salon_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_calls_count?: number | null
+          bookings_count?: number | null
+          bookings_limit_exceeded?: boolean | null
+          clients_count?: number | null
+          clients_limit_exceeded?: boolean | null
+          created_at?: string | null
+          employees_count?: number | null
+          employees_limit_exceeded?: boolean | null
+          id?: string
+          period_month: string
+          salon_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_calls_count?: number | null
+          bookings_count?: number | null
+          bookings_limit_exceeded?: boolean | null
+          clients_count?: number | null
+          clients_limit_exceeded?: boolean | null
+          created_at?: string | null
+          employees_count?: number | null
+          employees_limit_exceeded?: boolean | null
+          id?: string
+          period_month?: string
+          salon_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_tracking_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_vat: { Args: { subtotal_cents: number }; Returns: number }
       generate_client_code: { Args: { salon_uuid: string }; Returns: string }
       generate_employee_code: { Args: { salon_uuid: string }; Returns: string }
+      generate_invoice_number: { Args: never; Returns: string }
       get_user_employee_id: { Args: never; Returns: string }
       get_user_salon_id: { Args: never; Returns: string }
       has_any_salon_role: {

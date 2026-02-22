@@ -30,6 +30,7 @@ import Image from 'next/image'
 const STATUS_TABS = [
   { id: 'all', label: 'Wszystkie' },
   { id: 'scheduled', label: 'Zaplanowane' },
+  { id: 'pending', label: 'Oczekujące' },
   { id: 'confirmed', label: 'Potwierdzone' },
   { id: 'completed', label: 'Zakończone' },
   { id: 'cancelled', label: 'Anulowane' },
@@ -57,14 +58,19 @@ export default function BookingsPage() {
     if (!bookings) return []
 
     return bookings.filter((booking) => {
+      const clientName = booking.client?.full_name?.toLowerCase() || ''
+      const serviceName = booking.service?.name?.toLowerCase() || ''
+      const employeeFirstName = booking.employee?.first_name?.toLowerCase() || ''
+      const searchValue = search.toLowerCase()
+
       const matchesSearch =
-        booking.client.full_name.toLowerCase().includes(search.toLowerCase()) ||
-        booking.service.name.toLowerCase().includes(search.toLowerCase()) ||
-        booking.employee.first_name.toLowerCase().includes(search.toLowerCase())
+        clientName.includes(searchValue) ||
+        serviceName.includes(searchValue) ||
+        employeeFirstName.includes(searchValue)
 
       const matchesStatus = statusFilter === 'all' || booking.status === statusFilter
 
-      const matchesEmployee = employeeFilter === 'all' || booking.employee.id === employeeFilter
+      const matchesEmployee = employeeFilter === 'all' || booking.employee?.id === employeeFilter
 
       let matchesDate = true
       if (dateFilter !== 'all') {
@@ -97,6 +103,7 @@ export default function BookingsPage() {
     confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     completed: 'bg-slate-50 text-slate-700 border-slate-200',
     cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
   }
 
   const containerVariants = {
@@ -118,8 +125,8 @@ export default function BookingsPage() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">Rezerwacje</h1>
-          <p className="mt-2 text-lg text-gray-500 font-medium">Zarzajdzaj wizytami w swoim salonie</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Rezerwacje</h1>
+          <p className="mt-2 text-lg text-muted-foreground font-medium">Zarządzaj wizytami w swoim salonie</p>
         </div>
         <Button
           size="lg"
@@ -239,10 +246,10 @@ export default function BookingsPage() {
                       </div>
                       <div className="space-y-1 min-w-0">
                         <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors truncate">
-                          {booking.client.full_name}
+                          {booking.client?.full_name || 'Nieznany klient'}
                         </h3>
                         <p className="text-sm font-medium text-gray-500 truncate">
-                          {booking.client.phone}
+                          {booking.client?.phone || 'Brak telefonu'}
                         </p>
                       </div>
                     </div>
@@ -251,7 +258,7 @@ export default function BookingsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="text-sm font-bold text-gray-700">
-                          {booking.service.name}
+                          {booking.service?.name || 'Usunięta usługa'}
                         </span>
                         <span className="text-xs font-semibold text-gray-400 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -263,11 +270,11 @@ export default function BookingsPage() {
                           {booking.employee.avatar_url ? (
                             <Image src={booking.employee.avatar_url} alt="" width={32} height={32} />
                           ) : (
-                            booking.employee.first_name[0]
+                            booking.employee?.first_name?.[0] || '?'
                           )}
                         </div>
                         <span className="text-sm font-semibold text-gray-600">
-                          {booking.employee.first_name} {booking.employee.last_name}
+                          {booking.employee?.first_name || 'Nieznany'} {booking.employee?.last_name || 'pracownik'}
                         </span>
                       </div>
                     </div>

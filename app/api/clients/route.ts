@@ -27,6 +27,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     throw new NotFoundError('Profile')
   }
 
+  const typedProfile = profile as { salon_id: string }
+
   // Get query params
   const { searchParams } = new URL(request.url)
   const search = searchParams.get('search')
@@ -34,7 +36,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   let query = supabase
     .from('clients')
     .select('*')
-    .eq('salon_id', profile.salon_id)
+    .eq('salon_id', typedProfile.salon_id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
@@ -70,6 +72,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new NotFoundError('Profile')
   }
 
+  const typedProfile = profile as { salon_id: string }
+
   const body = await request.json()
 
   console.log('Client body received:', body)
@@ -77,7 +81,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Map frontend fields and add salon_id
   const mappedBody = {
     ...body,
-    salon_id: (profile as any).salon_id,
+    salon_id: typedProfile.salon_id,
     first_name: body.first_name || body.firstName || (body.fullName ? body.fullName.split(' ')[0] : ''),
     last_name: body.last_name || body.lastName || (body.fullName ? body.fullName.split(' ').slice(1).join(' ') : ''),
   }
@@ -85,7 +89,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const validatedData = createClientSchema.parse(mappedBody)
 
   // Generate client code with fallback
-  const { data: codeData, error: codeError } = await supabase
+  const { data: codeData, error: codeError } = await (supabase as any)
     .rpc('generate_client_code', { salon_uuid: validatedData.salon_id })
 
   const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
@@ -94,7 +98,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     console.warn('Failed to generate client code, using fallback:', codeError)
   }
 
-  const { data: client, error } = await supabase
+  const { data: client, error } = await (supabase as any)
     .from('clients')
     .insert({
       salon_id: validatedData.salon_id,

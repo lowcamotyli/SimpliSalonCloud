@@ -25,6 +25,7 @@ export function ThemeProvider({ themeKey, children }: ThemeProviderProps) {
     setHslVar('--secondary', theme.secondary)
     setHslVar('--accent', theme.accent)
     setHslVar('--background', theme.background)
+    setHslVar('--card', theme.card)
 
     // Set HEX variables for cases where HSL is not ideal
     root.style.setProperty('--primary-hex', theme.primary)

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
     }
 
-    const { date, serviceId } = parsed.data
+    const { date, serviceId, employeeId } = parsed.data
     const supabase = createAdminSupabaseClient()
     const salonId = getSalonId(request)
 
@@ -29,13 +29,19 @@ export async function GET(request: NextRequest) {
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
     // pobierz zajęte sloty tego dnia (niezanulowane)
-    const { data: bookings } = await supabase
+    let query = supabase
         .from('bookings')
         .select('booking_time, duration, employee_id')
         .eq('salon_id', salonId)
         .eq('booking_date', date)
         .not('status', 'eq', 'cancelled')
         .is('deleted_at', null)
+
+    if (employeeId) {
+        query = query.eq('employee_id', employeeId)
+    }
+
+    const { data: bookings } = await query
 
     // generuj sloty co 30 min, 8:00–20:00
     const slots: string[] = []
@@ -47,7 +53,7 @@ export async function GET(request: NextRequest) {
             const slotEnd = slotStart + service.duration
             if (slotEnd > 20 * 60) continue // nie wykracza poza zamknięcie
 
-            const conflict = bookings?.some((b) => {
+            const conflict = bookings?.some((b: any) => {
                 const [bh, bm] = b.booking_time.split(':').map(Number)
                 const bStart = bh * 60 + bm
                 const bEnd = bStart + b.duration

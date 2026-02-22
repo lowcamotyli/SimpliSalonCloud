@@ -24,8 +24,10 @@ export default async function HomePage() {
     redirect('/login?error=profile_not_found')
   }
 
-  if (profile?.salons) {
-    const salonSlug = (profile.salons as any).slug
+  const typedProfile = profile as { salons: { slug: string } | null } | null
+
+  if (typedProfile?.salons) {
+    const salonSlug = typedProfile.salons.slug
     if (salonSlug) {
       redirect(`/${salonSlug}/dashboard`)
     }

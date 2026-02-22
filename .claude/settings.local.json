@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(chmod:*)",
+      "Bash(supabase db dump:*)",
+      "Bash(npx tsc:*)",
+      "Bash(supabase status:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx supabase db execute:*)",
+      "Bash(npx supabase --help:*)",
+      "Bash(npx supabase login:*)",
+      "Bash(npx supabase link:*)",
+      "Bash(SERVICE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVia3VlaXdlbGFycGxuYmhxbW9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMzMjQ0MiwiZXhwIjoyMDg0OTA4NDQyfQ.ViW4h2gsE0wGKubrkuA9qn6aTfgHs8xo0BNcvK2nV4Y\")",
+      "Bash(curl -s -X POST \"https://ubkueiwelarplnbhqmoa.supabase.co/rest/v1/rpc/exec_sql\" -H \"apikey: $SERVICE_KEY\" -H \"Authorization: Bearer $SERVICE_KEY\" -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"SELECT 1\"\"}')",
+      "Bash(curl:*)",
+      "Bash(ACCESS_TOKEN=\"sbp_ad067433e2821fe40daede2e1ee1715f86720c96\")",
+      "Bash(npx next build:*)"
+    ]
+  }
+}

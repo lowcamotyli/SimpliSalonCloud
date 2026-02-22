@@ -1,8 +1,12 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
+import { validateEnv } from "@/lib/config/validate-env"
 import { QueryProvider } from "@/lib/providers/query-provider"
 import "./globals.css"
+
+const shouldThrowOnEnvError = process.env.ENFORCE_ENV_VALIDATION === 'true'
+validateEnv(shouldThrowOnEnvError)
 
 const inter = Inter({
   subsets: ["latin"],

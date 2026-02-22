@@ -40,7 +40,7 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-md bg-white/80 border border-white/20 shadow-xl rounded-2xl;
+    @apply backdrop-blur-md bg-card/80 border border-white/20 shadow-xl rounded-2xl;
   }
 
   .glass-dark {

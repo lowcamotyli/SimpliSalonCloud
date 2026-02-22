@@ -16,6 +16,7 @@ import {
   Sparkles,
   Scissors,
   BarChart3,
+  CreditCard,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -45,6 +46,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle },
     { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign, requiredPermission: 'finance:view' },
     { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3 },
+    { href: `/${salonSlug}/billing`, label: 'Subskrypcja', icon: CreditCard, requiredPermission: 'finance:view' },
     { href: `/${salonSlug}/settings`, label: 'Ustawienia', icon: Settings },
   ]
 

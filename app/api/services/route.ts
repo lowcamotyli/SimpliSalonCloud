@@ -23,10 +23,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     throw new NotFoundError('Profile')
   }
 
-  const { data: services, error } = await supabase
+  const typedProfile = profile as { salon_id: string }
+
+  const { data: services, error } = await (supabase as any)
     .from('services')
     .select('*')
-    .eq('salon_id', profile.salon_id)
+    .eq('salon_id', typedProfile.salon_id)
     .eq('active', true)
     .is('deleted_at', null)
     .order('category')
@@ -38,7 +40,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Group services by category and subcategory
   const grouped: any = {}
 
-  services?.forEach((service) => {
+  services?.forEach((service: any) => {
     if (!grouped[service.category]) {
       grouped[service.category] = {
         category: service.category,
@@ -90,13 +92,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new NotFoundError('Profile')
   }
 
+  const typedProfile = profile as { salon_id: string }
+
   const body = await request.json()
   const validatedData = createServiceSchema.parse({
     ...body,
-    salon_id: (profile as any).salon_id, // Auto-add salon_id from user profile
+    salon_id: typedProfile.salon_id, // Auto-add salon_id from user profile
   })
 
-  const { data: service, error } = await supabase
+  const { data: service, error } = await (supabase as any)
     .from('services')
     .insert({
       salon_id: validatedData.salon_id,

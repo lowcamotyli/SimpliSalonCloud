@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AlertCircle, Loader2 } from 'lucide-react'
+import type { Database } from '@/types/supabase'
 import {
   Select,
   SelectContent,
@@ -41,12 +42,13 @@ const businessSettingsSchema = z.object({
 })
 
 type BusinessSettingsFormData = z.infer<typeof businessSettingsSchema>
+type SalonRow = Database['public']['Tables']['salons']['Row']
 
 export default function BusinessSettingsPage() {
   const params = useParams()
   const slug = params.slug as string
 
-  const { data: salon } = useQuery({
+  const { data: salon } = useQuery<SalonRow | null>({
     queryKey: ['salon', slug],
     queryFn: async () => {
       const supabase = createClient()
@@ -54,14 +56,15 @@ export default function BusinessSettingsPage() {
         .from('salons')
         .select('*')
         .eq('slug', slug)
-        .single() as any
+        .single()
       if (error) throw error
       return data
     }
   })
 
-  const { data: settings } = useSettings(salon?.id || '')
-  const updateSettings = useUpdateSettings(salon?.id || '')
+  const salonId = salon?.id ?? ''
+  const { data: settings } = useSettings(salonId)
+  const updateSettings = useUpdateSettings(salonId)
 
   const form = useForm<BusinessSettingsFormData>({
     resolver: zodResolver(businessSettingsSchema),
@@ -106,11 +109,19 @@ export default function BusinessSettingsPage() {
   if (!salon || !settings) return <div className="p-6">Ładowanie...</div>
 
   const onSubmit = (data: BusinessSettingsFormData) => {
-    updateSettings.mutate(data)
+    updateSettings.mutate({
+      ...data,
+      address: {
+        street: data.address.street ?? '',
+        city: data.address.city ?? '',
+        postalCode: data.address.postalCode ?? '',
+        country: data.address.country ?? 'Polska',
+      },
+    })
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto border-2 border-green-500">
+    <div className="p-6 max-w-6xl mx-auto">
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -156,7 +167,7 @@ export default function BusinessSettingsPage() {
                     </SelectContent>
                   </Select>
                   {form.formState.errors.business_type && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.business_type.message}
                     </p>
@@ -182,7 +193,7 @@ export default function BusinessSettingsPage() {
                     placeholder="kontakt@twojsalon.pl"
                   />
                   {form.formState.errors.contact_email && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.contact_email.message}
                     </p>
@@ -195,7 +206,7 @@ export default function BusinessSettingsPage() {
                     placeholder="ksiegowosc@twojsalon.pl"
                   />
                   {form.formState.errors.accounting_email && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.accounting_email.message}
                     </p>
@@ -209,7 +220,7 @@ export default function BusinessSettingsPage() {
                     placeholder="+48 123 456 789"
                   />
                   {form.formState.errors.contact_phone && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.contact_phone.message}
                     </p>
@@ -222,7 +233,7 @@ export default function BusinessSettingsPage() {
                     placeholder="https://www.twojsalon.pl"
                   />
                   {form.formState.errors.website_url && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.website_url.message}
                     </p>
@@ -240,7 +251,7 @@ export default function BusinessSettingsPage() {
                     placeholder="ul. Piękna 12"
                   />
                   {form.formState.errors.address?.street && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.address.street.message}
                     </p>
@@ -254,7 +265,7 @@ export default function BusinessSettingsPage() {
                       placeholder="00-001"
                     />
                     {form.formState.errors.address?.postalCode && (
-                      <p className="text-sm text-red-600 flex items-center gap-1">
+                      <p className="text-sm text-destructive flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         {form.formState.errors.address.postalCode.message}
                       </p>
@@ -267,7 +278,7 @@ export default function BusinessSettingsPage() {
                       placeholder="Warszawa"
                     />
                     {form.formState.errors.address?.city && (
-                      <p className="text-sm text-red-600 flex items-center gap-1">
+                      <p className="text-sm text-destructive flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         {form.formState.errors.address.city.message}
                       </p>

@@ -66,8 +66,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       return {
         employeeId: booking.employee.id,
         serviceId: booking.service.id,
-        clientName: booking.client.full_name,
-        clientPhone: booking.client.phone,
+        clientName: booking.client?.full_name || '',
+        clientPhone: booking.client?.phone || '',
         bookingDate: booking.booking_date,
         bookingTime: booking.booking_time,
         notes: booking.notes || '',
@@ -221,8 +221,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="glass p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Klient</Label>
-                <p className="font-bold text-gray-900">{booking.client.full_name}</p>
-                <p className="text-sm text-gray-600">{formatPhoneNumber(booking.client.phone)}</p>
+                <p className="font-bold text-gray-900">{booking.client?.full_name || 'Nieznany klient'}</p>
+                <p className="text-sm text-gray-600">{booking.client?.phone ? formatPhoneNumber(booking.client.phone) : 'Brak telefonu'}</p>
               </div>
 
               <div className="glass p-3 rounded-lg">
@@ -254,7 +254,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               <div className="glass p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Status</Label>
                 <Badge className="mt-1" variant={booking.status === 'completed' ? 'success' : booking.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                  {BOOKING_STATUS_LABELS[booking.status]}
+                  {BOOKING_STATUS_LABELS[booking.status] || booking.status}
                 </Badge>
               </div>
 

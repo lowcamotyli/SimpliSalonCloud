@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { sendPayrollEmailSchema } from '@/lib/validators/payroll.validators'
+import { canSendPayrollEmails } from '@/lib/payroll/access'
 
 export async function POST(request: NextRequest) {
     try {
@@ -10,12 +12,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const body = await request.json()
-        const { employeeId, employeeName, month, totalPayout } = body
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single() as any
 
-        if (!employeeId || !month) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        if (!profile || !canSendPayrollEmails(profile.role)) {
+            return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
         }
+
+        const body = await request.json()
+        const { employeeId, employeeName, month, totalPayout } = sendPayrollEmailSchema.parse(body)
 
         // Mocking email send logic
         console.log(`[MOCK EMAIL] Sending payroll for ${month} to ${employeeName} (ID: ${employeeId}). Amount: ${totalPayout} zł`)
@@ -31,6 +39,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Email sent successfully (mocked)' }, { status: 200 })
     } catch (error: any) {
         console.error('POST /api/payroll/send-email error:', error)
+
+        if (error.name === 'ZodError') {
+            return NextResponse.json(
+                { error: 'Validation error', details: error.errors },
+                { status: 400 }
+            )
+        }
+
         return NextResponse.json(
             { error: error.message || 'Internal server error' },
             { status: 500 }

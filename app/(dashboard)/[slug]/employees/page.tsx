@@ -231,10 +231,10 @@ export default function EmployeesPage() {
       {/* Header & Main Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Pracownicy
           </h1>
-          <p className="text-gray-500 text-base font-medium">Zarządzaj zespołem swojego salonu</p>
+          <p className="text-muted-foreground text-base font-medium">Zarządzaj zespołem swojego salonu</p>
         </div>
         <Button
           size="lg"
@@ -329,11 +329,11 @@ export default function EmployeesPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-xl font-black text-gray-900">
+                      <h3 className="text-xl font-black text-foreground">
                         {employee.first_name} {employee.last_name}
                       </h3>
                       <div className="flex flex-wrap items-center justify-center gap-2">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
                           Kod: {employee.employee_code}
                         </p>
                         {employee.role && (

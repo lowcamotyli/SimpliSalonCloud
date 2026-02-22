@@ -7,6 +7,7 @@ export const THEMES = {
     secondary: '#FAEDCD',
     accent: '#606C38',
     background: '#FEFAE0',
+    card: '#FFFFFF',
     text: '#283618',
     font: 'Playfair Display',
     borderRadius: 'lg',
@@ -15,11 +16,12 @@ export const THEMES = {
   auto_service: {
     name: 'Auto & Moto',
     description: 'Tech-focused design z głębokim kontrastem',
-    primary: '#334155',
-    secondary: '#94A3B8',
-    accent: '#38BDF8',
-    background: '#020617',
-    text: '#F8FAFC',
+    primary: '#3B82F6', // Vibrant blue
+    secondary: '#1E293B', // Slate 800
+    accent: '#EF4444', // Red 500
+    background: '#0F172A', // Slate 900
+    card: '#1E293B', // Slate 800 (slightly lighter than bg)
+    text: '#F1F5F9', // Slate 100
     font: 'Inter',
     borderRadius: 'sm',
     shadows: false,
@@ -31,6 +33,7 @@ export const THEMES = {
     secondary: '#DBEAFE',
     accent: '#F97316',
     background: '#F8FAFC',
+    card: '#FFFFFF',
     text: '#0F172A',
     font: 'Roboto',
     borderRadius: 'md',
@@ -82,6 +85,19 @@ export interface SalonSettings {
   booksy_enabled?: boolean
   booksy_gmail_email?: string
   booksy_gmail_tokens?: any
+  booksy_sync_interval_minutes?: number
+  booksy_sender_filter?: string
+  booksy_auto_create_clients?: boolean
+  booksy_auto_create_services?: boolean
+  booksy_notify_on_new?: boolean
+  booksy_notify_on_cancel?: boolean
+  booksy_notify_email?: string
+  booksy_last_sync_at?: string
+  booksy_sync_stats?: {
+    total: number
+    success: number
+    errors: number
+  }
 }
 
 export interface NotificationSettings {

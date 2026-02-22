@@ -1,29 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
 
 export async function middleware(request: NextRequest) {
-  console.log('[MIDDLEWARE] Request:', request.method, request.nextUrl.pathname)
   const pathname = request.nextUrl.pathname
 
   // Handle CORS for public API
   if (pathname.startsWith('/api/public/')) {
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': 'http://localhost:5173',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, X-Salon-Id',
-        },
-      })
+    // Handle OPTIONS preflight request
+    const preflightResponse = handleCorsPreflightRequest(request)
+    if (preflightResponse) {
+      return preflightResponse
     }
 
     // For actual requests, add CORS headers and continue
     const response = NextResponse.next()
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173')
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-API-Key, X-Salon-Id')
-    return response
+    return setCorsHeaders(request, response)
   }
 
   let response = NextResponse.next({
@@ -31,6 +23,19 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   })
+
+  // Add security headers (tylko w production)
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-XSS-Protection', '1; mode=block')
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=()'
+    )
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,6 +87,31 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const resolveSalonSlug = async (): Promise<string> => {
+    const fromAppMetadata = (user?.app_metadata as { salon_slug?: string } | undefined)?.salon_slug
+    if (fromAppMetadata) {
+      return fromAppMetadata
+    }
+
+    const fromUserMetadata = (user?.user_metadata as { salon_slug?: string } | undefined)?.salon_slug
+    if (fromUserMetadata) {
+      return fromUserMetadata
+    }
+
+    if (!user) {
+      return 'dashboard'
+    }
+
+    const { data: profile } = await (supabase as any)
+      .from('profiles')
+      .select('salons!profiles_salon_id_fkey(slug)')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const profileWithSalon = profile as { salons?: { slug?: string } | null } | null
+    return profileWithSalon?.salons?.slug || 'dashboard'
+  }
+
   const userPermissions = (user?.app_metadata as { permissions?: string[] })?.permissions || [];
 
   // Funkcja pomocnicza do sprawdzania uprawnień
@@ -125,8 +155,7 @@ export async function middleware(request: NextRequest) {
 
   // 3. Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/signup')) {
-    const parts = pathname.split('/').filter(p => p.length > 0);
-    const slug = parts[0] || 'dashboard';
+    const slug = await resolveSalonSlug();
     const url = request.nextUrl.clone();
     url.pathname = `/${slug}/dashboard`;
     return NextResponse.redirect(url);
@@ -138,7 +167,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/public/:path*',
-    '/:path*',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 }
 

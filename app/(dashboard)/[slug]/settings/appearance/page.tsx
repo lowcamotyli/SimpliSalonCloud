@@ -13,12 +13,15 @@ import { Input } from '@/components/ui/input'
 import type { ThemeKey } from '@/lib/types/settings'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import type { Database } from '@/types/supabase'
+
+type SalonRow = Database['public']['Tables']['salons']['Row']
 
 export default function AppearancePage() {
   const params = useParams()
   const slug = params.slug as string
 
-  const { data: salon } = useQuery({
+  const { data: salon } = useQuery<SalonRow | null>({
     queryKey: ['salon', slug],
     queryFn: async () => {
       const supabase = createClient()
@@ -32,8 +35,9 @@ export default function AppearancePage() {
     }
   })
 
-  const { data: settings } = useSettings(salon?.id || '')
-  const updateSettings = useUpdateSettings(salon?.id || '')
+  const salonId = salon?.id ?? ''
+  const { data: settings } = useSettings(salonId)
+  const updateSettings = useUpdateSettings(salonId)
 
   const [theme, setTheme] = useState<ThemeKey>('beauty_salon')
   const [logoUrl, setLogoUrl] = useState('')

@@ -266,10 +266,10 @@ export default async function DashboardPage({ params }: { params: { slug: string
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-gray-500 text-base font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
+          <p className="text-muted-foreground text-base font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${params.slug}/bookings`}>
@@ -294,7 +294,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
 
         {/* Quick Actions */}
         <div className="glass p-6 rounded-2xl flex flex-col h-full bg-white/50 backdrop-blur-sm border-none">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-600" />
             Szybkie akcje
           </h2>
@@ -305,8 +305,8 @@ export default async function DashboardPage({ params }: { params: { slug: string
                   <Users className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Dodaj klienta</p>
-                  <p className="text-sm text-gray-500">Powiększ swoją bazę</p>
+                  <p className="font-bold text-foreground">Dodaj klienta</p>
+                  <p className="text-sm text-muted-foreground">Powiększ swoją bazę</p>
                 </div>
               </div>
             </Link>
@@ -316,8 +316,8 @@ export default async function DashboardPage({ params }: { params: { slug: string
                   <Clock className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Zarządzaj zespołem</p>
-                  <p className="text-sm text-gray-500">Pracownicy i grafik</p>
+                  <p className="font-bold text-foreground">Zarządzaj zespołem</p>
+                  <p className="text-sm text-muted-foreground">Pracownicy i grafik</p>
                 </div>
               </div>
             </Link>
@@ -327,8 +327,8 @@ export default async function DashboardPage({ params }: { params: { slug: string
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Kalendarz</p>
-                  <p className="text-sm text-gray-500">Przeglądaj harmonogram</p>
+                  <p className="font-bold text-foreground">Kalendarz</p>
+                  <p className="text-sm text-muted-foreground">Przeglądaj harmonogram</p>
                 </div>
               </div>
             </Link>
@@ -338,8 +338,8 @@ export default async function DashboardPage({ params }: { params: { slug: string
                   <TrendingUp className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Ustawienia</p>
-                  <p className="text-sm text-gray-500">Konfiguracja salonu</p>
+                  <p className="font-bold text-foreground">Ustawienia</p>
+                  <p className="text-sm text-muted-foreground">Konfiguracja salonu</p>
                 </div>
               </div>
             </Link>
@@ -356,9 +356,9 @@ export default async function DashboardPage({ params }: { params: { slug: string
       <div className="grid gap-6 lg:grid-cols-1">
 
         {/* Upcoming Bookings */}
-        <div className="glass p-6 rounded-2xl bg-white/50 backdrop-blur-sm border-none">
+        <div className="glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Dzisiejsze wizyty</h2>
+            <h2 className="text-xl font-bold text-foreground">Dzisiejsze wizyty</h2>
             <Link href={`/${params.slug}/calendar`} className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
               Zobacz wszystkie
             </Link>
@@ -369,19 +369,19 @@ export default async function DashboardPage({ params }: { params: { slug: string
                 <div
                   key={booking.id}
                   style={{ animationDelay: `${index * 50}ms` }}
-                  className="flex items-center justify-between p-4 rounded-xl glass group hover:bg-white transition-all duration-300 border-none animate-fade-in"
+                  className="flex items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
                 >
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">
                       {booking.clients?.full_name?.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{booking.clients?.full_name}</p>
-                      <p className="text-sm text-gray-500">{booking.services?.name}</p>
+                      <p className="font-bold text-foreground group-hover:text-purple-600 transition-colors">{booking.clients?.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{booking.services?.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">{booking.booking_time?.slice(0, 5)}</p>
+                    <p className="text-lg font-bold text-foreground">{booking.booking_time?.slice(0, 5)}</p>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                       }`}>
                       {booking.status}

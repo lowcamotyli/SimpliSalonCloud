@@ -3,10 +3,36 @@ import { validateApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { publicBookingSchema } from '@/lib/validators/public-booking.validators'
 import { getSalonId } from '@/lib/utils/salon'
+import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 
 export async function POST(request: NextRequest) {
     try {
         console.info('[PUBLIC_BOOKINGS] start')
+
+        // Rate limiting check
+        const clientIp = getClientIp(request.headers)
+        const rateLimitResult = await checkPublicApiRateLimit(clientIp)
+
+        if (!rateLimitResult.success) {
+            console.warn('[PUBLIC_BOOKINGS] rate limit exceeded', { ip: clientIp })
+            return NextResponse.json(
+                {
+                    error: 'Rate limit exceeded. Too many requests.',
+                    limit: rateLimitResult.limit,
+                    reset: new Date(rateLimitResult.reset).toISOString(),
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+                        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+                        'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+                        'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+                    },
+                }
+            )
+        }
+
         const authError = validateApiKey(request)
         if (authError) {
             console.warn('[PUBLIC_BOOKINGS] api key invalid')
@@ -27,7 +53,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
         }
 
-        const { name, phone, email, serviceId, date, time } = parsed.data
+        const { name, phone, email, serviceId, employeeId, date, time } = parsed.data
         const supabase = createAdminSupabaseClient()
         const salonId = getSalonId(request)
 
@@ -56,41 +82,6 @@ export async function POST(request: NextRequest) {
         if (!service) {
             console.warn('[PUBLIC_BOOKINGS] service not found', { serviceId, salonId })
             return NextResponse.json({ error: 'Service not found' }, { status: 404 })
-        }
-
-        // overlap check — zajęte sloty tego dnia
-        console.info('[PUBLIC_BOOKINGS] fetch bookings start')
-        const { data: bookings, error: bookingsError } = await supabase
-            .from('bookings')
-            .select('booking_time, duration')
-            .eq('salon_id', salonId)
-            .eq('booking_date', date)
-            .not('status', 'eq', 'cancelled')
-            .is('deleted_at', null)
-        console.info('[PUBLIC_BOOKINGS] fetch bookings end', {
-            count: bookings?.length ?? 0,
-            bookingsError,
-        })
-
-        if (bookingsError) {
-            console.error('[PUBLIC_BOOKINGS] bookings fetch error', bookingsError)
-            return NextResponse.json({ error: 'Bookings fetch failed' }, { status: 500 })
-        }
-
-        const [h, m] = time.split(':').map(Number)
-        const newStart = h * 60 + m
-        const newEnd = newStart + service.duration
-
-        const conflict = bookings?.some((b) => {
-            const [bh, bm] = b.booking_time.split(':').map(Number)
-            const bStart = bh * 60 + bm
-            const bEnd = bStart + b.duration
-            return newStart < bEnd && newEnd > bStart
-        })
-
-        if (conflict) {
-            console.warn('[PUBLIC_BOOKINGS] time slot conflict', { date, time })
-            return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
         }
 
         // find or create client po telefonie
@@ -162,30 +153,90 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Client not resolved' }, { status: 500 })
         }
 
-        // resolve employee (public booking uses first active employee)
-        console.info('[PUBLIC_BOOKINGS] fetch employee start')
-        const { data: employee, error: employeeError } = await supabase
-            .from('employees')
-            .select('id')
-            .eq('salon_id', salonId)
-            .eq('active', true)
-            .is('deleted_at', null)
-            .order('created_at', { ascending: true })
-            .limit(1)
-            .maybeSingle()
+        // resolve employee
+        console.info('[PUBLIC_BOOKINGS] fetch employee start', { providedEmployeeId: employeeId })
+
+        let employee: { id: string } | null = null
+
+        if (employeeId) {
+            // Validate provided employee
+            const { data: specificEmployee, error: specificEmployeeError } = await supabase
+                .from('employees')
+                .select('id')
+                .eq('id', employeeId)
+                .eq('salon_id', salonId)
+                .eq('active', true)
+                .is('deleted_at', null)
+                .single()
+
+            if (specificEmployeeError || !specificEmployee) {
+                console.warn('[PUBLIC_BOOKINGS] provided employee not found or invalid', { employeeId, salonId })
+                return NextResponse.json({ error: 'Invalid employee specified' }, { status: 400 })
+            }
+            employee = specificEmployee
+        } else {
+            // Fallback: any active employee
+            const { data: anyEmployee, error: anyEmployeeError } = await supabase
+                .from('employees')
+                .select('id')
+                .eq('salon_id', salonId)
+                .eq('active', true)
+                .is('deleted_at', null)
+                .order('created_at', { ascending: true })
+                .limit(1)
+                .maybeSingle()
+
+            if (anyEmployeeError) {
+                console.error('[PUBLIC_BOOKINGS] employee fetch error', anyEmployeeError)
+                return NextResponse.json({ error: 'Employee fetch failed' }, { status: 500 })
+            }
+            employee = anyEmployee
+        }
+
         console.info('[PUBLIC_BOOKINGS] fetch employee end', {
             hasEmployee: !!employee,
-            employeeError,
+            employeeId: employee?.id
         })
-
-        if (employeeError) {
-            console.error('[PUBLIC_BOOKINGS] employee fetch error', employeeError)
-            return NextResponse.json({ error: 'Employee fetch failed' }, { status: 500 })
-        }
 
         if (!employee) {
             console.warn('[PUBLIC_BOOKINGS] no active employee found', { salonId })
             return NextResponse.json({ error: 'No active employee available' }, { status: 404 })
+        }
+
+        // overlap check — zajęte sloty tego dnia dla wybranego pracownika
+        console.info('[PUBLIC_BOOKINGS] fetch bookings start', { employeeId: employee.id })
+        const { data: bookings, error: bookingsError } = await supabase
+            .from('bookings')
+            .select('booking_time, duration')
+            .eq('salon_id', salonId)
+            .eq('employee_id', employee.id)
+            .eq('booking_date', date)
+            .not('status', 'eq', 'cancelled')
+            .is('deleted_at', null)
+        console.info('[PUBLIC_BOOKINGS] fetch bookings end', {
+            count: bookings?.length ?? 0,
+            bookingsError,
+        })
+
+        if (bookingsError) {
+            console.error('[PUBLIC_BOOKINGS] bookings fetch error', bookingsError)
+            return NextResponse.json({ error: 'Bookings fetch failed' }, { status: 500 })
+        }
+
+        const [h, m] = time.split(':').map(Number)
+        const newStart = h * 60 + m
+        const newEnd = newStart + service.duration
+
+        const conflict = bookings?.some((b: any) => {
+            const [bh, bm] = b.booking_time.split(':').map(Number)
+            const bStart = bh * 60 + bm
+            const bEnd = bStart + b.duration
+            return newStart < bEnd && newEnd > bStart
+        })
+
+        if (conflict) {
+            console.warn('[PUBLIC_BOOKINGS] time slot conflict', { date, time, employeeId: employee.id })
+            return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
         }
 
         // create booking

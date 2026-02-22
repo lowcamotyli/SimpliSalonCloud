@@ -28,7 +28,7 @@ type Booking = {
     id: string
     full_name: string
     phone: string
-  }
+  } | null
   service: {
     id: string
     name: string
@@ -49,6 +49,7 @@ const statusColors = {
   confirmed: 'bg-green-100 text-green-800 border-green-200',
   completed: 'bg-gray-100 text-gray-800 border-gray-200',
   cancelled: 'bg-red-100 text-red-800 border-red-200',
+  pending: 'bg-amber-100 text-amber-800 border-amber-200',
 }
 
 export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors }: BookingCardProps) {
@@ -61,7 +62,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
 
     const confirmed = window.confirm(
       `Czy na pewno chcesz usunąć wizytę?\n\n` +
-      `Klient: ${booking.client.full_name}\n` +
+      `Klient: ${booking.client?.full_name || 'Nieznany klient'}\n` +
       `Data: ${booking.booking_date} ${booking.booking_time}\n` +
       `Usługa: ${booking.service.name}\n\n` +
       `Ta operacja może być cofnięta przez administratora.`
@@ -116,15 +117,15 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
         <div className="flex items-start justify-between gap-1 overflow-hidden">
           <div className="flex-1 min-w-0">
             <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
-              {booking.client.full_name}
+              {booking.client?.full_name || 'Nieznany klient'}
             </p>
             <p className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
               {booking.service.name}
             </p>
           </div>
           {booking.duration >= 45 && (
-            <Badge className={`${statusColors[booking.status as keyof typeof statusColors]} border text-[9px] px-1 h-4 shrink-0`}>
-              {BOOKING_STATUS_LABELS[booking.status].substring(0, 3)}
+            <Badge className={`${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4 shrink-0`}>
+              {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
             </Badge>
           )}
         </div>

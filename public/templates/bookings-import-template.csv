@@ -1,0 +1,3 @@
+data,godzina,klient_imie,klient_telefon,klient_email,usluga,pracownik,czas_min,cena,status,notatki
+2025-01-15,09:00,Anna Kowalska,500100200,anna@example.com,Strzyżenie damskie,Kasia Nowak,60,120.00,completed,Stała klientka
+2025-01-15,10:30,Jan Nowak,600200300,,Strzyżenie męskie,Bartosz Rogala,45,80.00,completed,
