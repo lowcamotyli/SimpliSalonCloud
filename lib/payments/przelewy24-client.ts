@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash, timingSafeEqual } from 'crypto'
 
 /**
  * Przelewy24 Client
@@ -10,7 +10,8 @@ import { createHash } from 'crypto'
 interface P24Config {
   merchantId: string
   posId: string
-  crc: string
+  crc: string      // CRC key — do generowania podpisów SHA384
+  apiKey: string   // API key — do HTTP Basic Auth (może być inny niż CRC)
   apiUrl: string
 }
 
@@ -80,6 +81,8 @@ export class Przelewy24Client {
     const merchantId = process.env.P24_MERCHANT_ID
     const posId = process.env.P24_POS_ID
     const crc = process.env.P24_CRC
+    // P24_API_KEY jest używany do HTTP Basic Auth; fallback na P24_CRC dla starszych kont
+    const apiKey = process.env.P24_API_KEY || process.env.P24_CRC
     const apiUrl = process.env.P24_API_URL
 
     if (!merchantId || !posId || !crc || !apiUrl) {
@@ -93,6 +96,7 @@ export class Przelewy24Client {
       merchantId,
       posId,
       crc,
+      apiKey: apiKey!,
       apiUrl,
     }
   }
@@ -246,7 +250,9 @@ export class Przelewy24Client {
       crc: this.config.crc,
     })
 
-    return expectedSign === notification.sign
+    const a = Buffer.from(expectedSign)
+    const b = Buffer.from(notification.sign)
+    return a.length === b.length && timingSafeEqual(a, b)
   }
 
   /**
@@ -410,9 +416,8 @@ export class Przelewy24Client {
    * Generuje header dla HTTP Basic Authentication
    */
   private getBasicAuthHeader(): string {
-    const credentials = Buffer.from(`${this.config.posId}:${this.config.crc}`).toString(
-      'base64'
-    )
+    // P24 REST API v1: Basic Auth używa posId jako login i apiKey jako hasło
+    const credentials = Buffer.from(`${this.config.posId}:${this.config.apiKey}`).toString('base64')
     return `Basic ${credentials}`
   }
 

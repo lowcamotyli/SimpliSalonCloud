@@ -44,10 +44,7 @@ export async function GET(request: NextRequest) {
     console.error('[USAGE REPORT] Error:', error)
 
     return NextResponse.json(
-      {
-        error: 'Failed to get usage report',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to get usage report' },
       { status: 500 }
     )
   }

@@ -4,9 +4,13 @@ import { createBookingSchema } from '@/lib/validators/booking.validators'
 import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, ConflictError, UnauthorizedError, ValidationError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 // GET /api/bookings - List bookings with optional filters
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  const rl = await applyRateLimit(request)
+  if (rl) return rl
+
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -90,6 +94,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 // POST /api/bookings - Create new booking
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const rl = await applyRateLimit(request, { limit: 30 })
+  if (rl) return rl
+
   const startTime = Date.now()
   const supabase = await createServerSupabaseClient()
 
@@ -139,23 +146,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw error
   }
 
-  // 1. Check slot availability
-  const { data: existingBooking } = await supabase
-    .from('bookings')
-    .select('id, clients(full_name)')
-    .eq('employee_id', validatedData.employee_id as string)
-    .eq('booking_date', validatedData.date)
-    .eq('booking_time', validatedData.start_time)
-    .neq('status', 'cancelled')
-    .maybeSingle()
-
-  if (existingBooking) {
-    throw new ConflictError('Termin jest już zajęty', {
-      conflictingClient: (existingBooking as any).clients?.full_name || 'Nieznany klient',
-    })
-  }
-
-  // 2. Get or create client
+  // 1. Get or create client
   let clientId = validatedData.client_id
 
   if (!clientId && validatedData.clientName && validatedData.clientPhone) {
@@ -208,7 +199,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ValidationError('Client ID or client details required')
   }
 
-  // 3. Get service details
+  // 2. Get service details
   const { data: service, error: serviceError } = await supabase
     .from('services')
     .select('price, duration')
@@ -217,37 +208,37 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (serviceError) throw serviceError
 
-  // 4. Create booking
+  // 3. Atomically check slot + create booking (eliminates race condition)
   const duration = validatedData.duration || (service as any).duration || 30
 
-  const { data: bookingData, error: bookingError } = await supabase
-    .from('bookings')
-    .insert({
-      salon_id: salonProfile.salon_id,
-      employee_id: validatedData.employee_id as string,
-      client_id: clientId,
-      service_id: validatedData.service_id as string,
-      booking_date: validatedData.date,
-      booking_time: validatedData.start_time,
-      duration: duration,
-      base_price: (service as any).price,
-      notes: validatedData.notes || null,
-      status: (validatedData.status as any) || 'scheduled',
-      created_by: user.id,
-      source: (body as any).source || 'manual'
+  const { data: bookingRows, error: bookingError } = await supabase
+    .rpc('create_booking_atomic', {
+      p_salon_id: salonProfile.salon_id,
+      p_employee_id: validatedData.employee_id as string,
+      p_client_id: clientId,
+      p_service_id: validatedData.service_id as string,
+      p_booking_date: validatedData.date,
+      p_booking_time: validatedData.start_time,
+      p_duration: duration,
+      p_base_price: (service as any).price,
+      p_notes: validatedData.notes || null,
+      p_status: (validatedData.status as any) || 'scheduled',
+      p_created_by: user.id,
+      p_source: (body as any).source || 'manual',
     } as any)
-    .select()
-    .single()
 
   if (bookingError) {
+    if (bookingError.code === '23P01') {
+      throw new ConflictError('Termin jest już zajęty')
+    }
     logger.error('Failed to create booking', bookingError, {
       code: bookingError.code,
       message: bookingError.message,
-      details: bookingError.details,
-      hint: bookingError.hint
     })
     throw bookingError
   }
+
+  const bookingData = Array.isArray(bookingRows) ? bookingRows[0] : bookingRows
   if (!bookingData) throw new Error('Failed to create booking')
 
   const booking = bookingData as any

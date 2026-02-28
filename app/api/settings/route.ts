@@ -1,41 +1,111 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { updateSettingsSchema } from '@/lib/validators/settings.validators'
+import { encryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
 import { z } from 'zod'
 
-export async function GET(request: Request) {
-  console.log('=== SETTINGS API GET START ===')
+const MASKED_SECRET = '********'
 
+function sanitizeSecrets<T extends Record<string, any>>(data: T): T {
+  return {
+    ...data,
+    resend_api_key: '',
+    smsapi_token: '',
+    p24_crc: '',
+    p24_api_key: '',
+    has_resend_api_key: !!data?.resend_api_key,
+    has_smsapi_token: !!data?.smsapi_token,
+    has_p24_crc: !!data?.p24_crc,
+    has_p24_api_key: !!data?.p24_api_key,
+  }
+}
+
+type SecretField = 'resend_api_key' | 'smsapi_token' | 'p24_crc' | 'p24_api_key'
+
+function prepareEncryptedCredentialUpdates(updates: Record<string, any>) {
+  const next = { ...updates }
+
+  const handleCredential = (field: SecretField) => {
+    if (!(field in next)) return
+
+    const value = next[field]
+
+    if (typeof value !== 'string') {
+      return
+    }
+
+    const trimmed = value.trim()
+
+    if (!trimmed) {
+      next[field] = null
+      return
+    }
+
+    if (trimmed === MASKED_SECRET || trimmed === '__UNCHANGED__') {
+      delete next[field]
+      return
+    }
+
+    if (isEncryptedPayload(trimmed)) {
+      next[field] = trimmed
+      return
+    }
+
+    next[field] = encryptSecret(trimmed)
+  }
+
+  handleCredential('resend_api_key')
+  handleCredential('smsapi_token')
+  handleCredential('p24_crc')
+  handleCredential('p24_api_key')
+
+  return next
+}
+
+export async function GET(request: Request) {
   try {
-    console.log('1. Creating Supabase client...')
     const supabase = await createServerSupabaseClient()
-    console.log('2. Supabase client created successfully')
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const { searchParams } = new URL(request.url)
     const salonId = searchParams.get('salonId')
-    console.log('3. SalonId from request:', salonId)
 
     if (!salonId) {
-      console.log('ERROR: No salonId provided')
       return NextResponse.json({ error: 'salonId required' }, { status: 400 })
     }
 
-    console.log('4. Querying salon_settings table...')
+    const { data: membership, error: membershipError } = await (supabase as any)
+      .from('profiles')
+      .select('salon_id')
+      .eq('user_id', user.id)
+      .eq('salon_id', salonId)
+      .maybeSingle()
+
+    if (membershipError) {
+      console.error('[SETTINGS] GET membership error:', membershipError)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { data, error } = await supabase
       .from('salon_settings')
       .select('*')
       .eq('salon_id', salonId)
       .maybeSingle()
 
-    console.log('5. Query result:', { data: !!data, error: error?.message })
-
     if (error) {
-      console.log('ERROR from Supabase:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[SETTINGS] GET query error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     if (!data) {
-      console.log('6. No data found, returning default settings')
       const defaultSettings = {
         salon_id: salonId,
         theme: 'beauty_salon',
@@ -52,6 +122,13 @@ export async function GET(request: Request) {
         contact_email: '',
         accounting_email: '',
         contact_phone: '',
+        resend_api_key: '',
+        resend_from_email: '',
+        resend_from_name: '',
+        smsapi_token: '',
+        smsapi_sender_name: '',
+        has_resend_api_key: false,
+        has_smsapi_token: false,
         operating_hours: {
           monday: { open: '09:00', close: '17:00', closed: false },
           tuesday: { open: '09:00', close: '17:00', closed: false },
@@ -73,17 +150,14 @@ export async function GET(request: Request) {
       return NextResponse.json(defaultSettings)
     }
 
-    console.log('6. Success! Returning data')
-    return NextResponse.json(data)
+    return NextResponse.json(sanitizeSecrets(data))
   } catch (err) {
-    console.log('CATCH ERROR:', err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    console.error('[SETTINGS] GET error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function PATCH(request: Request) {
-  console.log('=== SETTINGS API PATCH START ===')
-
   try {
     const supabase = await createServerSupabaseClient()
     const body = await request.json()
@@ -96,33 +170,50 @@ export async function PATCH(request: Request) {
     }
 
     const validatedUpdates = updateSettingsSchema.parse(updates)
+    const securedUpdates = prepareEncryptedCredentialUpdates(validatedUpdates as Record<string, any>)
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    console.log('PATCH User ID:', user?.id)
 
-    if (!user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: membership, error: membershipError } = await (supabase as any)
+      .from('profiles')
+      .select('salon_id, role')
+      .eq('user_id', user.id)
+      .eq('salon_id', salonId)
+      .maybeSingle()
+
+    if (membershipError) {
+      console.error('[SETTINGS] PATCH membership error:', membershipError)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (membership.role !== 'owner') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { data, error } = await (supabase
       .from('salon_settings') as any)
       .upsert({
         salon_id: salonId,
-        ...validatedUpdates,
+        ...securedUpdates,
         updated_at: new Date().toISOString()
       }, { onConflict: 'salon_id' })
       .select()
       .maybeSingle() as any
 
-    console.log('PATCH Result Data:', data)
-
     if (error) {
-      console.log('PATCH ERROR:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[SETTINGS] PATCH upsert error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
-    console.log('PATCH Success confirmed')
-    return NextResponse.json(data)
+    return NextResponse.json(data ? sanitizeSecrets(data) : data)
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json(
@@ -130,6 +221,7 @@ export async function PATCH(request: Request) {
         { status: 400 }
       )
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    console.error('[SETTINGS] PATCH error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

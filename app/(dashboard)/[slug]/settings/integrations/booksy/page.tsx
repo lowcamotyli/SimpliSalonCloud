@@ -19,6 +19,7 @@ import {
   LogOut, Settings2, Info, ChevronRight, Loader2
 } from 'lucide-react'
 import type { Database } from '@/types/supabase'
+import { BooksyPendingEmails } from '@/components/settings/booksy-pending-emails'
 
 type SalonRow = Database['public']['Tables']['salons']['Row']
 
@@ -143,6 +144,15 @@ export default function BooksySettingsPage() {
     try {
       const res = await fetch('/api/integrations/booksy/sync', { method: 'POST' })
       const data = await res.json()
+
+      if (data?.code === 'GMAIL_REAUTH_REQUIRED') {
+        toast.error('Sesja Gmail wygasla. Trwa ponowne laczenie konta...')
+        setTimeout(() => {
+          window.location.href = '/api/integrations/booksy/auth'
+        }, 800)
+        return
+      }
+
       if (data.success) {
         toast.success(`Synchronizacja zakończona: ${data.successful} nowych, ${data.errors} błędów`)
         refetchStats()
@@ -315,17 +325,17 @@ export default function BooksySettingsPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               <StatCard
-                label="Emaili przetworzonych"
+                label="Emaili przetworzonych (lacznie)"
                 value={stats?.syncStats.total ?? 0}
                 color="blue"
               />
               <StatCard
-                label="Sukcesy"
+                label="Sukcesy (lacznie)"
                 value={stats?.syncStats.success ?? 0}
                 color="green"
               />
               <StatCard
-                label="Błędy"
+                label="Bledy (lacznie)"
                 value={stats?.syncStats.errors ?? 0}
                 color="red"
               />
@@ -511,6 +521,8 @@ export default function BooksySettingsPage() {
         </Card>
       )}
 
+      {isConnected && <BooksyPendingEmails salonId={salonId} />}
+
       {/* ── 5. OSTATNIE OPERACJE (tylko gdy połączono) ── */}
       {isConnected && (
         <Card>
@@ -644,3 +656,4 @@ function StatCard({ label, value, color }: { label: string; value: number; color
     </div>
   )
 }
+

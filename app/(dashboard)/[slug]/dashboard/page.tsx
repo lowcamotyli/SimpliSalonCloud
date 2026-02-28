@@ -3,34 +3,22 @@ import { Button } from '@/components/ui/button'
 import { Calendar, Users, DollarSign, TrendingUp, Plus, Clock, ArrowUpRight, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { StatCard } from '@/components/dashboard/stat-card'
-import dynamic from 'next/dynamic'
+import RevenueChart from '@/components/dashboard/revenue-chart'
+import ServicesChart from '@/components/dashboard/services-chart'
+import EmployeeRevenueChart from '@/components/dashboard/employee-revenue-chart'
 import { format, subDays, startOfDay, endOfDay } from 'date-fns'
-
-const RevenueChart = dynamic(() => import('@/components/dashboard/revenue-chart'), {
-  loading: () => <div className="h-[300px] w-full animate-pulse bg-gray-100 rounded-2xl" />,
-  ssr: false
-})
-
-const ServicesChart = dynamic(() => import('@/components/dashboard/services-chart'), {
-  loading: () => <div className="h-[300px] w-full animate-pulse bg-gray-100 rounded-2xl" />,
-  ssr: false
-})
-
-const EmployeeRevenueChart = dynamic(() => import('@/components/dashboard/employee-revenue-chart'), {
-  loading: () => <div className="h-[300px] w-full animate-pulse bg-gray-100 rounded-2xl" />,
-  ssr: false
-})
 
 import { EmptyState } from '@/components/ui/empty-state'
 
-export default async function DashboardPage({ params }: { params: { slug: string } }) {
+export default async function DashboardPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const supabase = await createServerSupabaseClient()
 
   // Get salon ID from slug
   const { data: salon } = await supabase
     .from('salons')
     .select('id, name')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!salon) {
@@ -231,7 +219,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
       lightColor: 'from-blue-50 to-cyan-50',
       trend: { value: Math.abs(bookingTrend), isPositive: bookingTrend >= 0 },
       description: 'vs wczoraj',
-      href: `/${params.slug}/reports?tab=visits`
+      href: `/${slug}/reports?tab=visits`
     },
     {
       title: 'Przychód dzisiaj',
@@ -241,7 +229,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
       lightColor: 'from-emerald-50 to-teal-50',
       trend: { value: Math.abs(revenueTrend), isPositive: revenueTrend >= 0 },
       description: 'vs wczoraj',
-      href: `/${params.slug}/reports?tab=revenue`
+      href: `/${slug}/reports?tab=revenue`
     },
     {
       title: 'Aktywni pracownicy',
@@ -249,7 +237,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
       icon: Users,
       color: 'from-purple-600 to-violet-600',
       lightColor: 'from-purple-50 to-violet-50',
-      href: `/${params.slug}/reports?tab=employees`
+      href: `/${slug}/reports?tab=employees`
     },
     {
       title: 'Baza klientów',
@@ -257,7 +245,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
       icon: TrendingUp,
       color: 'from-pink-600 to-rose-600',
       lightColor: 'from-pink-50 to-rose-50',
-      href: `/${params.slug}/reports?tab=clients`
+      href: `/${slug}/reports?tab=clients`
     },
   ]
 
@@ -272,7 +260,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
           <p className="text-muted-foreground text-base font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/${params.slug}/bookings`}>
+          <Link href={`/${slug}/bookings`}>
             <Button size="lg" className="gradient-button rounded-xl h-12 px-6 font-bold flex gap-2">
               <Plus className="h-5 w-5" />
               Nowa wizyta
@@ -299,7 +287,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
             Szybkie akcje
           </h2>
           <div className="grid grid-cols-1 gap-3 flex-1">
-            <Link href={`/${params.slug}/clients`} className="group">
+            <Link href={`/${slug}/clients`} className="group">
               <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
                 <div className="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
                   <Users className="h-6 w-6" />
@@ -310,7 +298,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
                 </div>
               </div>
             </Link>
-            <Link href={`/${params.slug}/employees`} className="group">
+            <Link href={`/${slug}/employees`} className="group">
               <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
                 <div className="p-3 rounded-lg bg-green-100 text-green-600 group-hover:scale-110 transition-transform">
                   <Clock className="h-6 w-6" />
@@ -321,7 +309,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
                 </div>
               </div>
             </Link>
-            <Link href={`/${params.slug}/calendar`} className="group">
+            <Link href={`/${slug}/calendar`} className="group">
               <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
                 <div className="p-3 rounded-lg bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
                   <Calendar className="h-6 w-6" />
@@ -332,7 +320,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
                 </div>
               </div>
             </Link>
-            <Link href={`/${params.slug}/settings`} className="group">
+            <Link href={`/${slug}/settings`} className="group">
               <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
                 <div className="p-3 rounded-lg bg-rose-100 text-rose-600 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-6 w-6" />
@@ -359,7 +347,7 @@ export default async function DashboardPage({ params }: { params: { slug: string
         <div className="glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-foreground">Dzisiejsze wizyty</h2>
-            <Link href={`/${params.slug}/calendar`} className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
+            <Link href={`/${slug}/calendar`} className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
               Zobacz wszystkie
             </Link>
           </div>

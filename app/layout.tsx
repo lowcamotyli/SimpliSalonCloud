@@ -5,7 +5,7 @@ import { validateEnv } from "@/lib/config/validate-env"
 import { QueryProvider } from "@/lib/providers/query-provider"
 import "./globals.css"
 
-const shouldThrowOnEnvError = process.env.ENFORCE_ENV_VALIDATION === 'true'
+const shouldThrowOnEnvError = process.env.NODE_ENV === 'production' || process.env.ENFORCE_ENV_VALIDATION === 'true'
 validateEnv(shouldThrowOnEnvError)
 
 const inter = Inter({

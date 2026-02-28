@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Konfiguruje CORS headers dla requests bazując na ALLOWED_ORIGINS environment variable
+ * Konfiguruje CORS headers dla requests bazując na ALLOWED_ORIGINS environment variable.
+ * Dozwolone origins definiowane wyłącznie przez ALLOWED_ORIGINS — nigdy przez NODE_ENV.
+ * W development ustaw ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173 w .env.local
  *
  * @param request - Incoming NextRequest
  * @param response - NextResponse do modyfikacji
@@ -10,12 +12,6 @@ import { NextRequest, NextResponse } from 'next/server'
 export function setCorsHeaders(request: NextRequest, response: NextResponse): NextResponse {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || []
   const origin = request.headers.get('origin')
-
-  // Tylko w development mode zezwalaj na localhost
-  if (process.env.NODE_ENV === 'development') {
-    const devOrigins = ['http://localhost:5173', 'http://localhost:3000']
-    allowedOrigins.push(...devOrigins)
-  }
 
   if (origin && allowedOrigins.includes(origin)) {
     response.headers.set('Access-Control-Allow-Origin', origin)
@@ -40,12 +36,6 @@ export function handleCorsPreflightRequest(request: NextRequest): NextResponse |
 
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || []
   const origin = request.headers.get('origin')
-
-  // Development mode
-  if (process.env.NODE_ENV === 'development') {
-    const devOrigins = ['http://localhost:5173', 'http://localhost:3000']
-    allowedOrigins.push(...devOrigins)
-  }
 
   if (!origin || !allowedOrigins.includes(origin)) {
     return new NextResponse(null, { status: 403 })

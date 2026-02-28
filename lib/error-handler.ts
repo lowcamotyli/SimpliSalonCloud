@@ -165,7 +165,7 @@ export function handleApiError(error: unknown): NextResponse {
         errorString: String(error)
     })
 
-    const isDevelopment = process.env.NODE_ENV === 'development'
+    const isDevelopment = process.env.EXPOSE_ERROR_DETAILS === 'true'
 
     return NextResponse.json(
         {

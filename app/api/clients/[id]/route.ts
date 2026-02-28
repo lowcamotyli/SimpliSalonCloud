@@ -10,8 +10,9 @@ type ClientUpdate = Database['public']['Tables']['clients']['Update']
 // GET /api/clients/[id]
 export const GET = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -22,16 +23,20 @@ export const GET = withErrorHandling(async (
   const { data: client, error } = await supabase
     .from('clients')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') throw new NotFoundError('Client', params.id)
+    if (error.code === 'PGRST116') throw new NotFoundError('Client', id)
     throw error
   }
 
   if (!client) {
-    throw new NotFoundError('Client', params.id)
+    throw new NotFoundError('Client', id)
+  }
+
+  if ((client as any).salon_id !== user.app_metadata?.salon_id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   return NextResponse.json({ client })
@@ -40,8 +45,9 @@ export const GET = withErrorHandling(async (
 // PUT /api/clients/[id]
 export const PUT = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -55,12 +61,16 @@ export const PUT = withErrorHandling(async (
   // Get current version
   const { data: existingClient, error: existingError } = await supabase
     .from('clients')
-    .select('version')
-    .eq('id', params.id)
+    .select('version, salon_id')
+    .eq('id', id)
     .single()
 
   if (existingError || !existingClient) {
-    throw new NotFoundError('Client', params.id)
+    throw new NotFoundError('Client', id)
+  }
+
+  if ((existingClient as any).salon_id !== user.app_metadata?.salon_id) {
+    throw new NotFoundError('Client', id)
   }
 
   const updateData: ClientUpdate = {
@@ -76,12 +86,12 @@ export const PUT = withErrorHandling(async (
   const { data: client, error } = await (supabase as any)
     .from('clients')
     .update(updateData)
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') throw new NotFoundError('Client', params.id)
+    if (error.code === 'PGRST116') throw new NotFoundError('Client', id)
     throw error
   }
 

@@ -23,7 +23,7 @@ import { useClients } from '@/hooks/use-clients'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from '@/lib/formatters'
 import { toast } from 'sonner'
-import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User } from 'lucide-react'
+import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, Trash2, XCircle, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
 
 const bookingFormSchema = z.object({
@@ -51,6 +51,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const { data: clients } = useClients()
   const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
   const [surcharge, setSurcharge] = useState<number>(booking?.surcharge || 0)
+  const [editableDuration, setEditableDuration] = useState<number>(booking?.duration || 60)
+  const [savedDuration, setSavedDuration] = useState<number>(booking?.duration || 60)
   const [processingPayment, setProcessingPayment] = useState<'cash' | 'card' | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('')
@@ -59,6 +61,12 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
+
+  useEffect(() => {
+    setSurcharge(booking?.surcharge || 0)
+    setEditableDuration(booking?.duration || 60)
+    setSavedDuration(booking?.duration || 60)
+  }, [booking?.id, booking?.surcharge, booking?.duration])
 
   // Oblicz defaultValues na podstawie props
   const getDefaultValues = (): BookingFormData => {
@@ -207,6 +215,31 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     }
   }
 
+  const handleUpdateDuration = async () => {
+    if (!booking) return
+
+    const duration = Math.round(Number(editableDuration))
+    if (!Number.isFinite(duration) || duration <= 0) {
+      toast.error('Podaj poprawną długość wizyty (w minutach)')
+      return
+    }
+
+    try {
+      await updateMutation.mutateAsync({ duration })
+      setEditableDuration(duration)
+      setSavedDuration(duration)
+      toast.success('Długość wizyty zaktualizowana')
+    } catch (error) {
+      toast.error('Błąd podczas aktualizacji długości wizyty')
+    }
+  }
+
+  const currentBookingDuration = booking
+    ? (Number.isFinite(Number(editableDuration)) && Number(editableDuration) > 0
+      ? Math.round(Number(editableDuration))
+      : booking.duration)
+    : 60
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl glass rounded-2xl">
@@ -230,7 +263,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <div className="flex flex-col">
                   <p className="font-bold text-gray-900">{formatDateTime(booking.booking_date, booking.booking_time)}</p>
                   <p className="text-xs text-gray-500 font-medium">
-                    Koniec: {format(addMinutes(new Date(`${booking.booking_date}T${booking.booking_time}`), booking.duration), 'HH:mm')}
+                    Koniec: {format(addMinutes(new Date(`${booking.booking_date}T${booking.booking_time}`), currentBookingDuration), 'HH:mm')}
                   </p>
                 </div>
               </div>
@@ -240,8 +273,35 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <p className="font-bold text-gray-900">{booking.service.name}</p>
                 <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
                   <Clock className="h-3 w-3" />
-                  {booking.duration} min
+                  {currentBookingDuration} min
                 </div>
+                {booking.status === 'scheduled' && (
+                  <div className="mt-2 flex items-center justify-between bg-white/40 p-1.5 rounded-lg border border-purple-100">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="5"
+                        step="5"
+                        value={editableDuration}
+                        onChange={(e) => setEditableDuration(parseInt(e.target.value, 10) || 0)}
+                        className="h-7 w-16 text-center text-sm px-1 border-purple-200"
+                      />
+                      <span className="text-xs text-gray-500 font-medium">min</span>
+                    </div>
+                    {currentBookingDuration !== savedDuration && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleUpdateDuration}
+                        disabled={updateMutation.isPending}
+                        className="h-7 px-3 text-xs font-semibold text-purple-600 hover:text-purple-700 hover:bg-purple-100/50"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                        Zapisz
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="glass p-3 rounded-lg">
@@ -258,26 +318,32 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 </Badge>
               </div>
 
-              <div className="glass p-3 rounded-lg">
-                <Label className="text-xs text-gray-600 uppercase font-semibold">Cena końcowa</Label>
-                <p className="font-bold text-purple-600 text-lg">{formatPrice(booking.base_price + (surcharge || 0))}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-gray-600">Baza: {formatPrice(booking.base_price)}</span>
+              <div className="glass p-3 rounded-lg flex flex-col justify-between">
+                <div>
+                  <Label className="text-xs text-gray-600 uppercase font-semibold">Cena końcowa</Label>
+                  <p className="font-bold text-purple-600 text-xl">{formatPrice(booking.base_price + (surcharge || 0))}</p>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100/50">
+                  <span className="text-xs text-gray-500 font-medium tracking-tight">Baza: {formatPrice(booking.base_price)}</span>
                   {booking.status === 'scheduled' ? (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-gray-600">+ Dopłata:</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={surcharge}
-                        onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
-                        className="h-6 w-20 text-xs px-1"
-                      />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-medium">+ Dopłata:</span>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={surcharge || ''}
+                          onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                          className="h-7 w-16 text-xs pr-5 border-purple-200 bg-white/60 text-right"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium">zł</span>
+                      </div>
                     </div>
                   ) : (
                     booking.surcharge > 0 && (
-                      <span className="text-xs text-gray-600">+ Dopłata: {formatPrice(booking.surcharge)}</span>
+                      <span className="text-xs text-purple-600 font-medium bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">+ {formatPrice(booking.surcharge)}</span>
                     )
                   )}
                 </div>
@@ -291,46 +357,54 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               </div>
             )}
 
-            <DialogFooter className="gap-2 flex-wrap">
+            <DialogFooter className="mt-6 pt-4 border-t border-purple-100/50 flex flex-col sm:flex-row gap-4 sm:justify-between items-center bg-gray-50/50 -mx-4 -mb-4 px-4 pb-4 rounded-b-2xl">
               {booking.status === 'scheduled' && (
                 <>
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-start hide-scrollbar">
                     <Button
-                      variant="outline"
+                      variant="ghost"
+                      size="icon"
                       onClick={handleDeleteBooking}
                       disabled={updateMutation.isPending}
-                      className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"
+                      className="h-10 w-10 min-w-10 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 shrink-0"
+                      title="Usuń wizytę z systemu"
                     >
-                      Usuń wizytę
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       onClick={handleCancelBooking}
                       disabled={updateMutation.isPending}
-                      className="rounded-lg"
+                      className="h-10 rounded-full border-red-200 text-red-600 bg-white hover:bg-red-50 px-4 text-sm font-medium shrink-0"
                     >
-                      Anuluj wizytę
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Anuluj
                     </Button>
                   </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                     <Button
                       onClick={() => handleCompleteBooking('cash')}
                       disabled={updateMutation.isPending}
-                      className="gradient-button rounded-lg flex-1"
+                      className="h-10 rounded-full px-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
                     >
                       {processingPayment === 'cash' ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
+                      ) : (
+                        <Banknote className="h-4 w-4 mr-2" />
+                      )}
                       Gotówka
                     </Button>
                     <Button
                       onClick={() => handleCompleteBooking('card')}
                       disabled={updateMutation.isPending}
-                      className="gradient-button rounded-lg flex-1"
+                      className="h-10 rounded-full px-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
                     >
                       {processingPayment === 'card' ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-2" />
+                      )}
                       Karta
                     </Button>
                   </div>

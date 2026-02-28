@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         // Get salon settings
         const { data: settings, error: settingsError } = await admin
             .from('salon_settings')
-            .select('booksy_enabled, booksy_gmail_tokens, booksy_sync_stats')
+            .select('booksy_enabled, booksy_gmail_tokens, booksy_sync_stats, booksy_sender_filter')
             .eq('salon_id', profile.salon_id)
             .single()
 
@@ -47,14 +47,29 @@ export async function POST(request: NextRequest) {
         }
 
         const gmailClient = new GmailClient(settings.booksy_gmail_tokens as any)
-        const messages = await gmailClient.searchBooksyEmails(20)
+
+        let messages
+        try {
+            messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com')
+        } catch (error: any) {
+            if (error?.code === 'GMAIL_REAUTH_REQUIRED' || GmailClient.isInvalidGrantError(error)) {
+                return NextResponse.json(
+                    {
+                        error: 'Sesja Gmail wygasła. Połącz konto Gmail ponownie.',
+                        code: 'GMAIL_REAUTH_REQUIRED'
+                    },
+                    { status: 401 }
+                )
+            }
+            throw error
+        }
 
         const processor = new BooksyProcessor(admin, profile.salon_id)
         const results = []
 
         for (const message of messages) {
             try {
-                const result = await processor.processEmail(message.subject, message.body)
+                const result = await processor.processEmail(message.subject, message.body, { messageId: message.id })
                 await gmailClient.markAsProcessed(message.id, result.success)
                 results.push({ messageId: message.id, subject: message.subject, result })
             } catch (error: any) {

@@ -12,7 +12,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const slug = params.slug
+    const { slug } = await params
     const adminSupabase = createAdminSupabaseClient()
 
     // Pobierz salon
@@ -85,10 +85,7 @@ export async function GET(
     console.error('[SUBSCRIPTION] Error:', error)
 
     return NextResponse.json(
-      {
-        error: 'Failed to fetch subscription',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to fetch subscription' },
       { status: 500 }
     )
   }

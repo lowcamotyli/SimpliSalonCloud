@@ -50,6 +50,9 @@ const PLANS: Record<PlanType, PlanConfig> = {
       'pdf_export',
       'email_notifications',
       'sms_notifications',
+      'crm_sms',
+      'crm_campaigns',
+      'crm_automations',
       'booksy_integration',
       'advanced_analytics',
     ],
@@ -68,6 +71,9 @@ const PLANS: Record<PlanType, PlanConfig> = {
       'pdf_export',
       'email_notifications',
       'sms_notifications',
+      'crm_sms',
+      'crm_campaigns',
+      'crm_automations',
       'booksy_integration',
       'advanced_analytics',
       'api_access',
@@ -89,6 +95,9 @@ const PLANS: Record<PlanType, PlanConfig> = {
       'pdf_export',
       'email_notifications',
       'sms_notifications',
+      'crm_sms',
+      'crm_campaigns',
+      'crm_automations',
       'booksy_integration',
       'advanced_analytics',
       'api_access',
@@ -130,6 +139,7 @@ export class SubscriptionManager {
     // Oblicz cenę
     const plan = PLANS[planType]
     const amount = billingInterval === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice
+    const isStarterTrialWithoutPayment = planType === 'starter' && salon.subscription_status === 'trialing'
 
     // Oblicz daty okresu
     const now = new Date()
@@ -147,7 +157,7 @@ export class SubscriptionManager {
         salon_id: salonId,
         plan_type: planType,
         billing_interval: billingInterval,
-        status: 'active', // Zmieni się na 'past_due' jeśli płatność nie powiedzie się
+        status: isStarterTrialWithoutPayment ? 'active' : 'past_due',
         current_period_start: now.toISOString(),
         current_period_end: periodEnd.toISOString(),
         amount_cents: amount,
@@ -160,11 +170,10 @@ export class SubscriptionManager {
       throw new Error(`Failed to create subscription: ${subError?.message}`)
     }
 
-    // Aktywuj feature flags dla planu
-    await this.enablePlanFeatures(salonId, planType)
-
     // Jeśli to starter trial - nie wymagaj płatności
-    if (planType === 'starter' && salon.subscription_status === 'trialing') {
+    if (isStarterTrialWithoutPayment) {
+      await this.enablePlanFeatures(salonId, planType)
+
       return {
         subscriptionId: subscription.id,
         requiresPayment: false,
@@ -175,7 +184,7 @@ export class SubscriptionManager {
     const sessionId = `sub-${subscription.id}-${Date.now()}`
 
     try {
-      const { token, paymentUrl } = await this.p24.createTransaction({
+      const { paymentUrl } = await this.p24.createTransaction({
         sessionId,
         amount,
         description: `SimpliSalon - ${plan.name} (${billingInterval === 'monthly' ? 'miesięcznie' : 'rocznie'})`,
@@ -185,13 +194,16 @@ export class SubscriptionManager {
       })
 
       // Zapisz transaction ID
-      await this.supabase
+      const { error: txUpdateError } = await this.supabase
         .from('subscriptions')
         .update({
           p24_transaction_id: sessionId,
-          status: 'past_due', // Zmieni się na 'active' po udanej płatności
         })
         .eq('id', subscription.id)
+
+      if (txUpdateError) {
+        throw new Error(`Failed to save payment session: ${txUpdateError.message}`)
+      }
 
       return {
         subscriptionId: subscription.id,
@@ -254,19 +266,6 @@ export class SubscriptionManager {
     const unusedAmount = Math.floor((oldPrice * daysLeft) / totalDays)
     const proratedAmount = newPrice - unusedAmount
 
-    // Zaktualizuj subskrypcję
-    await this.supabase
-      .from('subscriptions')
-      .update({
-        plan_type: newPlanType,
-        billing_interval: interval,
-        amount_cents: newPrice,
-      })
-      .eq('id', currentSub.id)
-
-    // Zaktualizuj feature flags
-    await this.enablePlanFeatures(salonId, newPlanType)
-
     // Jeśli upgrade (wyższa cena) - wymagaj natychmiastowej płatności prorated
     if (proratedAmount > 0) {
       const { data: salon } = await this.supabase
@@ -279,7 +278,7 @@ export class SubscriptionManager {
 
       const sessionId = `upgrade-${currentSub.id}-${Date.now()}`
 
-      const { token, paymentUrl } = await this.p24.createTransaction({
+      const { paymentUrl } = await this.p24.createTransaction({
         sessionId,
         amount: proratedAmount,
         description: `SimpliSalon - Upgrade do ${newPlan.name} (dopłata proporcjonalna)`,
@@ -288,12 +287,43 @@ export class SubscriptionManager {
         returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/${salon.slug}/billing/success?session=${sessionId}`,
       })
 
+      const { error: pendingUpdateError } = await this.supabase
+        .from('subscriptions')
+        .update({
+          p24_transaction_id: sessionId,
+          metadata: {
+            ...(currentSub.metadata || {}),
+            pending_plan_change: {
+              plan_type: newPlanType,
+              billing_interval: interval,
+              amount_cents: newPrice,
+            },
+          },
+        })
+        .eq('id', currentSub.id)
+
+      if (pendingUpdateError) {
+        throw new Error(`Failed to save pending upgrade: ${pendingUpdateError.message}`)
+      }
+
       return {
         requiresPayment: true,
         paymentUrl,
         proratedAmount,
       }
     }
+
+    // Zaktualizuj subskrypcję (downgrade lub brak dopłaty)
+    await this.supabase
+      .from('subscriptions')
+      .update({
+        plan_type: newPlanType,
+        billing_interval: interval,
+        amount_cents: newPrice,
+      })
+      .eq('id', currentSub.id)
+
+    await this.enablePlanFeatures(salonId, newPlanType)
 
     // Downgrade - nie wymaga płatności, zastosuj od następnego okresu
     return {
@@ -355,6 +385,7 @@ export class SubscriptionManager {
     amount: number
   }): Promise<void> {
     const { salonId, sessionId, orderId, amount } = params
+    const orderIdString = orderId.toString()
 
     // Znajdź subskrypcję po transaction ID
     const { data: subscription } = await this.supabase
@@ -369,23 +400,49 @@ export class SubscriptionManager {
       return
     }
 
-    // Zaktualizuj status subskrypcji
-    await this.supabase
-      .from('subscriptions')
-      .update({
-        status: 'active',
-        p24_order_id: orderId.toString(),
-      })
-      .eq('id', subscription.id)
+    const pendingPlanChange = (subscription.metadata as any)?.pending_plan_change as
+      | {
+          plan_type?: PlanType
+          billing_interval?: BillingInterval
+          amount_cents?: number
+        }
+      | undefined
 
-    // Utwórz fakturę
+    const updatePayload: Record<string, any> = {
+      status: 'active',
+      p24_order_id: orderIdString,
+    }
+
+    let activatedPlanType = subscription.plan_type as PlanType
+
+    if (pendingPlanChange?.plan_type) {
+      const nextMetadata = { ...(subscription.metadata || {}) }
+      delete nextMetadata.pending_plan_change
+
+      updatePayload.plan_type = pendingPlanChange.plan_type
+      updatePayload.billing_interval = pendingPlanChange.billing_interval || subscription.billing_interval
+      updatePayload.amount_cents = pendingPlanChange.amount_cents || subscription.amount_cents
+      updatePayload.metadata = nextMetadata
+      activatedPlanType = pendingPlanChange.plan_type
+    }
+
+    // Utwórz fakturę najpierw: brak faktury blokuje aktywację i feature flags
     await this.createInvoice({
       salonId,
       subscriptionId: subscription.id,
       amount,
       p24TransactionId: sessionId,
-      p24OrderId: orderId.toString(),
+      p24OrderId: orderIdString,
     })
+
+    // Zaktualizuj status subskrypcji
+    await this.supabase
+      .from('subscriptions')
+      .update(updatePayload)
+      .eq('id', subscription.id)
+
+    // Security: aktywacja funkcji premium dopiero po potwierdzonej płatności
+    await this.enablePlanFeatures(salonId, activatedPlanType)
 
     console.log(`[SUBSCRIPTION] Payment success for salon ${salonId}, subscription ${subscription.id}`)
   }
@@ -433,6 +490,12 @@ export class SubscriptionManager {
    */
   private async enablePlanFeatures(salonId: string, planType: PlanType): Promise<void> {
     const plan = PLANS[planType]
+    const crmAutomationsLimitByPlan: Record<PlanType, number | null> = {
+      starter: null,
+      professional: 2,
+      business: 10,
+      enterprise: null,
+    }
 
     // Usuń wszystkie feature flags
     await this.supabase.from('feature_flags').delete().eq('salon_id', salonId)
@@ -442,6 +505,9 @@ export class SubscriptionManager {
       salon_id: salonId,
       feature_name: feature,
       enabled: true,
+      ...(feature === 'crm_automations'
+        ? { limit_value: crmAutomationsLimitByPlan[planType] }
+        : {}),
     }))
 
     // Dodaj limity
@@ -508,6 +574,17 @@ export class SubscriptionManager {
   }): Promise<void> {
     const { salonId, subscriptionId, amount, p24TransactionId, p24OrderId } = params
 
+    // Idempotencja: retry webhooka dla tego samego transaction ID nie może tworzyć duplikatu faktury
+    const { data: existingInvoice } = await this.supabase
+      .from('invoices')
+      .select('id')
+      .eq('p24_transaction_id', p24TransactionId)
+      .maybeSingle()
+
+    if (existingInvoice) {
+      return
+    }
+
     // Pobierz informacje o salonie
     const { data: salon } = await this.supabase
       .from('salons')
@@ -533,7 +610,7 @@ export class SubscriptionManager {
     const vat = amount - subtotal
 
     // Utwórz fakturę (invoice_number generuje się automatycznie przez trigger)
-    await this.supabase.from('invoices').insert({
+    const { error: insertError } = await this.supabase.from('invoices').insert({
       salon_id: salonId,
       subscription_id: subscriptionId,
       status: 'paid',
@@ -557,6 +634,11 @@ export class SubscriptionManager {
         },
       ],
     })
+
+    // Race-safe idempotencja: przy równoległym retried webhooku drugi insert trafi w unique index
+    if (insertError && insertError.code !== '23505') {
+      throw new Error(`Failed to create invoice: ${insertError.message}`)
+    }
 
     // TODO: Wygeneruj PDF faktury i wyślij email
   }

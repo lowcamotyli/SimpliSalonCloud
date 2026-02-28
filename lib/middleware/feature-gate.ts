@@ -12,6 +12,9 @@ export type FeatureName =
   | 'booksy_integration'
   | 'pdf_export'
   | 'sms_notifications'
+  | 'crm_sms'
+  | 'crm_campaigns'
+  | 'crm_automations'
   | 'email_notifications'
   | 'api_access'
   | 'multi_salon'
@@ -20,6 +23,24 @@ export type FeatureName =
   | 'dedicated_support'
   | 'custom_development'
   | 'sla_guarantee'
+
+export const FEATURE_TRANSLATIONS: Record<FeatureName, string> = {
+  google_calendar: 'Integracja z Kalendarzem Google',
+  booksy_integration: 'Integracja z Booksy',
+  pdf_export: 'Eksport do PDF',
+  sms_notifications: 'Powiadomienia SMS',
+  crm_sms: 'Wiadomości SMS (CRM)',
+  crm_campaigns: 'Kampanie CRM',
+  crm_automations: 'Automatyzacje CRM',
+  email_notifications: 'Powiadomienia Email',
+  api_access: 'Dostęp do API',
+  multi_salon: 'Obsługa wielu salonów',
+  white_label: 'White Label',
+  advanced_analytics: 'Zaawansowana analityka',
+  dedicated_support: 'Dedykowane wsparcie',
+  custom_development: 'Rozwój na życzenie',
+  sla_guarantee: 'Gwarancja SLA',
+}
 
 export interface FeatureAccessResult {
   allowed: boolean
@@ -64,12 +85,19 @@ export async function checkFeatureAccess(
   }
 
   // Pobierz feature flag z bazy
-  const { data: featureFlag } = await supabase
+  // SECURITY: maybeSingle() zwraca { data: null, error: null } gdy brak rekordu.
+  // .single() zwracałby { error: PGRST116 } co było nie do odróżnienia od błędu DB.
+  const { data: featureFlag, error: featureFlagError } = await supabase
     .from('feature_flags')
     .select('*')
     .eq('salon_id', salonId)
     .eq('feature_name', featureName)
-    .single()
+    .maybeSingle()
+
+  // Fail-secure: błąd DB = brak dostępu (nie otwieramy dostępu przy awarii)
+  if (featureFlagError) {
+    return { allowed: false, feature: featureName, reason: 'Feature access check failed' }
+  }
 
   // Jeśli nie ma rekordu, sprawdź czy plan obejmuje tę feature
   if (!featureFlag) {
@@ -86,7 +114,7 @@ export async function checkFeatureAccess(
       return {
         allowed: false,
         feature: featureName,
-        reason: `Feature "${featureName}" is not available in ${plan.name} plan`,
+        reason: `Funkcja "${FEATURE_TRANSLATIONS[featureName] || featureName}" jest niedostępna w planie ${plan.name}`,
         upgradeUrl: `/${salon.slug}/billing/upgrade`,
         requiredPlan,
       }
@@ -105,7 +133,7 @@ export async function checkFeatureAccess(
     return {
       allowed: false,
       feature: featureName,
-      reason: `Feature "${featureName}" is disabled`,
+      reason: `Funkcja "${FEATURE_TRANSLATIONS[featureName] || featureName}" jest wyłączona`,
     }
   }
 
@@ -114,7 +142,7 @@ export async function checkFeatureAccess(
     return {
       allowed: false,
       feature: featureName,
-      reason: `Feature "${featureName}" has expired`,
+      reason: `Funkcja "${FEATURE_TRANSLATIONS[featureName] || featureName}" wygasła`,
       upgradeUrl: `/${salon.slug}/billing/upgrade`,
     }
   }
@@ -224,6 +252,9 @@ export function getFeaturePlanRequirements(): Record<FeatureName, string> {
     pdf_export: 'Starter',
     email_notifications: 'Starter',
     sms_notifications: 'Professional',
+    crm_sms: 'Professional',
+    crm_campaigns: 'Professional',
+    crm_automations: 'Professional',
     booksy_integration: 'Professional',
     advanced_analytics: 'Professional',
     api_access: 'Business',
@@ -248,7 +279,7 @@ export async function requireFeature(
     return {
       allowed: false,
       error: {
-        message: result.reason || `Feature "${featureName}" is not available`,
+        message: result.reason || `Funkcja "${FEATURE_TRANSLATIONS[featureName] || featureName}" jest niedostępna`,
         upgradeUrl: result.upgradeUrl,
         status: 403,
       },

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import type { SalonSettings } from '@/lib/types/settings'
+import type { SalonSettings, SmsSettings } from '@/lib/types/settings'
 
 export function useSettings(salonId: string) {
   return useQuery({
@@ -49,5 +49,43 @@ export function useIntegrations(salonId: string) {
       return res.json()
     },
     enabled: !!salonId
+  })
+}
+
+export function useSmsSettings(salonId: string) {
+  return useQuery({
+    queryKey: ['sms-settings', salonId],
+    queryFn: async () => {
+      const res = await fetch(`/api/settings/sms?salonId=${salonId}`)
+      if (!res.ok) throw new Error('Failed to fetch SMS settings')
+      return res.json() as Promise<SmsSettings>
+    },
+    enabled: !!salonId,
+  })
+}
+
+export function useUpdateSmsSettings(salonId: string) {
+  const queryClient = useQueryClient()
+  const router = useRouter()
+
+  return useMutation({
+    mutationFn: async (updates: Partial<SmsSettings>) => {
+      const res = await fetch('/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ salonId, ...updates }),
+      })
+      if (!res.ok) throw new Error('Failed to update SMS settings')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sms-settings', salonId] })
+      queryClient.invalidateQueries({ queryKey: ['settings', salonId] })
+      router.refresh()
+      toast.success('Ustawienia SMS zapisane')
+    },
+    onError: () => {
+      toast.error('Błąd zapisu ustawień SMS')
+    },
   })
 }

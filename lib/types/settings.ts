@@ -81,6 +81,15 @@ export interface SalonSettings {
   language: string
   timezone: string
   notification_settings: NotificationSettings
+  // Przelewy24 Integration (per-salon — do przyjmowania płatności od klientów)
+  p24_merchant_id?: string
+  p24_pos_id?: string
+  p24_crc?: string
+  p24_api_key?: string
+  p24_api_url?: string
+  p24_sandbox_mode?: boolean
+  has_p24_crc?: boolean
+  has_p24_api_key?: boolean
   // Booksy Integration
   booksy_enabled?: boolean
   booksy_gmail_email?: string
@@ -98,6 +107,20 @@ export interface SalonSettings {
     success: number
     errors: number
   }
+  resend_api_key?: string
+  resend_from_email?: string
+  resend_from_name?: string
+  smsapi_token?: string
+  smsapi_sender_name?: string
+  has_resend_api_key?: boolean
+  has_smsapi_token?: boolean
+}
+
+export interface SmsSettings {
+  salon_id: string
+  smsapi_token?: string
+  smsapi_sender_name?: string
+  has_smsapi_token?: boolean
 }
 
 export interface NotificationSettings {
@@ -154,12 +177,13 @@ export const INTEGRATIONS: Integration[] = [
     status: 'available'
   },
   {
-    id: 'stripe',
-    name: 'Stripe',
-    description: 'Accept online payments',
-    icon: '💳',
-    type: 'stripe',
-    status: 'available'
+    id: 'przelewy24',
+    name: 'Przelewy24',
+    description: 'Bramka płatności online — karty, BLIK, przelew',
+    icon: '🏦',
+    type: 'przelewy24',
+    status: 'available',
+    config: '/settings/integrations/przelewy24'
   },
   {
     id: 'twilio',

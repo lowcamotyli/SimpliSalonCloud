@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { getUsageReport } from '@/lib/middleware/usage-limiter'
+import { validateCronSecret } from '@/lib/middleware/cron-auth'
 
 /**
  * Send Usage Reports Cron Job
@@ -18,13 +19,8 @@ import { getUsageReport } from '@/lib/middleware/usage-limiter'
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
 
-  // Weryfikuj że request pochodzi z Vercel Cron (lub dev environment)
-  const authHeader = request.headers.get('authorization')
-  const isDev = process.env.NODE_ENV === 'development'
-
-  if (!isDev && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = validateCronSecret(request)
+  if (authError) return authError
 
   const supabase = createAdminSupabaseClient() as any
 

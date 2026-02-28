@@ -25,8 +25,9 @@ export default async function DashboardLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
+  const { slug } = await params
   const supabase = await createServerSupabaseClient()
 
   // Check auth
@@ -72,7 +73,7 @@ export default async function DashboardLayout({
   }
 
   // Check if user has access to this salon
-  if (salon.slug !== params.slug) {
+  if (salon.slug !== slug) {
     redirect(`/${salon.slug}/dashboard`)
   }
 
@@ -89,7 +90,7 @@ export default async function DashboardLayout({
   return (
     <ThemeProvider themeKey={themeKey}>
       <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar salonSlug={params.slug} userName={typedProfile?.full_name ?? undefined} />
+        <Sidebar salonSlug={slug} userName={typedProfile?.full_name ?? undefined} />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar salonName={salon.name} />

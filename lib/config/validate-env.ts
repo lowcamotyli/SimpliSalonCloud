@@ -27,6 +27,8 @@ const REQUIRED_PROD_VARS = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'NEXT_PUBLIC_APP_URL',
   'ALLOWED_ORIGINS',
+  'MESSAGING_ENCRYPTION_KEY',
+  'CRON_SECRET',
   // Payment (opcjonalne na początek, wymagane gdy feature jest aktywny)
   // 'P24_MERCHANT_ID',
   // 'P24_POS_ID',

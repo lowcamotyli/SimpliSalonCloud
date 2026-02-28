@@ -14,13 +14,16 @@ export const ROLE_PERMISSIONS = {
     'clients:view',
     'clients:manage',
     'employees:manage',
+    'services:manage',
     'finance:view',
+    'reports:view',
+    'settings:view',
   ] as const,
   [RBAC_ROLES.EMPLOYEE]: [
     'calendar:view',
     'calendar:manage_own',
     'clients:view',
-    'clients:manage',
+    'services:view',
   ] as const,
 } as const
 

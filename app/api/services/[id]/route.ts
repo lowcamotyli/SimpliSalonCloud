@@ -7,8 +7,9 @@ import { NotFoundError, UnauthorizedError, ValidationError } from '@/lib/errors'
 // GET /api/services/[id]
 export const GET = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -19,16 +20,16 @@ export const GET = withErrorHandling(async (
   const { data: service, error } = await supabase
     .from('services')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') throw new NotFoundError('Service', params.id)
+    if (error.code === 'PGRST116') throw new NotFoundError('Service', id)
     throw error
   }
 
   if (!service) {
-    throw new NotFoundError('Service', params.id)
+    throw new NotFoundError('Service', id)
   }
 
   return NextResponse.json({ service })
@@ -37,8 +38,9 @@ export const GET = withErrorHandling(async (
 // PATCH /api/services/[id] - Update service
 export const PATCH = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const {
@@ -66,12 +68,12 @@ export const PATCH = withErrorHandling(async (
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id, version')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('salon_id', typedProfile.salon_id)
     .single()
 
   if (existingError || !existingService) {
-    throw new NotFoundError('Service', params.id)
+    throw new NotFoundError('Service', id)
   }
 
   const body = await request.json()
@@ -89,7 +91,7 @@ export const PATCH = withErrorHandling(async (
       ...(validatedData.active !== undefined && { active: validatedData.active }),
       ...(validatedData.surcharge_allowed !== undefined && { surcharge_allowed: validatedData.surcharge_allowed }),
     })
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 
@@ -101,8 +103,9 @@ export const PATCH = withErrorHandling(async (
 // DELETE /api/services/[id] - Delete service
 export const DELETE = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const {
@@ -130,19 +133,19 @@ export const DELETE = withErrorHandling(async (
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('salon_id', typedProfile.salon_id)
     .single()
 
   if (existingError || !existingService) {
-    throw new NotFoundError('Service', params.id)
+    throw new NotFoundError('Service', id)
   }
 
   // Check if service is used in bookings
   const { count } = await supabase
     .from('bookings')
     .select('id', { count: 'exact', head: true })
-    .eq('service_id', params.id)
+    .eq('service_id', id)
 
   if (count && count > 0) {
     throw new ValidationError('Nie można usunąć usługi, która jest używana w rezerwacjach. Możesz ją dezaktywować.')
@@ -151,7 +154,7 @@ export const DELETE = withErrorHandling(async (
   const { error } = await supabase
     .from('services')
     .delete()
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) throw error
 

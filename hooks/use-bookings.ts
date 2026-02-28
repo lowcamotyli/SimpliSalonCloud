@@ -56,6 +56,14 @@ type UpdateBookingData = {
   paymentMethod?: string
   surcharge?: number
   notes?: string
+  duration?: number
+  bookingDate?: string
+  bookingTime?: string
+  employeeId?: string
+}
+
+type UpdateBookingScheduleData = UpdateBookingData & {
+  id: string
 }
 
 export function useBookings(filters?: BookingFilters) {
@@ -151,6 +159,33 @@ export function useCheckAvailability() {
 
       if (!res.ok) throw new Error('Failed to check availability')
       return res.json()
+    },
+  })
+}
+
+export function useUpdateBookingSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, ...data }: UpdateBookingScheduleData) => {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to update booking schedule')
+      }
+
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message)
     },
   })
 }

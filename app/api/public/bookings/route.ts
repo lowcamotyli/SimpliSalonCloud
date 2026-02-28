@@ -4,17 +4,18 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { publicBookingSchema } from '@/lib/validators/public-booking.validators'
 import { getSalonId } from '@/lib/utils/salon'
 import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limit'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
     try {
-        console.info('[PUBLIC_BOOKINGS] start')
+        logger.info('[PUBLIC_BOOKINGS] start')
 
         // Rate limiting check
         const clientIp = getClientIp(request.headers)
         const rateLimitResult = await checkPublicApiRateLimit(clientIp)
 
         if (!rateLimitResult.success) {
-            console.warn('[PUBLIC_BOOKINGS] rate limit exceeded', { ip: clientIp })
+            logger.warn('[PUBLIC_BOOKINGS] rate limit exceeded')
             return NextResponse.json(
                 {
                     error: 'Rate limit exceeded. Too many requests.',
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
         const authError = validateApiKey(request)
         if (authError) {
-            console.warn('[PUBLIC_BOOKINGS] api key invalid')
+            logger.warn('[PUBLIC_BOOKINGS] api key invalid')
             return authError
         }
 
@@ -43,13 +44,13 @@ export async function POST(request: NextRequest) {
         try {
             body = await request.json()
         } catch (error) {
-            console.error('[PUBLIC_BOOKINGS] invalid json body', error)
+            logger.error('[PUBLIC_BOOKINGS] invalid json body', error as Error)
             return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
         }
 
         const parsed = publicBookingSchema.safeParse(body)
         if (!parsed.success) {
-            console.warn('[PUBLIC_BOOKINGS] validation failed', parsed.error.issues)
+            logger.warn('[PUBLIC_BOOKINGS] validation failed')
             return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
         }
 
@@ -58,34 +59,34 @@ export async function POST(request: NextRequest) {
         const salonId = getSalonId(request)
 
         if (!salonId) {
-            console.error('[PUBLIC_BOOKINGS] missing PUBLIC_SALON_ID')
+            logger.error('[PUBLIC_BOOKINGS] missing PUBLIC_SALON_ID')
             return NextResponse.json({ error: 'PUBLIC_SALON_ID is not configured' }, { status: 500 })
         }
 
-        console.info('[PUBLIC_BOOKINGS] payload', { serviceId, date, time })
+        logger.info('[PUBLIC_BOOKINGS] payload', { serviceId, date, time })
 
         // pobierz usługę (duration, price)
-        console.info('[PUBLIC_BOOKINGS] fetch service start')
+        logger.info('[PUBLIC_BOOKINGS] fetch service start')
         const { data: service, error: serviceError } = await supabase
             .from('services')
             .select('duration, price')
             .eq('id', serviceId)
             .eq('salon_id', salonId)
             .single()
-        console.info('[PUBLIC_BOOKINGS] fetch service end', { hasService: !!service, serviceError })
+        logger.info('[PUBLIC_BOOKINGS] fetch service end', { hasService: !!service })
 
         if (serviceError) {
-            console.error('[PUBLIC_BOOKINGS] service fetch error', serviceError)
+            logger.error('[PUBLIC_BOOKINGS] service fetch error', serviceError)
             return NextResponse.json({ error: 'Service fetch failed' }, { status: 500 })
         }
 
         if (!service) {
-            console.warn('[PUBLIC_BOOKINGS] service not found', { serviceId, salonId })
+            logger.warn('[PUBLIC_BOOKINGS] service not found', { serviceId })
             return NextResponse.json({ error: 'Service not found' }, { status: 404 })
         }
 
         // find or create client po telefonie
-        console.info('[PUBLIC_BOOKINGS] fetch client start')
+        logger.info('[PUBLIC_BOOKINGS] fetch client start')
         let { data: client, error: clientFetchError } = await supabase
             .from('clients')
             .select('id')
@@ -93,31 +94,25 @@ export async function POST(request: NextRequest) {
             .eq('phone', phone)
             .is('deleted_at', null)
             .single()
-        console.info('[PUBLIC_BOOKINGS] fetch client end', {
-            hasClient: !!client,
-            clientFetchError,
-        })
+        logger.info('[PUBLIC_BOOKINGS] fetch client end', { hasClient: !!client })
 
         if (clientFetchError && clientFetchError.code !== 'PGRST116') {
-            console.error('[PUBLIC_BOOKINGS] client fetch error', clientFetchError)
+            logger.error('[PUBLIC_BOOKINGS] client fetch error', clientFetchError)
             return NextResponse.json({ error: 'Client fetch failed' }, { status: 500 })
         }
 
         if (!client) {
-            console.info('[PUBLIC_BOOKINGS] generate client code start')
+            logger.info('[PUBLIC_BOOKINGS] generate client code start')
             const { data: codeData, error: codeError } = await supabase
                 .rpc('generate_client_code', { salon_uuid: salonId } as never)
             const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
-            console.info('[PUBLIC_BOOKINGS] generate client code end', {
-                hasCode: !!codeData,
-                codeError,
-            })
+            logger.info('[PUBLIC_BOOKINGS] generate client code end', { hasCode: !!codeData })
 
             if (codeError) {
-                console.warn('[PUBLIC_BOOKINGS] client code rpc error, using fallback', codeError)
+                logger.warn('[PUBLIC_BOOKINGS] client code rpc error, using fallback')
             }
 
-            console.info('[PUBLIC_BOOKINGS] create client start')
+            logger.info('[PUBLIC_BOOKINGS] create client start')
             const { data: newClient, error: clientCreateError } = await supabase
                 .from('clients')
                 .insert({
@@ -130,18 +125,15 @@ export async function POST(request: NextRequest) {
                 })
                 .select('id')
                 .single()
-            console.info('[PUBLIC_BOOKINGS] create client end', {
-                hasClient: !!newClient,
-                clientCreateError,
-            })
+            logger.info('[PUBLIC_BOOKINGS] create client end', { hasClient: !!newClient })
 
             if (clientCreateError) {
-                console.error('[PUBLIC_BOOKINGS] client create error', clientCreateError)
+                logger.error('[PUBLIC_BOOKINGS] client create error', clientCreateError)
                 return NextResponse.json({ error: 'Client create failed' }, { status: 500 })
             }
 
             if (!newClient) {
-                console.error('[PUBLIC_BOOKINGS] client create returned null')
+                logger.error('[PUBLIC_BOOKINGS] client create returned null')
                 return NextResponse.json({ error: 'Client create failed' }, { status: 500 })
             }
 
@@ -149,12 +141,12 @@ export async function POST(request: NextRequest) {
         }
 
         if (!client) {
-            console.error('[PUBLIC_BOOKINGS] client missing after create')
+            logger.error('[PUBLIC_BOOKINGS] client missing after create')
             return NextResponse.json({ error: 'Client not resolved' }, { status: 500 })
         }
 
         // resolve employee
-        console.info('[PUBLIC_BOOKINGS] fetch employee start', { providedEmployeeId: employeeId })
+        logger.info('[PUBLIC_BOOKINGS] fetch employee start', { hasEmployeeId: !!employeeId })
 
         let employee: { id: string } | null = null
 
@@ -170,7 +162,7 @@ export async function POST(request: NextRequest) {
                 .single()
 
             if (specificEmployeeError || !specificEmployee) {
-                console.warn('[PUBLIC_BOOKINGS] provided employee not found or invalid', { employeeId, salonId })
+                logger.warn('[PUBLIC_BOOKINGS] provided employee not found or invalid')
                 return NextResponse.json({ error: 'Invalid employee specified' }, { status: 400 })
             }
             employee = specificEmployee
@@ -187,24 +179,21 @@ export async function POST(request: NextRequest) {
                 .maybeSingle()
 
             if (anyEmployeeError) {
-                console.error('[PUBLIC_BOOKINGS] employee fetch error', anyEmployeeError)
+                logger.error('[PUBLIC_BOOKINGS] employee fetch error', anyEmployeeError)
                 return NextResponse.json({ error: 'Employee fetch failed' }, { status: 500 })
             }
             employee = anyEmployee
         }
 
-        console.info('[PUBLIC_BOOKINGS] fetch employee end', {
-            hasEmployee: !!employee,
-            employeeId: employee?.id
-        })
+        logger.info('[PUBLIC_BOOKINGS] fetch employee end', { hasEmployee: !!employee })
 
         if (!employee) {
-            console.warn('[PUBLIC_BOOKINGS] no active employee found', { salonId })
+            logger.warn('[PUBLIC_BOOKINGS] no active employee found')
             return NextResponse.json({ error: 'No active employee available' }, { status: 404 })
         }
 
         // overlap check — zajęte sloty tego dnia dla wybranego pracownika
-        console.info('[PUBLIC_BOOKINGS] fetch bookings start', { employeeId: employee.id })
+        logger.info('[PUBLIC_BOOKINGS] fetch bookings start')
         const { data: bookings, error: bookingsError } = await supabase
             .from('bookings')
             .select('booking_time, duration')
@@ -213,13 +202,10 @@ export async function POST(request: NextRequest) {
             .eq('booking_date', date)
             .not('status', 'eq', 'cancelled')
             .is('deleted_at', null)
-        console.info('[PUBLIC_BOOKINGS] fetch bookings end', {
-            count: bookings?.length ?? 0,
-            bookingsError,
-        })
+        logger.info('[PUBLIC_BOOKINGS] fetch bookings end', { count: bookings?.length ?? 0 })
 
         if (bookingsError) {
-            console.error('[PUBLIC_BOOKINGS] bookings fetch error', bookingsError)
+            logger.error('[PUBLIC_BOOKINGS] bookings fetch error', bookingsError)
             return NextResponse.json({ error: 'Bookings fetch failed' }, { status: 500 })
         }
 
@@ -235,12 +221,12 @@ export async function POST(request: NextRequest) {
         })
 
         if (conflict) {
-            console.warn('[PUBLIC_BOOKINGS] time slot conflict', { date, time, employeeId: employee.id })
+            logger.warn('[PUBLIC_BOOKINGS] time slot conflict', { date, time })
             return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
         }
 
         // create booking
-        console.info('[PUBLIC_BOOKINGS] create booking start')
+        logger.info('[PUBLIC_BOOKINGS] create booking start')
         const { data: booking, error: bookingError } = await supabase
             .from('bookings')
             .insert({
@@ -252,30 +238,27 @@ export async function POST(request: NextRequest) {
                 booking_time: time,
                 duration: service.duration,
                 base_price: service.price,
-                status: 'pending',
+                status: 'scheduled',
                 source: 'website',
             })
             .select('id, status, booking_date, booking_time')
             .single()
-        console.info('[PUBLIC_BOOKINGS] create booking end', {
-            hasBooking: !!booking,
-            bookingError,
-        })
+        logger.info('[PUBLIC_BOOKINGS] create booking end', { hasBooking: !!booking })
 
         if (bookingError) {
-            console.error('[PUBLIC_BOOKINGS] booking create error', bookingError)
+            logger.error('[PUBLIC_BOOKINGS] booking create error', bookingError)
             return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
         }
 
         if (!booking) {
-            console.error('[PUBLIC_BOOKINGS] booking create returned null')
+            logger.error('[PUBLIC_BOOKINGS] booking create returned null')
             return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
         }
 
-        console.info('[PUBLIC_BOOKINGS] success', { bookingId: booking.id })
+        logger.info('[PUBLIC_BOOKINGS] success', { bookingId: booking.id })
         return NextResponse.json({ booking }, { status: 201 })
     } catch (error) {
-        console.error('[PUBLIC_BOOKINGS] unhandled error', error)
+        logger.error('[PUBLIC_BOOKINGS] unhandled error', error as Error)
         return NextResponse.json({ error: 'Unhandled server error' }, { status: 500 })
     }
 }

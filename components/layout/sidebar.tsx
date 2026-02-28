@@ -17,6 +17,11 @@ import {
   Scissors,
   BarChart3,
   CreditCard,
+  Megaphone,
+  Zap,
+  MessageSquare,
+  List,
+  ChevronDown,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -25,11 +30,19 @@ import { Button } from '@/components/ui/button'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
 
+interface SubNavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
 interface NavItem {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
-  requiredPermission?: 'employees:manage' | 'finance:view'
+  requiredPermission?: 'employees:manage' | 'finance:view' | 'reports:view' | 'settings:view'
+  ownerOnly?: boolean
+  subItems?: SubNavItem[]
 }
 
 export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?: string }) {
@@ -37,17 +50,28 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
   const router = useRouter()
   const { currentRole, hasPermission, isOwnerOrManager } = useCurrentRole()
 
+  const crmSubItemsAll: (SubNavItem & { requiresManage?: boolean })[] = [
+    { href: `/${salonSlug}/clients`, label: 'Lista klientów', icon: List },
+    { href: `/${salonSlug}/clients/campaigns`, label: 'Kampanie', icon: Megaphone, requiresManage: true },
+    { href: `/${salonSlug}/clients/templates`, label: 'Szablony', icon: FileText, requiresManage: true },
+    { href: `/${salonSlug}/clients/automations`, label: 'Automatyzacje', icon: Zap, requiresManage: true },
+    { href: `/${salonSlug}/clients/messages`, label: 'Historia', icon: MessageSquare, requiresManage: true },
+  ]
+  const crmSubItems = crmSubItemsAll.filter(
+    (item) => !item.requiresManage || hasPermission('clients:manage')
+  )
+
   const navItems: NavItem[] = [
     { href: `/${salonSlug}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { href: `/${salonSlug}/calendar`, label: 'Kalendarz', icon: Calendar },
     { href: `/${salonSlug}/bookings`, label: 'Rezerwacje', icon: FileText },
     { href: `/${salonSlug}/services`, label: 'Usługi', icon: Scissors },
     { href: `/${salonSlug}/employees`, label: 'Pracownicy', icon: Users, requiredPermission: 'employees:manage' },
-    { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle },
+    { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle, subItems: crmSubItems },
     { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign, requiredPermission: 'finance:view' },
-    { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3 },
-    { href: `/${salonSlug}/billing`, label: 'Subskrypcja', icon: CreditCard, requiredPermission: 'finance:view' },
-    { href: `/${salonSlug}/settings`, label: 'Ustawienia', icon: Settings },
+    { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3, requiredPermission: 'reports:view' },
+    { href: `/${salonSlug}/billing`, label: 'Subskrypcja', icon: CreditCard, ownerOnly: true },
+    { href: `/${salonSlug}/settings`, label: 'Ustawienia', icon: Settings, requiredPermission: 'settings:view' },
   ]
 
   const roleLabel = (() => {
@@ -82,6 +106,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navItems
           .filter((item) => {
+            if (item.ownerOnly) return currentRole === RBAC_ROLES.OWNER
             if (!item.requiredPermission) return true
             if (item.requiredPermission === 'employees:manage') {
               return isOwnerOrManager()
@@ -90,7 +115,50 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
           })
           .map((item, index) => {
           const Icon = item.icon
+          const isInSection = item.subItems
+            ? pathname.startsWith(item.href)
+            : pathname === item.href
           const isActive = pathname === item.href
+
+          if (item.subItems && isInSection) {
+            return (
+              <div key={item.href}>
+                <div
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+                    'bg-primary/10 text-primary border border-primary/20'
+                  )}
+                >
+                  <Icon className="h-5 w-5 text-primary" />
+                  <span>{item.label}</span>
+                  <ChevronDown className="ml-auto h-4 w-4 text-primary/60" />
+                </div>
+                <div className="mt-1 ml-3 pl-3 border-l border-primary/20 space-y-0.5">
+                  {item.subItems.map((sub) => {
+                    const SubIcon = sub.icon
+                    const isSubActive = pathname === sub.href
+                    return (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 group',
+                          isSubActive
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-foreground/60 hover:bg-primary/5 hover:text-foreground/90'
+                        )}
+                      >
+                        <SubIcon className={cn('h-3.5 w-3.5', isSubActive ? 'text-primary' : 'text-foreground/40 group-hover:text-primary/70')} />
+                        <span>{sub.label}</span>
+                        {isSubActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          }
 
           return (
             <Link
@@ -101,14 +169,15 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
               }}
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
-                isActive
+                isActive || isInSection
                   ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
                   : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
               )}
             >
-              <Icon className={cn('h-5 w-5 transition-all', isActive ? 'text-primary' : 'text-foreground/40 group-hover:text-primary')} />
+              <Icon className={cn('h-5 w-5 transition-all', isActive || isInSection ? 'text-primary' : 'text-foreground/40 group-hover:text-primary')} />
               <span>{item.label}</span>
-              {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-glow" />}
+              {(isActive || isInSection) && !item.subItems && <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-glow" />}
+              {item.subItems && !isInSection && <ChevronDown className="ml-auto h-4 w-4 text-foreground/30" />}
             </Link>
           )
         })}

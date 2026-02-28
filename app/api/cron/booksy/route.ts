@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BooksyProcessor } from '@/lib/booksy/processor'
 import { GmailClient } from '@/lib/booksy/gmail-client'
+import { validateCronSecret } from '@/lib/middleware/cron-auth'
 
 /**
  * Cron job to process Booksy emails
@@ -11,11 +12,8 @@ import { GmailClient } from '@/lib/booksy/gmail-client'
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const authError = validateCronSecret(request)
+    if (authError) return authError
 
     const supabase = createAdminClient()
 
@@ -27,7 +25,8 @@ export async function GET(request: NextRequest) {
         slug, 
         salon_settings!inner(
           booksy_enabled,
-          booksy_gmail_tokens
+          booksy_gmail_tokens,
+          booksy_sender_filter
         )
       `)
       .eq('subscription_status', 'active')
@@ -53,7 +52,7 @@ export async function GET(request: NextRequest) {
         const gmailClient = new GmailClient(settings.booksy_gmail_tokens)
 
         // Search for new Booksy emails
-        const messages = await gmailClient.searchBooksyEmails(20)
+        const messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com')
 
         // Process each message
         const processor = new BooksyProcessor(supabase, salon.id)
@@ -79,6 +78,10 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (error: any) {
+        if (error?.code === 'GMAIL_REAUTH_REQUIRED' || GmailClient.isInvalidGrantError(error)) {
+          console.warn(`Booksy Gmail re-auth required for salon ${salon.slug}`)
+          continue
+        }
         console.error(`Error processing salon ${salon.slug}:`, error)
       }
     }

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -40,6 +43,28 @@ import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EmptyState } from '@/components/ui/empty-state'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
+
+type TemplateChannel = 'email' | 'sms' | 'both'
+
+type QuickTemplate = {
+  id: string
+  name: string
+  channel: TemplateChannel
+  subject: string | null
+  body: string
+}
+
+type ClientMessageLog = {
+  id: string
+  created_at: string
+  channel: 'email' | 'sms'
+  subject: string | null
+  body: string
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced'
+  crm_campaigns?: { name: string | null } | null
+}
 
 const clientFormSchema = z.object({
   fullName: z.string().min(2, 'Minimum 2 znaki'),
@@ -51,13 +76,72 @@ const clientFormSchema = z.object({
 type ClientFormData = z.infer<typeof clientFormSchema>
 
 export default function ClientsPage() {
+  const params = useParams()
+  const slug = params.slug as string
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [isQuickDialogOpen, setIsQuickDialogOpen] = useState(false)
+  const [quickClient, setQuickClient] = useState<any>(null)
+  const [quickChannel, setQuickChannel] = useState<'email' | 'sms'>('email')
+  const [quickTemplateId, setQuickTemplateId] = useState('')
+  const [quickSubject, setQuickSubject] = useState('')
+  const [quickBody, setQuickBody] = useState('')
+  const [isQuickSending, setIsQuickSending] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [historyClient, setHistoryClient] = useState<any>(null)
+  const [historyPage, setHistoryPage] = useState(1)
 
   const debouncedSearch = useDebounce(search, 300)
   const { data: clients, isLoading, refetch } = useClients(debouncedSearch)
   const createMutation = useCreateClient()
+
+  const { data: salon } = useQuery<{ id: string; slug: string } | null>({
+    queryKey: ['salon', slug],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('salons').select('id, slug').eq('slug', slug).single()
+      if (error) throw error
+      return data
+    },
+  })
+
+  const salonId = salon?.id || ''
+
+  const quickTemplatesQuery = useQuery<{ templates: QuickTemplate[]; locked?: boolean; reason?: string }>({
+    queryKey: ['quick-templates', salonId],
+    enabled: !!salonId && isQuickDialogOpen,
+    queryFn: async () => {
+      const res = await fetch(`/api/crm/templates?salonId=${salonId}`)
+      const payload = await res.json().catch(() => ({}))
+      if (res.status === 403) {
+        return { templates: [], locked: true, reason: payload?.error || 'Szablony CRM niedostępne w tym planie' }
+      }
+      if (!res.ok) throw new Error(payload?.error || 'Nie udało się pobrać szablonów')
+      return { templates: payload.templates || [] }
+    },
+  })
+
+  const clientHistoryQuery = useQuery<{ logs: ClientMessageLog[]; pagination: { page: number; totalPages: number } }>({
+    queryKey: ['client-message-history', salonId, historyClient?.id, historyPage],
+    enabled: !!salonId && !!historyClient?.id && isHistoryOpen,
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        salonId,
+        clientId: historyClient.id,
+        page: String(historyPage),
+        pageSize: '10',
+      })
+
+      const res = await fetch(`/api/crm/logs?${params.toString()}`)
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Nie udało się pobrać historii komunikacji')
+      return {
+        logs: payload.logs || [],
+        pagination: payload.pagination || { page: 1, totalPages: 1 },
+      }
+    },
+  })
 
   const stats = useMemo(() => {
     if (!clients) return { total: 0, avgVisits: 0, topClient: null }
@@ -143,6 +227,74 @@ export default function ClientsPage() {
     }
   }
 
+  const openQuickSend = (client: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setQuickClient(client)
+    const preferredChannel = client.email ? 'email' : 'sms'
+    setQuickChannel(preferredChannel)
+    setQuickTemplateId('')
+    setQuickSubject('')
+    setQuickBody('')
+    setIsQuickDialogOpen(true)
+  }
+
+  const openClientHistory = (client: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setHistoryClient(client)
+    setHistoryPage(1)
+    setIsHistoryOpen(true)
+  }
+
+  const handleTemplatePick = (templateId: string) => {
+    setQuickTemplateId(templateId)
+    const selected = (quickTemplatesQuery.data?.templates || []).find((t) => t.id === templateId)
+    if (!selected) return
+    if (quickChannel === 'email' && selected.subject) {
+      setQuickSubject(selected.subject)
+    }
+    setQuickBody(selected.body || '')
+  }
+
+  const handleQuickSend = async () => {
+    if (!salonId || !quickClient?.id) return
+    if (!quickBody.trim()) {
+      toast.error('Wpisz treść wiadomości')
+      return
+    }
+    if (quickChannel === 'email' && !quickSubject.trim()) {
+      toast.error('Temat email jest wymagany')
+      return
+    }
+
+    setIsQuickSending(true)
+    try {
+      const res = await fetch('/api/crm/quick-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salonId,
+          clientId: quickClient.id,
+          channel: quickChannel,
+          templateId: quickTemplateId || null,
+          subject: quickChannel === 'email' ? quickSubject : null,
+          body: quickBody,
+        }),
+      })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Wysyłka nie powiodła się')
+
+      toast.success('Wiadomość wysłana')
+      setIsQuickDialogOpen(false)
+      setQuickTemplateId('')
+      setQuickSubject('')
+      setQuickBody('')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Błąd wysyłki')
+    } finally {
+      setIsQuickSending(false)
+    }
+  }
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -166,14 +318,21 @@ export default function ClientsPage() {
           </h1>
           <p className="text-muted-foreground text-base font-medium">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
-        <Button
-          size="lg"
-          className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold"
-          onClick={handleAddClient}
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Dodaj klienta
-        </Button>
+        <div className="flex gap-2">
+          <Link href={`/${slug}/clients/templates`}>
+            <Button size="lg" variant="outline" className="h-12 px-6 rounded-xl font-bold">
+              Szablony
+            </Button>
+          </Link>
+          <Button
+            size="lg"
+            className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold"
+            onClick={handleAddClient}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Dodaj klienta
+          </Button>
+        </div>
       </div>
 
       {/* Stats Bar */}
@@ -323,6 +482,27 @@ export default function ClientsPage() {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => openQuickSend(client, e)}
+                      >
+                        Wyślij wiadomość
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => openClientHistory(client, e)}
+                      >
+                        Historia
+                      </Button>
+                    </div>
+
                     {client.notes && (
                       <div className="p-3 bg-slate-50 rounded-xl relative">
                         <MessageSquare className="absolute -top-1 -left-1 h-3 w-3 text-slate-200" />
@@ -453,6 +633,188 @@ export default function ClientsPage() {
           </DialogContent>
         </Dialog>
       </AnimatePresence>
+
+      <Dialog open={isQuickDialogOpen} onOpenChange={setIsQuickDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Wyślij wiadomość</DialogTitle>
+            <DialogDescription>
+              {quickClient ? `Do: ${quickClient.full_name}` : 'Szybka wysyłka do pojedynczego klienta'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Kanał</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={quickChannel === 'email' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setQuickChannel('email')
+                    setQuickTemplateId('')
+                  }}
+                >
+                  Email
+                </Button>
+                <Button
+                  type="button"
+                  variant={quickChannel === 'sms' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setQuickChannel('sms')
+                    setQuickTemplateId('')
+                  }}
+                >
+                  SMS
+                </Button>
+              </div>
+            </div>
+
+            {quickTemplatesQuery.isLoading && (
+              <p className="text-sm text-muted-foreground">Ładowanie szablonów...</p>
+            )}
+
+            {quickTemplatesQuery.isError && (
+              <p className="text-sm text-destructive">
+                {quickTemplatesQuery.error instanceof Error
+                  ? quickTemplatesQuery.error.message
+                  : 'Nie udało się pobrać szablonów'}
+              </p>
+            )}
+
+            {!quickTemplatesQuery.data?.locked && (
+              <div className="space-y-2">
+                <Label>Szablon (opcjonalnie)</Label>
+                <select
+                  value={quickTemplateId}
+                  onChange={(e) => handleTemplatePick(e.target.value)}
+                  className="w-full border rounded-md h-10 px-3 bg-background"
+                >
+                  <option value="">Brak szablonu</option>
+                  {(quickTemplatesQuery.data?.templates || [])
+                    .filter((t) => t.channel === 'both' || t.channel === quickChannel)
+                    .map((template) => (
+                      <option key={template.id} value={template.id}>{template.name}</option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {quickChannel === 'email' && (
+              <div className="space-y-2">
+                <Label>Temat</Label>
+                <Input value={quickSubject} onChange={(e) => setQuickSubject(e.target.value)} placeholder="Temat wiadomości" />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Treść</Label>
+              <Textarea value={quickBody} onChange={(e) => setQuickBody(e.target.value)} rows={6} placeholder="Treść wiadomości..." />
+              {quickChannel === 'sms' && (
+                <p className="text-xs text-muted-foreground">Znaki SMS: {quickBody.length}</p>
+              )}
+            </div>
+
+            <div className="rounded-md border p-3 bg-muted/20">
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Podgląd</p>
+              <p className="text-sm line-clamp-3">{quickBody || 'Brak treści'}</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setIsQuickDialogOpen(false)}>
+              Anuluj
+            </Button>
+            <Button type="button" onClick={handleQuickSend} disabled={isQuickSending || !salonId}>
+              {isQuickSending ? 'Wysyłanie...' : 'Wyślij'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Historia komunikacji</DialogTitle>
+            <DialogDescription>
+              {historyClient ? `Ostatnie wiadomości klienta: ${historyClient.full_name}` : 'Historia wiadomości klienta'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
+            {clientHistoryQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Ładowanie historii...</p>
+            ) : clientHistoryQuery.isError ? (
+              <p className="text-sm text-destructive">
+                {clientHistoryQuery.error instanceof Error
+                  ? clientHistoryQuery.error.message
+                  : 'Nie udało się pobrać historii komunikacji'}
+              </p>
+            ) : clientHistoryQuery.data?.logs?.length ? (
+              clientHistoryQuery.data.logs.map((log) => (
+                <div key={log.id} className="rounded-md border p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{log.channel.toUpperCase()}</Badge>
+                      <Badge
+                        variant={
+                          log.status === 'failed' || log.status === 'bounced'
+                            ? 'destructive'
+                            : log.status === 'delivered'
+                              ? 'success'
+                              : log.status === 'pending'
+                                ? 'secondary'
+                                : 'default'
+                        }
+                      >
+                        {log.status}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString('pl-PL')}</span>
+                  </div>
+                  {log.subject ? <p className="text-sm font-medium truncate">{log.subject}</p> : null}
+                  <p className="text-sm text-muted-foreground line-clamp-2">{log.body}</p>
+                  {log.crm_campaigns?.name ? (
+                    <p className="text-xs text-muted-foreground">Kampania: {log.crm_campaigns.name}</p>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">Brak wiadomości dla tego klienta.</p>
+            )}
+          </div>
+
+          <DialogFooter className="flex-row justify-between sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+              disabled={(clientHistoryQuery.data?.pagination.page || 1) <= 1 || clientHistoryQuery.isLoading}
+            >
+              Poprzednia
+            </Button>
+            <span className="text-xs text-muted-foreground self-center">
+              Strona {clientHistoryQuery.data?.pagination.page || 1} / {clientHistoryQuery.data?.pagination.totalPages || 1}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                setHistoryPage((p) => {
+                  const max = clientHistoryQuery.data?.pagination.totalPages || 1
+                  return Math.min(max, p + 1)
+                })
+              }
+              disabled={
+                (clientHistoryQuery.data?.pagination.page || 1) >= (clientHistoryQuery.data?.pagination.totalPages || 1) ||
+                clientHistoryQuery.isLoading
+              }
+            >
+              Następna
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

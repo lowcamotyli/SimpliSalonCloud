@@ -3,9 +3,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createClientSchema } from '@/lib/validators/client.validators'
 import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 // GET /api/clients - List all clients
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  const rl = await applyRateLimit(request)
+  if (rl) return rl
+
   const supabase = await createServerSupabaseClient()
 
   const {
@@ -41,8 +45,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     .order('created_at', { ascending: false })
 
   if (search) {
+    const sanitizedSearch = search.replace(/%/g, '\\%').replace(/_/g, '\\_')
     query = query.or(
-      `full_name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
+      `full_name.ilike.%${sanitizedSearch}%,phone.ilike.%${sanitizedSearch}%,email.ilike.%${sanitizedSearch}%`
     )
   }
 
@@ -55,6 +60,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 // POST /api/clients - Create new client
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const rl = await applyRateLimit(request, { limit: 30 })
+  if (rl) return rl
+
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -76,8 +84,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const body = await request.json()
 
-  console.log('Client body received:', body)
-
   // Map frontend fields and add salon_id
   const mappedBody = {
     ...body,
@@ -94,10 +100,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
 
-  if (codeError) {
-    console.warn('Failed to generate client code, using fallback:', codeError)
-  }
-
   const { data: client, error } = await (supabase as any)
     .from('clients')
     .insert({
@@ -113,7 +115,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     .single()
 
   if (error) {
-    console.error('Failed to create client:', error)
     throw error
   }
 

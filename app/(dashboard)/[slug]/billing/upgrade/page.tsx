@@ -411,15 +411,15 @@ export default function UpgradePage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Status integracji
               </p>
-              <div className="rounded-xl border border-accent/30 bg-accent/10 p-4">
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent/20">
-                    <Loader2 className="h-4 w-4 text-accent" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                    <Check className="h-4 w-4 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">W przygotowaniu</p>
+                    <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Aktywna integracja</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Integracja z Przelewy24 zostanie aktywowana wkrótce. Logika płatności zostanie podłączona w kolejnym etapie.
+                      Płatności Przelewy24 są w pełni aktywne. Po wyborze planu zostaniesz przekierowany do bezpiecznej bramki.
                     </p>
                   </div>
                 </div>

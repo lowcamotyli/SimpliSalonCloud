@@ -3,9 +3,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createEmployeeSchema } from '@/lib/validators/employee.validators'
 import { z } from 'zod'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 // GET /api/employees - List all employees
 export async function GET(request: NextRequest) {
+  const rl = await applyRateLimit(request)
+  if (rl) return rl
+
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -64,9 +68,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ employees: employeesWithRoles })
   } catch (error: any) {
-    console.error('GET /api/employees error:', error)
+    console.error('[EMPLOYEES] GET error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
@@ -74,6 +78,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/employees - Create new employee
 export async function POST(request: NextRequest) {
+  const rl = await applyRateLimit(request, { limit: 20 })
+  if (rl) return rl
+
   try {
     const supabase = await createServerSupabaseClient()
     const adminSupabase = createAdminClient()
@@ -106,19 +113,13 @@ export async function POST(request: NextRequest) {
     // Parse and validate body
     const body = await request.json()
 
-    console.log('Employee body received:', body)
-
     const validatedData = createEmployeeSchema.parse(body)
 
     // Generate employee code
-    const { data: codeData, error: codeError } = await (supabase as any)
+    const { data: codeData } = await (supabase as any)
       .rpc('generate_employee_code', { salon_uuid: (profile as any).salon_id })
 
     const employeeCode = codeData || `E${Date.now().toString().slice(-6)}`
-
-    if (codeError) {
-      console.warn('Failed to generate employee code, using fallback:', codeError)
-    }
 
     const normalizedEmail = validatedData.email.trim().toLowerCase()
 
@@ -150,7 +151,8 @@ export async function POST(request: NextRequest) {
     const { user: existingUser, error: existingUserError } = await findUserByEmail(normalizedEmail)
 
     if (existingUserError) {
-      return NextResponse.json({ error: existingUserError.message }, { status: 400 })
+      console.error('[EMPLOYEES] POST user lookup error:', existingUserError)
+      return NextResponse.json({ error: 'Failed to process user account' }, { status: 400 })
     }
 
     let authUser = existingUser
@@ -168,7 +170,8 @@ export async function POST(request: NextRequest) {
       )
 
       if (inviteError || !inviteData?.user) {
-        return NextResponse.json({ error: inviteError?.message || 'Failed to invite user' }, { status: 400 })
+        console.error('[EMPLOYEES] POST invite error:', inviteError)
+        return NextResponse.json({ error: 'Failed to invite user' }, { status: 400 })
       }
 
       authUser = inviteData.user
@@ -185,7 +188,8 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (existingEmployeeError) {
-      return NextResponse.json({ error: existingEmployeeError.message }, { status: 400 })
+      console.error('[EMPLOYEES] POST employee check error:', existingEmployeeError)
+      return NextResponse.json({ error: 'Failed to check employee record' }, { status: 400 })
     }
 
     if (existingEmployee) {
@@ -222,7 +226,8 @@ export async function POST(request: NextRequest) {
       if (authUser?.id && !existingUser) {
         await adminSupabase.auth.admin.deleteUser(authUser.id)
       }
-      return NextResponse.json({ error: insertError?.message || 'Failed to insert employee' }, { status: 400 })
+      console.error('[EMPLOYEES] POST insert error:', insertError)
+      return NextResponse.json({ error: 'Failed to create employee' }, { status: 400 })
     }
 
     const { data: profileRecord, error: profileError } = await adminSupabase
@@ -232,7 +237,8 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 })
+      console.error('[EMPLOYEES] POST profile check error:', profileError)
+      return NextResponse.json({ error: 'Failed to check profile record' }, { status: 400 })
     }
 
     if (profileRecord && profileRecord.salon_id !== (profile as any).salon_id) {
@@ -251,14 +257,13 @@ export async function POST(request: NextRequest) {
         })
 
       if (insertProfileError) {
-        return NextResponse.json({ error: insertProfileError.message }, { status: 400 })
+        console.error('[EMPLOYEES] POST profile insert error:', insertProfileError)
+        return NextResponse.json({ error: 'Failed to create profile record' }, { status: 400 })
       }
     }
 
     return NextResponse.json({ employee, invited: !existingUser }, { status: 201 })
   } catch (error: any) {
-    console.error('POST /api/employees error:', error)
-
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Validation error', details: error.errors },
@@ -266,8 +271,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.error('[EMPLOYEES] POST error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

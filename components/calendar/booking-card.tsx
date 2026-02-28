@@ -101,21 +101,9 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
       className={`h-full w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
       onClick={onClick}
     >
-      {/* Delete Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleDelete}
-        disabled={isDeleting}
-        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
-        title="Usuń wizytę"
-      >
-        <Trash2 className="h-3 w-3" />
-      </Button>
-
       <div className="flex-1 flex flex-col justify-between min-h-0">
         <div className="flex items-start justify-between gap-1 overflow-hidden">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-1">
             <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
               {booking.client?.full_name || 'Nieznany klient'}
             </p>
@@ -123,11 +111,23 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
               {booking.service.name}
             </p>
           </div>
-          {booking.duration >= 45 && (
-            <Badge className={`${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4 shrink-0`}>
-              {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
-            </Badge>
-          )}
+          <div className="relative shrink-0 flex items-start justify-end w-[30px] h-[24px]">
+            {booking.duration >= 45 && (
+              <Badge className={`absolute right-0 top-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
+                {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="absolute right-0 -top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
+              title="Usuń wizytę"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
 
         {booking.duration >= 60 && (

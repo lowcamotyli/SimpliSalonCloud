@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { validateCronSecret } from '@/lib/middleware/cron-auth'
 
 /**
  * Process Subscriptions Cron Job
@@ -18,13 +19,9 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
 
-  // Weryfikuj że request pochodzi z Vercel Cron (lub dev environment)
-  const authHeader = request.headers.get('authorization')
-  const isDev = process.env.NODE_ENV === 'development'
-
-  if (!isDev && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  // Weryfikuj że request pochodzi z Vercel Cron
+  const authError = validateCronSecret(request)
+  if (authError) return authError
 
   const supabase = createAdminSupabaseClient() as any
 

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -20,12 +19,14 @@ import {
   Zap,
   Users,
   BarChart3,
-  Clock,
   ArrowUpRight,
   Lock,
   FileText,
+  Activity,
+  CreditCard as CardIcon
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Aktywna',
@@ -36,11 +37,11 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-primary/10 text-primary border-primary/20',
-  trialing: 'bg-secondary text-secondary-foreground border-secondary',
-  past_due: 'bg-destructive/10 text-destructive border-destructive/20',
-  canceled: 'bg-muted text-muted-foreground border-border',
-  expired: 'bg-muted text-muted-foreground border-border',
+  active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  trialing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  past_due: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+  canceled: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20',
+  expired: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20',
 }
 
 const PLAN_LABELS: Record<string, string> = {
@@ -50,11 +51,11 @@ const PLAN_LABELS: Record<string, string> = {
   enterprise: 'Enterprise',
 }
 
-const PLAN_COLORS: Record<string, { from: string; to: string; badge: string }> = {
-  starter: { from: 'from-muted-foreground/50', to: 'to-muted-foreground', badge: 'bg-muted text-muted-foreground' },
-  professional: { from: 'from-primary/80', to: 'to-primary', badge: 'bg-primary/10 text-primary' },
-  business: { from: 'from-secondary', to: 'to-secondary/80', badge: 'bg-secondary/20 text-secondary-foreground' },
-  enterprise: { from: 'from-accent', to: 'to-accent/80', badge: 'bg-accent/20 text-accent-foreground' },
+const PLAN_COLORS: Record<string, { from: string; to: string; badge: string; shadow: string }> = {
+  starter: { from: 'from-slate-400', to: 'to-slate-600', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400', shadow: 'shadow-slate-500/20' },
+  professional: { from: 'from-blue-500', to: 'to-indigo-600', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', shadow: 'shadow-blue-500/20' },
+  business: { from: 'from-violet-500', to: 'to-purple-600', badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', shadow: 'shadow-violet-500/20' },
+  enterprise: { from: 'from-amber-400', to: 'to-orange-500', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', shadow: 'shadow-amber-500/20' },
 }
 
 function UsageBar({ label, current, limit, icon: Icon }: {
@@ -65,26 +66,43 @@ function UsageBar({ label, current, limit, icon: Icon }: {
 }) {
   const isUnlimited = limit === Infinity
   const percentage = isUnlimited ? 0 : Math.min((current / limit) * 100, 100)
-  const color = percentage > 90 ? 'from-destructive to-destructive/80' : percentage > 70 ? 'from-amber-500 to-amber-600' : 'from-primary to-primary/80'
+  const isDanger = percentage > 90
+  const isWarning = percentage > 70 && !isDanger
+
+  const color = isDanger
+    ? 'from-red-500 to-rose-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+    : isWarning
+      ? 'from-amber-400 to-orange-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+      : 'from-emerald-400 to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5 group">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Icon className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+          <div className={cn(
+            "p-1.5 rounded-md transition-colors duration-300",
+            isDanger ? "bg-red-500/10 text-red-500 dark:text-red-400" : isWarning ? "bg-amber-500/10 text-amber-500 dark:text-amber-400" : "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400"
+          )}>
+            <Icon className="h-4 w-4" />
+          </div>
           {label}
         </div>
-        <span className="text-sm font-semibold text-foreground">
-          {current}
-          <span className="text-muted-foreground font-normal"> / {isUnlimited ? '∞' : limit}</span>
-        </span>
+        <div className="flex items-baseline gap-1">
+          <span className={cn(
+            "text-base font-bold transition-colors duration-300",
+            isDanger ? "text-red-500 dark:text-red-400" : "text-foreground"
+          )}>
+            {current}
+          </span>
+          <span className="text-sm text-muted-foreground font-medium">/ {isUnlimited ? '∞' : limit}</span>
+        </div>
       </div>
-      <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+      <div className="relative w-full bg-secondary/50 rounded-full h-2 overflow-hidden backdrop-blur-sm border border-border/50">
         {isUnlimited ? (
-          <div className="h-2.5 rounded-full bg-gradient-to-r from-primary to-primary/80 w-full opacity-30" />
+          <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-teal-500 w-full opacity-30" />
         ) : (
           <div
-            className={`h-2.5 rounded-full bg-gradient-to-r ${color} transition-all duration-700`}
+            className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${color} transition-all duration-1000 ease-out`}
             style={{ width: `${percentage}%` }}
           />
         )}
@@ -151,12 +169,12 @@ export default function BillingPage() {
           <div className="h-10 w-64 bg-muted rounded-xl" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="h-64 bg-muted rounded-2xl" />
-              <div className="h-48 bg-muted rounded-2xl" />
+              <div className="h-64 bg-muted/40 rounded-3xl" />
+              <div className="h-48 bg-muted/40 rounded-3xl" />
             </div>
             <div className="space-y-6">
-              <div className="h-48 bg-muted rounded-2xl" />
-              <div className="h-32 bg-muted rounded-2xl" />
+              <div className="h-48 bg-muted/40 rounded-3xl" />
+              <div className="h-32 bg-muted/40 rounded-3xl" />
             </div>
           </div>
         </div>
@@ -171,21 +189,24 @@ export default function BillingPage() {
   const planColors = PLAN_COLORS[plan] || PLAN_COLORS.starter
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-6 pb-10 px-4 sm:px-0">
+    <div className="max-w-[1400px] mx-auto space-y-8 pb-10 px-4 sm:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <CreditCard className="h-6 w-6 text-primary" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
+            <Activity className="h-3.5 w-3.5" />
+            Rozliczenia
+          </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
             Subskrypcja i Płatności
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Zarządzaj swoim planem, płatnościami i fakturami
+          <p className="text-muted-foreground text-base max-w-xl">
+            Zarządzaj swoim planem, limitami wykorzystania oraz historią płatności
           </p>
         </div>
-        <Link href={`/${slug}/billing/upgrade`}>
-          <Button className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 gap-2 font-medium transition-all duration-300 transform hover:scale-[1.02]">
-            <TrendingUp className="h-4 w-4" />
+        <Link href={`/${slug}/billing/upgrade`} className="shrink-0">
+          <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-lg shadow-primary/25 gap-2 font-semibold transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-0.5 rounded-xl">
+            <Sparkles className="h-4 w-4" />
             Zmień Plan
           </Button>
         </Link>
@@ -193,24 +214,24 @@ export default function BillingPage() {
 
       {/* Alert Banners */}
       {status === 'trialing' && trialEndsAt && (
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10" />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                <Sparkles className="h-5 w-5 text-primary" />
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background/50 backdrop-blur-md shadow-lg shadow-primary/5 p-5 md:p-6 group transition-all duration-300 hover:border-primary/40">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
+                <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-foreground tracking-tight">
                   Okres próbny kończy się {new Date(trialEndsAt).toLocaleDateString('pl-PL')}
-                </p>
-                <p className="text-sm text-primary">
-                  Wybierz plan aby kontynuować korzystanie z SimpliSalon bez przerwy
+                </h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Wybierz plan aby kontynuować korzystanie bez przerw w dostępie
                 </p>
               </div>
             </div>
-            <Link href={`/${slug}/billing/upgrade`}>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md">
+            <Link href={`/${slug}/billing/upgrade`} className="self-stretch sm:self-auto">
+              <Button className="w-full sm:w-auto bg-primary text-primary-foreground gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl">
                 Wybierz Plan
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
@@ -220,21 +241,22 @@ export default function BillingPage() {
       )}
 
       {status === 'past_due' && (
-        <div className="relative overflow-hidden rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
-                <XCircle className="h-5 w-5 text-destructive" />
+        <div className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-background/50 backdrop-blur-md shadow-lg shadow-red-500/10 p-5 md:p-6 group transition-all duration-300 hover:border-red-500/50">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-red-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/20 shadow-inner">
+                <XCircle className="h-6 w-6 text-red-500" />
               </div>
               <div>
-                <p className="font-semibold text-destructive">Płatność nieudana</p>
-                <p className="text-sm text-destructive/80">
-                  Zaktualizuj metodę płatności aby kontynuować korzystanie z usługi
+                <h3 className="text-lg font-semibold text-red-500 tracking-tight">Płatność nieudana</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Zaktualizuj metodę płatności aby odblokować pełen dostęp
                 </p>
               </div>
             </div>
-            <Link href={`/${slug}/billing/upgrade`}>
-              <Button variant="destructive" className="gap-1.5 shadow-md">
+            <Link href={`/${slug}/billing/upgrade`} className="self-stretch sm:self-auto">
+              <Button variant="destructive" className="w-full sm:w-auto gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl">
                 Zaktualizuj Płatność
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
@@ -243,74 +265,81 @@ export default function BillingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
 
           {/* Current Plan Card */}
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            {/* Gradient top bar */}
-            <div className={`h-1.5 w-full bg-gradient-to-r ${planColors.from} ${planColors.to}`} />
+          <div className="group relative overflow-hidden rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-border/80 transition-all duration-500">
+            {/* Dynamic decorative background elements */}
+            <div className={`absolute top-0 right-0 -mt-20 -mr-20 h-64 w-64 rounded-full bg-gradient-to-br ${planColors.from} ${planColors.to} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-500`} />
+            <div className={`absolute bottom-0 left-0 -mb-20 -ml-20 h-40 w-40 rounded-full bg-gradient-to-br ${planColors.from} ${planColors.to} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500`} />
 
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-6">
+            {/* Gradient Top Bar */}
+            <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${planColors.from} ${planColors.to}`} />
+
+            <div className="relative p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Obecny plan</p>
-                  <h2 className="text-3xl font-bold text-foreground">{PLAN_LABELS[plan] || plan}</h2>
-                  {subscription?.amount && (
-                    <p className="text-muted-foreground mt-1 text-lg">
-                      <span className="font-semibold text-foreground">{subscription.amount / 100} PLN</span>
-                      {' '}/ {subscription.billingInterval === 'monthly' ? 'miesiąc' : 'rok'}
-                    </p>
+                  <div className="inline-flex items-center gap-1.5 mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Obecny plan</span>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[status] || STATUS_COLORS.active}`}>
+                      {status === 'active' && <CheckCircle className="h-3 w-3" />}
+                      {status === 'trialing' && <Sparkles className="h-3 w-3" />}
+                      {status === 'past_due' && <XCircle className="h-3 w-3" />}
+                      {STATUS_LABELS[status] || status}
+                    </span>
+                  </div>
+                  <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70 mb-2">
+                    {PLAN_LABELS[plan] || plan}
+                  </h2>
+                  {subscription?.amount ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl font-bold tracking-tight text-foreground">{subscription.amount / 100} PLN</span>
+                      <span className="text-muted-foreground font-medium">/ {subscription.billingInterval === 'monthly' ? 'mc' : 'rok'}</span>
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">Brak danych rozliczeniowych</div>
                   )}
                 </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium ${STATUS_COLORS[status] || STATUS_COLORS.active}`}>
-                  {status === 'active' && <CheckCircle className="h-3.5 w-3.5" />}
-                  {status === 'trialing' && <Sparkles className="h-3.5 w-3.5" />}
-                  {status === 'past_due' && <XCircle className="h-3.5 w-3.5" />}
-                  {STATUS_LABELS[status] || status}
-                </span>
+
+                <div className={`hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${planColors.from} ${planColors.to} shadow-lg ${planColors.shadow} text-white transform rotate-3 group-hover:rotate-6 transition-transform duration-500`}>
+                  <TrendingUp className="h-8 w-8" />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 {currentPeriodEnd && (
-                  <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background shadow-sm text-primary">
-                      <Calendar className="h-4 w-4" />
+                  <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-wider">Odnowienie</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Następne odnowienie</p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {new Date(currentPeriodEnd).toLocaleDateString('pl-PL')}
-                      </p>
-                    </div>
+                    <span className="text-sm font-bold text-foreground">
+                      {new Date(currentPeriodEnd).toLocaleDateString('pl-PL')}
+                    </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background shadow-sm text-primary">
-                    <Shield className="h-4 w-4" />
+                <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Shield className="h-4 w-4 text-emerald-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Ochrona</span>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Bezpieczeństwo</p>
-                    <p className="text-sm font-semibold text-foreground">SSL / TLS</p>
-                  </div>
+                  <span className="text-sm font-bold text-foreground">SSL / TLS Zapewnione</span>
                 </div>
-                <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background shadow-sm text-primary">
-                    <Zap className="h-4 w-4" />
+                <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Uptime</span>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Uptime</p>
-                    <p className="text-sm font-semibold text-foreground">99.9% SLA</p>
-                  </div>
+                  <span className="text-sm font-bold text-foreground">99.9% Gwarancji</span>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-border">
+              <div className="flex flex-wrap gap-4 pt-6 border-t border-border/50">
                 <Link href={`/${slug}/billing/upgrade`}>
-                  <Button className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 gap-2 font-medium transition-all duration-300 transform hover:scale-[1.02]">
-                    <TrendingUp className="h-4 w-4" />
-                    Zmień Plan
+                  <Button className="bg-foreground text-background hover:bg-foreground/90 hover:scale-105 transition-all duration-300 shadow-xl shadow-foreground/10 rounded-xl px-6 h-11 font-semibold text-sm">
+                    Aktualizuj Plan
                   </Button>
                 </Link>
                 {status === 'active' && (
@@ -318,9 +347,9 @@ export default function BillingPage() {
                     variant="outline"
                     onClick={handleCancel}
                     disabled={canceling}
-                    className="border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-colors"
+                    className="border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-all duration-300 rounded-xl px-6 h-11 font-medium bg-transparent"
                   >
-                    {canceling && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {canceling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                     Anuluj Subskrypcję
                   </Button>
                 )}
@@ -329,41 +358,49 @@ export default function BillingPage() {
           </div>
 
           {/* Usage Stats */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  Wykorzystanie zasobów
-                </h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Bieżący okres rozliczeniowy</p>
+          <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    Wykorzystanie Zasobów
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 font-medium">Zależy od wybranego planu</p>
+                </div>
               </div>
               {usage?.exceeded && usage.exceeded.length > 0 && (
-                <Badge variant="destructive">
-                  Limity przekroczone
+                <Badge variant="destructive" className="px-3 py-1 shadow-lg shadow-destructive/20 rounded-full animate-pulse">
+                  Przekroczone Limity
                 </Badge>
               )}
             </div>
 
             {usage ? (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 <UsageBar
                   label="Pracownicy"
                   current={usage.usage.employees.current}
                   limit={usage.usage.employees.limit}
                   icon={Users}
                 />
+                <div className="h-px w-full bg-border/40" />
                 {usage.usage.bookings.limit < Infinity && (
-                  <UsageBar
-                    label="Rezerwacje (ten miesiąc)"
-                    current={usage.usage.bookings.current}
-                    limit={usage.usage.bookings.limit}
-                    icon={Calendar}
-                  />
+                  <>
+                    <UsageBar
+                      label="Rezerwacje w tym miesiącu"
+                      current={usage.usage.bookings.current}
+                      limit={usage.usage.bookings.limit}
+                      icon={Calendar}
+                    />
+                    <div className="h-px w-full bg-border/40" />
+                  </>
                 )}
                 {usage.usage.clients.limit < Infinity && (
                   <UsageBar
-                    label="Klienci"
+                    label="Klienci w bazie"
                     current={usage.usage.clients.current}
                     limit={usage.usage.clients.limit}
                     icon={Users}
@@ -371,19 +408,21 @@ export default function BillingPage() {
                 )}
 
                 {usage.exceeded && usage.exceeded.length > 0 && (
-                  <div className="mt-2 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                  <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 shadow-inner">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 rounded-full bg-red-500/10 mt-0.5">
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                      </div>
                       <div>
-                        <p className="text-sm font-semibold text-destructive">
-                          Osiągnięto limity: {usage.exceeded.join(', ')}
-                        </p>
-                        <p className="text-sm text-destructive/80 mt-1">
-                          Przejdź na wyższy plan, aby odblokować więcej zasobów.
+                        <h4 className="text-sm font-bold text-red-500 dark:text-red-400">
+                          Wymagana akcja: Osiągnięto limity
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1 mb-3">
+                          Zablokowano niektóre funkcje ({usage.exceeded.join(', ')}). Zwiększ plan, aby kontynuować bez przeszkód.
                         </p>
                         <Link href={`/${slug}/billing/upgrade`}>
-                          <Button variant="link" size="sm" className="text-destructive p-0 h-auto mt-1 font-semibold">
-                            Przejdź na wyższy plan →
+                          <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white border-0 shadow-md shadow-red-500/20 rounded-lg font-semibold">
+                            Zwiększ Plan Teraz →
                           </Button>
                         </Link>
                       </div>
@@ -392,32 +431,34 @@ export default function BillingPage() {
                 )}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <BarChart3 className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Brak danych o wykorzystaniu</p>
+              <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border mt-4">
+                <BarChart3 className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">Brak danych o zużyciu</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Right sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-8">
 
           {/* Payment Method */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
-            <h2 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-              <CreditCard className="h-5 w-5 text-primary" />
+          <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                <CardIcon className="h-5 w-5" />
+              </div>
               Metoda Płatności
             </h2>
 
             {subscription?.paymentMethod ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 p-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background shadow-sm">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 rounded-2xl border border-border bg-background/50 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 border border-border shadow-sm">
+                    <CardIcon className="h-6 w-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <h3 className="text-sm font-bold text-foreground">
                       {subscription.paymentMethod.type === 'card' ? (
                         <>{subscription.paymentMethod.brand} •••• {subscription.paymentMethod.last4}</>
                       ) : subscription.paymentMethod.type === 'blik' ? (
@@ -425,55 +466,59 @@ export default function BillingPage() {
                       ) : (
                         'Przelew bankowy'
                       )}
+                    </h3>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3 text-emerald-500" />
+                      Aktywna i zweryfikowana
                     </p>
-                    <p className="text-xs text-muted-foreground">Aktywna metoda płatności</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground px-1">
-                  Zostanie użyta przy następnym odnowieniu subskrypcji
+                <p className="text-xs text-muted-foreground px-2 text-center">
+                  Metoda zostanie automatycznie obciążona przy odnowieniu
                 </p>
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center">
-                <CreditCard className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Brak zapisanej metody płatności
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Zostaniesz poproszony o płatność przy następnym odnowieniu
+              <div className="rounded-2xl border-2 border-dashed border-border bg-background/30 p-8 text-center transition-colors hover:bg-muted/30">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+                  <CardIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-1">Brak zapisanej karty</h3>
+                <p className="text-xs text-muted-foreground">
+                  Zostaniesz poproszony o płatność w dniu odnowienia
                 </p>
               </div>
             )}
           </div>
 
-          {/* Przelewy24 Placeholder */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-primary to-primary/80 px-5 py-4">
-              <h2 className="text-base font-semibold text-primary-foreground flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                Bezpieczne Płatności
-              </h2>
-              <p className="text-primary-foreground/80 text-xs mt-0.5">Powered by Przelewy24</p>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {/* P24 Logo placeholder */}
-              <div className="flex items-center justify-center rounded-xl border border-border bg-muted/30 py-5">
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 rounded-lg bg-background border border-border shadow-sm px-4 py-2.5">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">P</span>
-                    </div>
-                    <span className="font-bold text-foreground text-sm tracking-wide">Przelewy24</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Integracja płatności w przygotowaniu</p>
+          {/* Przelewy24 System */}
+          <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl overflow-hidden hover:border-border/80 transition-all duration-500 group">
+            <div className="relative border-b border-border/50 bg-muted/20 px-6 py-5 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-primary" />
+                    Bezpieczne Transakcje
+                  </h2>
+                  <p className="text-muted-foreground text-xs mt-1 font-medium">Obsługiwane przez Przelewy24</p>
                 </div>
               </div>
+            </div>
 
-              {/* Payment methods */}
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-2xl bg-background border border-border shadow-inner px-5 py-3 group-hover:shadow-md transition-shadow">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-sm">
+                    <span className="text-white text-sm font-black">P</span>
+                  </div>
+                  <span className="font-extrabold text-foreground text-lg tracking-tight">Przelewy<span className="text-red-600">24</span></span>
+                </div>
+                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Aktywne</Badge>
+              </div>
+
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2.5 uppercase tracking-wide">Akceptowane metody</p>
-                <div className="grid grid-cols-3 gap-2">
+                <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider text-center">Obsługiwane Systemy</p>
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: 'Karta', icon: '💳' },
                     { label: 'BLIK', icon: '📱' },
@@ -481,48 +526,52 @@ export default function BillingPage() {
                   ].map((method) => (
                     <div
                       key={method.label}
-                      className="flex flex-col items-center gap-1 rounded-lg border border-border bg-muted/50 py-2.5 px-2"
+                      className="flex flex-col items-center gap-2 rounded-xl border border-border/50 bg-background/50 py-3 px-2 hover:bg-muted/50 transition-colors shadow-sm"
                     >
-                      <span className="text-lg">{method.icon}</span>
-                      <span className="text-xs text-muted-foreground font-medium">{method.label}</span>
+                      <span className="text-2xl group-hover:scale-110 transition-transform">{method.icon}</span>
+                      <span className="text-xs text-foreground font-semibold">{method.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-lg bg-accent/20 border border-accent/30 p-3">
-                <p className="text-xs text-foreground flex items-start gap-1.5">
-                  <Clock className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-accent" />
-                  Integracja z Przelewy24 zostanie aktywowana wkrótce. Płatności będą obsługiwane automatycznie.
+              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                <p className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-emerald-500" />
+                  Płatności obsługiwane przez Przelewy24. Bezpieczne transakcje kartą, BLIK-iem i przelewem bankowym.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Info card */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-foreground mb-3">Informacje</h2>
-            <div className="space-y-2.5">
+          <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500">
+            <h2 className="text-sm font-bold text-foreground mb-4 tracking-wide uppercase">Warto Wiedzieć</h2>
+            <div className="space-y-4">
               {[
-                { icon: Shield, text: 'Płatności szyfrowane SSL/TLS' },
-                { icon: CheckCircle, text: 'Faktury VAT 23% automatycznie' },
-                { icon: Calendar, text: 'Anulacja na koniec okresu' },
+                { icon: Shield, text: 'Płatności bankowe szyfrowane 256-bit SSL' },
+                { icon: CheckCircle, text: 'Faktury VAT (23%) generowane automatycznie' },
+                { icon: Calendar, text: 'Możliwość anulowania w każdej chwili' },
               ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                  <Icon className="h-4 w-4 text-primary flex-shrink-0" />
-                  {text}
+                <div key={text} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <div className="p-1.5 rounded-lg bg-border/50 mt-0.5">
+                    <Icon className="h-3.5 w-3.5 text-foreground" />
+                  </div>
+                  <span className="font-medium leading-relaxed">{text}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-border">
+
+            <div className="mt-6 pt-6 border-t border-border/50">
               <Link href={`/${slug}/billing/invoices`}>
-                <Button variant="outline" className="w-full text-muted-foreground hover:text-primary gap-2">
+                <Button variant="secondary" className="w-full text-foreground hover:bg-muted font-bold rounded-xl gap-2 h-11">
                   <FileText className="h-4 w-4" />
-                  Zobacz wszystkie faktury
+                  Historia Faktur
                 </Button>
               </Link>
             </div>
           </div>
+
         </div>
       </div>
     </div>

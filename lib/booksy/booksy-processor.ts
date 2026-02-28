@@ -25,8 +25,25 @@ export class BooksyProcessor {
   /**
    * Parse Booksy email and create/update/cancel booking
    */
-  async processEmail(subject: string, body: string): Promise<any> {
+  // In order to properly test idempotency, the method must accept the event ID
+  async processEmail(subject: string, body: string, options?: { eventId?: string }): Promise<any> {
     try {
+      // 1. Check idempotency if eventId is provided
+      if (options?.eventId) {
+        const { data: existingBooking } = await this.supabase
+          .from('bookings')
+          .select('*')
+          .eq('salon_id', this.salonId)
+          .eq('source', 'booksy')
+          .like('notes', `%[booksy_event_id:${options.eventId}]%`)
+          .maybeSingle()
+
+        if (existingBooking) {
+          console.log(`[Booksy] Event ${options.eventId} already processed, skipping`)
+          return { success: true, deduplicated: true, booking: existingBooking }
+        }
+      }
+
       // 1. Parse email
       const parsed = this.parseEmail(subject, body)
       if (!parsed) {
@@ -66,6 +83,7 @@ export class BooksyProcessor {
         bookingTime: parsed.bookingTime,
         duration: parsed.duration || service.duration,
         price: parsed.price || service.price,
+        eventId: options?.eventId,
       })
 
       return {
@@ -220,8 +238,8 @@ export class BooksyProcessor {
         // Reschedule format:
         // z dnia 27 października 2024 10:00
         // na 28 października 2024, 14:00 — 15:00
-        const oldMatch = cleanBody.match(/z dnia (\d{1,2})\s+(\w+)\s+(\d{4})\s+(\d{2}):(\d{2})/i)
-        const newMatch = cleanBody.match(/na (\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})/i)
+        const oldMatch = cleanBody.match(/z dnia (\d{1,2})\s+([^\s]+)\s+(\d{4})\s+(\d{2}):(\d{2})/i)
+        const newMatch = cleanBody.match(/na (\d{1,2})\s+([^\s]+)\s+(\d{4}),\s+(\d{2}):(\d{2})/i)
 
         if (!oldMatch || !newMatch) return null
 
@@ -243,8 +261,8 @@ export class BooksyProcessor {
 
       // Handle 'new'
       // Extract phone
-      const phoneMatch = cleanBody.match(/(\d{3}\s?\d{3}\s?\d{3})/m)
-      const clientPhone = phoneMatch ? phoneMatch[1].replace(/\s/g, '') : ''
+      const phoneMatch = cleanBody.match(/(?:\+?48\s?)?(\d{3}\s?\d{3}\s?\d{3})/m)
+      const clientPhone = phoneMatch ? phoneMatch[0].replace(/[\s\+]/g, '') : ''
 
       // Extract email
       const emailMatch = cleanBody.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/m)
@@ -266,7 +284,7 @@ export class BooksyProcessor {
 
       if (!employeeName) return null
 
-      return {
+      const parsed = {
         type: 'new',
         clientName,
         clientPhone,
@@ -277,15 +295,15 @@ export class BooksyProcessor {
         bookingTime: dateMatch.time,
         employeeName,
         duration: dateMatch.duration,
-      }
+      } as const;
+      return parsed;
     } catch (error) {
-      console.error('Parse error:', error)
       return null
     }
   }
 
   private extractDateAndTime(body: string) {
-    const dateMatch = body.match(/(\d{1,2})\s+(\w+)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–—]\s*(\d{2}):(\d{2})/m)
+    const dateMatch = body.match(/(\d{1,2})\s+([^\s]+)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–—]\s*(\d{2}):(\d{2})/m)
     if (!dateMatch) return null
 
     const date = this.formatDate(dateMatch[1], dateMatch[2], dateMatch[3])
@@ -376,6 +394,18 @@ export class BooksyProcessor {
   }
 
   /**
+   * Normalize Polish diacritics to ASCII for fuzzy matching
+   */
+  private normalizeName(s: string): string {
+    return s
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // strip combining diacritics
+      .replace(/\s+/g, ' ')
+  }
+
+  /**
    * Find service by name
    */
   private async findServiceByName(name: string) {
@@ -389,13 +419,32 @@ export class BooksyProcessor {
       return null
     }
 
-    // Try exact match first
     const nameLower = name.toLowerCase().trim()
+    const nameNorm = this.normalizeName(name)
+
+    // 1. Exact match
     let match = services.find((svc) => svc.name.toLowerCase() === nameLower)
 
-    // Try partial match if exact fails
+    // 2. Partial match
     if (!match) {
       match = services.find((svc) => svc.name.toLowerCase().includes(nameLower))
+    }
+
+    // 3. Diacritic-normalized match (handles encoding differences)
+    if (!match) {
+      match = services.find((svc) => this.normalizeName(svc.name) === nameNorm)
+    }
+
+    // 4. Normalized partial match
+    if (!match) {
+      match = services.find((svc) => this.normalizeName(svc.name).includes(nameNorm))
+    }
+
+    if (!match) {
+      console.error(
+        `[Booksy] Service not found: "${name}". Available services:`,
+        services.map((s) => `"${s.name}"`).join(', ')
+      )
     }
 
     return match || null
@@ -412,7 +461,10 @@ export class BooksyProcessor {
     bookingTime: string
     duration: number
     price: number
+    eventId?: string
   }) {
+    const notes = data.eventId ? `[booksy_event_id:${data.eventId}]` : null;
+
     const { data: booking, error } = await this.supabase
       .from('bookings')
       .insert({
@@ -426,6 +478,7 @@ export class BooksyProcessor {
         base_price: data.price,
         status: 'scheduled',
         source: 'booksy',
+        notes: notes
       })
       .select()
       .single()

@@ -13,6 +13,16 @@ const linkUserSchema = z.object({
   email: z.string().email(),
 })
 
+type EmployeePatchDeps = {
+  createSupabase: typeof createServerSupabaseClient
+  createAdminSupabase: typeof createAdminClient
+}
+
+const defaultPatchDeps: EmployeePatchDeps = {
+  createSupabase: createServerSupabaseClient,
+  createAdminSupabase: createAdminClient,
+}
+
 // GET /api/employees/[id] - Get single employee
 export async function GET(
   request: NextRequest,
@@ -26,6 +36,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: profile } = await (supabase as any)
+      .from('profiles').select('salon_id').eq('user_id', user.id).single()
+
     const { data: employee, error } = await (supabase as any)
       .from('employees')
       .select('*')
@@ -33,7 +46,7 @@ export async function GET(
       .single()
 
     if (error) throw error
-    if (!employee) {
+    if (!employee || employee.salon_id !== profile?.salon_id) {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
     }
 
@@ -41,7 +54,7 @@ export async function GET(
   } catch (error: any) {
     console.error('GET /api/employees/[id] error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
@@ -60,17 +73,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: profile } = await (supabase as any)
+      .from('profiles').select('salon_id').eq('user_id', user.id).single()
+
     const body = await request.json()
     const validatedData = updateEmployeeSchema.parse(body)
 
     // Get current version
     const { data: existingEmployee, error: existingError } = await (supabase as any)
       .from('employees')
-      .select('version')
+      .select('version, salon_id')
       .eq('id', params.id)
       .single()
 
-    if (existingError || !existingEmployee) {
+    if (existingError || !existingEmployee || existingEmployee.salon_id !== profile?.salon_id) {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
     }
 
@@ -106,24 +122,45 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
 }
 
 // PATCH /api/employees/[id] - Update employee role
-export async function PATCH(
+export async function handlePatchEmployee(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
+  deps: EmployeePatchDeps = defaultPatchDeps
 ) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const adminSupabase = createAdminClient()
+    const { id } = await params
+    const supabase = await deps.createSupabase()
+    const adminSupabase = deps.createAdminSupabase()
 
     const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
     if (authError || !currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const employeeId = id
+    const body = await request.json()
+
+    if (body?.email) {
+      const { email } = linkUserSchema.parse(body)
+
+      const { data: linkResult, error: linkError } = await (supabase as any)
+        .rpc('link_employee_to_user_by_email', {
+          employee_uuid: employeeId,
+          user_email: email,
+        })
+
+      if (linkError) {
+        return NextResponse.json({ error: 'Unable to link user account' }, { status: 400 })
+      }
+
+      return NextResponse.json({ success: true, link: linkResult })
     }
 
     const currentRole = currentUser.app_metadata.role as Role | undefined
@@ -131,25 +168,6 @@ export async function PATCH(
 
     if (currentRole !== RBAC_ROLES.OWNER && currentRole !== RBAC_ROLES.MANAGER) {
       return NextResponse.json({ error: 'Forbidden. Requires OWNER or MANAGER role.' }, { status: 403 })
-    }
-
-    const employeeId = params.id
-    const body = await request.json()
-
-    if (body?.email) {
-      const { email } = linkUserSchema.parse(body)
-
-      const { data: linkResult, error: linkError } = await adminSupabase
-        .rpc('link_employee_to_user_by_email', {
-          employee_uuid: employeeId,
-          user_email: email,
-        })
-
-      if (linkError) {
-        return NextResponse.json({ error: linkError.message }, { status: 400 })
-      }
-
-      return NextResponse.json({ success: true, link: linkResult })
     }
 
     const { role: newRole } = updateRoleSchema.parse(body)
@@ -179,7 +197,8 @@ export async function PATCH(
       .maybeSingle()
 
     if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 })
+      console.error('PATCH /api/employees/[id] profile fetch error:', profileError)
+      return NextResponse.json({ error: 'Failed to fetch employee profile' }, { status: 400 })
     }
 
     let ensuredProfile = employeeProfile
@@ -198,7 +217,8 @@ export async function PATCH(
         .single()
 
       if (createProfileError || !createdProfile) {
-        return NextResponse.json({ error: createProfileError?.message || 'Employee profile not found' }, { status: 400 })
+        console.error('PATCH /api/employees/[id] profile create error:', createProfileError)
+        return NextResponse.json({ error: 'Failed to create employee profile' }, { status: 400 })
       }
 
       ensuredProfile = createdProfile
@@ -252,10 +272,17 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return handlePatchEmployee(request, { params })
 }
 
 // DELETE /api/employees/[id] - Soft delete employee
@@ -271,6 +298,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: profile } = await (supabase as any)
+      .from('profiles').select('salon_id').eq('user_id', user.id).single()
+
+    const { data: existingEmployee, error: existingError } = await (supabase as any)
+      .from('employees')
+      .select('id, salon_id')
+      .eq('id', params.id)
+      .single()
+
+    if (existingError || !existingEmployee || existingEmployee.salon_id !== profile?.salon_id) {
+      return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+    }
+
     // Delete will trigger soft_delete_employee trigger (sets deleted_at and deleted_by)
     const { error } = await (supabase as any)
       .from('employees')
@@ -283,7 +323,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('DELETE /api/employees/[id] error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

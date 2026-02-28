@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+export const MASKED_SECRET = '********'
+
+const smsSenderNameSchema = z
+    .string()
+    .max(11)
+    .regex(/^[a-zA-Z0-9]*$/)
+
 export const updateSettingsSchema = z.object({
     theme: z.string().optional(),
     font_family: z.string().optional(),
@@ -21,6 +28,29 @@ export const updateSettingsSchema = z.object({
     accounting_email: z.string().email().optional().or(z.literal('')),
     contact_phone: z.string().optional().or(z.literal('')),
     description: z.string().max(1000).optional(),
+    resend_api_key: z.string().optional().or(z.literal('')),
+    resend_from_email: z.string().email().optional().or(z.literal('')),
+    resend_from_name: z.string().max(120).optional().or(z.literal('')),
+    smsapi_token: z.string().optional().or(z.literal('')),
+    smsapi_sender_name: smsSenderNameSchema.optional().or(z.literal('')),
+    // Przelewy24 per-salon
+    p24_merchant_id: z.string().max(20).optional().or(z.literal('')),
+    p24_pos_id: z.string().max(20).optional().or(z.literal('')),
+    p24_crc: z.string().optional().or(z.literal('')),
+    p24_api_key: z.string().optional().or(z.literal('')),
+    p24_api_url: z.string().url().optional().or(z.literal('')),
+    p24_sandbox_mode: z.boolean().optional(),
+})
+
+export const updateSmsSettingsSchema = z.object({
+    smsapi_token: z.string().optional().or(z.literal('')),
+    smsapi_sender_name: smsSenderNameSchema.optional().or(z.literal('')),
+})
+
+export const testSmsSettingsSchema = z.object({
+    salonId: z.string().uuid(),
+    to: z.string().regex(/^\+?[1-9]\d{5,14}$/),
 })
 
 export type UpdateSettingsDTO = z.infer<typeof updateSettingsSchema>
+export type UpdateSmsSettingsDTO = z.infer<typeof updateSmsSettingsSchema>

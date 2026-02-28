@@ -1,0 +1,6 @@
+{
+  "message": "new row violates row-level security policy for table \"salon_settings\"",
+  "code": "42501",
+  "details": null,
+  "hint": null
+}

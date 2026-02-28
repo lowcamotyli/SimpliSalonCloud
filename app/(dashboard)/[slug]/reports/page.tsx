@@ -28,7 +28,7 @@ import { useEmployees } from '@/hooks/use-employees'
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
-export default function ReportsPage({ params }: { params: { slug: string } }) {
+export default function ReportsPage() {
     const searchParams = useSearchParams()
     const initialTab = searchParams.get('tab') || 'revenue'
     const [activeTab, setActiveTab] = useState(initialTab)

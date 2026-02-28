@@ -62,6 +62,21 @@ export class GmailClient {
   }
 
   /**
+   * Detect Google OAuth refresh-token failures (revoked/expired token).
+   */
+  static isInvalidGrantError(error: any): boolean {
+    const details = JSON.stringify({
+      message: error?.message,
+      code: error?.code,
+      status: error?.status,
+      response: error?.response?.data,
+      errors: error?.errors,
+    })
+
+    return /invalid_grant/i.test(details)
+  }
+
+  /**
    * Get user's email address
    */
   async getUserEmail(): Promise<string | null> {
@@ -77,17 +92,15 @@ export class GmailClient {
   /**
    * Search for Booksy emails
    */
-  async searchBooksyEmails(maxResults = 20): Promise<GmailMessage[]> {
+  async searchBooksyEmails(maxResults = 20, senderFilter = '@booksy.com'): Promise<GmailMessage[]> {
     try {
+      const sender = senderFilter.trim() || '@booksy.com'
       const query = [
-        'from:@booksy.com',
-        'OR subject:"nowa rezerwacja"',
-        'OR subject:"zmienił rezerwację"',
-        'OR subject:"odwołał wizytę"',
+        `from:${sender}`,
+        'subject:"nowa rezerwacja"',
         '-label:booksy/processed',
         '-label:booksy/error',
       ].join(' ')
-
       const response = await this.gmail.users.messages.list({
         userId: 'me',
         q: query,
@@ -106,6 +119,12 @@ export class GmailClient {
 
       return fullMessages
     } catch (error) {
+      if (GmailClient.isInvalidGrantError(error)) {
+        const authError = new Error('Gmail authorization expired. Reconnect Gmail account.')
+        ;(authError as any).code = 'GMAIL_REAUTH_REQUIRED'
+        ;(authError as any).cause = error
+        throw authError
+      }
       console.error('Error searching Booksy emails:', error)
       throw error
     }
@@ -166,32 +185,56 @@ export class GmailClient {
   async markAsProcessed(messageId: string, success = true): Promise<void> {
     try {
       const labelName = success ? 'booksy/processed' : 'booksy/error'
-
-      const labelsResponse = await this.gmail.users.labels.list({ userId: 'me' })
-      const labels = labelsResponse.data.labels || []
-      let label = labels.find((l: any) => l.name === labelName)
-
-      if (!label) {
-        const createResponse = await this.gmail.users.labels.create({
-          userId: 'me',
-          requestBody: {
-            name: labelName,
-            labelListVisibility: 'labelShow',
-            messageListVisibility: 'show',
-          },
-        })
-        label = createResponse.data
-      }
+      const labelId = await this.getOrCreateLabelId(labelName)
 
       await this.gmail.users.messages.modify({
         userId: 'me',
         id: messageId,
         requestBody: {
-          addLabelIds: [label!.id!],
+          addLabelIds: [labelId],
         },
       })
     } catch (error) {
       console.error('Error labeling message:', error)
     }
+  }
+
+  /**
+   * Resolve Gmail label id; handles create races/conflicts (409).
+   */
+  private async getOrCreateLabelId(labelName: string): Promise<string> {
+    const findLabel = async () => {
+      const labelsResponse = await this.gmail.users.labels.list({ userId: 'me' })
+      const labels = labelsResponse.data.labels || []
+      return labels.find((l: any) => (l.name || '').toLowerCase() === labelName.toLowerCase()) || null
+    }
+
+    let label = await findLabel()
+    if (label?.id) return label.id
+
+    try {
+      const createResponse = await this.gmail.users.labels.create({
+        userId: 'me',
+        requestBody: {
+          name: labelName,
+          labelListVisibility: 'labelShow',
+          messageListVisibility: 'show',
+        },
+      })
+      if (createResponse.data?.id) return createResponse.data.id
+    } catch (error: any) {
+      const conflict =
+        error?.code === 409 ||
+        error?.status === 409 ||
+        /exists or conflicts/i.test(error?.message || '')
+      if (!conflict) {
+        throw error
+      }
+    }
+
+    label = await findLabel()
+    if (label?.id) return label.id
+
+    throw new Error(`Unable to resolve Gmail label id for ${labelName}`)
   }
 }
