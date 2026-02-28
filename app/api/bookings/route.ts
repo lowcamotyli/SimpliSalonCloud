@@ -211,7 +211,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // 3. Atomically check slot + create booking (eliminates race condition)
   const duration = validatedData.duration || (service as any).duration || 30
 
-  const { data: bookingRows, error: bookingError } = await supabase
+  const { data: bookingRows, error: bookingError } = await (supabase as any)
     .rpc('create_booking_atomic', {
       p_salon_id: salonProfile.salon_id,
       p_employee_id: validatedData.employee_id as string,

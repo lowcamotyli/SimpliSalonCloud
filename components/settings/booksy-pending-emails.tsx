@@ -74,7 +74,7 @@ interface Service {
 interface Employee {
   id: string;
   first_name: string;
-  last_name: string;
+  last_name: string | null;
 }
 
 export function BooksyPendingEmails({ salonId }: { salonId: string }) {

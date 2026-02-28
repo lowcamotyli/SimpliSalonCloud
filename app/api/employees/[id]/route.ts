@@ -26,9 +26,10 @@ const defaultPatchDeps: EmployeePatchDeps = {
 // GET /api/employees/[id] - Get single employee
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerSupabaseClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -42,7 +43,7 @@ export async function GET(
     const { data: employee, error } = await (supabase as any)
       .from('employees')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) throw error
@@ -63,9 +64,10 @@ export async function GET(
 // PUT /api/employees/[id] - Update employee
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerSupabaseClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -83,7 +85,7 @@ export async function PUT(
     const { data: existingEmployee, error: existingError } = await (supabase as any)
       .from('employees')
       .select('version, salon_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (existingError || !existingEmployee || existingEmployee.salon_id !== profile?.salon_id) {
@@ -104,7 +106,7 @@ export async function PUT(
         ...(validatedData.avatarUrl !== undefined && { avatar_url: validatedData.avatarUrl || null }),
         ...(validatedData.active !== undefined && { active: validatedData.active }),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -288,9 +290,10 @@ export async function PATCH(
 // DELETE /api/employees/[id] - Soft delete employee
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerSupabaseClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -304,7 +307,7 @@ export async function DELETE(
     const { data: existingEmployee, error: existingError } = await (supabase as any)
       .from('employees')
       .select('id, salon_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (existingError || !existingEmployee || existingEmployee.salon_id !== profile?.salon_id) {
@@ -315,7 +318,7 @@ export async function DELETE(
     const { error } = await (supabase as any)
       .from('employees')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) throw error
 

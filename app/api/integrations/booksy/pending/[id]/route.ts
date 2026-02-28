@@ -8,8 +8,9 @@ import { UnauthorizedError, NotFoundError, ValidationError } from '@/lib/errors'
 // Body: { status: 'resolved' | 'ignored' }
 export const PATCH = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -38,9 +39,9 @@ export const PATCH = withErrorHandling(async (
     updateData.resolved_at = new Date().toISOString()
   }
 
-  const { data: updatedRow, error } = await (supabase.from('booksy_pending_emails') as any)
+  const { data: updatedRow, error } = await (supabase as any).from('booksy_pending_emails')
     .update(updateData)
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('salon_id', profile.salon_id)
     .select()
     .single()
@@ -56,8 +57,9 @@ export const PATCH = withErrorHandling(async (
 // Manual retry: creates a booking using the stored parsed_data with optional overrides
 export const POST = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -81,9 +83,9 @@ export const POST = withErrorHandling(async (
   const { serviceId, employeeId } = body as { serviceId?: string; employeeId?: string }
 
   // Fetch the pending email, enforcing salon ownership
-  const { data: pendingRow, error: fetchError } = await (supabase.from('booksy_pending_emails') as any)
+  const { data: pendingRow, error: fetchError } = await (supabase as any).from('booksy_pending_emails')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('salon_id', salonId)
     .single()
 
@@ -204,12 +206,12 @@ export const POST = withErrorHandling(async (
     if (bookingError) throw bookingError
 
     // 5. Mark the pending email as resolved
-    await (admin.from('booksy_pending_emails') as any)
+    await (admin as any).from('booksy_pending_emails')
       .update({
         status: 'resolved',
         resolved_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
 
     return NextResponse.json({ success: true, booking })
 

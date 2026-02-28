@@ -25,7 +25,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'pending'
 
-  let query = (supabase.from('booksy_pending_emails') as any)
+  let query = (supabase as any).from('booksy_pending_emails')
     .select('*')
     .eq('salon_id', profile.salon_id)
 
