@@ -54,7 +54,12 @@
       "Bash(npm view serialize-javascript version)",
       "WebFetch(domain:open.manus.ai)",
       "Bash(python -m json.tool)",
-      "Bash(PROMPT='You are a senior security auditor and code reviewer. Perform a comprehensive security and code quality audit of SimpliSalonCloud — a Polish SaaS platform for hair salon management built with Next.js 14 App Router, TypeScript, Supabase, Tailwind + shadcn/ui.:*)"
+      "Bash(PROMPT='You are a senior security auditor and code reviewer. Perform a comprehensive security and code quality audit of SimpliSalonCloud — a Polish SaaS platform for hair salon management built with Next.js 14 App Router, TypeScript, Supabase, Tailwind + shadcn/ui.:*)",
+      "Bash(supabase db push --include-all)",
+      "Bash(find \"d:\\\\SimpliSalonCLoud/app/\\(dashboard\\)/[slug]/payroll\" -type f)",
+      "Bash(find \"d:\\\\SimpliSalonCLoud/app/\\(dashboard\\)/[slug]/payroll\" -type f ! -path \"*node_modules*\")",
+      "Bash(supabase db execute --sql \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conrelid = ''employees''::regclass AND conname = ''chk_commission_rate'';\")",
+      "Bash(npx vercel ls)"
     ]
   }
 }

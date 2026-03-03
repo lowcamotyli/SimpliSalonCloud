@@ -14,10 +14,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMsg('') // Wyczyść poprzedni błąd
 
     try {
       const supabase = createClient()
@@ -27,7 +29,14 @@ export default function LoginPage() {
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        // Tłumaczenie błędu złego hasła/emailu z Supabase
+        if (error.message.includes('Invalid login credentials')) {
+          setErrorMsg('Nieprawidłowy adres email lub hasło.')
+          throw new Error('Nieprawidłowy adres email lub pole hasło.')
+        }
+        throw error
+      }
 
       // Get user's salon (use specific FK to avoid ambiguity with deleted_by)
       const { data: profile, error: profileError } = await supabase
@@ -38,10 +47,14 @@ export default function LoginPage() {
 
       console.log('Profile query result:', { profile, profileError })
 
-      if (profileError) throw profileError
+      if (profileError) {
+        setErrorMsg('Błąd połączenia z bazą użytkowników.')
+        throw profileError
+      }
 
       if (!profile) {
-        throw new Error('Profil użytkownika nie został znaleziony')
+        setErrorMsg('Profil użytkownika nie został odnaleziony.')
+        throw new Error('Profil użytkownika nie został odnaleziony')
       }
 
       // @ts-ignore - TS doesn't know about nested select
@@ -51,7 +64,8 @@ export default function LoginPage() {
       console.log('Redirecting to:', `/${salonSlug}/dashboard`)
 
       if (!salonSlug) {
-        throw new Error('Nie znaleziono salonu dla użytkownika')
+        setErrorMsg('Brak przypisanego salonu do konta.')
+        throw new Error('Brak przypisanego salonu do konta')
       }
 
       toast.success('Zalogowano pomyślnie')
@@ -59,7 +73,8 @@ export default function LoginPage() {
       // Use window.location instead of router.push for more reliable redirect
       window.location.href = `/${salonSlug}/dashboard`
     } catch (error: any) {
-      toast.error(error.message || 'Błąd logowania')
+      if (!errorMsg) setErrorMsg(error.message || 'Błąd logowania')
+      toast.error(errorMsg || error.message || 'Błąd logowania')
     } finally {
       setLoading(false)
     }
@@ -73,29 +88,36 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-6">
+        {errorMsg && (
+          <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+            {errorMsg}
+          </div>
+        )}
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className={errorMsg ? "text-red-500" : ""}>Email</Label>
           <Input
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setErrorMsg('') }}
             placeholder="twoj@email.com"
             required
             autoComplete="email"
+            className={errorMsg ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Hasło</Label>
+          <Label htmlFor="password" className={errorMsg ? "text-red-500" : ""}>Hasło</Label>
           <Input
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); setErrorMsg('') }}
             placeholder="••••••••"
             required
             autoComplete="current-password"
+            className={errorMsg ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
         </div>
 

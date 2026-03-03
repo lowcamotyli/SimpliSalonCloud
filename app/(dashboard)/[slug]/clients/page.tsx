@@ -210,20 +210,47 @@ export default function ClientsPage() {
 
   const handleSubmit = async (data: ClientFormData) => {
     try {
-      const payload = {
-        fullName: data.fullName,
-        phone: data.phone ? parsePhoneNumber(data.phone) : '',
-        email: data.email || '',
-        notes: data.notes || '',
+      if (selectedClient) {
+        // Bug #1 fix: use PUT for editing existing client
+        const fullName = data.fullName.trim()
+        const parts = fullName.split(' ')
+        const first_name = parts[0] || fullName
+        const last_name = parts.slice(1).join(' ') || '.'
+        const updatePayload = {
+          first_name,
+          last_name,
+          phone: data.phone ? parsePhoneNumber(data.phone) : undefined,
+          email: data.email || '',
+          notes: data.notes || '',
+        }
+        const res = await fetch(`/api/clients/${selectedClient.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatePayload),
+        })
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}))
+          throw new Error(errBody?.error || 'Błąd aktualizacji')
+        }
+        setIsDialogOpen(false)
+        form.reset()
+        refetch()
+        toast.success('Klient zaktualizowany')
+      } else {
+        const payload = {
+          fullName: data.fullName,
+          phone: data.phone ? parsePhoneNumber(data.phone) : '',
+          email: data.email || '',
+          notes: data.notes || '',
+        }
+        await createMutation.mutateAsync(payload)
+        setIsDialogOpen(false)
+        form.reset()
+        refetch()
+        toast.success('Klient dodany')
       }
-
-      await createMutation.mutateAsync(payload)
-      setIsDialogOpen(false)
-      form.reset()
-      refetch()
-      toast.success(selectedClient ? 'Klient zaktualizowany' : 'Klient dodany')
     } catch (error) {
-      toast.error('Błąd podczas zapisywania klienta')
+      toast.error(error instanceof Error ? error.message : 'Błąd podczas zapisywania klienta')
     }
   }
 
@@ -653,6 +680,8 @@ export default function ClientsPage() {
                   onClick={() => {
                     setQuickChannel('email')
                     setQuickTemplateId('')
+                    setQuickSubject('')
+                    setQuickBody('')
                   }}
                 >
                   Email
@@ -663,6 +692,8 @@ export default function ClientsPage() {
                   onClick={() => {
                     setQuickChannel('sms')
                     setQuickTemplateId('')
+                    setQuickSubject('')
+                    setQuickBody('')
                   }}
                 >
                   SMS

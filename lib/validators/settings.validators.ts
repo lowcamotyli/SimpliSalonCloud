@@ -40,6 +40,14 @@ export const updateSettingsSchema = z.object({
     p24_api_key: z.string().optional().or(z.literal('')),
     p24_api_url: z.string().url().optional().or(z.literal('')),
     p24_sandbox_mode: z.boolean().optional(),
+    // Booksy Gmail integration
+    booksy_sync_interval_minutes: z.number().int().positive().optional(),
+    booksy_sender_filter: z.string().optional(),
+    booksy_auto_create_clients: z.boolean().optional(),
+    booksy_auto_create_services: z.boolean().optional(),
+    booksy_notify_on_new: z.boolean().optional(),
+    booksy_notify_on_cancel: z.boolean().optional(),
+    booksy_notify_email: z.string().email().optional().or(z.literal('')).nullable().optional(),
 })
 
 export const updateSmsSettingsSchema = z.object({

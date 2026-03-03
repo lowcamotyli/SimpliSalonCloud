@@ -162,7 +162,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'booksy',
     name: 'Booksy',
-    description: 'Sync appointments from Booksy',
+    description: 'Synchronizacja rezerwacji z Booksy',
     icon: '📅',
     type: 'booksy',
     status: 'available',
@@ -170,8 +170,8 @@ export const INTEGRATIONS: Integration[] = [
   },
   {
     id: 'google_calendar',
-    name: 'Google Calendar',
-    description: 'Two-way sync with Google Calendar',
+    name: 'Kalendarz Google',
+    description: 'Dwukierunkowa synchronizacja z Kalendarzem Google',
     icon: '📆',
     type: 'google_calendar',
     status: 'available'
@@ -187,8 +187,8 @@ export const INTEGRATIONS: Integration[] = [
   },
   {
     id: 'twilio',
-    name: 'Twilio SMS',
-    description: 'Send SMS reminders',
+    name: 'SMS Twilio',
+    description: 'Wysyłaj przypomnienia SMS',
     icon: '💬',
     type: 'twilio',
     status: 'available'

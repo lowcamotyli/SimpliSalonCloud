@@ -5,24 +5,28 @@
  */
 export function formatPhoneNumber(phone: string): string {
   if (!phone) return ''
-  
+
   // Remove all non-digit characters except +
-  const cleaned = phone.replace(/[^\d+]/g, '')
-  
+  let cleaned = phone.replace(/[^\d+]/g, '')
+
   // If doesn't start with +, add +48
-  let normalized = cleaned
-  if (!normalized.startsWith('+')) {
-    normalized = normalized.replace(/^48/, '').replace(/^0/, '')
-    normalized = '+48' + normalized
+  if (!cleaned.startsWith('+')) {
+    if (cleaned.startsWith('48') && cleaned.length >= 11) {
+      cleaned = '+' + cleaned
+    } else {
+      cleaned = cleaned.replace(/^0/, '')
+      cleaned = '+48' + cleaned
+    }
   }
-  
-  // Format: +48 XXX XXX XXX
-  const match = normalized.match(/^(\+\d{2})(\d{3})(\d{3})(\d{3})/)
+
+  // Format: +48 XXX XXX XXX (and append any extra digits)
+  const match = cleaned.match(/^(\+\d{2})(\d{3})(\d{3})(.*)/)
   if (match) {
-    return `${match[1]} ${match[2]} ${match[3]} ${match[4]}`
+    const rest = match[4] ? ` ${match[4].match(/.{1,3}/g)?.join(' ')}` : ''
+    return `${match[1]} ${match[2]} ${match[3]}${rest}`.trim()
   }
-  
-  return normalized
+
+  return cleaned
 }
 
 /**
@@ -32,13 +36,18 @@ export function formatPhoneNumber(phone: string): string {
  */
 export function parsePhoneNumber(phone: string): string {
   if (!phone) return ''
-  
+
   const cleaned = phone.replace(/[^\d+]/g, '')
-  
+
   if (cleaned.startsWith('+')) {
     return cleaned
   }
-  
+
+  // Prevent +4848123456789 double prefixing if user types "48123456789"
+  if (cleaned.startsWith('48') && cleaned.length >= 11) {
+    return '+' + cleaned
+  }
+
   const withoutLeadingZero = cleaned.replace(/^0/, '')
   return '+48' + withoutLeadingZero
 }
@@ -64,7 +73,7 @@ export function formatPrice(price: number): string {
  */
 export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  
+
   return new Intl.DateTimeFormat('pl-PL', {
     year: 'numeric',
     month: 'long',
@@ -103,10 +112,10 @@ export function getRelativeTime(date: string | Date): string {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  
+
   const diffTime = dateOnly.getTime() - today.getTime()
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
+
   if (diffDays === 0) return 'dzisiaj'
   if (diffDays === 1) return 'jutro'
   if (diffDays === -1) return 'wczoraj'

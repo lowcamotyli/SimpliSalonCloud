@@ -61,13 +61,13 @@ const PLAN_COLORS: Record<string, { from: string; to: string; badge: string; sha
 function UsageBar({ label, current, limit, icon: Icon }: {
   label: string
   current: number
-  limit: number | typeof Infinity
+  limit: number | typeof Infinity | null | undefined
   icon: React.ElementType
 }) {
-  const isUnlimited = limit === Infinity
-  const percentage = isUnlimited ? 0 : Math.min((current / limit) * 100, 100)
-  const isDanger = percentage > 90
-  const isWarning = percentage > 70 && !isDanger
+  const isUnlimited = limit === Infinity || limit === null || limit === undefined
+  const percentage = isUnlimited ? 0 : Math.min((current / (limit as number)) * 100, 100)
+  const isDanger = !isUnlimited && percentage > 90
+  const isWarning = !isUnlimited && percentage > 70 && !isDanger
 
   const color = isDanger
     ? 'from-red-500 to-rose-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
@@ -94,7 +94,7 @@ function UsageBar({ label, current, limit, icon: Icon }: {
           )}>
             {current}
           </span>
-          <span className="text-sm text-muted-foreground font-medium">/ {isUnlimited ? '∞' : limit}</span>
+          <span className="text-sm text-muted-foreground font-medium">/ {isUnlimited ? 'Bez limitu' : (limit as number).toLocaleString('pl-PL')}</span>
         </div>
       </div>
       <div className="relative w-full bg-secondary/50 rounded-full h-2 overflow-hidden backdrop-blur-sm border border-border/50">

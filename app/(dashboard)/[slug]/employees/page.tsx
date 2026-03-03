@@ -12,6 +12,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -72,6 +82,7 @@ export default function EmployeesPage() {
   const [linkDialogEmployee, setLinkDialogEmployee] = useState<any | null>(null)
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
   const [linkEmail, setLinkEmail] = useState('')
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const params = useParams()
   const slug = params.slug as string
@@ -178,12 +189,19 @@ export default function EmployeesPage() {
     form.reset()
   }
 
-  const handleDelete = async () => {
+  const handleOpenDeleteDialog = () => {
     if (!editingEmployee) return
+    setIsDeleteDialogOpen(true)
+  }
 
-    if (confirm(`Czy na pewno chcesz usunąć pracownika ${editingEmployee.first_name}?`)) {
+  const handleConfirmDelete = async () => {
+    if (!editingEmployee) return
+    try {
       await deleteMutation.mutateAsync()
+      setIsDeleteDialogOpen(false)
       setIsDialogOpen(false)
+    } catch {
+      // onError in the mutation handles the toast
     }
   }
 
@@ -209,8 +227,12 @@ export default function EmployeesPage() {
 
   const handleLinkAccount = async () => {
     if (!linkDialogEmployee || !linkEmail) return
-    await linkMutation.mutateAsync(linkEmail)
-    setIsLinkDialogOpen(false)
+    try {
+      await linkMutation.mutateAsync(linkEmail)
+      setIsLinkDialogOpen(false)
+    } catch {
+      // onError in the mutation handles the toast; dialog remains open
+    }
   }
 
   const containerVariants = {
@@ -579,7 +601,7 @@ export default function EmployeesPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={handleDelete}
+                    onClick={handleOpenDeleteDialog}
                     disabled={deleteMutation.isPending}
                     className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl font-bold"
                   >
@@ -721,6 +743,37 @@ export default function EmployeesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-rose-600 font-black text-xl">
+              Usuń pracownika
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              Czy na pewno chcesz usunąć pracownika{' '}
+              <span className="font-bold text-gray-900">
+                {editingEmployee?.first_name} {editingEmployee?.last_name}
+              </span>
+              ? Tej operacji nie można cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl font-bold">
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+              className="rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {deleteMutation.isPending ? 'Usuwanie...' : 'Usuń pracownika'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

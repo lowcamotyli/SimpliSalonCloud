@@ -72,9 +72,12 @@ export async function sendSmsMessage(input: SendSmsInput): Promise<{ providerId:
     const sender = input.sender || settings?.smsapi_sender_name || process.env.SMSAPI_SENDER_NAME || undefined
     const to = normalizePolishPhoneToE164(input.to)
 
+    console.log(`[SMSAPI TEST] Sending test SMS to: ${to}, sender: ${sender}, token exists: ${!!token}, token length: ${token.length}`);
+
     const form = new URLSearchParams()
     form.set('to', to)
     form.set('message', input.body)
+    form.set('encoding', 'utf-8')
     if (sender) form.set('from', sender)
     if (process.env.SMSAPI_CALLBACK_URL) {
       const callbackUrl = new URL(process.env.SMSAPI_CALLBACK_URL)
@@ -92,10 +95,25 @@ export async function sendSmsMessage(input: SendSmsInput): Promise<{ providerId:
       body: form.toString(),
     })
 
-    const payload: any = await response.json().catch(() => null)
+    const responseText = await response.text();
+    console.log('[SMSAPI TEST] form body (partially hidden):', form.toString().replace(/to=[^&]+/, 'to=HIDDEN'));
+    console.log('[SMSAPI TEST] raw response status:', response.status);
+    console.log('[SMSAPI TEST] raw response text:', responseText);
+
+    let payload: any = null;
+    try {
+      payload = JSON.parse(responseText);
+    } catch (e) {
+      console.log('[SMSAPI TEST] Failed to parse JSON response');
+    }
 
     if (!response.ok) {
-      throw new Error(payload?.message || payload?.error || `SMSAPI request failed (${response.status})`)
+      throw new Error(payload?.message || payload?.error || `SMSAPI request failed (${response.status}): ${responseText}`)
+    }
+
+    if (payload?.error) {
+      console.error('[SMSAPI TEST] SMSAPI returned an error in payload despite 200 OK:', payload);
+      throw new Error(payload.message || `API SMSAPI zwróciło błąd: ${payload.error}`);
     }
 
     const providerId = payload?.list?.[0]?.id || payload?.id || null
@@ -110,6 +128,7 @@ export async function sendSmsMessage(input: SendSmsInput): Promise<{ providerId:
     return { providerId, status: 'sent' }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'SMS send failed'
+    console.error('[SMSAPI TEST] Exception caught while sending SMS:', error);
     if (input.messageLogId) {
       await updateLog(input.messageLogId, {
         status: 'failed',

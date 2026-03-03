@@ -107,7 +107,7 @@ export function useCreateBooking() {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
       toast.success('Rezerwacja utworzona pomyślnie')
     },
     onError: (error: Error) => {
@@ -135,7 +135,7 @@ export function useUpdateBooking(id: string) {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
       toast.success('Rezerwacja zaktualizowana')
     },
     onError: (error: Error) => {
@@ -182,7 +182,7 @@ export function useUpdateBookingSchedule() {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
     },
     onError: (error: Error) => {
       toast.error(error.message)

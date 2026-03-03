@@ -187,8 +187,8 @@ function useSegmentPreview(salonId: string, filters: SegmentFilters) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  // filtersKey is JSON.stringify(filters) – stable enough for debounce
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // filtersKey is JSON.stringify(filters) – stable enough for debounce
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId, filtersKey])
 
   return { count, loading }
@@ -373,7 +373,7 @@ function CampaignWizard({
               <Label>Kanał wysyłki</Label>
               <Select value={state.channel} onValueChange={(v) => update({ channel: v as Channel })}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Wybierz kanał…" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="email">Email</SelectItem>
@@ -391,11 +391,10 @@ function CampaignWizard({
                     key={preset.id}
                     type="button"
                     onClick={() => handlePresetClick(preset)}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                      state.selectedPresetId === preset.id
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${state.selectedPresetId === preset.id
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'bg-background border-border hover:bg-muted'
-                    }`}
+                      }`}
                   >
                     {preset.label}
                   </button>
@@ -603,11 +602,10 @@ function CampaignWizard({
               <button
                 type="button"
                 onClick={() => update({ scheduleMode: 'now' })}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                  state.scheduleMode === 'now'
+                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${state.scheduleMode === 'now'
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:bg-muted'
-                }`}
+                  }`}
               >
                 <div className="font-medium">Wyślij teraz</div>
                 <div className="text-sm text-muted-foreground mt-0.5">
@@ -618,11 +616,10 @@ function CampaignWizard({
               <button
                 type="button"
                 onClick={() => update({ scheduleMode: 'scheduled' })}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                  state.scheduleMode === 'scheduled'
+                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${state.scheduleMode === 'scheduled'
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:bg-muted'
-                }`}
+                  }`}
               >
                 <div className="font-medium">Zaplanuj wysyłkę</div>
                 <div className="text-sm text-muted-foreground mt-0.5">
@@ -660,8 +657,8 @@ function CampaignWizard({
                   {state.scheduleMode === 'now'
                     ? 'Natychmiast'
                     : state.scheduledAt
-                    ? formatDate(new Date(state.scheduledAt).toISOString())
-                    : 'Nie ustawiono'}
+                      ? formatDate(new Date(state.scheduledAt).toISOString())
+                      : 'Nie ustawiono'}
                 </span>
               </div>
             </div>
@@ -695,8 +692,8 @@ function CampaignWizard({
               {submitting
                 ? 'Wysyłanie…'
                 : state.scheduleMode === 'now'
-                ? 'Wyślij kampanię'
-                : 'Zaplanuj kampanię'}
+                  ? 'Wyślij kampanię'
+                  : 'Zaplanuj kampanię'}
             </Button>
           )}
         </DialogFooter>
@@ -943,8 +940,8 @@ export default function CampaignsPage() {
                       {campaign.sent_at
                         ? formatDate(campaign.sent_at)
                         : campaign.scheduled_at
-                        ? formatDate(campaign.scheduled_at)
-                        : '—'}
+                          ? formatDate(campaign.scheduled_at)
+                          : '—'}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
@@ -973,19 +970,19 @@ export default function CampaignsPage() {
                         {(campaign.status === 'draft' ||
                           campaign.status === 'cancelled' ||
                           campaign.status === 'sent') && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={deleteMutation.isPending}
-                            onClick={() => {
-                              if (confirm(`Usunąć kampanię "${campaign.name}"?`)) {
-                                deleteMutation.mutate(campaign.id)
-                              }
-                            }}
-                          >
-                            Usuń
-                          </Button>
-                        )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deleteMutation.isPending}
+                              onClick={() => {
+                                if (confirm(`Usunąć kampanię "${campaign.name}"?`)) {
+                                  deleteMutation.mutate(campaign.id)
+                                }
+                              }}
+                            >
+                              Usuń
+                            </Button>
+                          )}
                       </div>
                     </TableCell>
                   </TableRow>

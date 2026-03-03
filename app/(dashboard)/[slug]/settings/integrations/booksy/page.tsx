@@ -6,6 +6,16 @@ import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -77,6 +87,7 @@ export default function BooksySettingsPage() {
   const [notifyEmail, setNotifyEmail] = useState('')
   const [isSyncing, setIsSyncing] = useState(false)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false)
   const [settingsDirty, setSettingsDirty] = useState(false)
 
   // Sync local state from settings
@@ -125,7 +136,6 @@ export default function BooksySettingsPage() {
   }
 
   const handleDisconnect = async () => {
-    if (!confirm('Czy na pewno chcesz odłączyć integrację Booksy? Istniejące rezerwacje nie zostaną usunięte.')) return
     setIsDisconnecting(true)
     try {
       const res = await fetch('/api/integrations/booksy/disconnect', { method: 'POST' })
@@ -136,6 +146,7 @@ export default function BooksySettingsPage() {
       toast.error('Błąd odłączania: ' + error.message)
     } finally {
       setIsDisconnecting(false)
+      setShowDisconnectDialog(false)
     }
   }
 
@@ -278,7 +289,7 @@ export default function BooksySettingsPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={handleDisconnect}
+                  onClick={() => setShowDisconnectDialog(true)}
                   disabled={isDisconnecting}
                   className="gap-1.5"
                 >
@@ -290,6 +301,28 @@ export default function BooksySettingsPage() {
                 </Button>
                 <p className="text-xs text-gray-400">Istniejące rezerwacje nie zostaną usunięte</p>
               </div>
+
+              <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Odłączyć integrację Booksy?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Spowoduje to usunięcie połączenia z Gmail. Synchronizacja zostanie zatrzymana.
+                      Istniejące rezerwacje w kalendarzu nie zostaną usunięte.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDisconnect}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Odłącz
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
         </CardContent>
@@ -560,7 +593,10 @@ export default function BooksySettingsPage() {
                     {logsData.bookings.map(b => (
                       <tr key={b.id} className="hover:bg-gray-50">
                         <td className="py-2.5 pr-4 text-xs text-gray-600 whitespace-nowrap">
-                          {b.booking_date} {b.booking_time}
+                          {new Date(`${b.booking_date}T${b.booking_time}`).toLocaleString('pl-PL', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                          })}
                         </td>
                         <td className="py-2.5 pr-4">
                           <p className="font-medium text-gray-900">{b.clients?.full_name ?? '—'}</p>

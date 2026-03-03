@@ -145,6 +145,14 @@ export const POST = withErrorHandling(async (
     }
 
     // 3. Find or create client by phone number
+    const clientName = (parsed.clientName || '').trim()
+    if (clientName.length < 2) {
+      return NextResponse.json(
+        { success: false, error: 'Cannot create client: invalid or missing client name in parsed data' },
+        { status: 400 }
+      )
+    }
+
     let client: Record<string, any> | null = null
 
     const { data: existingClient } = await (admin.from('clients') as any)
@@ -163,7 +171,7 @@ export const POST = withErrorHandling(async (
         .insert({
           salon_id: salonId,
           client_code: clientCode,
-          full_name: parsed.clientName || 'Nieznany klient',
+          full_name: clientName,
           phone: parsed.clientPhone || null,
           email: parsed.clientEmail || null,
           visit_count: 0,

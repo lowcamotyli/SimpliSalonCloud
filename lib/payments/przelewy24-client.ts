@@ -15,6 +15,14 @@ interface P24Config {
   apiUrl: string
 }
 
+export interface Przelewy24RuntimeConfig {
+  merchantId: string
+  posId: string
+  crc: string
+  apiKey?: string
+  apiUrl: string
+}
+
 interface P24TransactionParams {
   sessionId: string
   amount: number // w groszach (29900 = 299 PLN)
@@ -76,16 +84,16 @@ export class Przelewy24Error extends Error {
 export class Przelewy24Client {
   private config: P24Config
 
-  constructor() {
-    // Waliduj environment variables
-    const merchantId = process.env.P24_MERCHANT_ID
-    const posId = process.env.P24_POS_ID
-    const crc = process.env.P24_CRC
+  constructor(runtimeConfig?: Przelewy24RuntimeConfig) {
+    // Domyślnie używaj globalnych env; można nadpisać per salon przez runtimeConfig
+    const merchantId = runtimeConfig?.merchantId ?? process.env.P24_MERCHANT_ID
+    const posId = runtimeConfig?.posId ?? process.env.P24_POS_ID
+    const crc = runtimeConfig?.crc ?? process.env.P24_CRC
     // P24_API_KEY jest używany do HTTP Basic Auth; fallback na P24_CRC dla starszych kont
-    const apiKey = process.env.P24_API_KEY || process.env.P24_CRC
-    const apiUrl = process.env.P24_API_URL
+    const apiKey = runtimeConfig?.apiKey ?? process.env.P24_API_KEY ?? crc
+    const apiUrl = runtimeConfig?.apiUrl ?? process.env.P24_API_URL
 
-    if (!merchantId || !posId || !crc || !apiUrl) {
+    if (!merchantId || !posId || !crc || !apiUrl || !apiKey) {
       throw new Przelewy24Error(
         'Missing Przelewy24 configuration. Set P24_MERCHANT_ID, P24_POS_ID, P24_CRC, and P24_API_URL environment variables.',
         'CONFIG_MISSING'
@@ -445,6 +453,6 @@ export class Przelewy24Client {
 /**
  * Helper function - tworzy instancję P24 Client
  */
-export function createPrzelewy24Client(): Przelewy24Client {
-  return new Przelewy24Client()
+export function createPrzelewy24Client(runtimeConfig?: Przelewy24RuntimeConfig): Przelewy24Client {
+  return new Przelewy24Client(runtimeConfig)
 }

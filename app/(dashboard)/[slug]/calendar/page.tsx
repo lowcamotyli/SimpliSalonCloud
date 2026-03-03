@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, generateWeekDays } from '@/lib/utils/date'
 import { addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, format } from 'date-fns'
+import { pl } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
@@ -226,12 +227,12 @@ export default function CalendarPage() {
   }
 
   const getPeriodLabel = () => {
-    if (viewType === 'day') return format(currentDate, 'd MMMM yyyy')
+    if (viewType === 'day') return format(currentDate, 'd MMMM yyyy', { locale: pl })
     if (viewType === 'week') {
       const weekDays = generateWeekDays(currentDate)
-      return `${format(weekDays[0], 'd MMM')} - ${format(weekDays[6], 'd MMM yyyy')}`
+      return `${format(weekDays[0], 'd MMM', { locale: pl })} - ${format(weekDays[6], 'd MMM yyyy', { locale: pl })}`
     }
-    return format(currentDate, 'MMMM yyyy')
+    return format(currentDate, 'LLLL yyyy', { locale: pl })
   }
 
   const timeSlots = Array.from({ length: BUSINESS_HOURS.END - BUSINESS_HOURS.START }, (_, i) => BUSINESS_HOURS.START + i)

@@ -114,73 +114,73 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
             return hasPermission(item.requiredPermission)
           })
           .map((item, index) => {
-          const Icon = item.icon
-          const isInSection = item.subItems
-            ? pathname.startsWith(item.href)
-            : pathname === item.href
-          const isActive = pathname === item.href
+            const Icon = item.icon
+            const isInSection = item.subItems
+              ? pathname.startsWith(item.href)
+              : pathname === item.href
+            const isActive = pathname === item.href
 
-          if (item.subItems && isInSection) {
+            if (item.subItems && isInSection) {
+              return (
+                <div key={item.href}>
+                  <div
+                    style={{ animationDelay: `${index * 50}ms` }}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+                      'bg-primary/10 text-primary border border-primary/20'
+                    )}
+                  >
+                    <Icon className="h-5 w-5 text-primary" />
+                    <span>{item.label}</span>
+                    <ChevronDown className="ml-auto h-4 w-4 text-primary/60" />
+                  </div>
+                  <div className="mt-1 ml-3 pl-3 border-l border-primary/20 space-y-0.5">
+                    {item.subItems.map((sub) => {
+                      const SubIcon = sub.icon
+                      const isSubActive = pathname === sub.href
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={cn(
+                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 group',
+                            isSubActive
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground/60 hover:bg-primary/5 hover:text-foreground/90'
+                          )}
+                        >
+                          <SubIcon className={cn('h-3.5 w-3.5', isSubActive ? 'text-primary' : 'text-foreground/40 group-hover:text-primary/70')} />
+                          <span>{sub.label}</span>
+                          {isSubActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            }
+
             return (
-              <div key={item.href}>
-                <div
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
-                    'bg-primary/10 text-primary border border-primary/20'
-                  )}
-                >
-                  <Icon className="h-5 w-5 text-primary" />
-                  <span>{item.label}</span>
-                  <ChevronDown className="ml-auto h-4 w-4 text-primary/60" />
-                </div>
-                <div className="mt-1 ml-3 pl-3 border-l border-primary/20 space-y-0.5">
-                  {item.subItems.map((sub) => {
-                    const SubIcon = sub.icon
-                    const isSubActive = pathname === sub.href
-                    return (
-                      <Link
-                        key={sub.href}
-                        href={sub.href}
-                        className={cn(
-                          'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 group',
-                          isSubActive
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-foreground/60 hover:bg-primary/5 hover:text-foreground/90'
-                        )}
-                      >
-                        <SubIcon className={cn('h-3.5 w-3.5', isSubActive ? 'text-primary' : 'text-foreground/40 group-hover:text-primary/70')} />
-                        <span>{sub.label}</span>
-                        {isSubActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                }}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
+                  isActive || isInSection
+                    ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
+                    : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
+                )}
+              >
+                <Icon className={cn('h-5 w-5 transition-all', isActive || isInSection ? 'text-primary' : 'text-foreground/40 group-hover:text-primary')} />
+                <span>{item.label}</span>
+                {(isActive || isInSection) && !item.subItems && <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-glow" />}
+                {item.subItems && !isInSection && <ChevronDown className="ml-auto h-4 w-4 text-foreground/30" />}
+              </Link>
             )
-          }
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                animationDelay: `${index * 50}ms`,
-              }}
-              className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
-                isActive || isInSection
-                  ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
-                  : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
-              )}
-            >
-              <Icon className={cn('h-5 w-5 transition-all', isActive || isInSection ? 'text-primary' : 'text-foreground/40 group-hover:text-primary')} />
-              <span>{item.label}</span>
-              {(isActive || isInSection) && !item.subItems && <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-glow" />}
-              {item.subItems && !isInSection && <ChevronDown className="ml-auto h-4 w-4 text-foreground/30" />}
-            </Link>
-          )
-        })}
+          })}
       </nav>
 
       {/* User Profile Section */}

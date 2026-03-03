@@ -37,7 +37,7 @@ export function useSendPayrollEmail() {
       return res.json()
     },
     onSuccess: () => {
-      toast.success('Email został wysłany (symulacja)')
+      toast.success('Email wysłany pomyślnie')
     },
     onError: (error: Error) => {
       toast.error(error.message)
@@ -47,6 +47,7 @@ export function useSendPayrollEmail() {
 
 export function useDownloadPayrollPDF() {
   const downloadPDF = async (entry: any, month: string) => {
+    const fmt = (n: number) => n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     try {
       const { jsPDF } = await import('jspdf')
       const { default: autoTable } = await import('jspdf-autotable')
@@ -111,7 +112,7 @@ export function useDownloadPayrollPDF() {
       doc.setFontSize(12)
       doc.setFont('Roboto', 'bold')
       doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2])
-      doc.text(`${entry.totalRevenue.toFixed(2)} zł`, 25, startY + 18)
+      doc.text(`${fmt(entry.totalRevenue)} zł`, 25, startY + 18)
 
       // Card 2: Prowizja
       doc.setFillColor(CARD_BG[0], CARD_BG[1], CARD_BG[2])
@@ -123,7 +124,7 @@ export function useDownloadPayrollPDF() {
       doc.setFontSize(12)
       doc.setFont('Roboto', 'bold')
       doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2])
-      doc.text(`${entry.commissionAmount.toFixed(2)} zł`, 20 + cardWidth + spacing + 5, startY + 18)
+      doc.text(`${fmt(entry.commissionAmount)} zł`, 20 + cardWidth + spacing + 5, startY + 18)
 
       // Card 3: Podstawa
       doc.setFillColor(CARD_BG[0], CARD_BG[1], CARD_BG[2])
@@ -135,7 +136,7 @@ export function useDownloadPayrollPDF() {
       doc.setFontSize(12)
       doc.setFont('Roboto', 'bold')
       doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2])
-      doc.text(`${entry.baseSalary.toFixed(2)} zł`, 20 + (cardWidth + spacing) * 2 + 5, startY + 18)
+      doc.text(`${fmt(entry.baseSalary)} zł`, 20 + (cardWidth + spacing) * 2 + 5, startY + 18)
 
       // --- Breakdown Section ---
       doc.setFontSize(10)
@@ -145,7 +146,7 @@ export function useDownloadPayrollPDF() {
 
       const calcData = [
         ['Liczba obsłużonych wizyt', `${entry.visitCount}`],
-        ['Próg naliczania prowizji', `${entry.baseThreshold.toFixed(2)} zł`],
+        ['Próg naliczania prowizji', `${fmt(entry.baseThreshold)} zł`],
         ['Stawka prowizji', `${(entry.commissionRate * 100).toFixed(1)}%`],
       ]
 
@@ -167,7 +168,7 @@ export function useDownloadPayrollPDF() {
       doc.setFont('Roboto', 'bold')
       doc.text('KWOTA DO WYPŁATY (ŁĄCZNIE):', 30, totalY + 13)
       doc.setFontSize(18)
-      doc.text(`${entry.totalPayout.toFixed(2)} zł`, 180, totalY + 13, { align: 'right' })
+      doc.text(`${fmt(entry.totalPayout)} zł`, 180, totalY + 13, { align: 'right' })
 
       // --- Visits Detail ---
       if (entry.visits && entry.visits.length > 0) {
@@ -185,7 +186,7 @@ export function useDownloadPayrollPDF() {
           v.date,
           v.clientName,
           v.serviceName,
-          `${v.price.toFixed(2)} zł`
+          `${fmt(v.price)} zł`
         ])
 
         autoTable(doc, {

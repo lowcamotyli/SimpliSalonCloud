@@ -22,16 +22,30 @@ CREATE TABLE IF NOT EXISTS booksy_pending_emails (
   UNIQUE (salon_id, message_id)
 );
 
-CREATE INDEX idx_booksy_pending_salon_status
+CREATE INDEX IF NOT EXISTS idx_booksy_pending_salon_status
   ON booksy_pending_emails (salon_id, status);
 
 -- RLS
 ALTER TABLE booksy_pending_emails ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "salon_members_select_pending_emails"
-  ON booksy_pending_emails FOR SELECT
-  USING (salon_id = public.get_user_salon_id());
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'booksy_pending_emails'
+      AND policyname = 'salon_members_select_pending_emails'
+  ) THEN
+    CREATE POLICY "salon_members_select_pending_emails"
+      ON booksy_pending_emails FOR SELECT
+      USING (salon_id = public.get_user_salon_id());
+  END IF;
 
-CREATE POLICY "salon_members_update_pending_emails"
-  ON booksy_pending_emails FOR UPDATE
-  USING (salon_id = public.get_user_salon_id());
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'booksy_pending_emails'
+      AND policyname = 'salon_members_update_pending_emails'
+  ) THEN
+    CREATE POLICY "salon_members_update_pending_emails"
+      ON booksy_pending_emails FOR UPDATE
+      USING (salon_id = public.get_user_salon_id());
+  END IF;
+END $$;

@@ -1,0 +1,207 @@
+﻿{
+    "id":  "DupZsq7ej7EPLjTuYKNizW",
+    "object":  "task",
+    "created_at":  "1772457874",
+    "updated_at":  "1772458974",
+    "status":  "completed",
+    "model":  "manus-1.6-adaptive",
+    "metadata":  {
+                     "task_title":  "Comprehensive QA Testing of Booksy Integration with SimpliSalonCloud",
+                     "task_url":  "https://manus.im/app/DupZsq7ej7EPLjTuYKNizW"
+                 },
+    "output":  [
+                   {
+                       "id":  "EGwnpjbxLUow6wlm7lIPrR",
+                       "status":  "completed",
+                       "role":  "user",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Zaloguj sie do SimpliSalonCloud pod adresem https://simplisaloncloud.vercel.app/login uzywajac email \u0027bartosz.rogala@yahoo.pl\u0027 i hasla \u0027Tmp!rTC8-OLa\u0027.\n\nCel: wykonac bardzo dokladny test flow Booksy pod GoLive, obejmujacy:\n1) utworzenie wizyty przez kanal Booksy,\n2) zmiane wizyty pochodzacej z Booksy,\n3) anulacje wizyty pochodzacej z Booksy,\n4) weryfikacje synchronizacji i poprawnego odzwierciedlenia zmian w SimpliSalonCloud.\n\nKRYTYCZNE: proces ma byc uruchamiany WYlACZNIE na podstawie maili od Booksy o okreslonej tresci.\nNie uruchamiaj procesu przez reczne \"Nowa wizyta\" w panelu ani przez klikanie flow rezerwacji w UI Booksy.\nJedyny trigger testu: przyjscie maila Booksy i jego przetworzenie przez system.\n\nZasady ogolne:\n- Dzialaj jak QA senior. Dokumentuj kazdy krok i wynik (PASS/FAIL).\n- Po kazdym krytycznym kroku zapisz: co kliknales, co widzisz, jaki jest rezultat.\n- Jesli pojawi sie blad, zrob screenshot i zapisz dokladny komunikat bledu (1:1).\n- Sprawdzaj happy path i edge-case\u0027y Booksy (sync opozniona, konflikt terminu, podwojne zdarzenie).\n- Priorytet: brak utraty danych, poprawny status wizyty, poprawny termin, brak duplikatow i brak rozjazdu miedzy Booksy a SimpliSalonCloud.\n\nPrzygotowanie:\n- Znajdz lub utworz klienta testowego o unikalnej nazwie, np. \"Booksy GoLive \u003ctimestamp\u003e\".\n- Wybierz usluge i pracownika aktywnych w Booksy.\n- Ustal termin w przyszlosci (minimum +1 dzien).\n- Zweryfikuj, ze istnieje identyfikator/zrodlo wizyty wskazujace na Booksy (np. kanal=Booksy, tag, ikona, external id).\n- Przygotuj/symuluj 3 maile przychodzace od Booksy:\n  1) mail \"NOWA WIZYTA\",\n  2) mail \"ZMIANA WIZYTY\",\n  3) mail \"ANULOWANIE WIZYTY\".\n\nWymaganie tresci maili (minimalny zakres danych):\n- Typ zdarzenia: nowa / zmiana / anulowanie.\n- Identyfikator rezerwacji Booksy (staly dla calego cyklu create-\u003eupdate-\u003ecancel).\n- Dane klienta (imie i nazwisko, opcjonalnie telefon/email jesli dostepne).\n- Usluga.\n- Pracownik.\n- Data i godzina wizyty.\n- Przy zmianie: stare i nowe wartosci (co najmniej termin).\n- Przy anulacji: jawna informacja, ze rezerwacja zostala anulowana.\n\nTest A - Utworzenie wizyty z Booksy (E2E):\n1. Dostarcz/symuluj przyjscie maila Booksy typu \"NOWA WIZYTA\" o przygotowanej tresci.\n2. Upewnij sie, ze proces importu/parsowania uruchomil sie wskutek tego maila.\n3. Oczekuj na utworzenie wizyty w SimpliSalonCloud.\n4. Oczekiwane w SimpliSalonCloud:\n   - wizyta pojawia sie w kalendarzu na poprawnym slocie,\n   - ma oznaczenie zrodla Booksy,\n   - szczegoly: klient, usluga, pracownik, data, godzina, status sa poprawne,\n   - brak duplikatu tej samej wizyty.\n5. Odswiez strone i potwierdz trwalosc danych.\n\nTest B - Zmiana wizyty Booksy:\n1. Dostarcz/symuluj przyjscie maila Booksy typu \"ZMIANA WIZYTY\" dla tego samego identyfikatora rezerwacji.\n2. W mailu ustaw nowy termin (i opcjonalnie zmien usluge lub pracownika).\n3. Oczekuj na aktualizacje wizyty w SimpliSalonCloud.\n4. Oczekiwane:\n   - stary slot jest pusty (brak pozostalosci/duplikatu),\n   - nowy slot pokazuje zaktualizowana wizyte,\n   - zachowane jest oznaczenie zrodla Booksy,\n   - status jest logiczny i zgodny z Booksy.\n5. Odswiez strone i potwierdz, ze zmiana jest trwala.\n\nTest C - Anulacja wizyty Booksy:\n1. Dostarcz/symuluj przyjscie maila Booksy typu \"ANULOWANIE WIZYTY\" dla tego samego identyfikatora rezerwacji.\n2. Oczekuj na aktualizacje statusu w SimpliSalonCloud.\n3. Oczekiwane:\n   - status w SimpliSalonCloud zmienia sie na anulowana (lub odpowiednik),\n   - wizyta nie jest traktowana jako aktywna,\n   - zachowany jest audit trail/historia (jesli system tak dziala),\n   - brak ponownego \"odzycia\" wizyty po refresh.\n4. Odswiez strone i potwierdz trwalosc stanu anulowania.\n\nTest D - Odpornosc integracji Booksy (edge cases):\n1. Sprawdz zachowanie przy opoznionej synchronizacji (odswiezanie co 30-60s przez kilka minut).\n   Oczekiwane: finalnie spojnosc danych i brak wielokrotnego tworzenia.\n2. Jesli mozliwe, wyslij dwa maile \"ZMIANA WIZYTY\" pod rzad w krotkim odstepie czasu.\n   Oczekiwane: SimpliSalonCloud przyjmuje ostatni poprawny stan i nie gubi zmian.\n3. Wyslij ponownie mail \"ANULOWANIE WIZYTY\" dla juz anulowanej wizyty.\n   Oczekiwane: bez crasha, bez duplikacji, sensowny komunikat/logika.\n4. Zweryfikuj idempotencje: ponowne przetworzenie identycznego maila \"NOWA WIZYTA\" nie tworzy drugiej wizyty.\n5. Zweryfikuj, ze reczna edycja wizyty Booksy po stronie SimpliSalonCloud (jesli dozwolona) nie zrywa mapowania do Booksy.\n\nJesli nie masz mozliwosci dostarczenia/symulacji maili Booksy:\n- oznacz krok jako BLOCKED (nie FAIL),\n- podaj dokladnie czego brakuje (np. brak dostepu do skrzynki, brak mechanizmu testowego do wstrzykiwania maili, brak uprawnien),\n- przeprowadz maksymalna czesc testu dostepna w SimpliSalonCloud i opisz ryzyko GoLive wynikajace z braku pelnej walidacji.\n\nRaport koncowy (obowiazkowy):\n- Sekcja 1: Podsumowanie PASS/FAIL dla testow A/B/C/D.\n- Sekcja 2: Lista bugow z priorytetem:\n  - Krytyczny: utrata danych, duplikacja, bledny status, brak synchronizacji Booksy -\u003e SimpliSalonCloud, brak trwaosci zmian po refresh.\n  - Wysoki: opozniona/niepelna synchronizacja, zle mapowanie uslugi/pracownika, bledna walidacja.\n  - Sredni/Niski: UX, teksty, drobne niespojnosci.\n- Sekcja 3: Kroki reprodukcji dla kazdego bledu.\n- Sekcja 4: Rekomendacja \"Go / No-Go\" na jutro z uzasadnieniem.\n\nWynik ma byc bardzo konkretny, techniczny i oparty wylacznie na tym, co rzeczywiscie zaobserwowales."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "o7FlglCTPga2mp1Yn7V89M",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message"
+                   },
+                   {
+                       "id":  "fqU6FoWAiFSqDDA9weQhM3",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Rozumiem zadanie. LogujÄ siÄ do SimpliSalonCloud i przeprowadzam szczegÃ³Åowy test flow Booksy pod GoLive. Zaczynam od eksploracji systemu, nastÄpnie przejdÄ przez testy A/B/C/D zgodnie ze specyfikacjÄ\u0085. PrzygotowujÄ plan dziaÅania."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "AdlhqYcyTDF66qgVFndhax",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Zalogowano pomyÅlnie do SimpliSalonCloud (salon: ANASTAZJA). Teraz eksplorujÄ strukturÄ systemu - sprawdzam ustawienia Booksy, dostÄpne usÅugi, pracownikÃ³w i mechanizm integracji."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "TFqhZ0mwaq5n3N5CNERa9e",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Faza 1 zakoÅczona. Kluczowe ustalenia:\n- Integracja Booksy jest **aktywna** (status: PoÅÄ\u0085czone)\n- Konto Gmail: lowca.motyli@gmail.com\n- Mechanizm: emaile od noreply@booksy.com â parsowanie â tworzenie wizyt\n- Statystyki: 86 emaili przetworzonych, 69 bÅÄdÃ³w (81% bÅÄdÃ³w - to istotna obserwacja)\n- Auto-tworzenie usÅug: WYÅÄCZONE (ryzyko!)\n\nPrzechodzÄ do przygotowania Årodowiska testowego i weryfikacji mechanizmu wstrzykiwania maili."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "9bxwR3m3ZTSszgDMpi4RQs",
+                       "status":  "completed",
+                       "role":  "user",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "moÅ¼esz wysyÅac maile na lowca.motyli@gmail.com. W ten sposÃ³b bÄdÄ\u0085 siÄ one procesowaÄ jak klikniesz przycisk synchronizuj."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "u1d6RgErfWlo4mAcoZOIfN",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Doskonale! BÄdÄ wysyÅaÅ emaile na lowca.motyli@gmail.com symulujÄ\u0085c wiadomoÅci od Booksy (noreply@booksy.com), a nastÄpnie klikaÅ \"Synchronizuj teraz\" aby system je przetworzyÅ. Zaczynam od przygotowania Årodowiska testowego i wysÅania pierwszego maila \"NOWA WIZYTA\"."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "3wRAWWUA2gSb6pZytXYQnr",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Potwierdzono mechanizm: `/api/integrations/booksy/sync` (POST bez body) pobiera emaile z Gmaila i przetwarza je. Teraz potrzebujÄ danych logowania do konta Gmail (lowca.motyli@gmail.com) lub App Password, aby mÃ³c wysyÅaÄ emaile testowe na tÄ skrzynkÄ. Czy moÅ¼esz podaÄ hasÅo lub App Password do konta Gmail lowca.motyli@gmail.com?\n\nAlternatywnie: jeÅli masz dostÄp do tej skrzynki Gmail, mogÄ przygotowaÄ treÅci emaili do rÄcznego wysÅania."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "ejHaVT81egi7FMckjHDr4m",
+                       "status":  "completed",
+                       "role":  "user",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "dobra dawaj treÅci e-mail, juÅ¼ powysyÅam. Powiedz kiedy jakie wysÅaÄ"
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "L9SG2eJL31m8100rp5SUJB",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Åwietnie! Zaczynam od Test A. ProszÄ wyÅlij teraz **pierwszy email** (NOWA WIZYTA) z poniÅ¼szÄ\u0085 treÅciÄ\u0085. WaÅ¼ne: nadawca musi byÄ `noreply@booksy.com` (lub przynajmniej adres musi zawieraÄ \"booksy\"), odbiorca: `lowca.motyli@gmail.com`.\n\n---\n\n**TEMAT:** `Nowa rezerwacja #BKS-20260302-GOLIVE-001`\n\n**TREÅÄ (HTML lub plain text):**\n\n```\nNowa rezerwacja #BKS-20260302-GOLIVE-001\n\nKlient: Booksy GoLive 20260302\nTelefon: 600123456\nUsÅuga: Strzyzenie meskie wÅosy krotkie\nPracownik: Karolina Testowa\nData: 2026-03-10\nGodzina: 11:00\nCena: 150.00 zÅ\n\nPozdrawiamy,\nZespÃ³Å Booksy\n```\n\nGdy wyÅlesz â daj znaÄ, a ja od razu kliknÄ \"Synchronizuj teraz\" i sprawdzÄ wynik."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "7oG4TYJaLIaU6iMQOdzQBY",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Czekam na Twoje potwierdzenie, Å¼e email NOWA WIZYTA zostaÅ wysÅany. Gdy to zrobisz â natychmiast klikam \"Synchronizuj teraz\" i dokumentujÄ wynik."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "s6bHgUMQJb4T27VFkH21fW",
+                       "status":  "completed",
+                       "role":  "user",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "wysÅaÅem, powinno byÄ. tylko dane inne"
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "CpAIbm5LxmTBbjahAGzmr9",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Rozumiem â dane w emailu mogÄ\u0085 byÄ inne niÅ¼ zaproponowane przeze mnie. Nie ma problemu, system i tak sparsuje to co przyszÅo. Klikam teraz \"Synchronizuj teraz\" i sprawdzam wynik."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "Gk0YcjOKbVNZQPpXLuNKNk",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "Sync zwraca `processed: 0` â system nie widzi nowego emaila. MoÅ¼liwe przyczyny: email jeszcze nie dotarÅ do Gmaila, lub nadawca nie pasuje do filtra `noreply@booksy.com`. \n\nKilka pytaÅ:\n1. **Z jakiego adresu wysÅaÅeÅ email?** System filtruje tylko emaile od `noreply@booksy.com` â jeÅli wysÅaÅeÅ z innego adresu, zostanie zignorowany.\n2. **Czy email dotarÅ juÅ¼ na skrzynkÄ lowca.motyli@gmail.com?** (moÅ¼esz sprawdziÄ)\n3. **Jakie dokÅadnie dane byÅy w emailu?** (Å¼ebym wiedziaÅ czego szukaÄ po synchronizacji)\n\nCzekam chwilÄ i sprÃ³bujÄ ponownie za moment."
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "qK46VJd0bfamOdUytibUDZ",
+                       "status":  "completed",
+                       "role":  "user",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "dotarÅ taki mail i dostaÅ flage processed"
+                                       },
+                                       {
+                                           "type":  "output_file",
+                                           "fileUrl":  "https://private-us-east-1.manuscdn.com/users/310519663184860376/uploads/HdA4AOk9scA3kTBTx6Da18_na1fn_cGFzdGVkX2ZpbGVfdUlsaEZ5X2ltYWdl.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vdXNlcnMvMzEwNTE5NjYzMTg0ODYwMzc2L3VwbG9hZHMvSGRBNEFPazlzY0Eza1RCVHg2RGExOF9uYTFmbl9jR0Z6ZEdWa1gyWnBiR1ZmZFVsc2FFWjVYMmx0WVdkbC5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__\u0026Key-Pair-Id=K2HSFNDJXOU9YS\u0026Signature=cx9IuNF5GGrc8b3RNuGXKEryDOm152dJheR5a7BDAibBLyMcuuWBZo~Mw14RbNz3B3kd3wRoqAyIKx4n1Oh~JLJ0q43bJHUTQMJyuMorQ7L1dK6zsQVPxdkQXMmlMzn4PH53LbJV-uaE3ax9XbcROM0AtqCOt-FX407u-EiAX4m3jTZxISIf5wqafThxElDCqc351invtG~ObEPVTbkslW4nMoRtQKYAgaatzzoUjdM9PaG9tbSJbCDH1ga~Z0HAi~8i0OyMJKAbpuv37XgpQnHvJnPu34~esYagRCs~DGhWIWo8hSl71CL-g0gm3NrRwXbxPrmVI4I9u1V-HOebVg__",
+                                           "fileName":  "pasted_file_uIlhFy_image.png",
+                                           "mimeType":  "image/webp"
+                                       }
+                                   ]
+                   },
+                   {
+                       "id":  "wEOWAUVAQkNmVTMrM2gKkG",
+                       "status":  "completed",
+                       "role":  "assistant",
+                       "type":  "message",
+                       "content":  [
+                                       {
+                                           "type":  "output_text",
+                                           "text":  "WidzÄ â to jest prawdziwy email z Booksy (forward od Tomasz Rogala, wysÅany 13 paÅºdziernika 2025, rezerwacja na poniedziaÅek 1 wrzeÅnia 2025 14:00). Kluczowa obserwacja: email **juÅ¼ byÅ w skrzynce i dostaÅ flagÄ \"processed\"** â czyli system go wczeÅniej przetworzyÅ. To tÅumaczy dlaczego sync zwraca `processed: 0` â system nie przetwarza ponownie juÅ¼ oznaczonych emaili.\n\nTeraz rozumiem format prawdziwego emaila Booksy. PotrzebujÄ Å¼ebyÅ wysÅaÅ **nowy, ÅwieÅ¼y email** (nie forward starego) symulujÄ\u0085cy Booksy â z danymi dla nowej rezerwacji testowej. PrzygotowujÄ teraz dokÅadny szablon zgodny z formatem prawdziwego emaila Booksy."
+                                       }
+                                   ]
+                   }
+               ],
+    "credit_usage":  310
+}

@@ -90,30 +90,41 @@ export class GmailClient {
   }
 
   /**
-   * Search for Booksy emails
+   * Search for Booksy emails (new bookings, cancellations, reschedules)
    */
   async searchBooksyEmails(maxResults = 20, senderFilter = '@booksy.com'): Promise<GmailMessage[]> {
     try {
       const sender = senderFilter.trim() || '@booksy.com'
-      const query = [
-        `from:${sender}`,
-        'subject:"nowa rezerwacja"',
-        '-label:booksy/processed',
-        '-label:booksy/error',
-      ].join(' ')
-      const response = await this.gmail.users.messages.list({
-        userId: 'me',
-        q: query,
-        maxResults,
-      })
+      const commonFilters = '-label:booksy/processed -label:booksy/error'
 
-      const messages = response.data.messages || []
+      // Run separate queries for each email type Booksy sends
+      const queries = [
+        `from:${sender} subject:"nowa rezerwacja" ${commonFilters}`,
+        `from:${sender} subject:"odwołała wizytę" ${commonFilters}`,
+        `from:${sender} subject:"odwołał wizytę" ${commonFilters}`,
+        `from:${sender} subject:"zmienił rezerwację" ${commonFilters}`,
+      ]
+
+      const seenIds = new Set<string>()
       const fullMessages: GmailMessage[] = []
 
-      for (const message of messages) {
-        const fullMessage = await this.getFullMessage(message.id)
-        if (fullMessage) {
-          fullMessages.push(fullMessage)
+      for (const query of queries) {
+        const response = await this.gmail.users.messages.list({
+          userId: 'me',
+          q: query,
+          maxResults,
+        })
+
+        const messages = response.data.messages || []
+
+        for (const message of messages) {
+          if (seenIds.has(message.id)) continue
+          seenIds.add(message.id)
+
+          const fullMessage = await this.getFullMessage(message.id)
+          if (fullMessage) {
+            fullMessages.push(fullMessage)
+          }
         }
       }
 
@@ -121,8 +132,8 @@ export class GmailClient {
     } catch (error) {
       if (GmailClient.isInvalidGrantError(error)) {
         const authError = new Error('Gmail authorization expired. Reconnect Gmail account.')
-        ;(authError as any).code = 'GMAIL_REAUTH_REQUIRED'
-        ;(authError as any).cause = error
+          ; (authError as any).code = 'GMAIL_REAUTH_REQUIRED'
+          ; (authError as any).cause = error
         throw authError
       }
       console.error('Error searching Booksy emails:', error)

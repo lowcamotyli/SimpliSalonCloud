@@ -109,6 +109,16 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     mode: 'onChange'
   })
 
+  // Bug #7 fix: set employeeId from first employee once they load (only for new bookings)
+  useEffect(() => {
+    if (!booking && employees && employees.length > 0) {
+      const currentValue = form.getValues('employeeId')
+      if (!currentValue) {
+        form.setValue('employeeId', employees[0].id, { shouldValidate: true })
+      }
+    }
+  }, [booking, employees, form])
+
   // Client autocomplete
   const clientNameValue = form.watch('clientName')
   useEffect(() => {
@@ -144,8 +154,9 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     .find((svc) => svc.id === form.watch('serviceId'))
 
   const handleSelectClient = (client: any) => {
-    form.setValue('clientName', client.full_name)
-    form.setValue('clientPhone', client.phone)
+    form.setValue('clientName', client.full_name, { shouldValidate: true })
+    form.setValue('clientPhone', client.phone, { shouldValidate: true })
+    // Bug #6 fix: explicitly clear suggestions so dropdown disappears before submit
     setClientSuggestions([])
   }
 
@@ -363,13 +374,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                   <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-start hide-scrollbar">
                     <Button
                       variant="ghost"
-                      size="icon"
                       onClick={handleDeleteBooking}
                       disabled={updateMutation.isPending}
-                      className="h-10 w-10 min-w-10 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 shrink-0"
+                      className="h-10 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 shrink-0 px-3"
                       title="Usuń wizytę z systemu"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 mr-1.5" />
+                      <span className="text-sm font-medium">Usuń</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -378,7 +389,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                       className="h-10 rounded-full border-red-200 text-red-600 bg-white hover:bg-red-50 px-4 text-sm font-medium shrink-0"
                     >
                       <XCircle className="h-4 w-4 mr-2" />
-                      Anuluj
+                      Anuluj wizytę
                     </Button>
                   </div>
 
@@ -592,6 +603,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                   {...form.register('clientName')}
                   placeholder="Wpisz imię lub nazwisko"
                   className="glass rounded-lg"
+                  // Bug #6 fix: close dropdown when input loses focus (with delay for click)
+                  onBlur={() => setTimeout(() => setClientSuggestions([]), 150)}
                 />
                 {form.formState.errors.clientName && (
                   <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
@@ -605,7 +618,11 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                       <button
                         key={client.id}
                         type="button"
-                        onClick={() => handleSelectClient(client)}
+                        onMouseDown={(e) => {
+                          // Bug #6 fix: use onMouseDown (fires before onBlur) to select before blur closes dropdown
+                          e.preventDefault()
+                          handleSelectClient(client)
+                        }}
                         className="w-full text-left px-3 py-2 hover:bg-purple-100 transition-colors"
                       >
                         <p className="font-medium text-gray-900">{client.full_name}</p>

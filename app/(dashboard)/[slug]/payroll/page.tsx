@@ -9,16 +9,28 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DollarSign, Download, Send, CreditCard, Users, Calendar, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { useCurrentRole } from '@/hooks/use-current-role'
-import { cn } from '@/lib/utils'
 
 export default function PayrollPage() {
   const currentMonth = format(new Date(), 'yyyy-MM')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set())
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false)
   const { hasPermission } = useCurrentRole()
+
+  const fmt = (n: number) => n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   const { data: payroll, isLoading } = usePayroll(selectedMonth)
   const generateMutation = useGeneratePayroll()
@@ -51,9 +63,8 @@ export default function PayrollPage() {
   }
 
   const handleGenerate = async () => {
-    if (confirm(`Czy na pewno chcesz wygenerować wynagrodzenia za ${selectedMonth}?`)) {
-      await generateMutation.mutateAsync(selectedMonth)
-    }
+    await generateMutation.mutateAsync(selectedMonth)
+    setShowGenerateDialog(false)
   }
 
   return (
@@ -82,7 +93,7 @@ export default function PayrollPage() {
             />
           </div>
           <Button
-            onClick={handleGenerate}
+            onClick={() => setShowGenerateDialog(true)}
             disabled={generateMutation.isPending}
             className="gradient-button rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
           >
@@ -175,20 +186,20 @@ export default function PayrollPage() {
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-gray-400 uppercase">Przychód (U)</p>
                       <p className="text-2xl font-black text-gray-900">
-                        {entry.totalRevenue.toFixed(2)} <span className="text-sm font-medium">zł</span>
+                        {fmt(entry.totalRevenue)} <span className="text-sm font-medium">zł</span>
                       </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-gray-400 uppercase">Próg (P)</p>
                       <p className="text-xl font-bold text-gray-600">
-                        {entry.baseThreshold.toFixed(2)} <span className="text-xs font-medium">zł</span>
+                        {fmt(entry.baseThreshold)} <span className="text-xs font-medium">zł</span>
                       </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-gray-400 uppercase">Prowizja</p>
                       <div className="flex items-baseline gap-2">
                         <p className="text-2xl font-black text-emerald-600">
-                          {entry.commissionAmount.toFixed(2)} <span className="text-sm font-medium text-emerald-600/70">zł</span>
+                          {fmt(entry.commissionAmount)} <span className="text-sm font-medium text-emerald-600/70">zł</span>
                         </p>
                         <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] rounded-md font-bold">
                           {(entry.commissionRate * 100).toFixed(1)}%
@@ -198,7 +209,7 @@ export default function PayrollPage() {
                     <div className="rounded-2xl bg-emerald-50/50 border border-emerald-100 p-4 group-hover:bg-emerald-50 transition-colors">
                       <p className="text-xs font-bold text-emerald-600/70 uppercase mb-1">Do wypłaty (W)</p>
                       <p className="text-3xl font-black text-emerald-700">
-                        {entry.totalPayout.toFixed(2)} <span className="text-lg font-bold">zł</span>
+                        {fmt(entry.totalPayout)} <span className="text-lg font-bold">zł</span>
                       </p>
                     </div>
                   </div>
@@ -223,7 +234,7 @@ export default function PayrollPage() {
                                 <td className="px-4 py-3 font-medium">{visit.date}</td>
                                 <td className="px-4 py-3">{visit.clientName}</td>
                                 <td className="px-4 py-3 text-gray-500">{visit.serviceName}</td>
-                                <td className="px-4 py-3 text-right font-bold">{visit.price.toFixed(2)} zł</td>
+                                <td className="px-4 py-3 text-right font-bold">{fmt(visit.price)} zł</td>
                               </tr>
                             ))}
                           </tbody>
@@ -278,6 +289,26 @@ export default function PayrollPage() {
           </CardContent>
         </Card>
       )}
+      <AlertDialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generuj wynagrodzenia</AlertDialogTitle>
+            <AlertDialogDescription>
+              Czy na pewno chcesz wygenerować wynagrodzenia za <strong>{selectedMonth}</strong>?
+              Operacja zapisze nowe rozliczenie w systemie.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleGenerate}
+              disabled={generateMutation.isPending}
+            >
+              {generateMutation.isPending ? 'Generowanie...' : 'Generuj'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -77,8 +77,8 @@ export function CRMUsageBanner({ salonId, slug }: { salonId: string; slug: strin
     <Card>
       <CardContent className="pt-6 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">CRM usage ({usageQuery.data.plan})</h2>
-          {showUpgradeHint ? <Badge variant="warning">Limit above 80%</Badge> : null}
+          <h2 className="text-sm font-semibold">Użycie CRM ({usageQuery.data.plan})</h2>
+          {showUpgradeHint ? <Badge variant="warning">Limit wyczerpany w ponad 80%</Badge> : null}
         </div>
 
         <div className="space-y-3">
@@ -98,9 +98,9 @@ export function CRMUsageBanner({ salonId, slug }: { salonId: string; slug: strin
 
         {showUpgradeHint ? (
           <p className="text-xs text-muted-foreground">
-            You are close to your monthly CRM messaging limits.{' '}
+            Zbliżasz się do miesięcznego limitu wiadomości CRM.{' '}
             <Link href={`/${slug}/billing/upgrade`} className="underline underline-offset-2 font-medium">
-              Upgrade plan
+              Zmień plan
             </Link>
           </p>
         ) : null}

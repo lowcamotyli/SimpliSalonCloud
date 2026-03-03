@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
       body: bodyText,
     })
 
+    console.log('[SMSAPI TEST route] sendSmsMessage result:', result);
+
     return NextResponse.json({ ok: true, messageLogId: log.id, providerId: result.providerId })
   } catch (error) {
     if (error instanceof z.ZodError) {

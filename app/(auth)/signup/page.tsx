@@ -20,9 +20,12 @@ export default function SignupPage() {
     salonSlug: '',
   })
   const [loading, setLoading] = useState(false)
+  const [errorDetails, setErrorDetails] = useState<Record<string, string>>({})
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
+    // Wyczyść błąd dla danego pola, gdy użytkownik zaczyna pisać
+    setErrorDetails(prev => ({ ...prev, [field]: '', general: '' }))
 
     // Auto-generate slug from salon name
     if (field === 'salonName') {
@@ -39,19 +42,30 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorDetails({}) // Reset błędów na starcie
+    let hasValidationError = false
+    const newErrors: Record<string, string> = {}
 
     try {
-      // Validation
+      // Validation Front-end
       if (formData.password !== formData.confirmPassword) {
-        throw new Error('Hasła nie są identyczne')
+        newErrors.confirmPassword = 'Hasła nie są identyczne'
+        hasValidationError = true
       }
 
       if (formData.password.length < 6) {
-        throw new Error('Hasło musi mieć minimum 6 znaków')
+        newErrors.password = 'Hasło musi mieć minimum 6 znaków'
+        hasValidationError = true
       }
 
       if (!formData.salonSlug) {
-        throw new Error('Nazwa salonu jest wymagana')
+        newErrors.salonSlug = 'Adres URL salonu jest wymagany'
+        hasValidationError = true
+      }
+
+      if (hasValidationError) {
+        setErrorDetails(newErrors)
+        throw new Error('Popraw błędy w formularzu przed kontynuacją')
       }
 
       const supabase = createClient()
@@ -62,7 +76,14 @@ export default function SignupPage() {
         password: formData.password,
       })
 
-      if (authError) throw authError
+      if (authError) {
+        // Tłumaczenie błędów Supabase Auth
+        if (authError.message.includes('already registered') || authError.status === 400) {
+          setErrorDetails({ email: 'Konto z podanym adresem email już istnieje' })
+          throw new Error('Konto o podanym adresie email już istnieje.')
+        }
+        throw authError
+      }
       if (!authData.user) throw new Error('Nie udało się utworzyć użytkownika')
 
       // 2. Create salon
@@ -76,7 +97,14 @@ export default function SignupPage() {
         .select()
         .single()
 
-      if (salonError) throw salonError
+      if (salonError) {
+        if (salonError.code === '23505') { // Postgres: unique_violation
+          setErrorDetails({ salonSlug: 'Ten URL salonu jest już zajęty' })
+          // Wycofujemy autoryzację, zeby zapobiec tworzeniu profilu "ducha" - Wymagałoby dodatkowego RLS, chwilowo zgłaszamy po prostu błąd
+          throw new Error('Ten link salonu jest już zajęty, wybierz inny.')
+        }
+        throw salonError
+      }
 
       // 3. Create profile
       const { error: profileError } = await supabase
@@ -96,6 +124,9 @@ export default function SignupPage() {
       router.push('/login')
     } catch (error: any) {
       toast.error(error.message || 'Błąd podczas rejestracji')
+      if (!Object.keys(newErrors).length && !errorDetails.email && !errorDetails.salonSlug) {
+        setErrorDetails(prev => ({ ...prev, general: error.message || 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.' }))
+      }
     } finally {
       setLoading(false)
     }
@@ -109,6 +140,11 @@ export default function SignupPage() {
       </div>
 
       <form onSubmit={handleSignup} className="space-y-4">
+        {errorDetails.general && (
+          <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+            {errorDetails.general}
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="fullName">Imię i nazwisko</Label>
           <Input
@@ -121,7 +157,7 @@ export default function SignupPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className={errorDetails.email ? "text-red-500" : ""}>Email</Label>
           <Input
             id="email"
             type="email"
@@ -129,11 +165,13 @@ export default function SignupPage() {
             onChange={handleChange('email')}
             placeholder="twoj@email.com"
             required
+            className={errorDetails.email ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
+          {errorDetails.email && <p className="text-sm text-red-500 mt-1">{errorDetails.email}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Hasło</Label>
+          <Label htmlFor="password" className={errorDetails.password ? "text-red-500" : ""}>Hasło</Label>
           <Input
             id="password"
             type="password"
@@ -141,11 +179,13 @@ export default function SignupPage() {
             onChange={handleChange('password')}
             placeholder="••••••••"
             required
+            className={errorDetails.password ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
+          {errorDetails.password && <p className="text-sm text-red-500 mt-1">{errorDetails.password}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Potwierdź hasło</Label>
+          <Label htmlFor="confirmPassword" className={errorDetails.confirmPassword ? "text-red-500" : ""}>Potwierdź hasło</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -153,7 +193,9 @@ export default function SignupPage() {
             onChange={handleChange('confirmPassword')}
             placeholder="••••••••"
             required
+            className={errorDetails.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
+          {errorDetails.confirmPassword && <p className="text-sm text-red-500 mt-1">{errorDetails.confirmPassword}</p>}
         </div>
 
         <div className="border-t pt-4">
@@ -169,7 +211,7 @@ export default function SignupPage() {
           </div>
 
           <div className="mt-2 space-y-2">
-            <Label htmlFor="salonSlug">Adres URL salonu</Label>
+            <Label htmlFor="salonSlug" className={errorDetails.salonSlug ? "text-red-500" : ""}>Adres URL salonu</Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">simplisalon.pl/</span>
               <Input
@@ -178,8 +220,10 @@ export default function SignupPage() {
                 onChange={handleChange('salonSlug')}
                 placeholder="moj-salon"
                 required
+                className={errorDetails.salonSlug ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
             </div>
+            {errorDetails.salonSlug && <p className="text-sm text-red-500 mt-1">{errorDetails.salonSlug}</p>}
           </div>
         </div>
 

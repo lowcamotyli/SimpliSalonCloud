@@ -1,5 +1,6 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import { createPrzelewy24Client, Przelewy24Error } from './przelewy24-client'
+import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { createPrzelewy24Client, Przelewy24Client } from './przelewy24-client'
 
 /**
  * Subscription Manager
@@ -112,7 +113,38 @@ const PLANS: Record<PlanType, PlanConfig> = {
 
 export class SubscriptionManager {
   private supabase = createAdminSupabaseClient()
-  private p24 = createPrzelewy24Client()
+
+  private resolveMaybeEncryptedSecret(value: string | null): string | null {
+    if (!value) return null
+    return isEncryptedPayload(value) ? decryptSecret(value) : value
+  }
+
+  private async getP24ClientForSalon(salonId: string): Promise<Przelewy24Client> {
+    const { data: settings } = await (this.supabase as any)
+      .from('salon_settings')
+      .select('p24_merchant_id, p24_pos_id, p24_crc, p24_api_key, p24_api_url')
+      .eq('salon_id', salonId)
+      .maybeSingle()
+
+    const merchantId = settings?.p24_merchant_id?.trim()
+    const posId = settings?.p24_pos_id?.trim()
+    const crc = this.resolveMaybeEncryptedSecret(settings?.p24_crc ?? null)?.trim()
+    const apiKey = this.resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
+    const apiUrl = settings?.p24_api_url?.trim()
+
+    // Backward compatibility: jeżeli salon nie ma własnej konfiguracji, użyj globalnego env
+    if (!merchantId || !posId || !crc || !apiUrl) {
+      return createPrzelewy24Client()
+    }
+
+    return createPrzelewy24Client({
+      merchantId,
+      posId,
+      crc,
+      apiKey: apiKey || crc,
+      apiUrl,
+    })
+  }
 
   /**
    * Tworzy nową subskrypcję dla salonu
@@ -184,7 +216,8 @@ export class SubscriptionManager {
     const sessionId = `sub-${subscription.id}-${Date.now()}`
 
     try {
-      const { paymentUrl } = await this.p24.createTransaction({
+      const p24 = await this.getP24ClientForSalon(salonId)
+      const { paymentUrl } = await p24.createTransaction({
         sessionId,
         amount,
         description: `SimpliSalon - ${plan.name} (${billingInterval === 'monthly' ? 'miesięcznie' : 'rocznie'})`,
@@ -278,7 +311,8 @@ export class SubscriptionManager {
 
       const sessionId = `upgrade-${currentSub.id}-${Date.now()}`
 
-      const { paymentUrl } = await this.p24.createTransaction({
+      const p24 = await this.getP24ClientForSalon(salonId)
+      const { paymentUrl } = await p24.createTransaction({
         sessionId,
         amount: proratedAmount,
         description: `SimpliSalon - Upgrade do ${newPlan.name} (dopłata proporcjonalna)`,
@@ -291,12 +325,14 @@ export class SubscriptionManager {
         .from('subscriptions')
         .update({
           p24_transaction_id: sessionId,
+          p24_order_id: null,
           metadata: {
             ...(currentSub.metadata || {}),
             pending_plan_change: {
               plan_type: newPlanType,
               billing_interval: interval,
               amount_cents: newPrice,
+              payment_amount_cents: proratedAmount,
             },
           },
         })
