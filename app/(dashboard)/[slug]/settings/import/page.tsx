@@ -75,6 +75,7 @@ const STATUS_MAP: Record<string, string> = {
   'zakonczona': 'completed',
   'scheduled': 'scheduled',
   'zaplanowana': 'scheduled',
+  'booked': 'scheduled',
   'confirmed': 'confirmed',
   'potwierdzona': 'confirmed',
   'cancelled': 'cancelled',

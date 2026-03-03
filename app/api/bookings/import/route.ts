@@ -109,7 +109,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         continue
       }
 
-      const status = VALID_STATUSES.includes(row.status) ? row.status : 'completed'
+      let status = VALID_STATUSES.includes(row.status) ? row.status : 'completed'
+      if (row.status === 'booked' || row.status === 'zaplanowana') status = 'scheduled'
+      if (row.status === 'anulowana') status = 'cancelled'
+      if (row.status === 'zakończona') status = 'completed'
 
       let clientId: string | null = null;
       const validPhoneFormat = (phone: string) => /^\+?[0-9]{9,15}$/.test(phone);
