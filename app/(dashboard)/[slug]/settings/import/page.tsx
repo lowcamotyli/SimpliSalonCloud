@@ -110,6 +110,8 @@ export default function ImportPage() {
   const [step, setStep] = useState(0)
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([])
   const [fileName, setFileName] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
   const [importResult, setImportResult] = useState<{
     imported: number
     skipped: number
@@ -286,12 +288,33 @@ export default function ImportPage() {
       notes: r.notatki,
     }))
 
+    setIsImporting(true)
+    setImportProgress({ current: 0, total: rows.length })
+
+    const batchSize = 100
+    const finalResult = { imported: 0, skipped: 0, errors: [] as Array<{ row: number; reason: string }> }
+
     try {
-      const result = await importMutation.mutateAsync(rows)
-      setImportResult(result)
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize)
+        const batchResult = await importMutation.mutateAsync(batch)
+
+        finalResult.imported += batchResult.imported
+        finalResult.skipped += batchResult.skipped
+        finalResult.errors.push(...(batchResult.errors || []).map(e => ({
+          row: i + e.row,
+          reason: e.reason
+        })))
+
+        setImportProgress({ current: Math.min(i + batchSize, rows.length), total: rows.length })
+      }
+
+      setImportResult(finalResult)
       setStep(2)
     } catch {
-      // error handled by mutation
+      // error handled by mutation logic ideally, but stop importing process on total failure
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -414,24 +437,39 @@ export default function ImportPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={reset} className="rounded-xl font-bold">
+                <Button variant="outline" onClick={reset} className="rounded-xl font-bold" disabled={isImporting}>
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Wróć
                 </Button>
                 <Button
                   onClick={handleImport}
-                  disabled={readyRows.length === 0 || importMutation.isPending}
+                  disabled={readyRows.length === 0 || isImporting}
                   className="gradient-button rounded-xl font-bold"
                 >
-                  {importMutation.isPending ? (
+                  {isImporting ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Upload className="h-4 w-4 mr-2" />
                   )}
-                  Importuj {readyRows.length} rezerwacji
+                  {isImporting ? `Importowanie... ${importProgress.current}/${importProgress.total}` : `Importuj ${readyRows.length} rezerwacji`}
                 </Button>
               </div>
             </div>
+
+            {isImporting && importProgress.total > 0 && (
+              <div className="mb-6 space-y-2">
+                <div className="flex justify-between text-sm font-medium text-gray-700">
+                  <span>Postęp importu</span>
+                  <span>{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="overflow-x-auto -mx-6 px-6">
               <table className="w-full text-sm">

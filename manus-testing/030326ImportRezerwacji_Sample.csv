@@ -1,0 +1,11 @@
+﻿data,godzina,klient_imie,klient_telefon,klient_email,usluga,pracownik,czas_min,cena,status,notatki
+2025-11-25,10:00,Test Klient,123456789,,Test Service,EMP001,,,booked,
+2025-11-18,19:41,Tomasz Rogala,55555,,Strzyżenie męskie włosy długie,Karolina Kasztelan,,85.0,paid,płatność: karta
+2025-12-02,09:00,Karolina Wachel,888623422,,Strzyżenie damskie włosy długie,Karolina Kasztelan,60.0,90.0,booked,Cena: 90.00 zł | Zakres: 09:00–10:00 | Czas: 60 min | Źródło: Booksy (new)
+2026-02-23,15:00,Klaudia Kacprzak,784909314,,Strzyżenie damskie włosy długie,Karolina Kasztelan,,90.0,booked,Źródło: Booksy (zmiana terminu)
+2025-10-24,16:00,Joanna Bajcer,508181572,,Strzyżenie damskie włosy średnie,Karolina,60.0,,booked,Zakres: 16:00–17:00 | Czas: 60 min | Źródło: Booksy (new)
+2025-10-27,14:00,malgorzata prusak,506618747,,Farba włosy średnie,Karolina,120.0,,booked,Zakres: 14:00–16:00 | Czas: 120 min | Źródło: Booksy (new)
+2025-10-20,14:00,Aldona Mazur,880977330,,Strzyżenie męskie włosy krótkie,Karolina,30.0,,booked,Zakres: 14:00–14:30 | Czas: 30 min | Źródło: Booksy (new)
+2025-10-22,17:30,Karolina Sulkowska,660488064,,Farba włosy średnie,Karolina,120.0,,booked,Zakres: 17:30–19:30 | Czas: 120 min | Źródło: Booksy (new)
+2025-09-12,16:45,Magdalena Miller,721036395,,Farba włosy średnie,Karolina,,,booked,Źródło: Booksy (zmiana terminu)
+2025-10-18,13:00,Roman Głowacki,606346676,,Strzyżenie męskie włosy krótkie,Karolina,30.0,,booked,Zakres: 13:00–13:30 | Czas: 30 min | Źródło: Booksy (new)

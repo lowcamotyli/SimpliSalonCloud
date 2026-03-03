@@ -59,7 +59,21 @@
       "Bash(find \"d:\\\\SimpliSalonCLoud/app/\\(dashboard\\)/[slug]/payroll\" -type f)",
       "Bash(find \"d:\\\\SimpliSalonCLoud/app/\\(dashboard\\)/[slug]/payroll\" -type f ! -path \"*node_modules*\")",
       "Bash(supabase db execute --sql \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conrelid = ''employees''::regclass AND conname = ''chk_commission_rate'';\")",
-      "Bash(npx vercel ls)"
+      "Bash(npx vercel ls)",
+      "Bash(npx vercel --version)",
+      "Bash(npx vercel project ls)",
+      "Bash(npx vercel domains ls)",
+      "Bash(npx vercel alias ls)",
+      "Bash(SUPABASE_URL=\"https://ubkueiwelarplnbhqmoa.supabase.co\")",
+      "Bash(SUPABASE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVia3VlaXdlbGFycGxuYmhxbW9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMzMjQ0MiwiZXhwIjoyMDg0OTA4NDQyfQ.ViW4h2gsE0wGKubrkuA9qn6aTfgHs8xo0BNcvK2nV4Y\")",
+      "Bash(SALON_ID=\"5dff9981-10fb-4bd3-9b06-4d98f58eb9aa\")",
+      "Bash(__NEW_LINE_b6c8c318f7c38722__ echo \"=== PRACOWNICY ===\")",
+      "Bash(__NEW_LINE_dfd7629d8e3fd1f4__ echo \"\")",
+      "Bash(__NEW_LINE_c4301c1f57ec9152__ echo \"\")",
+      "Bash(__NEW_LINE_91b5376377a0a3bf__ echo \"\")",
+      "Bash(__NEW_LINE_b9fd3324fd2a6e8c__ echo \"ALL EMPLOYEES:\")",
+      "Bash(__NEW_LINE_b9fd3324fd2a6e8c__ echo \"\")",
+      "Bash(npx vercel inspect simplisaloncloud-jpw9b3hvm-lowcamotyli-1366s-projects.vercel.app)"
     ]
   }
 }

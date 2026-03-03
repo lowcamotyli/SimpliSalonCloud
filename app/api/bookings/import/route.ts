@@ -111,11 +111,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
       const status = VALID_STATUSES.includes(row.status) ? row.status : 'completed'
 
-      // Find or create client
-      let clientId: string | null = null
-      const clientPhone = (row.client_phone || '').replace(/[\s\-\+()]/g, '')
+      let clientId: string | null = null;
+      const validPhoneFormat = (phone: string) => /^\+?[0-9]{9,15}$/.test(phone);
 
-      if (clientPhone) {
+      let rawPhone = (row.client_phone || '').replace(/[\s\-\+()]/g, '')
+      let clientPhone = validPhoneFormat(rawPhone) ? rawPhone : null
+
+      if (rawPhone && !validPhoneFormat(rawPhone)) {
+        // if user provided phone but it's invalid, we fallback to 000000000
+        clientPhone = '000000000';
+      }
+
+      if (clientPhone && clientPhone !== '000000000') {
         const { data: existingClient } = await supabase
           .from('clients')
           .select('id')
@@ -156,6 +163,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         clientId = (newClient as any).id
       }
 
+      // Determine source based on notes or row source if it exists, otherwise manual
+      let source = 'manual';
+      if (row.notes && row.notes.toLowerCase().includes('booksy')) {
+        source = 'booksy';
+      }
+
       // Insert booking
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
@@ -170,7 +183,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           base_price: price,
           status: status,
           notes: row.notes || null,
-          source: 'import',
+          source: source,
           created_by: user.id,
         } as any)
         .select('id')
