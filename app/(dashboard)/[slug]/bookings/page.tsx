@@ -46,7 +46,7 @@ const DATE_FILTERS = [
 export default function BookingsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [dateFilter, setDateFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('today')
   const [employeeFilter, setEmployeeFilter] = useState('all')
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -95,6 +95,10 @@ export default function BookingsPage() {
       }
 
       return matchesSearch && matchesStatus && matchesEmployee && matchesDate
+    }).sort((a, b) => {
+      const dateTimeA = `${a.booking_date}T${a.booking_time}`
+      const dateTimeB = `${b.booking_date}T${b.booking_time}`
+      return dateTimeA.localeCompare(dateTimeB)
     })
   }, [bookings, search, statusFilter, employeeFilter, dateFilter])
 
