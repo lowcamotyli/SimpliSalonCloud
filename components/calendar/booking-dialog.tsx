@@ -12,6 +12,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,7 +33,7 @@ import { useClients } from '@/hooks/use-clients'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from '@/lib/formatters'
 import { toast } from 'sonner'
-import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, Trash2, XCircle, CreditCard, Banknote } from 'lucide-react'
+import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
 
 const bookingFormSchema = z.object({
@@ -58,6 +68,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('')
   const [pickerView, setPickerView] = useState<'category' | 'subcategory' | 'service'>('category')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -200,29 +211,12 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   }
 
   const handleCancelBooking = async () => {
-    if (confirm('Czy na pewno chcesz anulować tę wizytę?')) {
-      try {
-        await updateMutation.mutateAsync({ status: 'cancelled' })
-        toast.success('Wizyta anulowana')
-        onClose()
-      } catch (error) {
-        toast.error('Błąd podczas anulowania wizyty')
-      }
-    }
-  }
-
-  const handleDeleteBooking = async () => {
-    if (confirm('Czy na pewno chcesz USUNĄĆ tę wizytę?')) {
-      try {
-        const response = await fetch(`/api/bookings/${booking.id}`, {
-          method: 'DELETE',
-        })
-        if (!response.ok) throw new Error('Failed to delete booking')
-        toast.success('Wizyta usunięta')
-        onClose()
-      } catch (error) {
-        toast.error('Błąd podczas usuwania wizyty')
-      }
+    try {
+      await updateMutation.mutateAsync({ status: 'cancelled' })
+      toast.success('Wizyta anulowana')
+      onClose()
+    } catch (error) {
+      toast.error('Błąd podczas anulowania wizyty')
     }
   }
 
@@ -252,6 +246,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     : 60
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl glass rounded-2xl">
         <DialogHeader>
@@ -373,18 +368,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <>
                   <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-start hide-scrollbar">
                     <Button
-                      variant="ghost"
-                      onClick={handleDeleteBooking}
-                      disabled={updateMutation.isPending}
-                      className="h-10 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 shrink-0 px-3"
-                      title="Usuń wizytę z systemu"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1.5" />
-                      <span className="text-sm font-medium">Usuń</span>
-                    </Button>
-                    <Button
                       variant="outline"
-                      onClick={handleCancelBooking}
+                      onClick={() => setShowCancelConfirm(true)}
                       disabled={updateMutation.isPending}
                       className="h-10 rounded-full border-red-200 text-red-600 bg-white hover:bg-red-50 px-4 text-sm font-medium shrink-0"
                     >
@@ -693,5 +678,26 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Anuluj wizytę</AlertDialogTitle>
+          <AlertDialogDescription>
+            Wizyta zostanie oznaczona jako anulowana. Pozostanie widoczna w historii.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Wróć</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleCancelBooking}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Anuluj wizytę
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

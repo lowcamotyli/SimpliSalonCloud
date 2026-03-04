@@ -73,7 +73,11 @@
       "Bash(__NEW_LINE_91b5376377a0a3bf__ echo \"\")",
       "Bash(__NEW_LINE_b9fd3324fd2a6e8c__ echo \"ALL EMPLOYEES:\")",
       "Bash(__NEW_LINE_b9fd3324fd2a6e8c__ echo \"\")",
-      "Bash(npx vercel inspect simplisaloncloud-jpw9b3hvm-lowcamotyli-1366s-projects.vercel.app)"
+      "Bash(npx vercel inspect simplisaloncloud-jpw9b3hvm-lowcamotyli-1366s-projects.vercel.app)",
+      "Bash(npx vercel env add CRON_SECRET production)",
+      "Bash(npx vercel env rm CRON_SECRET production --yes)",
+      "Bash(npx vercel --prod)",
+      "Bash(printf \"f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21\")"
     ]
   }
 }

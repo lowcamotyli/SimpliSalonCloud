@@ -1,6 +1,8 @@
 // Typy logów
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
+const LOG_LEVELS: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 }
+
 // Kontekst dla logów (dodatkowe informacje)
 interface LogContext {
     salonId?: string
@@ -8,18 +10,23 @@ interface LogContext {
     requestId?: string
     action?: string
     duration?: number
+    messageId?: string
     [key: string]: any // Możesz dodać dowolne pola
 }
 
 class Logger {
-    // Czy logować w zależności od poziomu i środowiska
+    // Minimalny poziom logowania — kontrolowany przez LOG_LEVEL env var
+    // Domyślnie 'info' (widoczne na Vercelu), można ustawić 'debug' lokalnie
+    private minLevel: number
+
+    constructor() {
+        const envLevel = (process.env.LOG_LEVEL ?? 'info') as LogLevel
+        this.minLevel = LOG_LEVELS[envLevel] ?? LOG_LEVELS.info
+    }
+
+    // Czy logować w zależności od poziomu
     private shouldLog(level: LogLevel): boolean {
-        // W production loguj tylko warn i error
-        if (process.env.NODE_ENV === 'production') {
-            return ['warn', 'error'].includes(level)
-        }
-        // W development loguj wszystko
-        return true
+        return LOG_LEVELS[level] >= this.minLevel
     }
 
     // Formatuj log jako JSON

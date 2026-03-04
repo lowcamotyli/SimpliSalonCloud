@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { logger } from '@/lib/logger'
 
 interface GmailMessage {
   id: string
@@ -84,7 +85,7 @@ export class GmailClient {
       const response = await this.gmail.users.getProfile({ userId: 'me' })
       return response.data.emailAddress || null
     } catch (error) {
-      console.error('Error getting user email:', error)
+      logger.error('Gmail: getUserEmail failed', error)
       return null
     }
   }
@@ -116,6 +117,7 @@ export class GmailClient {
         })
 
         const messages = response.data.messages || []
+        logger.debug('Gmail: query executed', { action: 'gmail_search', query, found: messages.length })
 
         for (const message of messages) {
           if (seenIds.has(message.id)) continue
@@ -128,15 +130,17 @@ export class GmailClient {
         }
       }
 
+      logger.info('Gmail: Booksy emails fetched', { action: 'gmail_fetch', count: fullMessages.length })
       return fullMessages
     } catch (error) {
       if (GmailClient.isInvalidGrantError(error)) {
+        logger.warn('Gmail: token expired, re-auth required', { action: 'gmail_reauth' })
         const authError = new Error('Gmail authorization expired. Reconnect Gmail account.')
           ; (authError as any).code = 'GMAIL_REAUTH_REQUIRED'
           ; (authError as any).cause = error
         throw authError
       }
-      console.error('Error searching Booksy emails:', error)
+      logger.error('Gmail: searchBooksyEmails failed', error)
       throw error
     }
   }
@@ -185,7 +189,7 @@ export class GmailClient {
         date,
       }
     } catch (error) {
-      console.error('Error getting message details:', error)
+      logger.error('Gmail: getFullMessage failed', error, { messageId })
       return null
     }
   }
@@ -206,7 +210,7 @@ export class GmailClient {
         },
       })
     } catch (error) {
-      console.error('Error labeling message:', error)
+      logger.error('Gmail: markAsProcessed failed', error, { messageId, success })
     }
   }
 

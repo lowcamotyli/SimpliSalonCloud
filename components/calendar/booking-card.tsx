@@ -61,11 +61,10 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
     e.stopPropagation() // Prevent card click
 
     const confirmed = window.confirm(
-      `Czy na pewno chcesz usunąć wizytę?\n\n` +
+      `Czy na pewno chcesz anulować wizytę?\n\n` +
       `Klient: ${booking.client?.full_name || 'Nieznany klient'}\n` +
       `Data: ${booking.booking_date} ${booking.booking_time}\n` +
-      `Usługa: ${booking.service.name}\n\n` +
-      `Ta operacja może być cofnięta przez administratora.`
+      `Usługa: ${booking.service.name}`
     )
 
     if (!confirmed) return
@@ -74,11 +73,13 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
 
     try {
       const response = await fetch(`/api/bookings/${booking.id}`, {
-        method: 'DELETE',
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete booking')
+        throw new Error('Failed to cancel booking')
       }
 
       // Call onDelete callback if provided
@@ -90,7 +91,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
       }
     } catch (error) {
       console.error('Error deleting booking:', error)
-      alert('Nie udało się usunąć wizyty. Spróbuj ponownie.')
+      alert('Nie udało się anulować wizyty. Spróbuj ponownie.')
     } finally {
       setIsDeleting(false)
     }
@@ -123,7 +124,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
               onClick={handleDelete}
               disabled={isDeleting}
               className="absolute right-0 -top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
-              title="Usuń wizytę"
+              title="Anuluj wizytę"
             >
               <Trash2 className="h-3 w-3" />
             </Button>

@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BooksyProcessor } from '@/lib/booksy/processor'
 import { GmailClient } from '@/lib/booksy/gmail-client'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/integrations/booksy/sync
@@ -66,6 +67,9 @@ export async function POST(request: NextRequest) {
 
         const processor = new BooksyProcessor(admin, profile.salon_id)
         const results = []
+        const syncStart = Date.now()
+
+        logger.info('Booksy manual sync started', { action: 'booksy_sync_start', salonId: profile.salon_id, found: messages.length })
 
         for (const message of messages) {
             try {
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
                 await gmailClient.markAsProcessed(message.id, result.success)
                 results.push({ messageId: message.id, subject: message.subject, result })
             } catch (error: any) {
-                console.error('Error processing message:', error)
+                logger.error('Booksy: manual sync message failed', error, { salonId: profile.salon_id, messageId: message.id, subject: message.subject })
                 await gmailClient.markAsProcessed(message.id, false)
                 results.push({ messageId: message.id, subject: message.subject, result: { success: false, error: error.message } })
             }
@@ -81,6 +85,21 @@ export async function POST(request: NextRequest) {
 
         const successCount = results.filter(r => r.result.success).length
         const errorCount = results.filter(r => !r.result.success).length
+        const durationMs = Date.now() - syncStart
+        logger.info('Booksy manual sync completed', { action: 'booksy_sync_end', salonId: profile.salon_id, processed: results.length, success: successCount, errors: errorCount, duration: durationMs })
+
+        // Persist audit log (fire-and-forget, non-blocking)
+        admin.from('booksy_sync_logs').insert({
+            salon_id: profile.salon_id,
+            triggered_by: 'manual',
+            started_at: new Date(syncStart).toISOString(),
+            finished_at: new Date().toISOString(),
+            duration_ms: durationMs,
+            emails_found: messages.length,
+            emails_success: successCount,
+            emails_error: errorCount,
+            sync_results: results.map(r => ({ messageId: r.messageId, subject: r.subject, success: r.result.success, action: (r.result as any).action, error: (r.result as any).error })),
+        }).then().catch((e: unknown) => logger.error('Failed to save sync log', e, { salonId: profile.salon_id }))
 
         // Update sync stats and last_sync_at
         const currentStats = (settings.booksy_sync_stats as any) ?? { total: 0, success: 0, errors: 0 }
@@ -104,7 +123,7 @@ export async function POST(request: NextRequest) {
             results,
         })
     } catch (error: any) {
-        console.error('Booksy sync error:', error)
+        logger.error('Booksy sync error', error, { action: 'booksy_sync_error' })
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BooksyProcessor } from '@/lib/booksy/processor'
+import { logger } from '@/lib/logger'
 
 const booksyWebhookPayloadSchema = z.object({
   salonId: z.string().uuid('salonId must be a valid UUID'),
@@ -89,6 +90,7 @@ export async function handleBooksyWebhook(
   }
 
   if (!isWebhookAuthorized(request, webhookSecret)) {
+    logger.warn('Booksy webhook: unauthorized request', { action: 'booksy_webhook_auth' })
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -113,6 +115,8 @@ export async function handleBooksyWebhook(
   const payload: BooksyWebhookPayload = payloadResult.data
   const processor = deps.createProcessor(payload.salonId)
 
+  logger.info('Booksy webhook received', { action: 'booksy_webhook', salonId: payload.salonId, emails: payload.emails.length })
+
   const results: Array<{ success: boolean; [key: string]: unknown }> = []
 
   for (const email of payload.emails) {
@@ -124,6 +128,8 @@ export async function handleBooksyWebhook(
 
   const successCount = results.filter((result) => result.success).length
   const errorCount = results.length - successCount
+
+  logger.info('Booksy webhook processed', { action: 'booksy_webhook_end', salonId: payload.salonId, processed: results.length, success: successCount, errors: errorCount })
 
   return NextResponse.json({
     success: true,
