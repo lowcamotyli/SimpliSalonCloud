@@ -26,7 +26,7 @@ const baseBookingSchema = z.object({
 
     duration: z.number().int().positive().optional(),
 
-    status: z.enum(['pending', 'confirmed', 'completed', 'cancelled', 'scheduled']).optional(),
+    status: z.enum(['pending', 'confirmed', 'completed', 'cancelled', 'no_show', 'scheduled']).optional(),
 
     notes: z.string().max(500, 'Notatka może mieć max 500 znaków').optional().or(z.literal('')),
     paymentMethod: z.string().optional().or(z.literal('')),

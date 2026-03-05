@@ -5,6 +5,7 @@ import { withErrorHandling } from '@/lib/error-handler'
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from '@/lib/errors'
 import type { Database } from '@/types/supabase'
 import { BUSINESS_HOURS } from '@/lib/constants'
+import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/lib/equipment/availability'
 
 type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 
@@ -73,7 +74,7 @@ export const PATCH = withErrorHandling(async (
   // Get current version
   const { data: existingBooking, error: existingError } = await supabase
     .from('bookings')
-    .select('version, employee_id, booking_date, booking_time, duration, salon_id')
+    .select('id, version, employee_id, booking_date, booking_time, duration, salon_id, status, client_id')
     .eq('id', id)
     .single()
 
@@ -82,12 +83,15 @@ export const PATCH = withErrorHandling(async (
   }
 
   const currentBooking = existingBooking as {
+    id: string
     version: number
     employee_id: string
     booking_date: string
     booking_time: string
     duration: number
     salon_id: string
+    status: string
+    client_id: string | null
   }
 
   if (currentBooking.salon_id !== user.app_metadata?.salon_id) {
@@ -137,6 +141,32 @@ export const PATCH = withErrorHandling(async (
     throw new ConflictError('Wybrany termin koliduje z inną wizytą')
   }
 
+  // Re-validate equipment availability when time changes
+  const timeChanged = validatedData.date !== undefined || validatedData.start_time !== undefined || validatedData.duration !== undefined
+  if (timeChanged) {
+    const startsAt = new Date(`${targetDate}T${targetStartTime}`)
+    const endsAt = new Date(startsAt.getTime() + targetDuration * 60_000)
+    const requiredEquipment = await getRequiredEquipmentForService(
+      (await (supabase as any).from('bookings').select('service_id').eq('id', id).single()).data?.service_id
+    )
+    if (requiredEquipment.length > 0) {
+      const availability = await checkEquipmentAvailability(requiredEquipment, startsAt, endsAt, id)
+      const conflicts = availability.filter((a: any) => !a.is_available)
+      if (conflicts.length > 0) {
+        return NextResponse.json({
+          error: 'EQUIPMENT_CONFLICT',
+          message: 'Wybrany termin jest niedostepny – sprzet jest juz zajety.',
+          conflictingEquipment: conflicts.map((c: any) => c.equipment_id),
+        }, { status: 409 })
+      }
+      // Update equipment_bookings times
+      await (supabase as any)
+        .from('equipment_bookings')
+        .update({ starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString() })
+        .eq('booking_id', id)
+    }
+  }
+
   const updateData: BookingUpdate = {
     version: currentBooking.version, // Required by check_version() trigger
     updated_by: user.id,
@@ -151,6 +181,22 @@ export const PATCH = withErrorHandling(async (
   if (validatedData.date) updateData.booking_date = validatedData.date
   if (validatedData.start_time) updateData.booking_time = validatedData.start_time
 
+  const shouldRegisterNoShow =
+    validatedData.status === 'no_show' &&
+    currentBooking.status !== 'no_show' &&
+    !!currentBooking.client_id
+
+  // Late cancel: cancellation made within 24h before the appointment
+  const LATE_CANCEL_HOURS = 24
+  const bookingStartsAt = new Date(`${currentBooking.booking_date}T${currentBooking.booking_time}`)
+  const hoursUntilBooking = (bookingStartsAt.getTime() - Date.now()) / (1000 * 60 * 60)
+  const shouldRegisterLateCancel =
+    validatedData.status === 'cancelled' &&
+    !['cancelled', 'no_show', 'completed'].includes(currentBooking.status) &&
+    !!currentBooking.client_id &&
+    hoursUntilBooking >= 0 &&
+    hoursUntilBooking <= LATE_CANCEL_HOURS
+
   const { data: booking, error } = await (supabase as any)
     .from('bookings')
     .update(updateData)
@@ -161,6 +207,29 @@ export const PATCH = withErrorHandling(async (
   if (error) {
     if (error.code === 'PGRST116') throw new NotFoundError('Booking', id)
     throw error
+  }
+
+  if (shouldRegisterNoShow && currentBooking.client_id) {
+    const { error: violationError } = await (supabase as any).from('client_violations').insert({
+      client_id: currentBooking.client_id,
+      booking_id: currentBooking.id,
+      violation_type: 'no_show',
+      occurred_at: new Date().toISOString(),
+    })
+    if (violationError) throw violationError
+
+    const { error: noShowError } = await (supabase as any).rpc('increment_client_no_show', { p_client_id: currentBooking.client_id })
+    if (noShowError) throw noShowError
+  }
+
+  if (shouldRegisterLateCancel && currentBooking.client_id) {
+    // Ignore errors — violation is best-effort, booking update already succeeded
+    await (supabase as any).from('client_violations').insert({
+      client_id: currentBooking.client_id,
+      booking_id: currentBooking.id,
+      violation_type: 'late_cancel',
+      occurred_at: new Date().toISOString(),
+    })
   }
 
   return NextResponse.json({ booking })

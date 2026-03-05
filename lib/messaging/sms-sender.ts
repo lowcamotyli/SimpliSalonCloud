@@ -1,5 +1,6 @@
-import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+﻿import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { createSmsAdapter } from '@/lib/messaging/sms-adapter'
 
 export interface SendSmsInput {
   salonId: string
@@ -7,6 +8,22 @@ export interface SendSmsInput {
   to: string
   body: string
   sender?: string
+}
+
+export interface SendSmsWithWalletInput {
+  salonId: string
+  to: string
+  body: string
+  clientId?: string | null
+  sender?: string
+}
+
+type SalonSmsSettings = {
+  sms_provider?: 'smsapi' | 'bulkgate' | string | null
+  smsapi_token?: string | null
+  smsapi_sender_name?: string | null
+  bulkgate_app_id?: string | null
+  bulkgate_app_token?: string | null
 }
 
 export function normalizePolishPhoneToE164(phone: string): string {
@@ -50,6 +67,26 @@ function resolveSmsApiToken(rawValue: string | null): string {
   return source
 }
 
+async function getSalonSmsSettings(supabase: ReturnType<typeof createAdminSupabaseClient>, salonId: string) {
+  const { data: settings } = await (supabase as any)
+    .from('salon_settings')
+    .select('sms_provider, smsapi_token, smsapi_sender_name, bulkgate_app_id, bulkgate_app_token')
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  return (settings || {}) as SalonSmsSettings
+}
+
+function resolveSender(inputSender: string | undefined, settings: SalonSmsSettings): string | undefined {
+  return (
+    inputSender ||
+    settings.smsapi_sender_name ||
+    process.env.SMS_SENDER_NAME ||
+    process.env.SMSAPI_SENDER_NAME ||
+    undefined
+  )
+}
+
 async function updateLog(
   messageLogId: string,
   payload: { status: 'sent' | 'failed'; provider_id?: string | null; error?: string | null; sent_at?: string | null }
@@ -58,77 +95,66 @@ async function updateLog(
   await (supabase as any).from('message_logs').update(payload).eq('id', messageLogId)
 }
 
+export async function sendSms(input: SendSmsWithWalletInput): Promise<{ messageId: string | null; status: 'sent' | 'queued' }> {
+  const supabase = createAdminSupabaseClient()
+  const to = normalizePolishPhoneToE164(input.to)
+
+  const settings = await getSalonSmsSettings(supabase, input.salonId)
+  if ((settings.sms_provider || '').toLowerCase() !== 'bulkgate') {
+    resolveSmsApiToken(settings.smsapi_token ?? null)
+  }
+
+  // Decrement before sending so balance validation and reservation are atomic, preventing race conditions.
+  const { data: decremented, error: decrementError } = await (supabase as any).rpc('decrement_sms_balance', {
+    p_salon_id: input.salonId,
+  })
+
+  if (decrementError || decremented !== true) {
+    throw new Error('INSUFFICIENT_SMS_BALANCE')
+  }
+
+  const sender = resolveSender(input.sender, settings)
+  const adapter = createSmsAdapter(settings)
+  const result = await adapter.send({ to, body: input.body, from: sender })
+
+  await (supabase as any).from('sms_messages').insert({
+    salon_id: input.salonId,
+    client_id: input.clientId || null,
+    direction: 'outbound',
+    body: input.body,
+    status: result.status,
+    provider_message_id: result.messageId,
+    sent_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  })
+
+  return result
+}
+
 export async function sendSmsMessage(input: SendSmsInput): Promise<{ providerId: string | null; status: 'sent' }> {
   const supabase = createAdminSupabaseClient()
 
   try {
-    const { data: settings } = await (supabase as any)
-      .from('salon_settings')
-      .select('smsapi_token, smsapi_sender_name')
-      .eq('salon_id', input.salonId)
-      .maybeSingle()
+    const settings = await getSalonSmsSettings(supabase, input.salonId)
+    if ((settings.sms_provider || '').toLowerCase() !== 'bulkgate') {
+      resolveSmsApiToken(settings.smsapi_token ?? null)
+    }
 
-    const token = resolveSmsApiToken(settings?.smsapi_token ?? null)
-    const sender = input.sender || settings?.smsapi_sender_name || process.env.SMSAPI_SENDER_NAME || undefined
+    const sender = resolveSender(input.sender, settings)
     const to = normalizePolishPhoneToE164(input.to)
-
-    console.log(`[SMSAPI TEST] Sending test SMS to: ${to}, sender: ${sender}, token exists: ${!!token}, token length: ${token.length}`);
-
-    const form = new URLSearchParams()
-    form.set('to', to)
-    form.set('message', input.body)
-    form.set('encoding', 'utf-8')
-    if (sender) form.set('from', sender)
-    if (process.env.SMSAPI_CALLBACK_URL) {
-      const callbackUrl = new URL(process.env.SMSAPI_CALLBACK_URL)
-      callbackUrl.searchParams.set('message_log_id', input.messageLogId)
-      callbackUrl.searchParams.set('salon_id', input.salonId)
-      form.set('callback', callbackUrl.toString())
-    }
-
-    const response = await fetch('https://api.smsapi.pl/sms.do?format=json', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: form.toString(),
-    })
-
-    const responseText = await response.text();
-    console.log('[SMSAPI TEST] form body (partially hidden):', form.toString().replace(/to=[^&]+/, 'to=HIDDEN'));
-    console.log('[SMSAPI TEST] raw response status:', response.status);
-    console.log('[SMSAPI TEST] raw response text:', responseText);
-
-    let payload: any = null;
-    try {
-      payload = JSON.parse(responseText);
-    } catch (e) {
-      console.log('[SMSAPI TEST] Failed to parse JSON response');
-    }
-
-    if (!response.ok) {
-      throw new Error(payload?.message || payload?.error || `SMSAPI request failed (${response.status}): ${responseText}`)
-    }
-
-    if (payload?.error) {
-      console.error('[SMSAPI TEST] SMSAPI returned an error in payload despite 200 OK:', payload);
-      throw new Error(payload.message || `API SMSAPI zwróciło błąd: ${payload.error}`);
-    }
-
-    const providerId = payload?.list?.[0]?.id || payload?.id || null
+    const adapter = createSmsAdapter(settings)
+    const result = await adapter.send({ to, body: input.body, from: sender })
 
     await updateLog(input.messageLogId, {
       status: 'sent',
-      provider_id: providerId,
+      provider_id: result.messageId,
       error: null,
       sent_at: new Date().toISOString(),
     })
 
-    return { providerId, status: 'sent' }
+    return { providerId: result.messageId, status: 'sent' }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'SMS send failed'
-    console.error('[SMSAPI TEST] Exception caught while sending SMS:', error);
     if (input.messageLogId) {
       await updateLog(input.messageLogId, {
         status: 'failed',
@@ -138,4 +164,3 @@ export async function sendSmsMessage(input: SendSmsInput): Promise<{ providerId:
     throw error
   }
 }
-

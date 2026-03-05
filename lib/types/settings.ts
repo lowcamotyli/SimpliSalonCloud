@@ -118,9 +118,21 @@ export interface SalonSettings {
 
 export interface SmsSettings {
   salon_id: string
+  sms_provider?: 'smsapi' | 'bulkgate'
   smsapi_token?: string
   smsapi_sender_name?: string
+  bulkgate_app_id?: string
+  bulkgate_app_token?: string
   has_smsapi_token?: boolean
+  has_bulkgate_app_token?: boolean
+  reminder_rules?: Array<{
+    id?: string
+    hours_before: number
+    message_template: string
+    require_confirmation: boolean
+    target_blacklisted_only: boolean
+    is_active: boolean
+  }>
 }
 
 export interface NotificationSettings {

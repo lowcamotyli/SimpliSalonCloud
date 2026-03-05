@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/use-services'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,8 @@ import {
   BarChart3,
   CheckCircle2,
   Lock,
-  Unlock
+  Unlock,
+  Wrench,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -68,11 +69,21 @@ export default function ServicesPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
+  const [availableEquipment, setAvailableEquipment] = useState<{ id: string; name: string; type: string }[]>([])
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([])
 
   const { data: servicesData, isLoading } = useServices()
   const createService = useCreateService()
   const updateService = useUpdateService()
   const deleteService = useDeleteService()
+
+  // Load all active equipment once for assignment UI
+  useEffect(() => {
+    fetch('/api/equipment')
+      .then(r => r.json())
+      .then(d => setAvailableEquipment(d.equipment ?? []))
+      .catch(() => {})
+  }, [])
 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
@@ -161,8 +172,13 @@ export default function ServicesPage() {
         price: service.price,
         duration: service.duration,
       })
+      fetch(`/api/services/${service.id}/equipment`)
+        .then(r => r.json())
+        .then(d => setSelectedEquipmentIds((d.equipment ?? []).map((e: any) => e.id)))
+        .catch(() => setSelectedEquipmentIds([]))
     } else {
       setEditingService(null)
+      setSelectedEquipmentIds([])
       form.reset({
         category: activeCategory !== 'all' ? activeCategory : '',
         subcategory: '',
@@ -177,7 +193,16 @@ export default function ServicesPage() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     setEditingService(null)
+    setSelectedEquipmentIds([])
     form.reset()
+  }
+
+  const saveEquipmentAssignment = async (serviceId: string) => {
+    await fetch(`/api/services/${serviceId}/equipment`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ equipment_ids: selectedEquipmentIds }),
+    })
   }
 
   const onSubmit = async (data: ServiceFormData) => {
@@ -192,9 +217,14 @@ export default function ServicesPage() {
           id: editingService.id,
           ...serviceData,
         })
+        await saveEquipmentAssignment(editingService.id)
         toast.success('Usługa zaktualizowana')
       } else {
-        await createService.mutateAsync(serviceData)
+        const result = await createService.mutateAsync(serviceData)
+        const newServiceId = result?.service?.id
+        if (newServiceId) {
+          await saveEquipmentAssignment(newServiceId)
+        }
         toast.success('Usługa dodana')
       }
       handleCloseDialog()
@@ -584,6 +614,42 @@ export default function ServicesPage() {
                 </div>
               </div>
             </div>
+
+            {availableEquipment.length > 0 && (
+              <div className="space-y-2">
+                <Label className="font-bold text-gray-700 flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Wymagany sprzęt
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {availableEquipment.map(eq => (
+                    <label
+                      key={eq.id}
+                      className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedEquipmentIds.includes(eq.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedEquipmentIds(prev => [...prev, eq.id])
+                          } else {
+                            setSelectedEquipmentIds(prev => prev.filter(id => id !== eq.id))
+                          }
+                        }}
+                        className="h-4 w-4 rounded accent-primary"
+                      />
+                      <span className="text-sm font-medium truncate">{eq.name}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedEquipmentIds.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Rezerwacja sprzętu będzie sprawdzana przy każdej nowej wizycie.
+                  </p>
+                )}
+              </div>
+            )}
 
             <DialogFooter className="gap-2">
               <Button type="button" variant="ghost" onClick={handleCloseDialog} className="rounded-xl font-bold">

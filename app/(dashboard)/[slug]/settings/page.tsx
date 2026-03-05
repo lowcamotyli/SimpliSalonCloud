@@ -5,7 +5,7 @@ import { useSettings, useIntegrations } from '@/hooks/use-settings'
 import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
-import { Palette, Building2, Bell, Link as LinkIcon, CheckCircle, Circle, Upload } from 'lucide-react'
+import { Palette, Building2, Bell, Link as LinkIcon, CheckCircle, Circle, Upload, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { THEMES } from '@/lib/types/settings'
 import { useQuery } from '@tanstack/react-query'
@@ -144,6 +144,23 @@ export default function SettingsPage() {
               <div>
                 <p className="font-medium">Import CSV</p>
                 <p className="text-sm text-muted-foreground">Z Booksy, Versum i innych</p>
+              </div>
+            </div>
+          </SettingsCard>
+        </Link>
+
+        <Link href={`${baseUrl}/crm`}>
+          <SettingsCard
+            title="CRM i Blacklist"
+            description="Scoring no-show i progi blokad"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-lg bg-rose-100 flex items-center justify-center">
+                <ShieldAlert className="h-6 w-6 text-rose-600" />
+              </div>
+              <div>
+                <p className="font-medium">Automatyczna ochrona</p>
+                <p className="text-sm text-muted-foreground">Ustawienia czarnej listy</p>
               </div>
             </div>
           </SettingsCard>

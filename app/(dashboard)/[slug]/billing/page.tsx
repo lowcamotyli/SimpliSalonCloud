@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import SmsWalletCard from '@/components/billing/SmsWalletCard'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -489,6 +490,9 @@ export default function BillingPage() {
               </div>
             )}
           </div>
+
+          {/* SMS Wallet */}
+          <SmsWalletCard />
 
           {/* Przelewy24 System */}
           <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl overflow-hidden hover:border-border/80 transition-all duration-500 group">

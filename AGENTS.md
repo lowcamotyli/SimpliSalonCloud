@@ -1,51 +1,153 @@
 # AGENTS.md
 
-## Global Preferences
+## Primary Mode: Claude as Orchestrator
 
-### Operating Mode
-- Use `Gemini-first` execution for context-heavy work and draft implementation.
-- Keep planning and final technical decision-making with Codex.
-- Keep final code review with Codex after Gemini output.
+Claude Code is the primary orchestrator. Codex and Gemini are delegated tools.
+
+### Claude Delegation Rules
+| Task | Tool | Why |
+|------|------|-----|
+| SQL / migrations | Gemini CLI | Deterministic output |
+| New TS/TSX > 150 lines | Gemini CLI | Token efficiency |
+| New TS/TSX 20–150 lines | Codex CLI | Reads local context automatically |
+| Edits to existing files | Claude directly | Edit tool is cheapest |
+| Short fixes / snippets < 30 lines | Claude directly | Always |
+| Code review after generation | Codex CLI (`--ephemeral`) | Read-only, no changes |
+
+### Gemini Prompt Rules (when invoked by Claude or Codex)
+> Coding conventions and output format are in `~/.gemini/GEMINI.md` and `GEMINI.md` (project root).
+> Gemini loads them automatically — do NOT repeat them in prompts.
+> Prompts should contain ONLY: target file path + types/interfaces needed + task specification.
 
 ### Gemini-First Triggers
-- Assume `gemini` CLI is installed, authenticated, and available in PATH.
-- Route work to `gemini` CLI first when at least one condition is true:
-  - file length is 300 lines or more
-  - file size is more than 200 KB
-  - combined analysis context is more than 300 KB
-  - log/report payload is large enough that direct full read is inefficient
+- File length >= 300 lines or size > 200 KB
+- Combined analysis context > 300 KB
+- Pure business logic handlers > 150 lines (no UI)
+
+### Gemini Usage Modes
+- `summary`: default for large-file reading and extraction.
+- `draft`: first-pass code only when the task explicitly needs generation.
+- `direct`: Codex can write directly for small/local edits or when Gemini output is inconsistent.
+
+### Gemini Draft-First (recommended)
+- Use `draft` by default for:
+1. New or heavily refactored UI/API files >= 150 lines.
+2. Large existing files >= 300 lines when changes span multiple sections.
+3. Repetitive CRUD/forms/settings implementations where first-pass speed matters.
+- Keep Codex as final owner for:
+1. Auth, payments, permissions, webhooks, cron, DB migrations.
+2. Final validation: `typecheck`, lint, migration state, and ship/no-ship decision.
 
 ### Responsibility Split
-1. Codex owns planning, solution strategy, and implementation sequencing.
-2. Gemini owns large-file reading, extraction, summarization, and first-pass code drafts/patch drafts.
+1. Claude owns planning, architecture, and orchestration.
+2. Gemini owns large-file reading, summarization, and first-pass code drafts.
 3. Codex owns final review of Gemini-generated code before acceptance.
-4. Codex owns critical debugging and validation for auth, payments, permissions, and DB migrations.
-5. Codex owns final test/lint/typecheck interpretation and ship/no-ship decision.
+4. Codex owns critical debugging for auth, payments, permissions, and DB migrations.
+5. Codex owns final typecheck interpretation and ship/no-ship decision.
 
-### Implementation Policy
-- Default: ask Gemini for draft code or patch proposal first.
-- For implementation requests, require Gemini output as `unified diff` or minimal patch hunks that can be applied directly.
-- Avoid narrative-only "patch proposals" when concrete edits are requested.
-- Codex writes code directly only when Gemini draft fails, is ambiguous, or is lower quality than required.
-- For small and localized edits, Codex may implement directly without Gemini roundtrip.
+### Review and Safety
+- Every Gemini-generated code change must receive Codex review before merge.
+- For auth, payments, permissions, webhooks, and DB migrations -- Gemini output is advisory only.
+- Force direct source verification when:
+  - line-level precision is required
+  - Gemini output is inconsistent with repository state
+  - security-sensitive behavior is involved
 
-### Encoding Discipline
+### Supabase Migration History Playbook
+- If `migration up` fails with `relation already exists` or similar drift symptoms:
+1. Confirm drift source with `supabase migration list --linked`.
+2. Repair only the conflicting version with:
+   `supabase migration repair <version> --status applied --linked --yes`
+3. Re-run:
+   `supabase migration up --linked --yes`
+4. If multiple versions are inconsistent, stop and run `supabase db pull` before further pushes.
+- Never run broad `repair` for many versions without explicit user approval.
+
+---
+
+## Fallback Mode: Codex + Gemini (when Claude is unavailable)
+
+Use this mode when Claude context window is exhausted. Codex takes the orchestrator role.
+
+### Codex as Orchestrator
+- Codex reads `AGENTS.md` (this file) and `CLAUDE.md` for project context.
+- Codex reads local project files -- always tell it which files to read for context.
+- Codex delegates large/complex generation to Gemini.
+
+### Codex Invocation (Windows, project directory)
+```powershell
+codex exec --dangerously-bypass-approvals-and-sandbox 'Read [file1], [file2] for context.
+Do NOT use Gemini -- write the files directly yourself.
+Create FILE: [path]
+[requirements]
+Write directly.'
+```
+
+### Codex -> Gemini Delegation (for large files)
+```powershell
+gemini -p "Generate [path]. Types: [paste interfaces]. Requirements: [spec]" --output-format text 2>/dev/null | grep -v "^Loaded" > [path]
+```
+Then: `head -3 [path]` to verify no prose prefix, `npx tsc --noEmit` for type errors.
+
+### Codex Review (after Gemini output)
+```powershell
+codex exec --ephemeral 'Review [path]. Focus: bugs, security, type correctness. No file modifications.'
+```
+
+### TASK.md — universal task brief
+
+`TASK.md` in project root is the standard way to define work for Codex+Gemini stack.
+Used in three scenarios:
+- **User starts a task directly** with Codex (no Claude involved)
+- **Claude hands off** mid-task when context window is ~70-80% full
+- **User resumes** an interrupted task
+
+**Format:**
+```markdown
+# TASK — [task name] — [date]
+
+## Objective
+[1-2 sentences: what we are building / fixing]
+
+## Context files to read
+- [path] — [why relevant]
+
+## Status
+[x] Done: [file/step]
+[ ] NEXT: [file/step] — [exact spec]
+[ ] TODO: [file/step] — [exact spec]
+
+## Key decisions / constraints
+- [decision or constraint Codex must respect]
+
+## Open risks / assumptions
+- [risk or assumption to verify]
+
+## Resume command
+codex exec --dangerously-bypass-approvals-and-sandbox 'Read TASK.md, [file1], [file2] for context. Do NOT use Gemini -- write directly. [task spec]. Write directly.'
+```
+
+**Starting fresh (user writes TASK.md):**
+- Fill Objective + Context files + TODO items
+- Leave Status empty (no Done items yet)
+- Run the resume command from the bottom
+
+**Claude handoff (context ~70-80% full):**
+- Claude writes TASK.md with current Done/NEXT/TODO status
+- Claude says: "Kontekst się kończy — zapisałem TASK.md. Uruchom komendę z sekcji Resume command."
+- User copies the command and runs it in terminal
+
+---
+
+## Encoding Discipline
 - Prefer ASCII-only edits by default.
 - Use non-ASCII only if the target file already uses it or there is explicit product/content need.
 
-### Review And Safety
-- Every Gemini-generated code change must receive Codex review before merge.
-- For auth, payments, permissions, webhooks, and DB migrations, Gemini output is advisory only until Codex performs direct source verification and final acceptance.
-- Force direct source verification when:
-  - line-level precision is required for exact patching
-  - Gemini output is inconsistent with repository state
-  - security-sensitive or correctness-critical behavior is involved
-
-### Output Discipline
+## Output Discipline
 - When Gemini is used, state it briefly and list analyzed files.
 - Keep extracted snippets minimal and focused on decisions, patching, and validation.
 
-### Context Handoff
-- When conversation context becomes long and there is risk of context-window loss, proactively warn the user before quality degrades.
-- Provide a ready-to-paste handoff summary for a new chat window.
-- Handoff summary should include: objective, completed work, pending work, key files changed, key commands/tests run, and open risks/assumptions.
+## Context Handoff (Claude -> user)
+- When conversation context becomes long, Claude proactively warns before quality degrades.
+- Provides a ready-to-paste handoff summary for a new chat window.
+- Handoff summary includes: objective, completed work, pending work, key files changed, key commands run, open risks/assumptions.

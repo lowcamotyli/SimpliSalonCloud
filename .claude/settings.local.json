@@ -1,6 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
+      "Bash(gemini:*)",
+      "Bash(codex:*)",
       "Bash(xargs:*)",
       "Bash(grep:*)",
       "Bash(ls:*)",
@@ -77,7 +80,35 @@
       "Bash(npx vercel env add CRON_SECRET production)",
       "Bash(npx vercel env rm CRON_SECRET production --yes)",
       "Bash(npx vercel --prod)",
-      "Bash(printf \"f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21\")"
+      "Bash(printf \"f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21\")",
+      "Bash(npx supabase migration list)",
+      "Bash(npx supabase db push)",
+      "Bash(vercel env ls)",
+      "Bash(npx vercel env ls)",
+      "Bash(npx vercel env add LOG_LEVEL production)",
+      "Bash(vercel --version)",
+      "Bash(npx vercel env pull .env.vercel --yes)",
+      "Bash(npx vercel env add GOOGLE_REDIRECT_URI production)",
+      "Bash(npx vercel env rm GOOGLE_REDIRECT_URI production)",
+      "Bash(npx vercel env rm GOOGLE_REDIRECT_URI production --yes)",
+      "Bash(npx vercel env rm NEXT_PUBLIC_APP_URL production --yes)",
+      "Bash(npx vercel env add NEXT_PUBLIC_APP_URL production)",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(npx vercel logs --since 10m)",
+      "Bash(npx vercel logs --since 3m)",
+      "Bash(npx vercel logs --since 5m)",
+      "Bash(npx vercel logs --since 1m)",
+      "Bash(npx vercel logs --since 30m)",
+      "Bash(npx vercel logs --since 15m)",
+      "Bash(npx vercel logs --since 2h)",
+      "Bash(npx vercel logs --since 24h)",
+      "Bash(npx vercel logs --since 8h)",
+      "Bash(npx vercel logs --help)",
+      "Bash(npx vercel logs --environment production --limit 200)",
+      "Bash(npx supabase db push --include-all)",
+      "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100000_equipment_v1.sql\")",
+      "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100001_equipment_v2.sql\")",
+      "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100002_equipment_v3.sql\")"
     ]
   }
 }

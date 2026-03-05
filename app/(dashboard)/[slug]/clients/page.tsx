@@ -32,7 +32,10 @@ import {
   Calendar,
   ChevronRight,
   User,
-  MessageSquare
+  MessageSquare,
+  AlertTriangle,
+  Ban,
+  ShieldCheck
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -64,6 +67,21 @@ type ClientMessageLog = {
   body: string
   status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced'
   crm_campaigns?: { name: string | null } | null
+}
+
+type BlacklistStatus = 'clean' | 'warned' | 'blacklisted'
+
+type ClientViolation = {
+  id: string
+  violation_type: 'no_show' | 'late_cancel'
+  occurred_at: string
+  booking_id: string | null
+  booking?: {
+    id: string
+    booking_date: string
+    booking_time: string
+    status: string
+  } | null
 }
 
 const clientFormSchema = z.object({
@@ -143,6 +161,17 @@ export default function ClientsPage() {
     },
   })
 
+  const clientViolationsQuery = useQuery<{ violations: ClientViolation[]; client: any }>({
+    queryKey: ['client-violations', selectedClient?.id],
+    enabled: !!selectedClient?.id && isDialogOpen,
+    queryFn: async () => {
+      const res = await fetch(`/api/clients/${selectedClient.id}/violations?limit=20`)
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Nie udalo sie pobrac historii naruszen')
+      return payload
+    },
+  })
+
   const stats = useMemo(() => {
     if (!clients) return { total: 0, avgVisits: 0, topClient: null }
     const total = clients.length
@@ -205,6 +234,56 @@ export default function ClientsPage() {
       refetch()
     } catch (error) {
       toast.error('Nie udało się usunąć klienta')
+    }
+  }
+
+  const getBlacklistBadge = (status: BlacklistStatus) => {
+    if (status === 'blacklisted') {
+      return (
+        <Badge variant="destructive" className="ml-2 gap-1">
+          <Ban className="h-3 w-3" />
+          Czarna lista
+        </Badge>
+      )
+    }
+
+    if (status === 'warned') {
+      return (
+        <Badge className="ml-2 gap-1 bg-amber-100 text-amber-700 hover:bg-amber-100">
+          <AlertTriangle className="h-3 w-3" />
+          Ostrzezenie
+        </Badge>
+      )
+    }
+
+    return null
+  }
+
+  const handleBlacklistAction = async (clientId: string, action: 'add' | 'remove') => {
+    const reasonPrompt = action === 'add'
+      ? 'Powod dodania do czarnej listy:'
+      : 'Powod usuniecia z czarnej listy (opcjonalnie):'
+    const reason = window.prompt(reasonPrompt, '')
+    if (reason === null) return
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}/blacklist`, {
+        method: action === 'add' ? 'POST' : 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason || '' }),
+      })
+
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Nie udalo sie zaktualizowac blacklisty')
+
+      const updatedClient = payload.client
+      setSelectedClient((prev: any) => prev ? { ...prev, ...updatedClient } : prev)
+      refetch()
+      clientViolationsQuery.refetch()
+
+      toast.success(action === 'add' ? 'Klient dodany do czarnej listy' : 'Klient usuniety z czarnej listy')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Blad aktualizacji blacklisty')
     }
   }
 
@@ -441,9 +520,12 @@ export default function ClientsPage() {
                           <User className="h-6 w-6" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                            {client.full_name}
-                          </h3>
+                          <div className="flex items-center">
+                            <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                              {client.full_name}
+                            </h3>
+                            {getBlacklistBadge((client.blacklist_status || 'clean') as BlacklistStatus)}
+                          </div>
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             ID: {client.id.slice(0, 8)}
                           </p>
@@ -637,6 +719,79 @@ export default function ClientsPage() {
                     className="glass h-11 rounded-xl focus:bg-white"
                   />
                 </div>
+
+                {selectedClient && (
+                  <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-gray-800">Czarna Lista</div>
+                      {getBlacklistBadge((selectedClient.blacklist_status || 'clean') as BlacklistStatus) || (
+                        <Badge variant="secondary" className="gap-1">
+                          <ShieldCheck className="h-3 w-3" />
+                          Czysty status
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-gray-600">
+                      <p>No-show w systemie: {selectedClient.no_show_count || 0}</p>
+                      {selectedClient.blacklisted_at && (
+                        <p>Na czarnej liscie od: {new Date(selectedClient.blacklisted_at).toLocaleDateString()}</p>
+                      )}
+                      {selectedClient.blacklist_reason && (
+                        <p>Powod: {selectedClient.blacklist_reason}</p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {(selectedClient.blacklist_status || 'clean') !== 'blacklisted' ? (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleBlacklistAction(selectedClient.id, 'add')}
+                        >
+                          Dodaj do czarnej listy
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBlacklistAction(selectedClient.id, 'remove')}
+                        >
+                          Usun z czarnej listy
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Historia naruszen</p>
+                      {clientViolationsQuery.isLoading ? (
+                        <p className="text-xs text-gray-500">Ladowanie...</p>
+                      ) : (clientViolationsQuery.data?.violations || []).length === 0 ? (
+                        <p className="text-xs text-gray-500">Brak naruszen.</p>
+                      ) : (
+                        <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                          {(clientViolationsQuery.data?.violations || []).map((violation) => (
+                            <div key={violation.id} className="rounded-md bg-white border p-2 text-xs">
+                              <p className="font-semibold">
+                                {violation.violation_type === 'no_show' ? 'No-show' : 'Pozna anulacja'}
+                              </p>
+                              <p className="text-gray-500">
+                                {new Date(violation.occurred_at).toLocaleString()}
+                              </p>
+                              {violation.booking && (
+                                <p className="text-gray-500">
+                                  Rezerwacja: {violation.booking.booking_date} {violation.booking.booking_time}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <DialogFooter className="gap-2">

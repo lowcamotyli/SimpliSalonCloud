@@ -51,8 +51,21 @@ export const updateSettingsSchema = z.object({
 })
 
 export const updateSmsSettingsSchema = z.object({
+    sms_provider: z.enum(['smsapi', 'bulkgate']).optional(),
     smsapi_token: z.string().optional().or(z.literal('')),
     smsapi_sender_name: smsSenderNameSchema.optional().or(z.literal('')),
+    bulkgate_app_id: z.string().max(120).optional().or(z.literal('')),
+    bulkgate_app_token: z.string().optional().or(z.literal('')),
+    reminder_rules: z.array(
+      z.object({
+        id: z.string().uuid().optional(),
+        hours_before: z.number().int().positive(),
+        message_template: z.string().trim().min(1).max(1000),
+        require_confirmation: z.boolean().default(true),
+        target_blacklisted_only: z.boolean().default(false),
+        is_active: z.boolean().default(true),
+      })
+    ).optional(),
 })
 
 export const testSmsSettingsSchema = z.object({

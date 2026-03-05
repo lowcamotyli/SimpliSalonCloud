@@ -5,6 +5,10 @@ import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, ConflictError, UnauthorizedError, ValidationError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/lib/equipment/availability'
+import { generateFormToken } from '@/lib/forms/token'
+import { hasFeature } from '@/lib/features'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 
 // GET /api/bookings - List bookings with optional filters
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -148,17 +152,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // 1. Get or create client
   let clientId = validatedData.client_id
+  let bookingWarning: string | null = null
 
   if (!clientId && validatedData.clientName && validatedData.clientPhone) {
     const { data: existingClient } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, blacklist_status')
       .eq('salon_id', salonProfile.salon_id)
       .eq('phone', validatedData.clientPhone)
       .maybeSingle()
 
     if (existingClient) {
       clientId = (existingClient as any).id
+      if ((existingClient as any).blacklist_status === 'blacklisted') {
+        bookingWarning = 'Ten klient jest na czarnej liscie. Wizyte mozna dodac tylko po decyzji recepcji.'
+      }
     } else {
       const { data: codeData, error: codeError } = await supabase
         .rpc('generate_client_code', { salon_uuid: salonProfile.salon_id } as any)
@@ -199,6 +207,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw new ValidationError('Client ID or client details required')
   }
 
+  if (clientId && !bookingWarning) {
+    const { data: selectedClient, error: clientLookupError } = await supabase
+      .from('clients')
+      .select('id, blacklist_status')
+      .eq('id', clientId)
+      .eq('salon_id', salonProfile.salon_id)
+      .is('deleted_at', null)
+      .maybeSingle()
+
+    if (clientLookupError) throw clientLookupError
+    if (!selectedClient) throw new ValidationError('Client not found in this salon')
+
+    if ((selectedClient as any).blacklist_status === 'blacklisted') {
+      bookingWarning = 'Ten klient jest na czarnej liscie. Wizyte mozna dodac tylko po decyzji recepcji.'
+    }
+  }
+
   // 2. Get service details
   const { data: service, error: serviceError } = await supabase
     .from('services')
@@ -208,8 +233,24 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (serviceError) throw serviceError
 
-  // 3. Atomically check slot + create booking (eliminates race condition)
+  // 3. Check equipment availability for the service
   const duration = validatedData.duration || (service as any).duration || 30
+  const startsAt = new Date(`${validatedData.date}T${validatedData.start_time}`)
+  const endsAt = new Date(startsAt.getTime() + duration * 60_000)
+  const requiredEquipment = await getRequiredEquipmentForService(validatedData.service_id as string)
+  if (requiredEquipment.length > 0) {
+    const availability = await checkEquipmentAvailability(requiredEquipment, startsAt, endsAt)
+    const conflicts = availability.filter(a => !a.is_available)
+    if (conflicts.length > 0) {
+      return NextResponse.json({
+        error: 'EQUIPMENT_CONFLICT',
+        message: 'Wybrany termin jest niedostepny – sprzet jest juz zajety.',
+        conflictingEquipment: conflicts.map(c => c.equipment_id),
+      }, { status: 409 })
+    }
+  }
+
+  // 4. Atomically check slot + create booking (eliminates race condition)
 
   const { data: bookingRows, error: bookingError } = await (supabase as any)
     .rpc('create_booking_atomic', {
@@ -243,8 +284,28 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const booking = bookingData as any
 
-  // 5. Increment client visit count
+  // 5. Create equipment bookings
+  if (requiredEquipment.length > 0) {
+    await supabase.from('equipment_bookings').insert(
+      requiredEquipment.map(eqId => ({
+        booking_id: booking.id,
+        equipment_id: eqId,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+      }))
+    )
+  }
+
+  // 6. Increment client visit count
   await supabase.rpc('increment_client_visits', { client_uuid: clientId } as any)
+
+  // 7. Send form links for service forms (fire-and-forget, non-blocking)
+  void sendFormLinksForBooking({
+    booking,
+    salonId: salonProfile.salon_id,
+    clientId,
+    serviceId: validatedData.service_id as string,
+  }).catch(err => logger.warn('Form link dispatch failed', err))
 
   const executionTime = Date.now() - startTime
   logger.info('Booking created successfully', {
@@ -259,5 +320,50 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     })
   }
 
-  return NextResponse.json({ booking }, { status: 201 })
+  return NextResponse.json({ booking, warning: bookingWarning }, { status: 201 })
 })
+
+async function sendFormLinksForBooking({
+  booking, salonId, clientId, serviceId,
+}: { booking: any; salonId: string; clientId: string; serviceId: string }) {
+  const adminSupabase = createAdminSupabaseClient()
+
+  const { data: serviceFormRows } = await adminSupabase
+    .from("service_forms")
+    .select("form_template_id")
+    .eq("service_id", serviceId)
+
+  if (!serviceFormRows || serviceFormRows.length === 0) return
+
+  const [{ data: salon }, { data: client }] = await Promise.all([
+    adminSupabase.from("salons").select("features").eq("id", salonId).single(),
+    adminSupabase.from("clients").select("phone").eq("id", clientId).single(),
+  ])
+
+  const fillTokenExp = new Date(Date.now() + 72 * 3600 * 1000).toISOString()
+
+  for (const row of serviceFormRows) {
+    const token = await generateFormToken({
+      formTemplateId: (row as any).form_template_id,
+      clientId,
+      bookingId: booking.id,
+      salonId,
+    })
+
+    await adminSupabase.from("client_forms").insert({
+      client_id: clientId,
+      booking_id: booking.id,
+      form_template_id: (row as any).form_template_id,
+      answers: Buffer.from("{}").toString("hex"),
+      answers_iv: Buffer.alloc(12).toString("hex"),
+      answers_tag: Buffer.alloc(16).toString("hex"),
+      fill_token: token,
+      fill_token_exp: fillTokenExp,
+    } as any)
+
+    if (hasFeature((salon as any)?.features, "sms_chat") && (client as any)?.phone) {
+      const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
+      logger.info("Form link ready", { link: `${appUrl}/forms/fill/${token}`, clientId })
+    }
+  }
+}

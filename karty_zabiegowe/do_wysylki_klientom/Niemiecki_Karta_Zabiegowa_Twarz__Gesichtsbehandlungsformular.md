@@ -1,0 +1,222 @@
+﻿# Niemiecki: Karta Zabiegowa Twarz / Gesichtsbehandlungsformular
+
+Zweryfikuj zawartość karty zabiegowej dla zabiegu  Niemiecki: Karta Zabiegowa Twarz / Gesichtsbehandlungsformular
+Werden Sie derzeit medizinisch behandelt?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Nehmen Sie regelmäßig Medikamente ein?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Haben Sie Allergien?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Haben Sie in den letzten 6 Monaten Isotretinoin (Accutane) oder andere Akne-Medikamente/-Cremes eingenommen oder verwenden Sie diese derzeit?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Wann möchten Sie Ergebnisse der Behandlung sehen?
+Sofort
+In etwa einem Monat
+In etwa drei Monaten
+Ich habe keinen bestimmten Zeitrahmen
+Haben Sie jemals eine der folgenden Erkrankungen gehabt?
+Krebs
+Herzkrankheit
+Herz-Kreislauf-Erkrankungen
+Gefäßerkrankungen
+Lungenerkrankung
+Magen-Darm-Erkrankungen
+Lebererkrankung
+Harnwegserkrankungen
+Stoffwechselstörungen
+Schilddrüsenerkrankungen
+Hormonelle Störungen
+Erkrankungen des Nervensystems
+Blut- und Gerinnungsstörungen
+Augenkrankheiten
+Keiner
+Haben Sie jemals eine der folgenden Erkrankungen gehabt?
+Knochen- und Gelenkerkrankungen
+Infektionskrankheiten
+Hauterkrankungen
+Psychosomatische Störungen
+Keine
+Falls Sie eine der oben genannten Erkrankungen haben, geben Sie bitte die genaue Bezeichnung an: ______
+Falls keine, geben Sie bitte „X“ ein.
+Haben Sie bereits invasive kosmetische Eingriffe durchführen lassen?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Haben Sie bereits ästhetische Behandlungen durchführen lassen?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Traten nach kosmetischen oder ästhetischen Eingriffen oder nach der Verwendung eines Kosmetikprodukts bisher Nebenwirkungen auf?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Was sind derzeit Ihre größten Hautpflegeprobleme?
+Schlaffe Haut
+Verfärbungen
+Aknenarben
+Falten
+Mangel an Feuchtigkeit
+Sichtbare Kapillaren
+Akne
+Hängende Gesichtskonturen
+Fettige T-Zone
+Hautwucherungen (z. B. Fibrome)
+Narben
+Befolgen Sie Ihre morgendliche Hautpflegeroutine jeden Tag?
+Ja
+Nein
+Ich versuche es
+12. Befolgen Sie Ihre abendliche Hautpflegeroutine jeden Tag?
+Ja
+Nein
+Ich versuche es
+Welche Produkte verwenden Sie in Ihrer morgendlichen Hautpflegeroutine? Bitte alle zutreffenden ankreuzen:
+Mizellenwasser
+Reinigungsöl
+Augen-Make-up-Entferner
+Reinigungsschaum
+Reinigungsgel
+Toner
+Peeling
+Serum
+Gesichts- und Halscreme
+Augencreme
+Sonnenschutz SPF 50Foundation
+Gesichtsmasken
+Retinol
+Welche Produkte verwenden Sie in Ihrer abendlichen Hautpflegeroutine? Bitte alle zutreffenden ankreuzen:
+Mizellenwasser
+Reinigungsöl
+Augen-Make-up-Entferner
+Reinigungsschaum
+Reinigungsgel
+Toner
+Peeling
+Serum
+Gesichts- und Halscreme
+Augencreme
+Gesichtsmasken
+Retinol
+Verwenden Sie Hautpflegeprodukte mit Wirkstoffen (z. B. Vitamin C, Retinol, Säuren, Niacinamid, Benzoylperoxid, Hyaluronsäure, Peptide, Extrakte usw.)?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Nutzen Sie Sonnenschutz?
+Ja, jeden Morgen und mehrmals täglich
+Ja, aber nur einmal täglich
+Ja, aber nur im Sommer
+Gelegentlich
+Nein
+Wie bewerten Sie den aktuellen Zustand Ihrer Haut?
+Sehr gut
+Gut
+Verbesserungsbedürftig
+Rauchen Sie Zigaretten?
+Ja
+Nein
+Wenn ja, wie viele pro Tag oder wenn nein, geben Sie bitte „X“ ein.
+Haben Sie Prothesen, Implantate, einen Herzschrittmacher oder eine Spirale?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Wie viel Wasser trinken Sie täglich?
+Weniger als 1 Liter1 bis 1,5 Liter1,5 bis 2 Liter2 bis 2,5 Liter
+Mehr als 2,5 Liter
+21. Haben Sie bereits eine hormonelle Behandlung durchführen lassen?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Wie viele Stunden schlafen Sie in der Regel?
+Weniger als 7 Stunden7 bis 8 Stunden8 bis 9 Stunden
+Mehr als 9 Stunden
+Verbringen Sie tagsüber mehr Zeit drinnen oder draußen?
+In klimatisierten Innenräumen
+In nicht klimatisierten Innenräumen
+Im Freien
+Besuchen Sie regelmäßig ein Solarium?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Sind Sie schwanger?
+Ja
+Nein
+Nicht zutreffend
+Stillen Sie?
+Ja
+Nein
+Nicht zutreffend
+Haben Sie Verdauungs- oder Darmprobleme?
+Ja
+Nein
+Wenn ja, bitte spezifizieren oder wenn nein, geben Sie bitte „X“ ein.
+Betreiben Sie regelmäßig Sport? Falls ja, geben Sie bitte die Häufigkeit an:
+0-mal pro Woche1-2-mal pro Woche3-4-mal pro Woche
+Mehr als 5-mal pro Woche
+Wenn Sie Sport treiben, welche Art bevorzugen Sie?
+Nicht zutreffend
+Krafttraining
+Cardio
+Dehnen/Yoga/Pilates
+Andere
+Nehmen Sie Nahrungsergänzungsmittel ein? Bitte aus den folgenden Optionen auswählen:
+Vitamin DVitamin AVitamin EB-Vitamine
+Vitamin COmega 3Eisen
+Magnesium
+Biotin
+Kollagen
+Ich nehme keine Nahrungsergänzungsmittel
+Falls Sie andere Ergänzungsmittel einnehmen, bitte angeben: ______. Falls nicht, geben Sie bitte „X“ ein.
+Bitte alles ankreuzen, was auf Ihre Ernährung zutrifft:
+Vegetarische Ernährung
+Vegane Ernährung
+Ich esse Fleisch
+Ich vermeide Süßigkeiten und Fast Food
+Ich konsumiere viele Süßigkeiten und Fast Food
+Ernährung reich an Obst und Gemüse
+Ernährung arm an Obst und Gemüse
+Eiweißreiche Ernährung
+Kalorienarme Ernährung
+Kalorienreiche Ernährung
+Ketogene Ernährung
+Traditionelle polnische Küche
+Ich achte nicht besonders auf meine Ernährung
+Ernährung reich an Gluten (Nudeln, Brot, Kuchen)
+Zusätzliche Informationen/Anmerkungen: ______
+Falls keine, geben Sie bitte „X“ ein.
+Wyrażam zgodę na przetwarzanie moich danych dotyczących zdrowia na potrzeby przeprowadzenia zabiegu.
+
+## Klauzula informacyjna RODO
+
+KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest BRAVE EDUCATION SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:
+Jeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: redsxiii@gmail.comW jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?
+CEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty
+Planów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty
+Planów
+PODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty
+Planu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).
+SPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail redsxiii@gmail.com- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).
+Do czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.
+CEL: Odpowiedzi na zapytania
+PODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).
+SPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail redsxiii@gmail.comW przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).
+CEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów
+PODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.
+CEL: Reklamacje
+PODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).
+SPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail redsxiii@gmail.com
+Czy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.
+Jak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.
+Gdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.
+Komu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).
+Jakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail redsxiii@gmail.com lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.
+Jeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.
+ZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.
+

@@ -5,6 +5,7 @@ import { publicBookingSchema } from '@/lib/validators/public-booking.validators'
 import { getSalonId } from '@/lib/utils/salon'
 import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 import { logger } from '@/lib/logger'
+import { validateClientCanBook } from '@/lib/booking/validation'
 
 export async function POST(request: NextRequest) {
     try {
@@ -75,6 +76,13 @@ export async function POST(request: NextRequest) {
             .single()
         logger.info('[PUBLIC_BOOKINGS] fetch service end', { hasService: !!service })
 
+        // pobierz wymagany sprzęt dla usługi
+        const { data: serviceEquipmentRows } = await supabase
+            .from('service_equipment')
+            .select('equipment_id')
+            .eq('service_id', serviceId)
+        const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((r: any) => r.equipment_id)
+
         if (serviceError) {
             logger.error('[PUBLIC_BOOKINGS] service fetch error', serviceError)
             return NextResponse.json({ error: 'Service fetch failed' }, { status: 500 })
@@ -143,6 +151,15 @@ export async function POST(request: NextRequest) {
         if (!client) {
             logger.error('[PUBLIC_BOOKINGS] client missing after create')
             return NextResponse.json({ error: 'Client not resolved' }, { status: 500 })
+        }
+
+        const bookingEligibility = await validateClientCanBook(phone, salonId)
+        if (!bookingEligibility.allowed) {
+            logger.warn('[PUBLIC_BOOKINGS] blocked blacklisted client', { phone, salonId })
+            return NextResponse.json(
+                { error: bookingEligibility.message || 'Booking unavailable for this client' },
+                { status: 403 }
+            )
         }
 
         // resolve employee
@@ -225,6 +242,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
         }
 
+        // sprawdź dostępność sprzętu
+        if (requiredEquipmentIds.length > 0) {
+            const startsAt = new Date(`${date}T${time}`)
+            const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+            const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
+                p_equipment_ids: requiredEquipmentIds,
+                p_starts_at: startsAt.toISOString(),
+                p_ends_at: endsAt.toISOString(),
+                p_exclude_booking_id: null,
+            } as any)
+            const equipmentConflicts = (equipmentAvailability ?? []).filter((a: any) => !a.is_available)
+            if (equipmentConflicts.length > 0) {
+                logger.warn('[PUBLIC_BOOKINGS] equipment conflict', { date, time, conflicts: equipmentConflicts.length })
+                return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
+            }
+        }
+
         // create booking
         logger.info('[PUBLIC_BOOKINGS] create booking start')
         const { data: booking, error: bookingError } = await supabase
@@ -253,6 +287,20 @@ export async function POST(request: NextRequest) {
         if (!booking) {
             logger.error('[PUBLIC_BOOKINGS] booking create returned null')
             return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
+        }
+
+        // zarezerwuj sprzęt
+        if (requiredEquipmentIds.length > 0) {
+            const startsAt = new Date(`${date}T${time}`)
+            const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+            await supabase.from('equipment_bookings').insert(
+                requiredEquipmentIds.map((eqId: string) => ({
+                    booking_id: booking.id,
+                    equipment_id: eqId,
+                    starts_at: startsAt.toISOString(),
+                    ends_at: endsAt.toISOString(),
+                }))
+            )
         }
 
         logger.info('[PUBLIC_BOOKINGS] success', { bookingId: booking.id })

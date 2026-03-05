@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useUpdateEmployeeRole, useLinkEmployeeUser } from '@/hooks/use-employees'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScheduleTab } from '@/components/employees/schedule-tab'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -299,166 +301,187 @@ export default function EmployeesPage() {
         </Card>
       </div>
 
-      {/* Search Bar */}
-      <Card className="p-4 glass border-none shadow-xl shadow-slate-200/50">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <Input
-            placeholder="Szukaj po imieniu, nazwisku, emailu lub telefonie..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+      <Tabs defaultValue="lista">
+        <TabsList className="mb-2">
+          <TabsTrigger value="lista">Lista pracowników</TabsTrigger>
+          <TabsTrigger value="grafik">Grafik</TabsTrigger>
+        </TabsList>
+
+        {/* ── ZAKŁADKA: GRAFIK ── */}
+        <TabsContent value="grafik">
+          <ScheduleTab
+            employees={(employees ?? []).map(e => ({
+              id: e.id,
+              first_name: e.first_name,
+              last_name: (e as any).last_name ?? null,
+            }))}
           />
-        </div>
-      </Card>
+        </TabsContent>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium animate-pulse">Ładowanie zespołu...</p>
-        </div>
-      ) : filteredEmployees.length > 0 ? (
-        <motion.div
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredEmployees.map((employee) => (
-              <motion.div key={employee.id} layout variants={itemVariants}>
-                <Card className="group relative overflow-hidden p-6 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border-2 border-white shadow-inner">
-                      {employee.avatar_url ? (
-                        <Image
-                          src={employee.avatar_url}
-                          alt={employee.first_name}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary text-3xl font-black">
-                          {employee.first_name[0]}{employee.last_name?.[0] || ''}
+        {/* ── ZAKŁADKA: LISTA ── */}
+        <TabsContent value="lista" className="space-y-6">
+          {/* Search Bar */}
+          <Card className="p-4 glass border-none shadow-xl shadow-slate-200/50">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Szukaj po imieniu, nazwisku, emailu lub telefonie..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+              />
+            </div>
+          </Card>
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 space-y-4">
+              <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
+              <p className="text-gray-500 font-medium animate-pulse">Ładowanie zespołu...</p>
+            </div>
+          ) : filteredEmployees.length > 0 ? (
+            <motion.div
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredEmployees.map((employee) => (
+                  <motion.div key={employee.id} layout variants={itemVariants}>
+                    <Card className="group relative overflow-hidden p-6 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10">
+                      <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border-2 border-white shadow-inner">
+                          {employee.avatar_url ? (
+                            <Image
+                              src={employee.avatar_url}
+                              alt={employee.first_name}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary text-3xl font-black">
+                              {employee.first_name[0]}{employee.last_name?.[0] || ''}
+                            </div>
+                          )}
+
+                          {employee.active ? (
+                            <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
+                          ) : (
+                            <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white" />
+                          )}
                         </div>
-                      )}
 
-                      {employee.active ? (
-                        <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
-                      ) : (
-                        <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white" />
-                      )}
-                    </div>
-
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-black text-foreground">
-                        {employee.first_name} {employee.last_name}
-                      </h3>
-                      <div className="flex flex-wrap items-center justify-center gap-2">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
-                          Kod: {employee.employee_code}
-                        </p>
-                        {employee.role && (
-                          <Badge variant="secondary" className="uppercase tracking-wider text-[10px]">
-                            {employee.role}
-                          </Badge>
-                        )}
-                        {!employee.user_id && (
-                          <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
-                            Brak konta
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="w-full space-y-2 py-4">
-                      {employee.email && (
-                        <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                          <Mail className="h-4 w-4 text-gray-400" />
-                          <span className="truncate">{employee.email}</span>
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-black text-foreground">
+                            {employee.first_name} {employee.last_name}
+                          </h3>
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
+                              Kod: {employee.employee_code}
+                            </p>
+                            {employee.role && (
+                              <Badge variant="secondary" className="uppercase tracking-wider text-[10px]">
+                                {employee.role}
+                              </Badge>
+                            )}
+                            {!employee.user_id && (
+                              <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
+                                Brak konta
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {employee.phone && (
-                        <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          <span>{employee.phone}</span>
+
+                        <div className="w-full space-y-2 py-4">
+                          {employee.email && (
+                            <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                              <Mail className="h-4 w-4 text-gray-400" />
+                              <span className="truncate">{employee.email}</span>
+                            </div>
+                          )}
+                          {employee.phone && (
+                            <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                              <Phone className="h-4 w-4 text-gray-400" />
+                              <span>{employee.phone}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className="w-full grid grid-cols-3 gap-2 p-3 bg-gray-50 rounded-xl">
-                      <div className="text-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase">Próg</p>
-                        <p className="text-xs font-bold text-gray-700">{Math.round(employee.base_threshold)} zł</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase">Podst.</p>
-                        <p className="text-xs font-bold text-gray-700">{Math.round(employee.base_salary)} zł</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase">Prow.</p>
-                        <p className="text-xs font-bold text-emerald-600">{(employee.commission_rate * 100).toFixed(0)}%</p>
-                      </div>
-                    </div>
+                        <div className="w-full grid grid-cols-3 gap-2 p-3 bg-gray-50 rounded-xl">
+                          <div className="text-center">
+                            <p className="text-[10px] font-black text-gray-400 uppercase">Próg</p>
+                            <p className="text-xs font-bold text-gray-700">{Math.round(employee.base_threshold)} zł</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[10px] font-black text-gray-400 uppercase">Podst.</p>
+                            <p className="text-xs font-bold text-gray-700">{Math.round(employee.base_salary)} zł</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[10px] font-black text-gray-400 uppercase">Prow.</p>
+                            <p className="text-xs font-bold text-emerald-600">{(employee.commission_rate * 100).toFixed(0)}%</p>
+                          </div>
+                        </div>
 
-                    <div className="pt-2 w-full flex flex-col gap-2">
-                      <Button
-                        variant="ghost"
-                        className="w-full rounded-xl font-bold bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all shadow-none"
-                        onClick={() => handleEdit(employee)}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edytuj profil
-                      </Button>
-                      {isOwnerOrManager() && (
-                        <Button
-                          variant="outline"
-                          className="w-full rounded-xl font-bold"
-                          onClick={() => handleOpenRoleDialog(employee)}
-                        >
-                          <ShieldCheck className="mr-2 h-4 w-4" />
-                          Zmień rolę
-                        </Button>
-                      )}
-                      {isOwnerOrManager() && !employee.user_id && (
-                        <Button
-                          variant="outline"
-                          className="w-full rounded-xl font-bold text-amber-700 border-amber-200 hover:bg-amber-50"
-                          onClick={() => handleOpenLinkDialog(employee)}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          Powiąż konto
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      ) : (
-        <Card className="flex flex-col items-center justify-center py-24 px-6 text-center glass border-dashed border-2 border-gray-200">
-          <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6">
-            {search ? <Search className="h-10 w-10 text-gray-300" /> : <Sparkles className="h-10 w-10 text-gray-300" />}
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {search ? 'Nie znaleziono pracowników' : 'Brak zespołu'}
-          </h3>
-          <p className="text-gray-500 max-w-sm mb-8">
-            {search
-              ? 'Spróbuj zmienić parametry wyszukiwania.'
-              : 'W Twoim salonie nie ma jeszcze dodanych pracowników. Dodaj pierwszego członka zespołu!'}
-          </p>
-          <Button
-            variant={search ? "outline" : "default"}
-            onClick={search ? () => setSearch('') : handleAdd}
-            className={cn("rounded-xl font-bold", !search && "gradient-button")}
-          >
-            {search ? 'Wyczyść wyszukiwanie' : 'Dodaj pracownika'}
-          </Button>
-        </Card>
-      )}
+                        <div className="pt-2 w-full flex flex-col gap-2">
+                          <Button
+                            variant="ghost"
+                            className="w-full rounded-xl font-bold bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all shadow-none"
+                            onClick={() => handleEdit(employee)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edytuj profil
+                          </Button>
+                          {isOwnerOrManager() && (
+                            <Button
+                              variant="outline"
+                              className="w-full rounded-xl font-bold"
+                              onClick={() => handleOpenRoleDialog(employee)}
+                            >
+                              <ShieldCheck className="mr-2 h-4 w-4" />
+                              Zmień rolę
+                            </Button>
+                          )}
+                          {isOwnerOrManager() && !employee.user_id && (
+                            <Button
+                              variant="outline"
+                              className="w-full rounded-xl font-bold text-amber-700 border-amber-200 hover:bg-amber-50"
+                              onClick={() => handleOpenLinkDialog(employee)}
+                            >
+                              <User className="mr-2 h-4 w-4" />
+                              Powiąż konto
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            <Card className="flex flex-col items-center justify-center py-24 px-6 text-center glass border-dashed border-2 border-gray-200">
+              <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6">
+                {search ? <Search className="h-10 w-10 text-gray-300" /> : <Sparkles className="h-10 w-10 text-gray-300" />}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {search ? 'Nie znaleziono pracowników' : 'Brak zespołu'}
+              </h3>
+              <p className="text-gray-500 max-w-sm mb-8">
+                {search
+                  ? 'Spróbuj zmienić parametry wyszukiwania.'
+                  : 'W Twoim salonie nie ma jeszcze dodanych pracowników. Dodaj pierwszego członka zespołu!'}
+              </p>
+              <Button
+                variant={search ? "outline" : "default"}
+                onClick={search ? () => setSearch('') : handleAdd}
+                className={cn("rounded-xl font-bold", !search && "gradient-button")}
+              >
+                {search ? 'Wyczyść wyszukiwanie' : 'Dodaj pracownika'}
+              </Button>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

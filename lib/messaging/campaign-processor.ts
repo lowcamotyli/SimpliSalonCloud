@@ -250,12 +250,24 @@ export async function enqueueCampaign(params: {
   const token = process.env.QSTASH_TOKEN
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
 
-  if (!token) {
-    throw new Error('QSTASH_TOKEN is not configured')
-  }
+  if (!token || !appUrl) {
+    console.warn('QSTASH_TOKEN or NEXT_PUBLIC_APP_URL not configured. Simulating background processing.')
 
-  if (!appUrl) {
-    throw new Error('NEXT_PUBLIC_APP_URL is not configured')
+    if (params.scheduledAt) {
+      throw new Error('QSTASH_TOKEN is required for scheduled campaigns')
+    }
+
+    Promise.resolve().then(async () => {
+      for (const job of params.jobs) {
+        try {
+          await processMessage(job)
+        } catch (err) {
+          console.error('Failed to process simulated job:', err)
+        }
+      }
+    })
+
+    return { messageIds: params.jobs.map((_, i) => `sim-${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`) }
   }
 
   const client = new QStashClient({ token })

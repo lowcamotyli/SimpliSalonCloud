@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/navbar'
 import { Sidebar } from '@/components/layout/sidebar'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { ThemeKey } from '@/lib/types/settings'
+import DunningBanner from '@/components/billing/DunningBanner'
 
 type ProfileWithSalon = {
   salon_id: string
@@ -96,6 +97,7 @@ export default async function DashboardLayout({
           <Navbar salonName={salon.name} />
 
           <main className="flex-1 overflow-y-auto p-6">
+            <DunningBanner salonId={salon.id} slug={slug} />
             {children}
           </main>
         </div>

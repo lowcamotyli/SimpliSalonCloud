@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
 
         const authUrl = GmailClient.getAuthUrl(state)
 
+        console.log('OAuth authUrl:', authUrl)
+
         return NextResponse.redirect(authUrl)
     } catch (error: any) {
         console.error('Booksy auth error:', error)

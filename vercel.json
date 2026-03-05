@@ -37,6 +37,22 @@
     {
       "path": "/api/cron/crm-automations",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/billing-dunning",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/reminders",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/blacklist-scoring",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/surveys",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
