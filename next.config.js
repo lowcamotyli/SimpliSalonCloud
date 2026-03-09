@@ -21,16 +21,16 @@ const nextConfig = {
   },
 }
 
-module.exports = withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: true,
-  widenClientFileUpload: true,
-  tunnelRoute: '/monitoring',
-  webpack: {
-    treeshake: {
-      removeDebugLogging: true,
-    },
+const withSentry = process.env.VERCEL_ENV === 'production' && process.env.SENTRY_AUTH_TOKEN
+  ? withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: true,
+  }, {
+    widenClientFileUpload: true,
+    tunnelRoute: '/monitoring',
     automaticVercelMonitors: false,
-  },
-})
+  })
+  : nextConfig;
+
+module.exports = withSentry;

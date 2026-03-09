@@ -72,6 +72,7 @@ function parseCSV(text: string): string[][] {
 }
 
 const REQUIRED_HEADERS = ['data', 'godzina', 'klient_imie', 'klient_telefon', 'usluga', 'pracownik', 'czas_min', 'cena']
+const SERVICE_REQUIRED_HEADERS = ['kategoria', 'podkategoria', 'nazwa', 'czas_min', 'cena']
 const STATUS_MAP: Record<string, string> = {
   'completed': 'completed',
   'zakończona': 'completed',
@@ -86,6 +87,15 @@ const STATUS_MAP: Record<string, string> = {
   'pending': 'pending',
   'oczekująca': 'pending',
   'oczekujaca': 'pending',
+}
+
+interface ServiceRow {
+  kategoria: string
+  podkategoria: string
+  nazwa: string
+  czas_min: string
+  cena: string
+  aktywna: string
 }
 
 interface ParsedRow {
@@ -121,6 +131,16 @@ export default function ImportPage() {
     skipped: number
     errors: Array<{ row: number; reason: string }>
   } | null>(null)
+  const [servicesStep, setServicesStep] = useState(0)
+  const [parsedServiceRows, setParsedServiceRows] = useState<ServiceRow[]>([])
+  const [servicesFileName, setServicesFileName] = useState('')
+  const [isImportingServices, setIsImportingServices] = useState(false)
+  const [servicesImportResult, setServicesImportResult] = useState<{
+    imported: number
+    errors: Array<{ row: number; reason: string }>
+  } | null>(null)
+  const servicesFileInputRef = useRef<HTMLInputElement>(null)
+
   const formImportFileRef = useRef<HTMLInputElement>(null)
   const [selectedBuiltins, setSelectedBuiltins] = useState<Set<string>>(new Set())
   const [formImportResult, setFormImportResult] = useState<{ imported: number; errors: string[] } | null>(null)
@@ -445,6 +465,74 @@ export default function ImportPage() {
     }
   }
 
+  const handleServicesFileSelect = useCallback((file: File) => {
+    if (!file.name.endsWith(".csv")) { toast.error("Proszę wybrać plik CSV"); return }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const text = e.target?.result as string
+      if (!text) { toast.error("Nie udało się odczytać pliku"); return }
+      const lines = parseCSV(text)
+      if (lines.length < 2) { toast.error("Plik jest pusty lub zawiera tylko nagłówki"); return }
+      const headers = lines[0].map(h => h.toLowerCase().replace(/\s+/g, "_"))
+      const missing = SERVICE_REQUIRED_HEADERS.filter(h => !headers.includes(h))
+      if (missing.length > 0) { toast.error("Brakuje kolumn: " + missing.join(", ")); return }
+      const col = (name: string) => headers.indexOf(name)
+      const rows: ServiceRow[] = lines.slice(1).map(cells => ({
+        kategoria: cells[col("kategoria")] || "",
+        podkategoria: cells[col("podkategoria")] || "",
+        nazwa: cells[col("nazwa")] || "",
+        czas_min: cells[col("czas_min")] || "",
+        cena: cells[col("cena")] || "",
+        aktywna: cells[col("aktywna")] || "1",
+      }))
+      setParsedServiceRows(rows)
+      setServicesFileName(file.name)
+      setServicesStep(1)
+    }
+    reader.readAsText(file, "UTF-8")
+  }, [])
+
+  const handleServicesImport = async () => {
+    setIsImportingServices(true)
+    const errors: Array<{ row: number; reason: string }> = []
+    let imported = 0
+    for (let i = 0; i < parsedServiceRows.length; i++) {
+      const row = parsedServiceRows[i]
+      if (!row.nazwa) { errors.push({ row: i + 2, reason: "Brak nazwy uslugi" }); continue }
+      try {
+        const res = await fetch("/api/services", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: row.kategoria || "Inne",
+            subcategory: row.podkategoria || "Ogolne",
+            name: row.nazwa,
+            duration: parseInt(row.czas_min) || 60,
+            price: parseFloat(row.cena) || 0,
+            active: row.aktywna !== "0" && row.aktywna?.toLowerCase() !== "nie",
+          }),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          errors.push({ row: i + 2, reason: body.error || "Blad API" })
+        } else {
+          imported++
+        }
+      } catch {
+        errors.push({ row: i + 2, reason: "Blad sieci" })
+      }
+    }
+    setServicesImportResult({ imported, errors })
+    setServicesStep(2)
+    setIsImportingServices(false)
+  }
+
+  const resetServices = () => {
+    setServicesStep(0)
+    setParsedServiceRows([])
+    setServicesFileName("")
+    setServicesImportResult(null)
+  }
   const reset = () => {
     setStep(0)
     setParsedRows([])
@@ -763,36 +851,148 @@ export default function ImportPage() {
       )}
         </TabsContent>
 
-        <TabsContent value="services">
-          <Card className="p-8 glass border-none shadow-xl">
-            <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <FileSpreadsheet className="h-7 w-7" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-foreground">Import usług z CSV</h2>
-                <p className="text-muted-foreground">
-                  Zaimportuj listę usług z pliku CSV. Pobierz szablon, wypełnij go danymi i wgraj tutaj.
-                </p>
-                <a
-                  href="/templates/services-import-template.csv"
-                  download
-                  className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+        <TabsContent value="services" className="space-y-6">
+          {servicesStep === 0 && (
+            <div className="space-y-6">
+              <Card className="p-8 glass border-none shadow-xl">
+                <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <FileSpreadsheet className="h-7 w-7" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-bold text-foreground">Import usług z CSV</h2>
+                    <p className="text-muted-foreground">
+                      Zaimportuj listę usług z pliku CSV. Pobierz szablon, wypełnij go danymi i wgraj tutaj.
+                    </p>
+                    <a href="/templates/services-import-template.csv" download className="inline-flex items-center gap-2 text-primary font-bold hover:underline">
+                      <Download className="h-4 w-4" />
+                      Pobierz szablon CSV
+                    </a>
+                  </div>
+                </div>
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleServicesFileSelect(f) }}
+                  onClick={() => servicesFileInputRef.current?.click()}
                 >
-                  <Download className="h-4 w-4" />
-                  Pobierz szablon CSV
-                </a>
+                  <input ref={servicesFileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleServicesFileSelect(f) }} />
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-bold text-foreground mb-1">Przeciągnij plik CSV lub kliknij, aby wybrać</p>
+                  <p className="text-sm text-muted-foreground">Kolumny: kategoria, podkategoria, nazwa, czas_min, cena</p>
+                </div>
+              </Card>
+              <Card className="p-6 glass border-none shadow-sm">
+                <h3 className="font-bold text-foreground mb-3">Wymagane kolumny</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {["kategoria", "podkategoria", "nazwa", "czas_min", "cena"].map(col => (
+                    <Badge key={col} variant="outline" className="px-3 py-1.5 text-sm font-mono justify-center">{col}</Badge>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-400 mt-3">Opcjonalne: <span className="font-mono">aktywna</span> (1/0, domyślnie 1)</p>
+              </Card>
+            </div>
+          )}
+          {servicesStep === 1 && (
+            <Card className="p-6 glass border-none shadow-xl">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Podgląd: {servicesFileName}</h2>
+                  <p className="text-sm text-gray-500 mt-1">{parsedServiceRows.length} usług do importu</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={resetServices} className="rounded-xl font-bold" disabled={isImportingServices}>
+                    <ArrowLeft className="h-4 w-4 mr-1" />Wróć
+                  </Button>
+                  <Button onClick={handleServicesImport} disabled={parsedServiceRows.length === 0 || isImportingServices} className="gradient-button rounded-xl font-bold">
+                    {isImportingServices ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                    {isImportingServices ? "Importowanie..." : `Importuj ${parsedServiceRows.length} usług`}
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center text-muted-foreground">
-              <Upload className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-bold mb-1">Import usług — wkrótce</p>
-              <p className="text-sm">Ta funkcja jest w przygotowaniu.</p>
-            </div>
-          </Card>
+              <div className="overflow-x-auto -mx-6 px-6">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">#</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Kategoria</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Podkategoria</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Nazwa</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Czas</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Cena</th>
+                      <th className="pb-3 text-left font-bold text-gray-400 text-xs uppercase tracking-wider">Aktywna</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedServiceRows.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50">
+                        <td className="py-3 pr-3 text-gray-400 font-mono text-xs">{i + 1}</td>
+                        <td className="py-3 pr-3 text-gray-600">{row.kategoria}</td>
+                        <td className="py-3 pr-3 text-gray-600">{row.podkategoria}</td>
+                        <td className="py-3 pr-3 font-medium">{row.nazwa}</td>
+                        <td className="py-3 pr-3 text-gray-600">{row.czas_min} min</td>
+                        <td className="py-3 pr-3 font-bold">{row.cena} zl</td>
+                        <td className="py-3">
+                          <Badge variant={row.aktywna === "0" || row.aktywna?.toLowerCase() === "nie" ? "outline" : "secondary"} className="text-xs">
+                            {row.aktywna === "0" || row.aktywna?.toLowerCase() === "nie" ? "Nie" : "Tak"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+          {servicesStep === 2 && servicesImportResult && (
+            <Card className="p-8 glass border-none shadow-xl text-center">
+              <div className="mx-auto mb-6">
+                {servicesImportResult.imported > 0 ? (
+                  <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-rose-100 flex items-center justify-center mx-auto">
+                    <XCircle className="h-10 w-10 text-rose-600" />
+                  </div>
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {servicesImportResult.imported > 0 ? "Import zakończony!" : "Import nieudany"}
+              </h2>
+              <div className="flex items-center justify-center gap-6 mt-6 mb-8">
+                <div className="text-center">
+                  <p className="text-3xl font-black text-emerald-600">{servicesImportResult.imported}</p>
+                  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Zaimportowane</p>
+                </div>
+                {servicesImportResult.errors.length > 0 && (
+                  <>
+                    <div className="h-12 w-px bg-gray-200" />
+                    <div className="text-center">
+                      <p className="text-3xl font-black text-rose-600">{servicesImportResult.errors.length}</p>
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Błędy</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              {servicesImportResult.errors.length > 0 && (
+                <div className="text-left max-w-lg mx-auto mb-8">
+                  <h3 className="font-bold text-gray-700 mb-3">Błędy:</h3>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {servicesImportResult.errors.map((err, i) => (
+                      <div key={i} className="flex gap-2 text-sm">
+                        <span className="text-gray-400 font-mono shrink-0">Wiersz {err.row}:</span>
+                        <span className="text-rose-600">{err.reason}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <Button onClick={resetServices} className="gradient-button rounded-xl font-bold px-8">Importuj kolejny plik</Button>
+            </Card>
+          )}
         </TabsContent>
-
-        <TabsContent value="forms" className="space-y-6">
+        <TabsContent value="forms" className="space-y-6"> 
           {formImportResult ? (
             <Card className="p-8 glass border-none shadow-xl">
               <div className="flex items-start gap-4">
@@ -948,3 +1148,4 @@ export default function ImportPage() {
     </div>
   )
 }
+
