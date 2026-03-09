@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useIntegrations, useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -107,8 +106,6 @@ export default function IntegrationsPage() {
         <h1 className="text-3xl font-bold">Integracje</h1>
         <p className="text-muted-foreground">Połącz zewnętrzne usługi i automatyzuj salon</p>
       </div>
-
-      <SettingsNav baseUrl={`/${slug}/settings`} />
 
       <div className="mt-8 space-y-12">
 

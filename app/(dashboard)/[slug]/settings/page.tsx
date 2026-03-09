@@ -2,10 +2,8 @@
 
 import { useParams } from 'next/navigation'
 import { useSettings, useIntegrations } from '@/hooks/use-settings'
-import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
-import { Button } from '@/components/ui/button'
-import { Palette, Building2, Bell, Link as LinkIcon, CheckCircle, Circle, Upload, ShieldAlert } from 'lucide-react'
+import { Palette, Building2, Bell, Link as LinkIcon, Upload, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { THEMES } from '@/lib/types/settings'
 import { useQuery } from '@tanstack/react-query'
@@ -44,19 +42,8 @@ export default function SettingsPage() {
   const theme = THEMES[settings.theme] || THEMES.beauty_salon
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Ustawienia
-          </h1>
-          <p className="text-muted-foreground text-base font-medium">Zarządzaj konfiguracją salonu</p>
-        </div>
-      </div>
-
-      <SettingsNav baseUrl={baseUrl} />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href={`${baseUrl}/appearance`}>
           <SettingsCard
             title="Wygląd"

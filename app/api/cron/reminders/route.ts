@@ -12,6 +12,7 @@ type ReminderRule = {
   hours_before: number
   message_template: string
   require_confirmation: boolean
+  target_blacklisted_only: boolean
   salons?: {
     features?: Record<string, boolean>
   } | null
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: rules, error: rulesError } = await (admin as any)
       .from('reminder_rules')
-      .select('id, salon_id, hours_before, message_template, require_confirmation, salons!inner(features)')
+      .select('id, salon_id, hours_before, message_template, require_confirmation, target_blacklisted_only, salons!inner(features)')
       .eq('is_active', true)
 
     if (rulesError) {
@@ -80,10 +81,10 @@ export async function GET(request: NextRequest) {
 
       let candidatesQuery = (admin as any)
         .from('bookings')
-        .select('id, salon_id, booking_date, booking_time, status, reminder_sent, client:clients(id, full_name, phone)')
+        .select('id, salon_id, booking_date, booking_time, status, reminder_sent, client:clients(id, full_name, phone, blacklist_status)')
         .eq('salon_id', rule.salon_id)
         .eq('reminder_sent', false)
-        .in('status', ['pending', 'confirmed'])
+        .in('status', ['pending', 'confirmed', 'scheduled'])
         .gte('booking_date', minDateStr)
         .lte('booking_date', maxDateStr)
 
@@ -109,6 +110,8 @@ export async function GET(request: NextRequest) {
 
         const client = booking.client
         if (!client?.phone) continue
+        // When rule targets blacklisted clients only, skip non-blacklisted
+        if (rule.target_blacklisted_only && client.blacklist_status !== 'active') continue
         result.bookingsMatched += 1
 
         let confirmUrl = ''

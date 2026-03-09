@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { SettingsNav } from '@/components/settings/settings-nav'
+import { Bell, Smartphone, Target } from 'lucide-react'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -37,7 +37,7 @@ export default function NotificationsPage() {
   const salonId = salon?.id ?? ''
   const { data: settings } = useSettings(salonId)
   const updateSettings = useUpdateSettings(salonId)
-  
+
   const [notifications, setNotifications] = useState<NotificationSettings>({
     clientReminders: { enabled: true, timing: [24, 2], channels: ['sms', 'email'] },
     clientConfirmations: { enabled: true, channels: ['email'] },
@@ -73,7 +73,7 @@ export default function NotificationsPage() {
     const updated = current.includes(channel)
       ? current.filter((c: string) => c !== channel)
       : [...current, channel]
-    
+
     updateNotification(key, { channels: updated })
   }
 
@@ -89,10 +89,8 @@ export default function NotificationsPage() {
         </Button>
       </div>
 
-      <SettingsNav baseUrl={`/${slug}/settings`} />
-
       <div className="space-y-6">
-        <SettingsCard 
+        <SettingsCard
           title="Przypomnienia dla klientów"
           description="Automatyczne przypomnienia o wizytach"
         >

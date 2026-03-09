@@ -154,10 +154,20 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         paymentMethod,
         surcharge: surcharge || 0,
       })
-      toast.success('Wizyta zakończona')
       onClose()
     } catch (error) {
       toast.error('Błąd podczas kończenia wizyty')
+    }
+  }
+
+  const handleNoShow = async () => {
+    if (confirm('Oznaczyć wizytę jako "Nie przyszedł"? Naruszenie zostanie zapisane na koncie klienta.')) {
+      try {
+        await updateMutation.mutateAsync({ status: 'no_show' })
+        onClose()
+      } catch (error) {
+        toast.error('Błąd podczas zapisywania nieobecności')
+      }
     }
   }
 
@@ -165,7 +175,6 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     if (confirm('Czy na pewno chcesz anulować tę wizytę?')) {
       try {
         await updateMutation.mutateAsync({ status: 'cancelled' })
-        toast.success('Wizyta anulowana')
         onClose()
       } catch (error) {
         toast.error('Błąd podczas anulowania wizyty')
@@ -239,8 +248,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
               <div className="glass p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Status</Label>
-                <Badge className="mt-1" variant={booking.status === 'completed' ? 'success' : booking.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                  {BOOKING_STATUS_LABELS[booking.status]}
+                <Badge className="mt-1" variant={booking.status === 'completed' ? 'success' : booking.status === 'cancelled' || booking.status === 'no_show' ? 'destructive' : 'secondary'}>
+                  {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
                 </Badge>
               </div>
 
@@ -278,7 +287,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
             )}
 
             <DialogFooter className="gap-2 flex-wrap">
-              {booking.status === 'scheduled' && (
+              {(booking.status === 'scheduled' || booking.status === 'confirmed') && (
                 <>
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button
@@ -287,6 +296,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                       className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"
                     >
                       Usuń wizytę
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleNoShow}
+                      className="rounded-lg border-orange-300 text-orange-600 hover:bg-orange-50"
+                    >
+                      Nie przyszedł
                     </Button>
                     <Button
                       variant="destructive"

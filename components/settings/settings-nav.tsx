@@ -1,4 +1,3 @@
-// components/settings/settings-nav.tsx
 'use client'
 
 import Link from 'next/link'
@@ -10,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
+import { buttonVariants } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { href: '', label: 'Przegląd', icon: LayoutDashboard, ownerOnly: false },
@@ -35,10 +35,11 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
   )
 
   return (
-    <nav className="flex space-x-2 border-b mb-6">
+    <nav className="flex flex-wrap gap-2 pb-2">
       {visibleItems.map(item => {
         const href = `${baseUrl}${item.href}`
-        const isActive = pathname === href
+        // Match exact or startsWith depending on routing, but exact is safer here for settings.
+        const isActive = pathname === href || (item.href === '' && pathname === baseUrl)
         const Icon = item.icon
 
         return (
@@ -46,14 +47,12 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
             key={href}
             href={href}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 border-b-2 transition-colors',
-              isActive
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+              buttonVariants({ variant: isActive ? 'secondary' : 'ghost' }),
+              'justify-start whitespace-nowrap gap-2 text-sm h-10 px-4 transition-colors'
             )}
           >
-            <Icon className="h-4 w-4" />
-            {item.label}
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className={cn(isActive ? "font-medium" : "font-normal")}>{item.label}</span>
           </Link>
         )
       })}

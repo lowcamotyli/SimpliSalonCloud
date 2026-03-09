@@ -4,6 +4,7 @@ export const BOOKING_STATUSES = {
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   PENDING: 'pending',
+  NO_SHOW: 'no_show',
 } as const
 
 export const BOOKING_STATUS_LABELS: Record<string, string> = {
@@ -12,6 +13,7 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   completed: 'Zakończona',
   cancelled: 'Anulowana',
   pending: 'Oczekująca',
+  no_show: 'Nie przyszedł',
 }
 
 export const PAYMENT_METHODS = {

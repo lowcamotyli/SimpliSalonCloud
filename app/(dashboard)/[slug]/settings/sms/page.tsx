@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -126,8 +125,6 @@ export default function SmsSettingsPage() {
         <p className="text-muted-foreground">Konfiguracja dostawcy i przypomnień SMS</p>
       </div>
 
-      <SettingsNav baseUrl={`/${slug}/settings`} />
-
       <SettingsCard title="Dostawca SMS" description="Wybór provider-a i dane dostępowe">
         <div className="space-y-4">
           <div>
@@ -218,12 +215,19 @@ export default function SmsSettingsPage() {
                     onChange={(event) => updateRule(index, { hours_before: Number(event.target.value || 1) })}
                   />
                 </div>
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 flex-wrap">
                   <Button
                     variant={rule.is_active ? 'default' : 'outline'}
                     onClick={() => updateRule(index, { is_active: !rule.is_active })}
                   >
                     {rule.is_active ? 'Aktywna' : 'Nieaktywna'}
+                  </Button>
+                  <Button
+                    variant={rule.target_blacklisted_only ? 'destructive' : 'outline'}
+                    title="Gdy włączone, SMS wysyłany tylko do klientów na czarnej liście"
+                    onClick={() => updateRule(index, { target_blacklisted_only: !rule.target_blacklisted_only })}
+                  >
+                    {rule.target_blacklisted_only ? 'Tylko blacklista' : 'Wszyscy klienci'}
                   </Button>
                   <Button variant="outline" onClick={() => removeRule(index)}>Usuń</Button>
                 </div>

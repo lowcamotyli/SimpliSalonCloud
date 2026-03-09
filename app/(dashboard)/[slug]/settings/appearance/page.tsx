@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { ThemeSelector } from '@/components/settings/theme-selector'
 import { Button } from '@/components/ui/button'
@@ -67,10 +66,8 @@ export default function AppearancePage() {
         </Button>
       </div>
 
-      <SettingsNav baseUrl={`/${slug}/settings`} />
-
       <div className="space-y-6">
-        <SettingsCard title="Motyw" description="Wybierz predefiniowany motyw">
+        <SettingsCard title="Motyw salonu" description="Wybierz kolorystykę aplikacji.">
           <ThemeSelector selected={theme} onChange={setTheme} />
         </SettingsCard>
 

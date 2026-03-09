@@ -33,7 +33,7 @@ import { useClients } from '@/hooks/use-clients'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from '@/lib/formatters'
 import { toast } from 'sonner'
-import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, CreditCard, Banknote } from 'lucide-react'
+import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, UserX, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
 
 const bookingFormSchema = z.object({
@@ -210,6 +210,16 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     }
   }
 
+  const handleNoShow = async () => {
+    try {
+      await updateMutation.mutateAsync({ status: 'no_show' })
+      toast.success('Oznaczono jako nieobecność')
+      onClose()
+    } catch (error) {
+      toast.error('Błąd podczas oznaczania nieobecności')
+    }
+  }
+
   const handleCancelBooking = async () => {
     try {
       await updateMutation.mutateAsync({ status: 'cancelled' })
@@ -367,6 +377,15 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               {booking.status === 'scheduled' && (
                 <>
                   <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-start hide-scrollbar">
+                    <Button
+                      variant="outline"
+                      onClick={handleNoShow}
+                      disabled={updateMutation.isPending}
+                      className="h-10 rounded-full border-orange-200 text-orange-600 bg-white hover:bg-orange-50 px-4 text-sm font-medium shrink-0"
+                    >
+                      <UserX className="h-4 w-4 mr-2" />
+                      Nie przyszedł
+                    </Button>
                     <Button
                       variant="outline"
                       onClick={() => setShowCancelConfirm(true)}

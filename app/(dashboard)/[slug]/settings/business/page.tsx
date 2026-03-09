@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { SettingsNav } from '@/components/settings/settings-nav'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { HoursEditor } from '@/components/settings/hours-editor'
 import { Button } from '@/components/ui/button'
@@ -137,8 +136,6 @@ export default function BusinessSettingsPage() {
             ) : 'Zapisz zmiany'}
           </Button>
         </div>
-
-        <SettingsNav baseUrl={`/${slug}/settings`} />
 
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
