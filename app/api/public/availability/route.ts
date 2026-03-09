@@ -32,6 +32,11 @@ interface BookingRow {
     employee_id: string
 }
 
+interface EquipmentBlockRow {
+    starts_at: string
+    ends_at: string
+}
+
 function parseTimeToMinutes(time: string): number {
     const [h, m] = time.split(':').map(Number)
     return h * 60 + m
@@ -62,28 +67,35 @@ function resolveEmployeeWindow(
     return [parseTimeToMinutes(day.start_time), parseTimeToMinutes(day.end_time)]
 }
 
-/** Generuje wolne sloty w przedziale czasowym z uwzględnieniem zajętych bookingów */
+/** Generuje wolne sloty w przedziale czasowym z uwzględnieniem zajętych bookingów i sprzętu */
 function generateSlots(
     startMin: number,
     endMin: number,
     serviceDuration: number,
     bookings: BookingRow[],
-    employeeId?: string | null
+    employeeId?: string | null,
+    equipmentBlocks?: [number, number][]
 ): string[] {
     const slots: string[] = []
     for (let minutes = startMin; minutes < endMin; minutes += 30) {
         const slotEnd = minutes + serviceDuration
         if (slotEnd > endMin) continue
 
-        const conflict = bookings.some((b) => {
+        const bookingConflict = bookings.some((b) => {
             if (employeeId && b.employee_id !== employeeId) return false
             const [bh, bm] = b.booking_time.split(':').map(Number)
             const bStart = bh * 60 + bm
             const bEnd = bStart + b.duration
             return minutes < bEnd && slotEnd > bStart
         })
+        if (bookingConflict) continue
 
-        if (!conflict) slots.push(minutesToTime(minutes))
+        const equipmentConflict = equipmentBlocks?.some(([eqStart, eqEnd]) =>
+            minutes < eqEnd && slotEnd > eqStart
+        )
+        if (equipmentConflict) continue
+
+        slots.push(minutesToTime(minutes))
     }
     return slots
 }
@@ -111,6 +123,30 @@ export async function GET(request: NextRequest) {
         .single()
 
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
+
+    // Pobierz wymagany sprzęt dla usługi i jego zajętość w danym dniu
+    const { data: serviceEquipmentRows } = await supabase
+        .from('service_equipment')
+        .select('equipment_id')
+        .eq('service_id', serviceId)
+    const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((r: { equipment_id: string }) => r.equipment_id)
+
+    let equipmentBlocks: [number, number][] = []
+    if (requiredEquipmentIds.length > 0) {
+        const dayStart = `${date}T00:00:00.000Z`
+        const dayEnd = `${date}T23:59:59.999Z`
+        const { data: eqBookings } = await supabase
+            .from('equipment_bookings')
+            .select('starts_at, ends_at')
+            .in('equipment_id', requiredEquipmentIds)
+            .lt('starts_at', dayEnd)
+            .gt('ends_at', dayStart)
+        equipmentBlocks = (eqBookings ?? [] as EquipmentBlockRow[]).map((eb: EquipmentBlockRow) => {
+            const s = new Date(eb.starts_at)
+            const e = new Date(eb.ends_at)
+            return [s.getUTCHours() * 60 + s.getUTCMinutes(), e.getUTCHours() * 60 + e.getUTCMinutes()]
+        })
+    }
 
     // Pobierz godziny otwarcia salonu
     const { data: settings } = await supabase
@@ -178,7 +214,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ date, serviceId, slots: [] })
         }
 
-        const slots = generateSlots(effectiveStart, effectiveEnd, service.duration, bookingRows, employeeId)
+        const slots = generateSlots(effectiveStart, effectiveEnd, service.duration, bookingRows, employeeId, equipmentBlocks)
         return NextResponse.json({ date, serviceId, slots })
     }
 
@@ -237,7 +273,7 @@ export async function GET(request: NextRequest) {
         if (effectiveStart >= effectiveEnd) continue
 
         const empBookings = bookingRows.filter(b => b.employee_id === empId)
-        const empSlots = generateSlots(effectiveStart, effectiveEnd, service.duration, empBookings, empId)
+        const empSlots = generateSlots(effectiveStart, effectiveEnd, service.duration, empBookings, empId, equipmentBlocks)
         for (const s of empSlots) slotsSet.add(s)
     }
 
