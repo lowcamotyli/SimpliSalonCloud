@@ -14,7 +14,7 @@ export function createAdminSupabaseClient() {
       autoRefreshToken: false,
       persistSession: false
     }
-  }) as any
+  })
 }
 
 // Alias — backward compat dla cron/booksy i webhooks/booksy

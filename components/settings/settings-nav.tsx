@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   Palette, Building2, Bell, Link as LinkIcon, MessageSquare,
-  LayoutDashboard, Wrench, ClipboardList, ShieldAlert
+  LayoutDashboard, Wrench, ClipboardList, ShieldAlert, Star, Database
 } from 'lucide-react'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
@@ -20,6 +20,8 @@ const NAV_ITEMS = [
   { href: '/equipment', label: 'Sprzęt', icon: Wrench, ownerOnly: true },
   { href: '/forms', label: 'Formularze', icon: ClipboardList, ownerOnly: true },
   { href: '/crm', label: 'CRM', icon: ShieldAlert, ownerOnly: false },
+  { href: '/surveys', label: 'Ankiety', icon: Star, ownerOnly: false },
+  { href: '/import', label: 'Import danych', icon: Database, ownerOnly: true },
   { href: '/notifications', label: 'Powiadomienia', icon: Bell, ownerOnly: false },
 ]
 

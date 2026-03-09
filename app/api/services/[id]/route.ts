@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { updateServiceSchema } from '@/lib/validators/service.validators'
 import { withErrorHandling } from '@/lib/error-handler'
-import { NotFoundError, UnauthorizedError, ValidationError } from '@/lib/errors'
+import { NotFoundError, ValidationError } from '@/lib/errors'
 
 // GET /api/services/[id]
 export const GET = withErrorHandling(async (
@@ -10,12 +10,7 @@ export const GET = withErrorHandling(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
+  const { supabase } = await getAuthContext()
 
   const { data: service, error } = await supabase
     .from('services')
@@ -41,35 +36,14 @@ export const PATCH = withErrorHandling(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const typedProfile = profile as { salon_id: string }
+  const { supabase, salonId } = await getAuthContext()
 
   // Verify service belongs to salon and get current version
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id, version')
     .eq('id', id)
-    .eq('salon_id', typedProfile.salon_id)
+    .eq('salon_id', salonId)
     .single()
 
   if (existingError || !existingService) {
@@ -79,10 +53,10 @@ export const PATCH = withErrorHandling(async (
   const body = await request.json()
   const validatedData = updateServiceSchema.parse(body)
 
-  const { data: service, error } = await (supabase as any)
+  const { data: service, error } = await supabase
     .from('services')
     .update({
-      version: (existingService as any).version, // Required by check_version() trigger
+      version: existingService.version, // Required by check_version() trigger
       ...(validatedData.category !== undefined && { category: validatedData.category }),
       ...(validatedData.subcategory !== undefined && { subcategory: validatedData.subcategory }),
       ...(validatedData.name !== undefined && { name: validatedData.name }),
@@ -90,6 +64,8 @@ export const PATCH = withErrorHandling(async (
       ...(validatedData.price !== undefined && { price: validatedData.price }),
       ...(validatedData.active !== undefined && { active: validatedData.active }),
       ...(validatedData.surcharge_allowed !== undefined && { surcharge_allowed: validatedData.surcharge_allowed }),
+      ...(validatedData.survey_enabled !== undefined && { survey_enabled: validatedData.survey_enabled }),
+      ...(validatedData.survey_custom_message !== undefined && { survey_custom_message: validatedData.survey_custom_message }),
     })
     .eq('id', id)
     .select()
@@ -106,35 +82,14 @@ export const DELETE = withErrorHandling(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const typedProfile = profile as { salon_id: string }
+  const { supabase, salonId } = await getAuthContext()
 
   // Verify service belongs to salon
   const { data: existingService, error: existingError } = await supabase
     .from('services')
     .select('id')
     .eq('id', id)
-    .eq('salon_id', typedProfile.salon_id)
+    .eq('salon_id', salonId)
     .single()
 
   if (existingError || !existingService) {

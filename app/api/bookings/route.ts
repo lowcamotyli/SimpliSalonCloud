@@ -1,38 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { createBookingSchema } from '@/lib/validators/booking.validators'
 import { withErrorHandling } from '@/lib/error-handler'
-import { NotFoundError, ConflictError, UnauthorizedError, ValidationError } from '@/lib/errors'
+import { ConflictError, ValidationError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
 import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/lib/equipment/availability'
 import { generateFormToken } from '@/lib/forms/token'
-import { hasFeature } from '@/lib/features'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { sendTransactionalEmail } from '@/lib/messaging/email-sender'
 
 // GET /api/bookings - List bookings with optional filters
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const rl = await applyRateLimit(request)
   if (rl) return rl
 
-  const supabase = await createServerSupabaseClient()
+  const { supabase, salonId } = await getAuthContext()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const salonProfile = profile as any
   // Get query params
   const { searchParams } = new URL(request.url)
   const startDate = searchParams.get('startDate')
@@ -49,7 +33,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       client:clients(id, client_code, full_name, phone),
       service:services(id, name, price, duration, category)
     `)
-    .eq('salon_id', salonProfile.salon_id)
+    .eq('salon_id', salonId)
     .is('deleted_at', null)
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: false })
@@ -102,28 +86,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (rl) return rl
 
   const startTime = Date.now()
-  const supabase = await createServerSupabaseClient()
+  const { supabase, user, salonId } = await getAuthContext()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const salonProfile = profile as any
   const body = await request.json()
 
   logger.info('Creating booking', {
-    salonId: salonProfile.salon_id,
+    salonId: salonId,
     userId: user.id,
     body
   })
@@ -131,7 +99,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Map frontend fields (employeeId -> employee_id, etc.)
   const normalizedBody = {
     ...body,
-    salon_id: salonProfile.salon_id,
+    salon_id: salonId,
     employee_id: (body.employee_id || body.employeeId || '').trim() || undefined,
     service_id: (body.service_id || body.serviceId || '').trim() || undefined,
     client_id: (body.client_id || body.clientId || '').trim() || undefined,
@@ -158,7 +126,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { data: existingClient } = await supabase
       .from('clients')
       .select('id, blacklist_status')
-      .eq('salon_id', salonProfile.salon_id)
+      .eq('salon_id', salonId)
       .eq('phone', validatedData.clientPhone)
       .maybeSingle()
 
@@ -169,19 +137,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       }
     } else {
       const { data: codeData, error: codeError } = await supabase
-        .rpc('generate_client_code', { salon_uuid: salonProfile.salon_id } as any)
+        .rpc('generate_client_code', { salon_uuid: salonId } as any)
 
       // Fallback if RPC returns null or fails
       const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
 
       if (codeError) {
-        logger.warn('Failed to generate client code via RPC, using fallback', codeError)
+        logger.warn('Failed to generate client code via RPC, using fallback', { error: codeError })
       }
 
       const { data: newClient, error: clientError } = await supabase
         .from('clients')
         .insert({
-          salon_id: salonProfile.salon_id,
+          salon_id: salonId,
           client_code: clientCode,
           full_name: validatedData.clientName,
           phone: validatedData.clientPhone,
@@ -212,7 +180,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .from('clients')
       .select('id, blacklist_status')
       .eq('id', clientId)
-      .eq('salon_id', salonProfile.salon_id)
+      .eq('salon_id', salonId)
       .is('deleted_at', null)
       .maybeSingle()
 
@@ -254,7 +222,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const { data: bookingRows, error: bookingError } = await (supabase as any)
     .rpc('create_booking_atomic', {
-      p_salon_id: salonProfile.salon_id,
+      p_salon_id: salonId,
       p_employee_id: validatedData.employee_id as string,
       p_client_id: clientId,
       p_service_id: validatedData.service_id as string,
@@ -302,7 +270,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // 7. Send form links for service forms (fire-and-forget, non-blocking)
   void sendFormLinksForBooking({
     booking,
-    salonId: salonProfile.salon_id,
+    salonId: salonId,
     clientId,
     serviceId: validatedData.service_id as string,
   }).catch(err => logger.warn('Form link dispatch failed', err))
@@ -335,12 +303,11 @@ async function sendFormLinksForBooking({
 
   if (!serviceFormRows || serviceFormRows.length === 0) return
 
-  const [{ data: salon }, { data: client }] = await Promise.all([
-    adminSupabase.from("salons").select("features").eq("id", salonId).single(),
-    adminSupabase.from("clients").select("phone").eq("id", clientId).single(),
-  ])
+  const { data: client } = await adminSupabase
+    .from("clients").select("email, full_name").eq("id", clientId).single()
 
   const fillTokenExp = new Date(Date.now() + 72 * 3600 * 1000).toISOString()
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
 
   for (const row of serviceFormRows) {
     const token = await generateFormToken({
@@ -349,6 +316,12 @@ async function sendFormLinksForBooking({
       bookingId: booking.id,
       salonId,
     })
+
+    const { data: template } = await adminSupabase
+      .from("form_templates")
+      .select("name")
+      .eq("id", (row as any).form_template_id)
+      .single()
 
     await adminSupabase.from("client_forms").insert({
       client_id: clientId,
@@ -361,9 +334,20 @@ async function sendFormLinksForBooking({
       fill_token_exp: fillTokenExp,
     } as any)
 
-    if (hasFeature((salon as any)?.features, "sms_chat") && (client as any)?.phone) {
-      const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
-      logger.info("Form link ready", { link: `${appUrl}/forms/fill/${token}`, clientId })
+    const clientEmail = (client as any)?.email
+    if (clientEmail) {
+      const clientName = (client as any)?.full_name || 'Kliencie'
+      const formName = (template as any)?.name || 'formularz'
+      const formUrl = `${appUrl}/forms/fill/${token}`
+      await sendTransactionalEmail({
+        salonId,
+        to: clientEmail,
+        subject: `Prosimy o wypełnienie formularza przed wizytą`,
+        html: `<p>Drogi/Droga ${clientName},</p>
+<p>Przed nadchodzącą wizytą prosimy o wypełnienie formularza <strong>${formName}</strong>.</p>
+<p><a href="${formUrl}" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Wypełnij formularz</a></p>
+<p>Link jest ważny przez 72 godziny.</p>`,
+      })
     }
   }
 }

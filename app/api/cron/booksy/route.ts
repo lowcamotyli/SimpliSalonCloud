@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
           emails_success: salonSuccess,
           emails_error: salonEmailResults.length - salonSuccess,
           sync_results: salonEmailResults,
-        }).then().catch((e: any) => logger.error('Failed to save cron sync log', e, { salonId: salon.id }))
+        }).then(null, (e: any) => logger.error('Failed to save cron sync log', e, { salonId: salon.id }))
       } catch (error: any) {
         if (error?.code === 'GMAIL_REAUTH_REQUIRED' || GmailClient.isInvalidGrantError(error)) {
           logger.warn('Booksy cron: Gmail re-auth required', { action: 'booksy_cron_reauth', salonId: salon.id, salonSlug: salon.slug })

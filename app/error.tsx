@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
@@ -12,7 +13,9 @@ export default function GlobalError({
     reset: () => void
 }) {
     useEffect(() => {
-        console.error('Global Application Error:', error)
+        if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+            Sentry.captureException(error)
+        }
     }, [error])
 
     return (

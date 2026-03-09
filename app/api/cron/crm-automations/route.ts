@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
-  const admin = createAdminSupabaseClient() as any
+  const admin = createAdminSupabaseClient()
   const results = {
     automationsScanned: 0,
     automationsProcessed: 0,
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
 
     if (error) throw new Error(error.message)
 
-    const activeAutomations: Automation[] = automations || []
+    const activeAutomations = (automations || []) as unknown as Automation[]
     results.automationsScanned = activeAutomations.length
 
     for (const automation of activeAutomations) {

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// ---------------------------------------------------------------------------
+// Types (kept for backward compat with callers of checkProtectedApiRateLimit /
+// checkPublicApiRateLimit that use the returned object)
+// ---------------------------------------------------------------------------
 interface RateLimitResult {
   success: boolean
   limit: number
@@ -7,41 +11,57 @@ interface RateLimitResult {
   reset: number
 }
 
+// ---------------------------------------------------------------------------
+// Upstash Redis path (production)
+// ---------------------------------------------------------------------------
+let upstashRatelimit: {
+  limit: (key: string) => Promise<{ success: boolean; limit: number; remaining: number; reset: number }>
+} | null = null
+
+async function getUpstashLimiter(limit: number): Promise<typeof upstashRatelimit> {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null
+  }
+  // Lazy import — keeps bundle small; only loaded when env vars present
+  const { Ratelimit } = await import('@upstash/ratelimit')
+  const { redis } = await import('@/lib/redis')
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, '1 m'),
+    analytics: true,
+    prefix: 'rl',
+  })
+}
+
+// ---------------------------------------------------------------------------
+// In-memory fallback (dev / CI without Upstash env vars)
+// ---------------------------------------------------------------------------
 const rateLimitMap = new Map<string, number[]>()
+let _devWarnEmitted = false
 
-function checkRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+function devFallback(key: string, limit: number, windowMs: number): RateLimitResult {
+  if (!_devWarnEmitted) {
+    console.warn('[rate-limit] UPSTASH_REDIS_REST_URL not set, using in-memory fallback (dev only)')
+    _devWarnEmitted = true
+  }
   const now = Date.now()
-
-  // Clean up expired entries
   for (const [k, timestamps] of rateLimitMap.entries()) {
     const valid = timestamps.filter((t) => now - t < windowMs)
-    if (valid.length === 0) {
-      rateLimitMap.delete(k)
-    } else {
-      rateLimitMap.set(k, valid)
-    }
+    if (valid.length === 0) rateLimitMap.delete(k)
+    else rateLimitMap.set(k, valid)
   }
-
   const current = rateLimitMap.get(key) ?? []
   const reset = current.length > 0 ? current[0] + windowMs : now + windowMs
-
   if (current.length >= limit) {
-    return {
-      success: false,
-      limit,
-      remaining: 0,
-      reset,
-    }
+    return { success: false, limit, remaining: 0, reset }
   }
-
   rateLimitMap.set(key, [...current, now])
-  return {
-    success: true,
-    limit,
-    remaining: limit - current.length - 1,
-    reset,
-  }
+  return { success: true, limit, remaining: limit - current.length - 1, reset }
 }
+
+// ---------------------------------------------------------------------------
+// Public helpers (used by dedicated callers e.g. crm/quick-send)
+// ---------------------------------------------------------------------------
 
 /**
  * Rate limit for authenticated/protected API routes.
@@ -53,7 +73,13 @@ export async function checkProtectedApiRateLimit(
 ): Promise<RateLimitResult> {
   const limit = opts?.limit ?? 20
   const windowMs = opts?.windowMs ?? 60_000
-  return checkRateLimit(key, limit, windowMs)
+
+  const limiter = await getUpstashLimiter(limit)
+  if (limiter) {
+    const result = await limiter.limit(key)
+    return { success: result.success, limit: result.limit, remaining: result.remaining, reset: result.reset }
+  }
+  return devFallback(key, limit, windowMs)
 }
 
 /**
@@ -66,7 +92,13 @@ export async function checkPublicApiRateLimit(
 ): Promise<RateLimitResult> {
   const limit = opts?.limit ?? 10
   const windowMs = opts?.windowMs ?? 60_000
-  return checkRateLimit(key, limit, windowMs)
+
+  const limiter = await getUpstashLimiter(limit)
+  if (limiter) {
+    const result = await limiter.limit(key)
+    return { success: result.success, limit: result.limit, remaining: result.remaining, reset: result.reset }
+  }
+  return devFallback(key, limit, windowMs)
 }
 
 /**
@@ -78,6 +110,7 @@ export function getClientIp(headers: Headers): string {
 
 /**
  * Generic rate limit middleware — returns NextResponse 429 if exceeded, null if OK.
+ * Default: 60 requests per minute per IP.
  */
 export async function applyRateLimit(
   request: NextRequest,
@@ -87,7 +120,15 @@ export async function applyRateLimit(
   const windowMs = opts?.windowMs ?? 60_000
   const ip = getClientIp(request.headers)
 
-  const result = checkRateLimit(ip, limit, windowMs)
+  const limiter = await getUpstashLimiter(limit)
+
+  let result: RateLimitResult
+  if (limiter) {
+    const r = await limiter.limit(ip)
+    result = { success: r.success, limit: r.limit, remaining: r.remaining, reset: r.reset }
+  } else {
+    result = devFallback(ip, limit, windowMs)
+  }
 
   if (!result.success) {
     const retryAfter = Math.ceil((result.reset - Date.now()) / 1000)

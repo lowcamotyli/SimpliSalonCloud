@@ -93,6 +93,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
+    const { data: salon, error: salonError } = await (supabase as any)
+      .from('salons')
+      .select('name')
+      .eq('id', payload.salonId)
+      .single()
+
+    if (salonError || !salon) {
+      return NextResponse.json({ error: 'Salon not found' }, { status: 404 })
+    }
+
     let template: any = null
     if (payload.templateId) {
       const { data: templateData, error: templateError } = await (supabase as any)
@@ -141,6 +151,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client has SMS opt-out enabled' }, { status: 400 })
     }
 
+    const firstName = client.full_name.split(' ')[0] || ''
+    const unsubscribeLink = `${request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?c=${client.id}&s=${payload.salonId}`
+
+    const finalSubjectParsed = finalSubject
+      ? finalSubject
+        .replace(/\{\{first_name\}\}/g, firstName)
+        .replace(/\{\{salon_name\}\}/g, salon.name)
+      : null
+
+    const finalBodyParsed = finalBody
+      .replace(/\{\{first_name\}\}/g, firstName)
+      .replace(/\{\{salon_name\}\}/g, salon.name)
+      .replace(/\{\{unsubscribe_link\}\}/g, unsubscribeLink)
+
     const admin = createAdminSupabaseClient()
 
     const { data: log, error: logError } = await (admin as any)
@@ -150,8 +174,8 @@ export async function POST(request: NextRequest) {
         client_id: client.id,
         channel: payload.channel,
         recipient,
-        subject: finalSubject,
-        body: finalBody,
+        subject: finalSubjectParsed,
+        body: finalBodyParsed,
         status: 'pending',
       })
       .select('id')
@@ -162,13 +186,108 @@ export async function POST(request: NextRequest) {
     }
 
     if (payload.channel === 'email') {
+      const htmlContent = finalBodyParsed.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br />')
+      const formattedHtml = htmlContent.startsWith('<p>') ? htmlContent : `<p>${htmlContent}</p>`
+
+      const htmlWrapper = `
+      <!DOCTYPE html>
+      <html lang="pl">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #1f2937; 
+            background-color: #f3f4f6; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-font-smoothing: antialiased;
+          }
+          .wrapper { width: 100%; background-color: #f3f4f6; padding: 40px 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 0 20px; }
+          .card { 
+            background-color: #ffffff; 
+            border-radius: 16px; 
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+          }
+          .header { 
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            padding: 32px 40px; 
+            text-align: center; 
+            border-bottom: 1px solid #f3f4f6;
+          }
+          .header h1 { 
+            color: #111827; 
+            font-size: 24px; 
+            font-weight: 700; 
+            margin: 0; 
+            letter-spacing: -0.025em;
+          }
+          .content { 
+            padding: 40px; 
+            font-size: 16px; 
+            color: #374151; 
+          }
+          .content p {
+            margin-top: 0;
+            margin-bottom: 16px;
+          }
+          .content p:last-child {
+            margin-bottom: 0;
+          }
+          .footer { 
+            background-color: #f9fafb;
+            text-align: center; 
+            font-size: 13px; 
+            color: #6b7280; 
+            padding: 32px 40px; 
+            border-top: 1px solid #f3f4f6; 
+          }
+          .unsubscribe { 
+            display: inline-block;
+            margin-top: 16px;
+            color: #9ca3af; 
+            text-decoration: none; 
+            font-size: 12px;
+            transition: color 0.15s ease-in-out;
+          }
+          .unsubscribe:hover {
+            color: #4b5563;
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="container">
+            <div class="card">
+              ${salon.name ? `<div class="header"><h1>${salon.name}</h1></div>` : ''}
+              <div class="content">
+                ${formattedHtml}
+              </div>
+              <div class="footer">
+                Wiadomość wysłana z systemu <strong style="color: #374151;">${salon.name || 'SimpliSalon'}</strong>.<br>
+                Prosimy nie odpowiadać bezpośrednio na ten adres email.
+                <br>
+                <a href="${unsubscribeLink}" class="unsubscribe">Zrezygnuj z otrzymywania powiadomień</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+      `
+
       const result = await sendEmailMessage({
         salonId: payload.salonId,
         messageLogId: log.id,
         to: recipient,
-        subject: finalSubject as string,
-        text: finalBody,
-        html: finalBody,
+        subject: finalSubjectParsed as string,
+        text: finalBodyParsed,
+        html: htmlWrapper,
       })
 
       return NextResponse.json({ ok: true, channel: 'email', messageLogId: log.id, providerId: result.providerId })
@@ -178,7 +297,7 @@ export async function POST(request: NextRequest) {
       salonId: payload.salonId,
       messageLogId: log.id,
       to: recipient,
-      body: finalBody,
+      body: finalBodyParsed,
     })
 
     return NextResponse.json({ ok: true, channel: 'sms', messageLogId: log.id, providerId: result.providerId })

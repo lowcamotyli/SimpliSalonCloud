@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 function parseDate(value: string | null): Date | null {
   if (!value) return null
@@ -62,6 +63,9 @@ function bookingRevenue(booking: any): number {
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 20 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
     const {
       data: { user },

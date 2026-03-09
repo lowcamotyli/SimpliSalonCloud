@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
-  const supabase = createAdminSupabaseClient() as any
+  const supabase = createAdminSupabaseClient()
   const nowIso = new Date().toISOString()
 
   const { data: subscriptions, error } = await supabase

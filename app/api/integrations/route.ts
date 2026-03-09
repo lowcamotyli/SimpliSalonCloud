@@ -1,17 +1,10 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { searchParams } = new URL(request.url)
-    const salonId = searchParams.get('salonId')
+    const { supabase, salonId } = await getAuthContext()
 
-    if (!salonId) {
-      return NextResponse.json({ error: 'salonId required' }, { status: 400 })
-    }
-
-    // Get standard integration_configs
     const { data: configs, error } = await supabase
       .from('integration_configs')
       .select('*')
@@ -23,7 +16,6 @@ export async function GET(request: Request) {
 
     const result: any[] = [...(configs || [])]
 
-    // Also check Booksy status from salon_settings (stored separately)
     const { data: settings } = await (supabase as any)
       .from('salon_settings')
       .select('booksy_enabled, booksy_gmail_email')
@@ -31,7 +23,6 @@ export async function GET(request: Request) {
       .single()
 
     if (settings?.booksy_enabled && settings?.booksy_gmail_email) {
-      // Only add synthetic entry if not already in integration_configs
       const alreadyPresent = result.some((c: any) => c.integration_type === 'booksy')
       if (!alreadyPresent) {
         result.push({

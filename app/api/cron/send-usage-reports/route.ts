@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
-  const supabase = createAdminSupabaseClient() as any
+  const supabase = createAdminSupabaseClient()
 
   const results = {
     processed: 0,

@@ -5,8 +5,10 @@ import { useEmployees } from '@/hooks/use-employees'
 import { useServices } from '@/hooks/use-services'
 import { useImportBookings } from '@/hooks/use-import-bookings'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Upload,
   Download,
@@ -18,11 +20,12 @@ import {
   ArrowLeft,
   Loader2,
   User,
-  Briefcase,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { toast } from 'sonner'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
+import { BUILTIN_TEMPLATES } from '@/lib/forms/builtin-templates'
+
 
 // --- CSV parsing ---
 function parseCSV(text: string): string[][] {
@@ -118,6 +121,10 @@ export default function ImportPage() {
     skipped: number
     errors: Array<{ row: number; reason: string }>
   } | null>(null)
+  const formImportFileRef = useRef<HTMLInputElement>(null)
+  const [selectedBuiltins, setSelectedBuiltins] = useState<Set<string>>(new Set())
+  const [formImportResult, setFormImportResult] = useState<{ imported: number; errors: string[] } | null>(null)
+  const [isImportingForms, setIsImportingForms] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data: employees } = useEmployees()
@@ -319,6 +326,125 @@ export default function ImportPage() {
     }
   }
 
+  const importFormsFromFile = async (file: File) => {
+    const raw = await file.text()
+    const parsed: unknown = JSON.parse(raw)
+    const templates = Array.isArray(parsed) ? parsed : [parsed]
+
+    if (!templates.length) {
+      throw new Error('Plik JSON nie zawiera szablonów.')
+    }
+
+    const validTemplates = templates.map((template, index) => {
+      if (
+        !template ||
+        typeof template !== 'object' ||
+        typeof (template as { name?: unknown }).name !== 'string' ||
+        !Array.isArray((template as { fields?: unknown }).fields)
+      ) {
+        throw new Error(`Nieprawidłowy format szablonu na pozycji ${index + 1}.`)
+      }
+      return template as {
+        name: string
+        description?: string
+        requires_signature?: boolean
+        gdpr_consent_text?: string
+        fields: Array<{ id: string; type: string; label: string; required: boolean; options?: string[] }>
+      }
+    })
+
+    let imported = 0
+    const errors: string[] = []
+
+    for (const template of validTemplates) {
+      try {
+        const response = await fetch('/api/forms/templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...template,
+            is_active: true,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Błąd API')
+        }
+
+        imported += 1
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Nieznany błąd'
+        errors.push(`${template.name}: ${message}`)
+      }
+    }
+
+    setFormImportResult({ imported, errors })
+  }
+
+  const handleFormsBulkImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsImportingForms(true)
+
+    try {
+      await importFormsFromFile(file)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nie udało się zaimportować pliku JSON'
+      toast.error(message)
+      setFormImportResult({ imported: 0, errors: [message] })
+    } finally {
+      setIsImportingForms(false)
+      event.target.value = ''
+      if (formImportFileRef.current) {
+        formImportFileRef.current.value = ''
+      }
+    }
+  }
+
+  const handleBuiltinsImport = async () => {
+    if (!selectedBuiltins.size) return
+
+    setIsImportingForms(true)
+    let imported = 0
+    const errors: string[] = []
+
+    try {
+      for (const name of selectedBuiltins) {
+        const template = BUILTIN_TEMPLATES.find(item => item.name === name)
+        if (!template) {
+          errors.push(`${name}: szablon nie istnieje`)
+          continue
+        }
+
+        try {
+          const response = await fetch('/api/forms/templates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...template,
+              is_active: true,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error('Błąd API')
+          }
+
+          imported += 1
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Nieznany błąd'
+          errors.push(`${name}: ${message}`)
+        }
+      }
+
+      setFormImportResult({ imported, errors })
+      setSelectedBuiltins(new Set())
+    } finally {
+      setIsImportingForms(false)
+    }
+  }
+
   const reset = () => {
     setStep(0)
     setParsedRows([])
@@ -330,12 +456,20 @@ export default function ImportPage() {
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Import rezerwacji</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Import danych</h1>
         <p className="text-muted-foreground text-base font-medium">
           Migruj dane z innych systemów do SimpliSalon
         </p>
       </div>
 
+      <Tabs defaultValue="bookings">
+        <TabsList className="mb-6">
+          <TabsTrigger value="bookings">Rezerwacje</TabsTrigger>
+          <TabsTrigger value="services">Usługi</TabsTrigger>
+          <TabsTrigger value="forms">Formularze</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="bookings" className="space-y-8">
       {/* Steps indicator */}
       <div className="flex items-center gap-2">
         {STEPS.map((label, i) => (
@@ -627,6 +761,190 @@ export default function ImportPage() {
           </Card>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="services">
+          <Card className="p-8 glass border-none shadow-xl">
+            <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <FileSpreadsheet className="h-7 w-7" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-foreground">Import usług z CSV</h2>
+                <p className="text-muted-foreground">
+                  Zaimportuj listę usług z pliku CSV. Pobierz szablon, wypełnij go danymi i wgraj tutaj.
+                </p>
+                <a
+                  href="/templates/services-import-template.csv"
+                  download
+                  className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+                >
+                  <Download className="h-4 w-4" />
+                  Pobierz szablon CSV
+                </a>
+              </div>
+            </div>
+            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center text-muted-foreground">
+              <Upload className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="text-lg font-bold mb-1">Import usług — wkrótce</p>
+              <p className="text-sm">Ta funkcja jest w przygotowaniu.</p>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="forms" className="space-y-6">
+          {formImportResult ? (
+            <Card className="p-8 glass border-none shadow-xl">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <h3 className="text-xl font-bold text-foreground">Wynik importu formularzy</h3>
+                  <p className="text-muted-foreground">
+                    Zaimportowano: <span className="font-bold text-foreground">{formImportResult.imported}</span>
+                  </p>
+                  {formImportResult.errors.length > 0 && (
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                      <p className="text-sm font-semibold text-rose-700 mb-2">Błędy:</p>
+                      <ul className="space-y-1 text-sm text-rose-700">
+                        {formImportResult.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <Button className="mt-2 rounded-xl font-bold" onClick={() => setFormImportResult(null)}>
+                    Importuj kolejne
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <>
+              <Card className="p-8 glass border-none shadow-xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Import z pliku JSON</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Wgraj eksport szablonów formularzy.
+                  </p>
+                </div>
+
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                  onClick={() => formImportFileRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={async (e) => {
+                    e.preventDefault()
+                    const file = e.dataTransfer.files?.[0]
+                    if (!file) return
+
+                    setIsImportingForms(true)
+                    try {
+                      await importFormsFromFile(file)
+                    } catch (error) {
+                      const message = error instanceof Error ? error.message : 'Nie udało się zaimportować pliku JSON'
+                      toast.error(message)
+                      setFormImportResult({ imported: 0, errors: [message] })
+                    } finally {
+                      setIsImportingForms(false)
+                      if (formImportFileRef.current) {
+                        formImportFileRef.current.value = ''
+                      }
+                    }
+                  }}
+                >
+                  <input
+                    ref={formImportFileRef}
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleFormsBulkImport}
+                  />
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-bold text-foreground mb-1">
+                    Przeciągnij plik JSON lub kliknij
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Obsługuje tablicę szablonów lub pojedynczy szablon
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+                  <p className="font-semibold mb-2">Wymagana struktura JSON:</p>
+                  <p>
+                    Tablica obiektów z polami: <span className="font-mono">name</span> (string), <span className="font-mono">fields</span> (array), <span className="font-mono">requires_signature</span> (boolean), <span className="font-mono">gdpr_consent_text</span> (string, opcjonalnie).
+                  </p>
+                </div>
+              </Card>
+
+              <Card className="p-8 glass border-none shadow-xl space-y-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Biblioteka szablonów</h2>
+                    <p className="text-muted-foreground mt-1">Wybierz gotowe formularze do szybkiego dodania.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedBuiltins(new Set(BUILTIN_TEMPLATES.map(template => template.name)))}
+                    >
+                      Zaznacz wszystkie
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedBuiltins(new Set())}
+                    >
+                      Odznacz wszystkie
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {BUILTIN_TEMPLATES.map((template) => (
+                    <Card key={template.name} className="p-5 border border-gray-200 relative">
+                      <div className="absolute top-4 right-4">
+                        <Checkbox
+                          checked={selectedBuiltins.has(template.name)}
+                          onCheckedChange={(checked) => {
+                            setSelectedBuiltins(prev => {
+                              const next = new Set(prev)
+                              if (checked === true) {
+                                next.add(template.name)
+                              } else {
+                                next.delete(template.name)
+                              }
+                              return next
+                            })
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2 pr-8">
+                        <CardTitle className="text-base">{template.name}</CardTitle>
+                        <CardDescription>{template.description}</CardDescription>
+                        <Badge variant="secondary">{template.fields.length} pól</Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleBuiltinsImport}
+                    disabled={!selectedBuiltins.size || isImportingForms}
+                    className="rounded-xl font-bold"
+                  >
+                    {isImportingForms ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    Dodaj zaznaczone ({selectedBuiltins.size})
+                  </Button>
+                </div>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

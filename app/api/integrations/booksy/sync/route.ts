@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
             emails_success: successCount,
             emails_error: errorCount,
             sync_results: results.map(r => ({ messageId: r.messageId, subject: r.subject, success: r.result.success, action: (r.result as any).action, error: (r.result as any).error })),
-        }).then().catch((e: unknown) => logger.error('Failed to save sync log', e, { salonId: profile.salon_id }))
+        }).then(null, (e: unknown) => logger.error('Failed to save sync log', e, { salonId: profile.salon_id }))
 
         // Update sync stats and last_sync_at
         const currentStats = (settings.booksy_sync_stats as any) ?? { total: 0, success: 0, errors: 0 }

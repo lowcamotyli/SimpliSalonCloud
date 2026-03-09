@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
+import { logger } from '@/lib/logger'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 type BillingPlan = 'starter' | 'professional' | 'business' | 'enterprise'
 
@@ -18,6 +20,9 @@ const PLAN_PRICES_CENTS: Record<BillingPlan, number> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 5 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
 
     const {
@@ -60,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const salonId = profile.salon_id
-    const admin = createAdminSupabaseClient() as any
+    const admin = createAdminSupabaseClient()
 
     const { data: existingSubscriptions, error: existingSubError } = await admin
       .from('subscriptions')
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
           total: subtotalCents,
         },
       ],
-    })
+    } as any)
 
     if (invoiceInsertError) {
       throw new Error(`Failed to create pending invoice: ${invoiceInsertError.message}`)
@@ -143,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ redirectUrl: paymentUrl })
   } catch (error) {
-    console.error('[BILLING SUBSCRIBE] Error:', error)
+    logger.error('billing.subscribe failed', error, { endpoint: 'POST /api/billing/subscribe' })
 
     return NextResponse.json(
       {

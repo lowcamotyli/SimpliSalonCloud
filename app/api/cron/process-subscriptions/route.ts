@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
-  const supabase = createAdminSupabaseClient() as any
+  const supabase = createAdminSupabaseClient()
 
   const results = {
     processed: 0,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
           .update({
             status: 'past_due',
             metadata: {
-              ...sub.metadata,
+              ...(sub.metadata as Record<string, unknown>),
               renewal_attempted_at: new Date().toISOString(),
             },
           })

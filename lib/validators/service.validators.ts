@@ -9,6 +9,8 @@ export const createServiceSchema = z.object({
     price: z.number().nonnegative('Cena nie może być ujemna'),
     active: z.boolean().default(true),
     surcharge_allowed: z.boolean().default(true),
+    survey_enabled: z.boolean().default(true),
+    survey_custom_message: z.string().max(320).nullable().optional(),
 })
 
 export const updateServiceSchema = createServiceSchema.partial()

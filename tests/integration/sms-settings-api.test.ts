@@ -1,5 +1,4 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect } from 'vitest'
 import { handleGetSmsSettings, handlePutSmsSettings } from '@/app/api/settings/sms/route'
 
 type AnyObj = Record<string, any>
@@ -27,6 +26,15 @@ function createSmsSettingsSupabaseMock(options?: {
         filters[column] = value
         return this
       },
+      order() {
+        return this
+      },
+      delete() {
+        return this
+      },
+      insert() {
+        return { error: null } // simplified success
+      },
       upsert(payload: AnyObj) {
         mode = 'upsert'
         state.upsertPayload = payload
@@ -47,6 +55,13 @@ function createSmsSettingsSupabaseMock(options?: {
 
         return { data: null, error: null }
       },
+      then: (resolve: any) => {
+        if (table === 'reminder_rules') {
+          resolve({ data: [], error: null })
+        } else {
+          resolve({ data: null, error: null })
+        }
+      }
     }
   }
 
@@ -63,184 +78,182 @@ function createSmsSettingsSupabaseMock(options?: {
   return { supabase, state }
 }
 
-test('SMS settings GET masks token and returns has_smsapi_token', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock({
-    settingsRow: {
-      salon_id: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-      smsapi_token: 'v1:encrypted:value',
-      smsapi_sender_name: 'SalonPL',
-    },
+describe('SMS settings API', () => {
+  it('GET masks token and returns has_smsapi_token', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock({
+      settingsRow: {
+        salon_id: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+        smsapi_token: 'v1:encrypted:value',
+        smsapi_sender_name: 'SalonPL',
+      },
+    })
+
+    const response = await handleGetSmsSettings(
+      new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
+      { createSupabase: async () => supabase as any }
+    )
+
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(200)
+    const payload = await response!.json()
+    expect(payload.smsapi_token).toBe('')
+    expect(payload.has_smsapi_token).toBe(true)
+    expect(payload.smsapi_sender_name).toBe('SalonPL')
   })
 
-  const response = await handleGetSmsSettings(
-    new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
-    { createSupabase: async () => supabase as any }
-  )!
+  it('GET returns 401 for unauthorized user', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock({ authenticated: false })
 
-  assert.ok(response)
+    const response = await handleGetSmsSettings(
+      new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.equal(response.status, 200)
-  const payload = await response.json()
-  assert.equal(payload.smsapi_token, '')
-  assert.equal(payload.has_smsapi_token, true)
-  assert.equal(payload.smsapi_sender_name, 'SalonPL')
-})
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(401)
+  })
 
-test('SMS settings GET returns 401 for unauthorized user', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock({ authenticated: false })
+  it('GET returns 403 when user is not a salon member', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock({ member: false })
 
-  const response = await handleGetSmsSettings(
-    new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
-    { createSupabase: async () => supabase as any }
-  )!
+    const response = await handleGetSmsSettings(
+      new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
-  assert.equal(response.status, 401)
-})
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(403)
+  })
 
-test('SMS settings GET returns 403 when user is not a salon member', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock({ member: false })
+  it('GET returns 400 when salonId is missing', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock()
 
-  const response = await handleGetSmsSettings(
-    new Request('http://localhost/api/settings/sms?salonId=a58bccf5-e159-4cde-b837-1f7d0a0d1797'),
-    { createSupabase: async () => supabase as any }
-  )!
+    const response = await handleGetSmsSettings(new Request('http://localhost/api/settings/sms'), {
+      createSupabase: async () => supabase as any,
+    })
 
-  assert.ok(response)
-  assert.equal(response.status, 403)
-})
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(400)
+  })
 
-test('SMS settings GET returns 400 when salonId is missing', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock()
+  it('PUT supports __UNCHANGED__ sentinel (does not overwrite token)', async () => {
+    const { supabase, state } = createSmsSettingsSupabaseMock()
 
-  const response = await handleGetSmsSettings(new Request('http://localhost/api/settings/sms'), {
-    createSupabase: async () => supabase as any,
-  })!
-
-  assert.ok(response)
-  assert.equal(response.status, 400)
-})
-
-test('SMS settings PUT supports __UNCHANGED__ sentinel (does not overwrite token)', async () => {
-  const { supabase, state } = createSmsSettingsSupabaseMock()
-
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-        smsapi_token: '__UNCHANGED__',
-        smsapi_sender_name: 'Sender11',
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+          smsapi_token: '__UNCHANGED__',
+          smsapi_sender_name: 'Sender11',
+        }),
       }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(200)
+    expect(Boolean(state.upsertPayload)).toBe(true)
+    expect('smsapi_token' in (state.upsertPayload || {})).toBe(false)
+    expect(state.upsertPayload?.smsapi_sender_name).toBe('Sender11')
+  })
 
-  assert.equal(response.status, 200)
-  assert.equal(Boolean(state.upsertPayload), true)
-  assert.equal('smsapi_token' in (state.upsertPayload || {}), false)
-  assert.equal(state.upsertPayload?.smsapi_sender_name, 'Sender11')
-})
+  it('PUT encrypts plaintext token before save', async () => {
+    process.env.MESSAGING_ENCRYPTION_KEY = '12345678901234567890123456789012'
 
-test('SMS settings PUT encrypts plaintext token before save', async () => {
-  process.env.MESSAGING_ENCRYPTION_KEY = '12345678901234567890123456789012'
+    const { supabase, state } = createSmsSettingsSupabaseMock()
 
-  const { supabase, state } = createSmsSettingsSupabaseMock()
-
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-        smsapi_token: 'plain-secret-token',
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+          smsapi_token: 'plain-secret-token',
+        }),
       }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(200)
+    expect(typeof state.upsertPayload?.smsapi_token).toBe('string')
+    expect(state.upsertPayload?.smsapi_token.startsWith('v1:')).toBe(true)
+    expect(state.upsertPayload?.smsapi_token).not.toBe('plain-secret-token')
+  })
 
-  assert.equal(response.status, 200)
-  assert.equal(typeof state.upsertPayload?.smsapi_token, 'string')
-  assert.equal(state.upsertPayload?.smsapi_token.startsWith('v1:'), true)
-  assert.notEqual(state.upsertPayload?.smsapi_token, 'plain-secret-token')
-})
+  it('PUT returns 401 for unauthorized user', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock({ authenticated: false })
 
-test('SMS settings PUT returns 401 for unauthorized user', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock({ authenticated: false })
-
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-        smsapi_sender_name: 'Sender11',
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+          smsapi_sender_name: 'Sender11',
+        }),
       }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
-  assert.equal(response.status, 401)
-})
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(401)
+  })
 
-test('SMS settings PUT returns 403 when user is not a salon member', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock({ member: false })
+  it('PUT returns 403 when user is not a salon member', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock({ member: false })
 
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-        smsapi_sender_name: 'Sender11',
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+          smsapi_sender_name: 'Sender11',
+        }),
       }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
-  assert.equal(response.status, 403)
-})
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(403)
+  })
 
-test('SMS settings PUT returns 400 when salonId is missing', async () => {
-  const { supabase } = createSmsSettingsSupabaseMock()
+  it('PUT returns 400 when salonId is missing', async () => {
+    const { supabase } = createSmsSettingsSupabaseMock()
 
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ smsapi_sender_name: 'Sender11' }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
-
-  assert.ok(response)
-  assert.equal(response.status, 400)
-})
-
-test('SMS settings PUT clears token when empty string is provided', async () => {
-  const { supabase, state } = createSmsSettingsSupabaseMock()
-
-  const response = await handlePutSmsSettings(
-    new Request('http://localhost/api/settings/sms', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
-        smsapi_token: '',
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ smsapi_sender_name: 'Sender11' }),
       }),
-    }),
-    { createSupabase: async () => supabase as any }
-  )!
+      { createSupabase: async () => supabase as any }
+    )
 
-  assert.ok(response)
-  assert.equal(response.status, 200)
-  assert.equal(state.upsertPayload?.smsapi_token, null)
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(400)
+  })
+
+  it('PUT clears token when empty string is provided', async () => {
+    const { supabase, state } = createSmsSettingsSupabaseMock()
+
+    const response = await handlePutSmsSettings(
+      new Request('http://localhost/api/settings/sms', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          salonId: 'a58bccf5-e159-4cde-b837-1f7d0a0d1797',
+          smsapi_token: '',
+        }),
+      }),
+      { createSupabase: async () => supabase as any }
+    )
+
+    expect(response!).toBeTruthy()
+    expect(response!.status).toBe(200)
+    expect(state.upsertPayload?.smsapi_token).toBeNull()
+  })
 })
-

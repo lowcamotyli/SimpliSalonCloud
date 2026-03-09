@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { hasFeature } from '@/lib/features'
-import { validateCronRequest } from '@/lib/cron/guard'
+import { validateCronSecret as validateCronRequest } from '@/lib/middleware/cron-auth'
 
 type ScoringSetting = {
   salon_id: string
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const authError = validateCronRequest(request)
   if (authError) return authError
 
-  const admin = createAdminSupabaseClient() as any
+  const admin = createAdminSupabaseClient()
   const summary = {
     salonsScanned: 0,
     salonsProcessed: 0,

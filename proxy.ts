@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Handle CORS for public API
@@ -23,19 +23,6 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   })
-
-  // Add security headers (tylko w production)
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-XSS-Protection', '1; mode=block')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set(
-      'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=()'
-    )
-  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -98,7 +85,7 @@ export async function middleware(request: NextRequest) {
   // Mapowanie ścieżek do wymaganych uprawnień
   const PATH_PERMISSIONS: { regex: RegExp; permission: string }[] = [
     // /dashboard/[slug]/settings/*
-    { regex: /\/settings\//, permission: 'settings:manage' },
+    { regex: /\/settings\//, permission: 'settings:view' },
     // /dashboard/[slug]/payroll
     { regex: /\/payroll(\/|$)/, permission: 'finance:view' },
     // /dashboard/[slug]/employees

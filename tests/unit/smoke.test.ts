@@ -1,7 +1,5 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import { it, expect } from 'vitest'
 
-test('smoke', () => {
-  assert.equal(1, 1)
+it('smoke', () => {
+  expect(1).toBe(1)
 })
-

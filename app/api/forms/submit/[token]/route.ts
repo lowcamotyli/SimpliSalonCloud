@@ -74,7 +74,7 @@ export async function POST(
       return NextResponse.json({ error: 'Nie znaleziono szablonu formularza' }, { status: 404 })
     }
 
-    const fields = (template.fields ?? []) as FormField[]
+    const fields = (template.fields ?? []) as unknown as FormField[]
     const missingRequired = fields
       .filter((field) => field.required)
       .filter((field) => !hasValue(answers[field.id]))

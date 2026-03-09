@@ -1,22 +1,19 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
 
-const originalNodeEnv = process.env.NODE_ENV
 const originalAllowedOrigins = process.env.ALLOWED_ORIGINS
 
-test.beforeEach(() => {
-    ;(process.env as Record<string, string | undefined>).NODE_ENV = 'development'
-    process.env.ALLOWED_ORIGINS = 'https://example.com'
+beforeEach(() => {
+  process.env.ALLOWED_ORIGINS = 'https://example.com,http://localhost:3000'
 })
 
-test.afterEach(() => {
-    ;(process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv
-    process.env.ALLOWED_ORIGINS = originalAllowedOrigins
+afterEach(() => {
+  process.env.ALLOWED_ORIGINS = originalAllowedOrigins
 })
 
-test('sets CORS headers for allowed origin', () => {
+describe('CORS middleware', () => {
+  it('sets CORS headers for allowed origin', () => {
     const request = new NextRequest('http://localhost:3000/api/public/bookings', {
       headers: {
         origin: 'http://localhost:3000',
@@ -26,11 +23,24 @@ test('sets CORS headers for allowed origin', () => {
 
     const result = setCorsHeaders(request, response)
 
-    assert.equal(result.headers.get('Access-Control-Allow-Origin'), 'http://localhost:3000')
-    assert.equal(result.headers.get('Access-Control-Allow-Credentials'), 'true')
-})
+    expect(result.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000')
+    expect(result.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+  })
 
-test('returns 200 for valid preflight request', () => {
+  it('does not set CORS headers for disallowed origin', () => {
+    const request = new NextRequest('http://localhost:3000/api/public/bookings', {
+      headers: {
+        origin: 'https://evil.com',
+      },
+    })
+    const response = NextResponse.next()
+
+    const result = setCorsHeaders(request, response)
+
+    expect(result.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+
+  it('returns 200 for valid preflight request from allowed origin', () => {
     const request = new NextRequest('http://localhost:3000/api/public/bookings', {
       method: 'OPTIONS',
       headers: {
@@ -40,7 +50,20 @@ test('returns 200 for valid preflight request', () => {
 
     const result = handleCorsPreflightRequest(request)
 
-    assert.equal(result?.status, 200)
-    assert.equal(result?.headers.get('Access-Control-Allow-Origin'), 'http://localhost:3000')
-})
+    expect(result?.status).toBe(200)
+    expect(result?.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000')
+  })
 
+  it('returns 403 for preflight from disallowed origin', () => {
+    const request = new NextRequest('http://localhost:3000/api/public/bookings', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://evil.com',
+      },
+    })
+
+    const result = handleCorsPreflightRequest(request)
+
+    expect(result?.status).toBe(403)
+  })
+})

@@ -9,8 +9,8 @@
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern types/database.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/unit/*.test.ts tests/unit/**/*.test.ts tests/integration/**/*.test.ts",
-    "test:watch": "tsx --watch --test tests/unit/*.test.ts tests/unit/**/*.test.ts tests/integration/**/*.test.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:all": "node ./scripts/run-all-checks.cjs",
     "types:generate": "npx supabase gen types typescript --project-id ubkueiwelarplnbhqmoa --schema public > types/database.ts"

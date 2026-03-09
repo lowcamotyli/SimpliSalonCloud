@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
 
 export async function POST() {
   try {
@@ -30,7 +31,7 @@ export async function POST() {
     }
 
     const salonId = profile.salon_id
-    const admin = createAdminSupabaseClient() as any
+    const admin = createAdminSupabaseClient()
 
     const { error: updateError } = await admin
       .from('subscriptions')
@@ -47,7 +48,7 @@ export async function POST() {
       message: 'Subscription canceled. Access continues until end of billing period.',
     })
   } catch (error) {
-    console.error('[BILLING CANCEL] Error:', error)
+    logger.error('billing.cancel failed', error, { endpoint: 'POST /api/billing/cancel' })
 
     return NextResponse.json(
       {

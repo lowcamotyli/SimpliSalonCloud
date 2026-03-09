@@ -11,7 +11,48 @@ interface LogContext {
     action?: string
     duration?: number
     messageId?: string
-    [key: string]: any // Możesz dodać dowolne pola
+    [key: string]: unknown
+}
+
+// Pola PII które należy redaktować przed logowaniem
+const PII_FIELDS = new Set([
+    'email',
+    'phone',
+    'password',
+    'token',
+    'secret',
+    'authorization',
+    'cookie',
+    'name',
+    'full_name',
+    'firstName',
+    'lastName',
+    'first_name',
+    'last_name',
+    'owner_email',
+    'billing_email',
+])
+
+const REDACTED = '[REDACTED]'
+
+function scrubPii(value: unknown, depth = 0): unknown {
+    if (depth > 5) return value // guard against circular / deeply nested objects
+    if (value === null || value === undefined) return value
+    if (typeof value !== 'object') return value
+
+    if (Array.isArray(value)) {
+        return value.map((item) => scrubPii(item, depth + 1))
+    }
+
+    const scrubbed: Record<string, unknown> = {}
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+        if (PII_FIELDS.has(key)) {
+            scrubbed[key] = REDACTED
+        } else {
+            scrubbed[key] = scrubPii(val, depth + 1)
+        }
+    }
+    return scrubbed
 }
 
 class Logger {
@@ -30,13 +71,13 @@ class Logger {
     }
 
     // Formatuj log jako JSON
-    private format(level: LogLevel, message: string, context?: LogContext) {
+    private format(level: LogLevel, message: string, context?: unknown) {
         return JSON.stringify({
             timestamp: new Date().toISOString(),
             level,
             message,
             environment: process.env.NODE_ENV,
-            ...context
+            ...(context && typeof context === 'object' ? context : {}),
         })
     }
 
@@ -44,56 +85,57 @@ class Logger {
 
     debug(message: string, context?: LogContext) {
         if (this.shouldLog('debug')) {
-            console.log(this.format('debug', message, context))
+            console.log(this.format('debug', message, scrubPii(context)))
         }
     }
 
     info(message: string, context?: LogContext) {
         if (this.shouldLog('info')) {
-            console.log(this.format('info', message, context))
+            console.log(this.format('info', message, scrubPii(context)))
         }
     }
 
     warn(message: string, context?: LogContext) {
         if (this.shouldLog('warn')) {
-            console.warn(this.format('warn', message, context))
+            console.warn(this.format('warn', message, scrubPii(context)))
         }
     }
 
     error(message: string, error?: unknown, context?: LogContext) {
         if (this.shouldLog('error')) {
-            let errorInfo: any = {}
+            let errorInfo: Record<string, unknown> = {}
 
             if (error instanceof Error) {
                 errorInfo = {
                     error: error.message,
                     stack: error.stack,
-                    name: error.name
+                    name: error.name,
                 }
             } else if (error && typeof error === 'object') {
                 // Handle Supabase/PostgrestError and other objects
+                // Scrub full object to remove PII before spreading
+                const scrubbed = scrubPii(error) as Record<string, unknown>
                 errorInfo = {
-                    error: (error as any).message || String(error),
-                    code: (error as any).code,
-                    details: (error as any).details,
-                    hint: (error as any).hint,
-                    // Include all enumerable properties for debugging
+                    error: (error as Record<string, unknown>).message || String(error),
+                    code: (error as Record<string, unknown>).code,
+                    details: (error as Record<string, unknown>).details,
+                    hint: (error as Record<string, unknown>).hint,
                     ...Object.fromEntries(
-                        Object.entries(error).filter(([key]) =>
-                            !['stack'].includes(key) // Exclude stack trace from object errors
-                        )
-                    )
+                        Object.entries(scrubbed).filter(([key]) => !['stack'].includes(key))
+                    ),
                 }
             } else if (error) {
                 errorInfo = {
-                    error: String(error)
+                    error: String(error),
                 }
             }
 
-            console.error(this.format('error', message, {
-                ...context,
-                ...errorInfo
-            }))
+            console.error(
+                this.format('error', message, {
+                    ...((scrubPii(context) as Record<string, unknown>) ?? {}),
+                    ...errorInfo,
+                })
+            )
         }
     }
 }

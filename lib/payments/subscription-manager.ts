@@ -327,7 +327,7 @@ export class SubscriptionManager {
           p24_transaction_id: sessionId,
           p24_order_id: null,
           metadata: {
-            ...(currentSub.metadata || {}),
+            ...(currentSub.metadata as Record<string, unknown> || {}),
             pending_plan_change: {
               plan_type: newPlanType,
               billing_interval: interval,
@@ -452,7 +452,7 @@ export class SubscriptionManager {
     let activatedPlanType = subscription.plan_type as PlanType
 
     if (pendingPlanChange?.plan_type) {
-      const nextMetadata = { ...(subscription.metadata || {}) }
+      const nextMetadata = { ...(subscription.metadata as Record<string, unknown> || {}) }
       delete nextMetadata.pending_plan_change
 
       updatePayload.plan_type = pendingPlanChange.plan_type
@@ -509,7 +509,7 @@ export class SubscriptionManager {
       .update({
         status: 'past_due',
         metadata: {
-          ...subscription.metadata,
+          ...(subscription.metadata as Record<string, unknown>),
           last_payment_error: reason,
           last_payment_attempt: new Date().toISOString(),
         },
@@ -656,7 +656,7 @@ export class SubscriptionManager {
       currency: 'PLN',
       billing_name: salon.name,
       billing_email: salon.billing_email || salon.owner_email,
-      billing_address: salon.address || null,
+      billing_address: (salon as any).address || null,
       payment_method: 'p24',
       paid_at: new Date().toISOString(),
       p24_transaction_id: p24TransactionId,
@@ -669,7 +669,7 @@ export class SubscriptionManager {
           total: subtotal,
         },
       ],
-    })
+    } as any)
 
     // Race-safe idempotencja: przy równoległym retried webhooku drugi insert trafi w unique index
     if (insertError && insertError.code !== '23505') {

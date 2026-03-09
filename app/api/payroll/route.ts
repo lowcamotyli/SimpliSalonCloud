@@ -4,6 +4,8 @@ import { format } from 'date-fns'
 import { payrollMonthSchema } from '@/lib/validators/payroll.validators'
 import { canGeneratePayroll, canViewPayroll } from '@/lib/payroll/access'
 import { parsePayrollMonth } from '@/lib/payroll/period'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { logger } from '@/lib/logger'
 
 async function buildPayrollData(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
@@ -113,6 +115,9 @@ async function buildPayrollData(
 // GET /api/payroll?month=YYYY-MM
 export async function GET(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 20 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -135,7 +140,7 @@ export async function GET(request: NextRequest) {
     const payrollData = await buildPayrollData(supabase, profile.salon_id, monthParam)
     return NextResponse.json(payrollData)
   } catch (error: any) {
-    console.error('GET /api/payroll error:', error)
+    logger.error('GET /api/payroll failed', error, { endpoint: 'GET /api/payroll' })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
@@ -231,7 +236,7 @@ export async function POST(request: NextRequest) {
       ownerEmailSent: !!targetEmail
     }, { status: 201 })
   } catch (error: any) {
-    console.error('POST /api/payroll error:', error)
+    logger.error('POST /api/payroll failed', error, { endpoint: 'POST /api/payroll' })
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

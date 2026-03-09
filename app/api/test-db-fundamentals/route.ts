@@ -2,10 +2,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 /**
- * Test endpoint for database fundamentals
+ * Test endpoint for database fundamentals — dev only
  * GET /api/test-db-fundamentals
  */
 export async function GET() {
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
     const supabase = (await createServerSupabaseClient()) as any
     const results: any = {
         timestamp: new Date().toISOString(),

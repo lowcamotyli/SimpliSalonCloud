@@ -21,6 +21,11 @@ type BookingCandidate = {
     phone: string | null
     full_name: string | null
   } | null
+  services?: {
+    id: string
+    survey_enabled: boolean
+    survey_custom_message: string | null
+  } | null
 }
 
 function toIsoDateString(date: Date): string {
@@ -36,7 +41,7 @@ export async function GET(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
-  const admin = createAdminSupabaseClient() as any
+  const admin = createAdminSupabaseClient()
   const now = new Date()
   const nowMs = now.getTime()
   const minEndMs = nowMs - 2.5 * 60 * 60 * 1000
@@ -51,7 +56,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await admin
       .from('bookings')
       .select(
-        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, full_name)'
+        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, full_name), services(id, survey_enabled, survey_custom_message)'
       )
       .eq('status', 'completed')
       .eq('survey_sent', false)
@@ -77,6 +82,12 @@ export async function GET(request: NextRequest) {
         continue
       }
 
+      // Skip if the specific service has surveys disabled
+      if (booking.services?.survey_enabled === false) {
+        skipped += 1
+        continue
+      }
+
       const client = booking.clients
       if (!client?.phone) {
         skipped += 1
@@ -96,6 +107,7 @@ export async function GET(request: NextRequest) {
           booking_id: booking.id,
           client_id: booking.client_id,
           salon_id: booking.salon_id,
+          service_id: booking.services?.id ?? null,
           fill_token: token,
           fill_token_exp: fillTokenExp,
         })
@@ -108,11 +120,16 @@ export async function GET(request: NextRequest) {
         // 2. Send SMS — if this fails, survey row exists and next cron run will be blocked
         //    by the UNIQUE constraint (no duplicate sent), but survey row is orphaned.
         //    Acceptable tradeoff vs sending duplicate SMS.
+        const surveyUrl = `${appUrl}/survey/${token}`
+        const smsBody = booking.services?.survey_custom_message
+          ? booking.services.survey_custom_message.replace('{{url}}', surveyUrl)
+          : `Dzi\u0119kujemy za wizyt\u0119! Oce\u0144 nas w 30 sekund: ${surveyUrl}`
+
         await sendSms({
           salonId: booking.salon_id,
           clientId: client.id,
           to: client.phone,
-          body: `Dziekujemy za wizyte! Oce\u0144 nas w 30 sekund: ${appUrl}/survey/${token}`,
+          body: smsBody,
         })
 
         // 3. Mark booking as sent — if this fails, UNIQUE on survey row prevents duplicate

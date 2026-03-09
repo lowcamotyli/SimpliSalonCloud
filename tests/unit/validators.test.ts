@@ -1,9 +1,9 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect } from 'vitest'
 import { createEmployeeSchema } from '@/lib/validators/employee.validators'
 import { createClientSchema } from '@/lib/validators/client.validators'
 
-test('employee validator accepts valid employee payload', () => {
+describe('employee validator', () => {
+  it('accepts valid employee payload', () => {
     const result = createEmployeeSchema.safeParse({
       firstName: 'Anna',
       lastName: 'Nowak',
@@ -15,11 +15,10 @@ test('employee validator accepts valid employee payload', () => {
       avatarUrl: 'https://example.com/avatar.jpg',
       active: true,
     })
+    expect(result.success).toBe(true)
+  })
 
-    assert.equal(result.success, true)
-})
-
-test('employee validator rejects invalid employee email', () => {
+  it('rejects invalid employee email', () => {
     const result = createEmployeeSchema.safeParse({
       firstName: 'Anna',
       email: 'not-an-email',
@@ -28,11 +27,12 @@ test('employee validator rejects invalid employee email', () => {
       commissionRate: 0,
       active: true,
     })
-
-    assert.equal(result.success, false)
+    expect(result.success).toBe(false)
+  })
 })
 
-test('client validator accepts valid client payload', () => {
+describe('client validator', () => {
+  it('accepts valid client payload', () => {
     const result = createClientSchema.safeParse({
       salon_id: '123e4567-e89b-12d3-a456-426614174000',
       first_name: 'Jan',
@@ -41,18 +41,16 @@ test('client validator accepts valid client payload', () => {
       email: 'jan@example.com',
       notes: 'VIP',
     })
+    expect(result.success).toBe(true)
+  })
 
-    assert.equal(result.success, true)
-})
-
-test('client validator rejects invalid phone format', () => {
+  it('rejects invalid phone format', () => {
     const result = createClientSchema.safeParse({
       salon_id: '123e4567-e89b-12d3-a456-426614174000',
       first_name: 'Jan',
       last_name: 'Kowalski',
       phone: 'abc',
     })
-
-    assert.equal(result.success, false)
+    expect(result.success).toBe(false)
+  })
 })
-

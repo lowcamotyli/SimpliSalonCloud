@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +23,6 @@ export default function SignupPage() {
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
-    // Wyczyść błąd dla danego pola, gdy użytkownik zaczyna pisać
     setErrorDetails(prev => ({ ...prev, [field]: '', general: '' }))
 
     // Auto-generate slug from salon name
@@ -42,12 +40,13 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setErrorDetails({}) // Reset błędów na starcie
-    let hasValidationError = false
+    setErrorDetails({})
+
     const newErrors: Record<string, string> = {}
+    let hasValidationError = false
 
     try {
-      // Validation Front-end
+      // Client-side validation only
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Hasła nie są identyczne'
         hasValidationError = true
@@ -65,68 +64,61 @@ export default function SignupPage() {
 
       if (hasValidationError) {
         setErrorDetails(newErrors)
-        throw new Error('Popraw błędy w formularzu przed kontynuacją')
+        return
       }
 
-      const supabase = createClient()
-
-      // 1. Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+      // All DB operations are delegated to the server-side API route
+      // which assigns role: 'owner' internally — no client-side trust
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          salonName: formData.salonName,
+          salonSlug: formData.salonSlug,
+        }),
       })
 
-      if (authError) {
-        // Tłumaczenie błędów Supabase Auth
-        if (authError.message.includes('already registered') || authError.status === 400) {
+      if (!res.ok) {
+        const data = await res.json()
+
+        if (res.status === 409 && data.field === 'email') {
           setErrorDetails({ email: 'Konto z podanym adresem email już istnieje' })
-          throw new Error('Konto o podanym adresie email już istnieje.')
+          toast.error('Konto o podanym adresie email już istnieje.')
+          return
         }
-        throw authError
-      }
-      if (!authData.user) throw new Error('Nie udało się utworzyć użytkownika')
 
-      // 2. Create salon
-      const { data: salonData, error: salonError } = await supabase
-        .from('salons')
-        .insert({
-          slug: formData.salonSlug,
-          name: formData.salonName,
-          owner_email: formData.email,
-        } as any)
-        .select()
-        .single()
-
-      if (salonError) {
-        if (salonError.code === '23505') { // Postgres: unique_violation
+        if (res.status === 409 && data.field === 'salonSlug') {
           setErrorDetails({ salonSlug: 'Ten URL salonu jest już zajęty' })
-          // Wycofujemy autoryzację, zeby zapobiec tworzeniu profilu "ducha" - Wymagałoby dodatkowego RLS, chwilowo zgłaszamy po prostu błąd
-          throw new Error('Ten link salonu jest już zajęty, wybierz inny.')
+          toast.error('Ten link salonu jest już zajęty, wybierz inny.')
+          return
         }
-        throw salonError
+
+        if (res.status === 400 && data.details) {
+          // Zod validation errors from server
+          const fieldErrors = data.details as Record<string, string[]>
+          const mapped: Record<string, string> = {}
+          for (const [field, msgs] of Object.entries(fieldErrors)) {
+            if (Array.isArray(msgs) && msgs.length > 0) {
+              mapped[field] = msgs[0]
+            }
+          }
+          setErrorDetails(mapped)
+          toast.error('Popraw błędy w formularzu.')
+          return
+        }
+
+        throw new Error(data.error || 'Błąd podczas rejestracji')
       }
-
-      // 3. Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: authData.user.id,
-          salon_id: (salonData as any).id,
-          full_name: formData.fullName,
-          role: 'owner',
-        } as any)
-
-      if (profileError) throw profileError
 
       toast.success('Konto zostało utworzone! Sprawdź email w celu weryfikacji.')
-
-      // Redirect to login
       router.push('/login')
-    } catch (error: any) {
-      toast.error(error.message || 'Błąd podczas rejestracji')
-      if (!Object.keys(newErrors).length && !errorDetails.email && !errorDetails.salonSlug) {
-        setErrorDetails(prev => ({ ...prev, general: error.message || 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.' }))
-      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.'
+      toast.error(message)
+      setErrorDetails(prev => ({ ...prev, general: message }))
     } finally {
       setLoading(false)
     }

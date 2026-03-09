@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       audit_logs: {
@@ -822,6 +797,111 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_completed_booking_applications_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_schedule_exceptions: {
+        Row: {
+          created_at: string
+          employee_id: string
+          end_time: string | null
+          exception_date: string
+          id: string
+          is_working: boolean
+          reason: string | null
+          salon_id: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          end_time?: string | null
+          exception_date: string
+          id?: string
+          is_working?: boolean
+          reason?: string | null
+          salon_id: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          end_time?: string | null
+          exception_date?: string
+          id?: string
+          is_working?: boolean
+          reason?: string | null
+          salon_id?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedule_exceptions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_schedule_exceptions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          employee_id: string
+          end_time: string | null
+          id: string
+          is_working: boolean
+          salon_id: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          employee_id: string
+          end_time?: string | null
+          id?: string
+          is_working?: boolean
+          salon_id: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          employee_id?: string
+          end_time?: string | null
+          id?: string
+          is_working?: boolean
+          salon_id?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_schedules_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -1891,6 +1971,7 @@ export type Database = {
           nps_score: number | null
           rating: number | null
           salon_id: string
+          service_id: string | null
           submitted_at: string | null
         }
         Insert: {
@@ -1904,6 +1985,7 @@ export type Database = {
           nps_score?: number | null
           rating?: number | null
           salon_id: string
+          service_id?: string | null
           submitted_at?: string | null
         }
         Update: {
@@ -1917,6 +1999,7 @@ export type Database = {
           nps_score?: number | null
           rating?: number | null
           salon_id?: string
+          service_id?: string | null
           submitted_at?: string | null
         }
         Relationships: [
@@ -1939,6 +2022,13 @@ export type Database = {
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -2017,6 +2107,8 @@ export type Database = {
           salon_id: string
           subcategory: string
           surcharge_allowed: boolean
+          survey_custom_message: string | null
+          survey_enabled: boolean
           updated_at: string
           version: number
         }
@@ -2033,6 +2125,8 @@ export type Database = {
           salon_id: string
           subcategory: string
           surcharge_allowed?: boolean
+          survey_custom_message?: string | null
+          survey_enabled?: boolean
           updated_at?: string
           version?: number
         }
@@ -2049,6 +2143,8 @@ export type Database = {
           salon_id?: string
           subcategory?: string
           surcharge_allowed?: boolean
+          survey_custom_message?: string | null
+          survey_enabled?: boolean
           updated_at?: string
           version?: number
         }
@@ -2547,9 +2643,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

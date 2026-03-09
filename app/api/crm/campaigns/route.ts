@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { checkFeatureAccess } from '@/lib/middleware/feature-gate'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 const querySchema = z.object({
   salonId: z.string().uuid(),
@@ -136,6 +137,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 10 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
     const {
       data: { user },

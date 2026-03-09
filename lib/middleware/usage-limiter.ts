@@ -146,16 +146,16 @@ export async function incrementUsage(
 
     switch (resourceType) {
       case 'bookings':
-        updates.bookings_count = existing.bookings_count + incrementBy
+        updates.bookings_count = (existing.bookings_count ?? 0) + incrementBy
         break
       case 'clients':
-        updates.clients_count = existing.clients_count + incrementBy
+        updates.clients_count = (existing.clients_count ?? 0) + incrementBy
         break
       case 'employees':
-        updates.employees_count = existing.employees_count + incrementBy
+        updates.employees_count = (existing.employees_count ?? 0) + incrementBy
         break
       case 'api_calls':
-        updates.api_calls_count = existing.api_calls_count + incrementBy
+        updates.api_calls_count = (existing.api_calls_count ?? 0) + incrementBy
         break
     }
 
@@ -217,16 +217,16 @@ export async function decrementUsage(
 
   switch (resourceType) {
     case 'bookings':
-      updates.bookings_count = Math.max(0, existing.bookings_count - decrementBy)
+      updates.bookings_count = Math.max(0, (existing.bookings_count ?? 0) - decrementBy)
       break
     case 'clients':
-      updates.clients_count = Math.max(0, existing.clients_count - decrementBy)
+      updates.clients_count = Math.max(0, (existing.clients_count ?? 0) - decrementBy)
       break
     case 'employees':
-      updates.employees_count = Math.max(0, existing.employees_count - decrementBy)
+      updates.employees_count = Math.max(0, (existing.employees_count ?? 0) - decrementBy)
       break
     case 'api_calls':
-      updates.api_calls_count = Math.max(0, existing.api_calls_count - decrementBy)
+      updates.api_calls_count = Math.max(0, (existing.api_calls_count ?? 0) - decrementBy)
       break
   }
 

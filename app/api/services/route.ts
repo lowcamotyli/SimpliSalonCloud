@@ -1,34 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { createServiceSchema } from '@/lib/validators/service.validators'
 import { withErrorHandling } from '@/lib/error-handler'
-import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
 
 // GET /api/services - List all services
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabase = await createServerSupabaseClient()
+  const { supabase, salonId } = await getAuthContext()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const typedProfile = profile as { salon_id: string }
-
-  const { data: services, error } = await (supabase as any)
+  const { data: services, error } = await supabase
     .from('services')
     .select('*')
-    .eq('salon_id', typedProfile.salon_id)
+    .eq('salon_id', salonId)
     .eq('active', true)
     .is('deleted_at', null)
     .order('category')
@@ -75,32 +58,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 // POST /api/services - Create new service
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const supabase = await createServerSupabaseClient()
+  const rl = await applyRateLimit(request, { limit: 30 })
+  if (rl) return rl
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new UnauthorizedError()
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('salon_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!profile) {
-    throw new NotFoundError('Profile')
-  }
-
-  const typedProfile = profile as { salon_id: string }
+  const { supabase, salonId } = await getAuthContext()
 
   const body = await request.json()
   const validatedData = createServiceSchema.parse({
     ...body,
-    salon_id: typedProfile.salon_id, // Auto-add salon_id from user profile
+    salon_id: salonId,
   })
 
-  const { data: service, error } = await (supabase as any)
+  const { data: service, error } = await supabase
     .from('services')
     .insert({
       salon_id: validatedData.salon_id,

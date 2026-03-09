@@ -1,8 +1,10 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { updateSettingsSchema } from '@/lib/validators/settings.validators'
 import { encryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
 import { z } from 'zod'
+import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { logger } from '@/lib/logger'
 
 const MASKED_SECRET = '********'
 
@@ -62,8 +64,11 @@ function prepareEncryptedCredentialUpdates(updates: Record<string, any>) {
   return next
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 30 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -86,7 +91,7 @@ export async function GET(request: Request) {
       .maybeSingle()
 
     if (membershipError) {
-      console.error('[SETTINGS] GET membership error:', membershipError)
+      logger.error('settings.GET membership error', membershipError, { endpoint: 'GET /api/settings' })
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
@@ -101,7 +106,7 @@ export async function GET(request: Request) {
       .maybeSingle()
 
     if (error) {
-      console.error('[SETTINGS] GET query error:', error)
+      logger.error('settings.GET query error', error, { endpoint: 'GET /api/settings' })
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
@@ -152,13 +157,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json(sanitizeSecrets(data))
   } catch (err) {
-    console.error('[SETTINGS] GET error:', err)
+    logger.error('settings.GET failed', err, { endpoint: 'GET /api/settings' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
+    const rl = await applyRateLimit(request, { limit: 15 })
+    if (rl) return rl
+
     const supabase = await createServerSupabaseClient()
     const body = await request.json()
     const salonId = body.salonId as string
@@ -186,7 +194,7 @@ export async function PATCH(request: Request) {
       .maybeSingle()
 
     if (membershipError) {
-      console.error('[SETTINGS] PATCH membership error:', membershipError)
+      logger.error('settings.PATCH membership error', membershipError, { endpoint: 'PATCH /api/settings' })
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
@@ -209,7 +217,7 @@ export async function PATCH(request: Request) {
       .maybeSingle() as any
 
     if (error) {
-      console.error('[SETTINGS] PATCH upsert error:', error)
+      logger.error('settings.PATCH upsert error', error, { endpoint: 'PATCH /api/settings' })
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
@@ -221,7 +229,7 @@ export async function PATCH(request: Request) {
         { status: 400 }
       )
     }
-    console.error('[SETTINGS] PATCH error:', err)
+    logger.error('settings.PATCH failed', err, { endpoint: 'PATCH /api/settings' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

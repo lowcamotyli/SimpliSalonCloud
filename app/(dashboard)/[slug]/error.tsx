@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, RefreshCcw, Home } from 'lucide-react'
@@ -13,8 +14,9 @@ export default function Error({
     reset: () => void
 }) {
     useEffect(() => {
-        // Log the error to an error reporting service
-        console.error('Dashboard Error:', error)
+        if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+            Sentry.captureException(error)
+        }
     }, [error])
 
     return (
