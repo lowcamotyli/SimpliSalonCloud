@@ -137,6 +137,7 @@ export default function ImportPage() {
   const [isImportingServices, setIsImportingServices] = useState(false)
   const [servicesImportResult, setServicesImportResult] = useState<{
     imported: number
+    skipped: number
     errors: Array<{ row: number; reason: string }>
   } | null>(null)
   const servicesFileInputRef = useRef<HTMLInputElement>(null)
@@ -496,33 +497,51 @@ export default function ImportPage() {
     setIsImportingServices(true)
     const errors: Array<{ row: number; reason: string }> = []
     let imported = 0
+    let skipped = 0
+
+    // Validate rows client-side before sending
+    const validRows: Array<{ rowIndex: number; service: object }> = []
     for (let i = 0; i < parsedServiceRows.length; i++) {
       const row = parsedServiceRows[i]
-      if (!row.nazwa) { errors.push({ row: i + 2, reason: "Brak nazwy uslugi" }); continue }
-      try {
-        const res = await fetch("/api/services", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+      if (!row.nazwa) {
+        errors.push({ row: i + 2, reason: "Brak nazwy uslugi" })
+      } else {
+        validRows.push({
+          rowIndex: i + 2,
+          service: {
             category: row.kategoria || "Inne",
             subcategory: row.podkategoria || "Ogolne",
             name: row.nazwa,
             duration: parseInt(row.czas_min) || 60,
             price: parseFloat(row.cena) || 0,
             active: row.aktywna !== "0" && row.aktywna?.toLowerCase() !== "nie",
-          }),
+          },
+        })
+      }
+    }
+
+    if (validRows.length > 0) {
+      try {
+        const res = await fetch("/api/services/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ services: validRows.map((r) => r.service) }),
         })
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
-          errors.push({ row: i + 2, reason: body.error || "Blad API" })
+          // Mark all valid rows as failed
+          validRows.forEach((r) => errors.push({ row: r.rowIndex, reason: body.error || "Blad API" }))
         } else {
-          imported++
+          const data = await res.json()
+          imported = data.imported ?? 0
+          skipped = data.skipped ?? 0
         }
       } catch {
-        errors.push({ row: i + 2, reason: "Blad sieci" })
+        validRows.forEach((r) => errors.push({ row: r.rowIndex, reason: "Blad sieci" }))
       }
     }
-    setServicesImportResult({ imported, errors })
+
+    setServicesImportResult({ imported, skipped, errors })
     setServicesStep(2)
     setIsImportingServices(false)
   }
@@ -965,6 +984,15 @@ export default function ImportPage() {
                   <p className="text-3xl font-black text-emerald-600">{servicesImportResult.imported}</p>
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Zaimportowane</p>
                 </div>
+                {servicesImportResult.skipped > 0 && (
+                  <>
+                    <div className="h-12 w-px bg-gray-200" />
+                    <div className="text-center">
+                      <p className="text-3xl font-black text-amber-500">{servicesImportResult.skipped}</p>
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Pominięte (duplikaty)</p>
+                    </div>
+                  </>
+                )}
                 {servicesImportResult.errors.length > 0 && (
                   <>
                     <div className="h-12 w-px bg-gray-200" />
