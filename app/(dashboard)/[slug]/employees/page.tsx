@@ -84,6 +84,8 @@ export default function EmployeesPage() {
   const [linkDialogEmployee, setLinkDialogEmployee] = useState<any | null>(null)
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
   const [linkEmail, setLinkEmail] = useState('')
+  const [linkMode, setLinkMode] = useState<'existing' | 'new'>('existing')
+  const [tempPassword, setTempPassword] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const params = useParams()
@@ -224,13 +226,18 @@ export default function EmployeesPage() {
     if (!isOwnerOrManager()) return
     setLinkDialogEmployee(employee)
     setLinkEmail(employee?.email || '')
+    setLinkMode('existing')
+    setTempPassword('')
     setIsLinkDialogOpen(true)
   }
 
   const handleLinkAccount = async () => {
     if (!linkDialogEmployee || !linkEmail) return
     try {
-      await linkMutation.mutateAsync(linkEmail)
+      await linkMutation.mutateAsync({
+        email: linkEmail,
+        ...(linkMode === 'new' ? { password: tempPassword } : {}),
+      })
       setIsLinkDialogOpen(false)
     } catch {
       // onError in the mutation handles the toast; dialog remains open
@@ -717,11 +724,37 @@ export default function EmployeesPage() {
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">Powiąż konto</DialogTitle>
             <DialogDescription>
-              Podaj email użytkownika, aby przypisać konto do pracownika.
+              Powiąż pracownika z istniejącym kontem lub utwórz nowe.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
+            <div className="flex border border-gray-200 rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setLinkMode('existing')}
+                className={cn(
+                  'flex-1 h-10 rounded-lg text-sm font-semibold transition-colors',
+                  linkMode === 'existing'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                )}
+              >
+                Istniejące konto
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkMode('new')}
+                className={cn(
+                  'flex-1 h-10 rounded-lg text-sm font-semibold transition-colors',
+                  linkMode === 'new'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                )}
+              >
+                Utwórz nowe konto
+              </button>
+            </div>
             <div className="space-y-2">
               <Label className="font-bold text-gray-700">Email</Label>
               <div className="relative">
@@ -735,6 +768,25 @@ export default function EmployeesPage() {
                 />
               </div>
             </div>
+            {linkMode === 'new' ? (
+              <div className="space-y-2">
+                <Label className="font-bold text-gray-700">Tymczasowe hasło</Label>
+                <Input
+                  type="text"
+                  value={tempPassword}
+                  onChange={(e) => setTempPassword(e.target.value)}
+                  placeholder="Min. 8 znaków"
+                  className="h-11 rounded-xl font-mono"
+                />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Pracownik zaloguje się tym hasłem i może je zmienić w ustawieniach.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 leading-relaxed">
+                Pracownik musi mieć już zarejestrowane konto w aplikacji. Jeśli nie - wybierz opcję Utwórz nowe konto.
+              </p>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:justify-between">
@@ -756,7 +808,7 @@ export default function EmployeesPage() {
               </Button>
               <Button
                 type="button"
-                disabled={linkMutation.isPending || linkEmail.length === 0}
+                disabled={linkMutation.isPending || linkEmail.length === 0 || (linkMode === 'new' && tempPassword.length < 8)}
                 onClick={handleLinkAccount}
                 className="gradient-button rounded-xl font-black px-8"
               >

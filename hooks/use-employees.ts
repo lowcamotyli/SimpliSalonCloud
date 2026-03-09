@@ -128,11 +128,11 @@ export function useLinkEmployeeUser(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (email: string) => {
+    mutationFn: async ({ email, password }: { email: string; password?: string }) => {
       const res = await fetch(`/api/employees/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, ...(password ? { password } : {}) }),
       })
 
       if (!res.ok) {

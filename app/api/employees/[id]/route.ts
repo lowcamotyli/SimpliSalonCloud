@@ -152,6 +152,35 @@ export async function handlePatchEmployee(
     if (body?.email) {
       const { email } = linkUserSchema.parse(body)
 
+      if (body?.password) {
+        const { password } = z.object({ password: z.string().min(8) }).parse(body)
+
+        const { data: newUser, error: createError } = await adminSupabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        })
+
+        if (createError) {
+          console.error('createUser error:', createError)
+          return NextResponse.json({ error: createError.message }, { status: 400 })
+        }
+
+        const { data: linkResult, error: linkError } = await (supabase as any)
+          .rpc('link_employee_to_user_by_email', {
+            employee_uuid: employeeId,
+            user_email: email,
+          })
+
+        if (linkError) {
+          console.error('link after create error:', linkError)
+          await adminSupabase.auth.admin.deleteUser(newUser.user.id)
+          return NextResponse.json({ error: linkError.message }, { status: 400 })
+        }
+
+        return NextResponse.json({ success: true, link: linkResult })
+      }
+
       const { data: linkResult, error: linkError } = await (supabase as any)
         .rpc('link_employee_to_user_by_email', {
           employee_uuid: employeeId,
@@ -159,7 +188,9 @@ export async function handlePatchEmployee(
         })
 
       if (linkError) {
-        return NextResponse.json({ error: 'Unable to link user account' }, { status: 400 })
+        console.error('link_employee_to_user_by_email error:', linkError)
+        const message = linkError.message || 'Unable to link user account'
+        return NextResponse.json({ error: message }, { status: 400 })
       }
 
       return NextResponse.json({ success: true, link: linkResult })
