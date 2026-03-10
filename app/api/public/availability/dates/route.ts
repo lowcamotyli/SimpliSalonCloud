@@ -177,6 +177,8 @@ export async function GET(request: NextRequest) {
         exceptionsByEmp.get(row.employee_id)!.push(row)
     }
 
+    console.log("DATES API FETCH:", { startDate, endDate, empIds, allExceptions, schedulesByEmp: Array.from(schedulesByEmp.keys()) })
+
     // Sprzet - optional optimization, moglibysmy tu sciagnac caly miesiac tak samo
     const { data: serviceEquipmentRows } = await supabase
         .from('service_equipment')
@@ -199,9 +201,9 @@ export async function GET(request: NextRequest) {
     const end = new Date(endDate)
     const availableDates: string[] = []
 
-    for (let current = new Date(start); current <= end; current.setDate(current.getDate() + 1)) {
+    for (let current = new Date(start); current <= end; current.setUTCDate(current.getUTCDate() + 1)) {
         const dateStr = current.toISOString().split('T')[0]
-        const dayOfWeek = current.getDay()
+        const dayOfWeek = current.getUTCDay()
         const dayName = DAY_NAMES[dayOfWeek]
         const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }
 
@@ -261,6 +263,8 @@ export async function GET(request: NextRequest) {
             availableDates.push(dateStr)
         }
     }
+
+    console.log("DATES API RESULT:", { availableDates })
 
     return NextResponse.json({ availableDates })
 }
