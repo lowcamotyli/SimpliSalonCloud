@@ -3,16 +3,32 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { Bell, Smartphone, Target } from 'lucide-react'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import Link from 'next/link'
+import { ClipboardList } from 'lucide-react'
 import type { NotificationSettings } from '@/lib/types/settings'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+
+type PreviewData = {
+  type: string
+  channel: 'sms' | 'email'
+  body: string
+  template: string | null
+  hoursBefore?: number | null
+}
 
 type SalonRow = Database['public']['Tables']['salons']['Row']
 
@@ -38,12 +54,36 @@ export default function NotificationsPage() {
   const { data: settings } = useSettings(salonId)
   const updateSettings = useUpdateSettings(salonId)
 
+  const [preview, setPreview] = useState<PreviewData | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
+  const handlePreview = async (type: string) => {
+    if (!salonId) return
+    setPreviewLoading(true)
+    setPreviewError(null)
+    try {
+      const res = await fetch(`/api/notifications/preview?salonId=${salonId}&type=${type}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Błąd pobierania podglądu')
+      setPreview(data as PreviewData)
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : 'Błąd')
+      setPreview({ type, channel: 'sms', body: '', template: null })
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
   const [notifications, setNotifications] = useState<NotificationSettings>({
-    clientReminders: { enabled: true, timing: [24, 2], channels: ['sms', 'email'] },
-    clientConfirmations: { enabled: true, channels: ['email'] },
-    newBooking: { enabled: true, channels: ['email'] },
-    cancellation: { enabled: true, channels: ['email'] },
-    dailySummary: { enabled: false, time: '08:00', recipients: [] }
+    clientReminders: { enabled: false, timing: [24, 2], channels: ['sms', 'email'] },
+    clientConfirmations: { enabled: false, channels: ['email'] },
+    newBooking: { enabled: false, channels: ['email'] },
+    cancellation: { enabled: false, channels: ['email'] },
+    dailySummary: { enabled: false, time: '08:00', recipients: [] },
+    surveys: { enabled: false },
+    crmAutomations: { enabled: false },
+    preAppointmentForms: { enabled: false },
   })
 
   useEffect(() => {
@@ -84,9 +124,17 @@ export default function NotificationsPage() {
           <h1 className="text-3xl font-bold">Powiadomienia</h1>
           <p className="text-muted-foreground">Zarządzaj komunikacją z klientami</p>
         </div>
-        <Button onClick={handleSave} disabled={updateSettings.isPending}>
-          {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/${slug}/settings/notifications/logs`}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Logi wysyłki
+            </Link>
+          </Button>
+          <Button onClick={handleSave} disabled={updateSettings.isPending}>
+            {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -97,11 +145,22 @@ export default function NotificationsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="reminders">Włącz przypomnienia</Label>
-              <Switch
-                id="reminders"
-                checked={notifications.clientReminders.enabled}
-                onCheckedChange={(enabled) => updateNotification('clientReminders', { enabled })}
-              />
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={() => handlePreview('reminder')}
+                  disabled={previewLoading || !salonId}
+                >
+                  Podgląd szablonu
+                </Button>
+                <Switch
+                  id="reminders"
+                  checked={notifications.clientReminders.enabled}
+                  onCheckedChange={(enabled) => updateNotification('clientReminders', { enabled })}
+                />
+              </div>
             </div>
 
             {notifications.clientReminders.enabled && (
@@ -222,7 +281,117 @@ export default function NotificationsPage() {
             )}
           </div>
         </SettingsCard>
+
+        <SettingsCard
+          title="Ankiety po wizycie"
+          description="SMS z linkiem do oceny wizyty — wysyłany 2 godziny po zakończeniu"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="surveys">Włącz ankiety</Label>
+                <p className="text-sm text-muted-foreground">
+                  Klient dostaje SMS z prośbą o ocenę. Wymaga aktywnej funkcji <strong>surveys</strong> na planie.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={() => handlePreview('survey')}
+                  disabled={previewLoading || !salonId}
+                >
+                  Podgląd szablonu
+                </Button>
+                <Switch
+                  id="surveys"
+                  checked={notifications.surveys?.enabled ?? false}
+                  onCheckedChange={(enabled) => updateNotification("surveys", { enabled })}
+                />
+              </div>
+            </div>
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          title="Formularz przed wizytą"
+          description="SMS z linkiem do krótkiego formularza — wysyłany 24h przed wizytą"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="preAppointmentForms">Włącz formularze przed wizytą</Label>
+                <p className="text-sm text-muted-foreground">
+                  Klient dostaje SMS z linkiem do wypełnienia ankiety przed wizytą. Wymaga funkcji <strong>forms</strong> na planie.
+                </p>
+              </div>
+              <Switch
+                id="preAppointmentForms"
+                checked={notifications.preAppointmentForms?.enabled ?? false}
+                onCheckedChange={(enabled) => updateNotification("preAppointmentForms", { enabled })}
+              />
+            </div>
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          title="Automatyzacje CRM"
+          description="Cykliczne kampanie SMS/email wyzwalane zdarzeniami (brak wizyty, urodziny, liczba wizyt)"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="crmAutomations">Włącz automatyzacje</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatyczne wysyłki do klientów wg reguł z modułu CRM. Wyłącz aby wstrzymać wszystkie kampanie automatyczne.
+                </p>
+              </div>
+              <Switch
+                id="crmAutomations"
+                checked={notifications.crmAutomations?.enabled ?? false}
+                onCheckedChange={(enabled) => updateNotification("crmAutomations", { enabled })}
+              />
+            </div>
+          </div>
+        </SettingsCard>
       </div>
+
+      <Dialog open={!!preview} onOpenChange={(open) => { if (!open) { setPreview(null); setPreviewError(null) } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Podgląd szablonu
+              {preview && (
+                <Badge variant="outline" className={preview.channel === 'sms' ? 'border-blue-200 text-blue-700' : 'border-purple-200 text-purple-700'}>
+                  {preview.channel === 'sms' ? 'SMS' : 'Email'}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {previewError ? (
+              <p className="text-sm text-red-600">{previewError}</p>
+            ) : (
+              <>
+                {preview?.template && (
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">Szablon</p>
+                    <pre className="rounded border bg-muted px-3 py-2 text-xs text-muted-foreground whitespace-pre-wrap">{preview.template}</pre>
+                  </div>
+                )}
+                <div>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Przykładowa wiadomość</p>
+                  <pre className="rounded border bg-background px-3 py-2 text-sm whitespace-pre-wrap">{preview?.body}</pre>
+                </div>
+                {preview?.hoursBefore != null && (
+                  <p className="text-xs text-muted-foreground">Wysyłane {preview.hoursBefore}h przed wizytą</p>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

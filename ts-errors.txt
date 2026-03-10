@@ -1,0 +1,7 @@
+app/api/bookings/route.ts(146,79): error TS2345: Argument of type 'PostgrestError' is not assignable to parameter of type 'LogContext'.
+  Index signature for type 'string' is missing in type 'PostgrestError'.
+tests/integration/sms-settings-api.test.ts(97,12): error TS18048: 'response' is possibly 'undefined'.
+tests/integration/sms-settings-api.test.ts(98,27): error TS18048: 'response' is possibly 'undefined'.
+tests/integration/sms-settings-api.test.ts(113,12): error TS18048: 'response' is possibly 'undefined'.
+tests/integration/sms-settings-api.test.ts(125,12): error TS18048: 'response' is possibly 'undefined'.
+tests/integration/sms-settings-api.test.ts(136,12): error TS18048: 'response' is possibly 'undefined'.

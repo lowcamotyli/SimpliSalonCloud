@@ -1,19 +1,33 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { checkProtectedApiRateLimit } from '@/lib/middleware/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
-        const rl = await applyRateLimit(req, { limit: 20 })
-        if (rl) return rl
-
         const supabase = await createServerSupabaseClient()
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const rateLimit = await checkProtectedApiRateLimit(`reports:top-employees:${user.id}`, { limit: 60 })
+        if (!rateLimit.success) {
+            const retryAfter = Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000))
+            return NextResponse.json(
+                { error: 'Too Many Requests' },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': retryAfter.toString(),
+                        'X-RateLimit-Limit': rateLimit.limit.toString(),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': Math.ceil(rateLimit.reset / 1000).toString(),
+                    },
+                }
+            )
         }
 
         const { searchParams } = new URL(req.url)

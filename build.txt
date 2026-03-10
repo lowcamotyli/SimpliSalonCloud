@@ -1,0 +1,190 @@
+﻿
+> simplisaloncloud@0.1.0 build
+> node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build
+
+Ôľ▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  ┬Ě clientTraceMetadata
+  ┬Ě serverActions
+
+  Creating an optimized production build ...
+Ôťô Compiled successfully in 12.0s
+  Running next.config.js provided runAfterProductionCompile ...
+Ôťô Completed runAfterProductionCompile in 20215ms
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+Ôťů Environment validation passed
+  Generating static pages using 15 workers (0/77) ...
+  Generating static pages using 15 workers (19/77) 
+Ôťů Environment validation passed
+  Generating static pages using 15 workers (38/77) 
+  Generating static pages using 15 workers (57/77) 
+Ôťô Generating static pages using 15 workers (77/77) in 620.4ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ăĺ /
+Ôöť ÔŚő /_not-found
+Ôöť Ăĺ /[slug]/billing
+Ôöť Ăĺ /[slug]/billing/invoices
+Ôöť Ăĺ /[slug]/billing/success
+Ôöť Ăĺ /[slug]/billing/upgrade
+Ôöť Ăĺ /[slug]/bookings
+Ôöť Ăĺ /[slug]/calendar
+Ôöť Ăĺ /[slug]/clients
+Ôöť Ăĺ /[slug]/clients/[id]
+Ôöť Ăĺ /[slug]/clients/automations
+Ôöť Ăĺ /[slug]/clients/campaigns
+Ôöť Ăĺ /[slug]/clients/messages
+Ôöť Ăĺ /[slug]/clients/templates
+Ôöť Ăĺ /[slug]/dashboard
+Ôöť Ăĺ /[slug]/employees
+Ôöť Ăĺ /[slug]/payroll
+Ôöť Ăĺ /[slug]/reports
+Ôöť Ăĺ /[slug]/services
+Ôöť Ăĺ /[slug]/settings
+Ôöť Ăĺ /[slug]/settings/appearance
+Ôöť Ăĺ /[slug]/settings/business
+Ôöť Ăĺ /[slug]/settings/crm
+Ôöť Ăĺ /[slug]/settings/equipment
+Ôöť Ăĺ /[slug]/settings/forms
+Ôöť Ăĺ /[slug]/settings/import
+Ôöť Ăĺ /[slug]/settings/integrations
+Ôöť Ăĺ /[slug]/settings/integrations/booksy
+Ôöť Ăĺ /[slug]/settings/integrations/przelewy24
+Ôöť Ăĺ /[slug]/settings/notifications
+Ôöť Ăĺ /[slug]/settings/sms
+Ôöť Ăĺ /[slug]/settings/surveys
+Ôöť Ăĺ /api/auth/callback/google
+Ôöť Ăĺ /api/beauty-plans/[id]
+Ôöť Ăĺ /api/beauty-plans/[id]/steps
+Ôöť Ăĺ /api/beauty-plans/[id]/steps/[stepId]
+Ôöť Ăĺ /api/billing/cancel
+Ôöť Ăĺ /api/billing/invoices
+Ôöť Ăĺ /api/billing/sms-topup
+Ôöť Ăĺ /api/billing/sms-wallet
+Ôöť Ăĺ /api/billing/subscribe
+Ôöť Ăĺ /api/billing/webhook
+Ôöť Ăĺ /api/bookings
+Ôöť Ăĺ /api/bookings/[id]
+Ôöť Ăĺ /api/bookings/check-availability
+Ôöť Ăĺ /api/bookings/confirm/[token]
+Ôöť Ăĺ /api/bookings/import
+Ôöť Ăĺ /api/clients
+Ôöť Ăĺ /api/clients/[id]
+Ôöť Ăĺ /api/clients/[id]/beauty-plans
+Ôöť Ăĺ /api/clients/[id]/blacklist
+Ôöť Ăĺ /api/clients/[id]/forms
+Ôöť Ăĺ /api/clients/[id]/forms/[formId]
+Ôöť Ăĺ /api/clients/[id]/violations
+Ôöť Ăĺ /api/crm/automations
+Ôöť Ăĺ /api/crm/automations/[id]
+Ôöť Ăĺ /api/crm/campaigns
+Ôöť Ăĺ /api/crm/campaigns/[id]
+Ôöť Ăĺ /api/crm/campaigns/[id]/cancel
+Ôöť Ăĺ /api/crm/campaigns/[id]/send
+Ôöť Ăĺ /api/crm/campaigns/[id]/stats
+Ôöť Ăĺ /api/crm/campaigns/worker
+Ôöť Ăĺ /api/crm/logs
+Ôöť Ăĺ /api/crm/quick-send
+Ôöť Ăĺ /api/crm/segments/preview
+Ôöť Ăĺ /api/crm/templates
+Ôöť Ăĺ /api/crm/templates/[id]
+Ôöť Ăĺ /api/crm/test-email
+Ôöť Ăĺ /api/crm/usage
+Ôöť Ăĺ /api/cron/billing-dunning
+Ôöť Ăĺ /api/cron/blacklist-scoring
+Ôöť Ăĺ /api/cron/booksy
+Ôöť Ăĺ /api/cron/check-trial-expirations
+Ôöť Ăĺ /api/cron/crm-automations
+Ôöť Ăĺ /api/cron/process-subscriptions
+Ôöť Ăĺ /api/cron/reminders
+Ôöť Ăĺ /api/cron/send-usage-reports
+Ôöť Ăĺ /api/cron/surveys
+Ôöť Ăĺ /api/employees
+Ôöť Ăĺ /api/employees/[id]
+Ôöť Ăĺ /api/employees/[id]/schedule
+Ôöť Ăĺ /api/employees/[id]/schedule/exceptions
+Ôöť Ăĺ /api/equipment
+Ôöť Ăĺ /api/equipment/[id]
+Ôöť Ăĺ /api/equipment/[id]/schedule
+Ôöť Ăĺ /api/forms/public/[token]
+Ôöť Ăĺ /api/forms/submit/[token]
+Ôöť Ăĺ /api/forms/templates
+Ôöť Ăĺ /api/forms/templates/[id]
+Ôöť Ăĺ /api/forms/templates/[id]/services
+Ôöť Ăĺ /api/health
+Ôöť Ăĺ /api/integrations
+Ôöť Ăĺ /api/integrations/booksy/auth
+Ôöť Ăĺ /api/integrations/booksy/disconnect
+Ôöť Ăĺ /api/integrations/booksy/logs
+Ôöť Ăĺ /api/integrations/booksy/pending
+Ôöť Ăĺ /api/integrations/booksy/pending/[id]
+Ôöť Ăĺ /api/integrations/booksy/stats
+Ôöť Ăĺ /api/integrations/booksy/sync
+Ôöť Ăĺ /api/integrations/gmail/callback
+Ôöť Ăĺ /api/payments/cancel
+Ôöť Ăĺ /api/payments/create-checkout
+Ôöť Ăĺ /api/payments/status
+Ôöť Ăĺ /api/payments/upgrade
+Ôöť Ăĺ /api/payroll
+Ôöť Ăĺ /api/payroll/send-email
+Ôöť Ăĺ /api/public/availability
+Ôöť Ăĺ /api/public/bookings
+Ôöť Ăĺ /api/public/employees
+Ôöť Ăĺ /api/public/services
+Ôöť Ăĺ /api/reports/nps
+Ôöť Ăĺ /api/reports/revenue
+Ôöť Ăĺ /api/reports/top-employees
+Ôöť Ăĺ /api/reports/top-services
+Ôöť Ăĺ /api/services
+Ôöť Ăĺ /api/services/[id]
+Ôöť Ăĺ /api/services/[id]/equipment
+Ôöť Ăĺ /api/services/[id]/forms
+Ôöť Ăĺ /api/settings
+Ôöť Ăĺ /api/settings/crm
+Ôöť Ăĺ /api/settings/sms
+Ôöť Ăĺ /api/settings/sms/test
+Ôöť Ăĺ /api/settings/surveys
+Ôöť Ăĺ /api/sms/campaigns
+Ôöť Ăĺ /api/sms/history/[clientId]
+Ôöť Ăĺ /api/sms/send
+Ôöť Ăĺ /api/sms/webhook
+Ôöť Ăĺ /api/subscriptions/[slug]
+Ôöť Ăĺ /api/subscriptions/[slug]/invoices
+Ôöť Ăĺ /api/subscriptions/usage
+Ôöť Ăĺ /api/surveys/fill/[token]
+Ôöť Ăĺ /api/surveys/submit/[token]
+Ôöť Ăĺ /api/test-db-fundamentals
+Ôöť Ăĺ /api/webhooks/booksy
+Ôöť Ăĺ /api/webhooks/booksy/test
+Ôöť Ăĺ /api/webhooks/przelewy24
+Ôöť Ăĺ /api/webhooks/resend
+Ôöť Ăĺ /api/webhooks/smsapi
+Ôöť Ăĺ /forms/fill/[token]
+Ôöť ÔŚő /invite
+Ôöť ÔŚő /login
+Ôöť Ăĺ /register
+Ôöť ÔŚő /signup
+Ôöö Ăĺ /survey/[token]
+
+
+Ăĺ Proxy (Middleware)
+
+ÔŚő  (Static)   prerendered as static content
+Ăĺ  (Dynamic)  server-rendered on demand
+

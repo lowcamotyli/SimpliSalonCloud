@@ -5,6 +5,7 @@ export type FeatureFlag =
   | 'sms_chat'
   | 'blacklist'
   | 'surveys'
+  | 'forms'
 
 export function hasFeature(
   salonFeatures: Record<string, boolean> | null | undefined,

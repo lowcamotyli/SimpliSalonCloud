@@ -1,0 +1,17 @@
+# Build & dependencies
+.next/
+node_modules/
+.vercel/
+
+# Business content (not code)
+karty_zabiegowe/
+
+# Supabase local dev
+supabase/.branches/
+supabase/.temp/
+
+# Locks & generated
+pnpm-lock.yaml
+package-lock.json
+next-env.d.ts
+types/supabase.ts

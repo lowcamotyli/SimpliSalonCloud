@@ -1,0 +1,264 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mD:/SimpliSalonCLoud[39m
+
+Ôťö smoke (0.9325ms)
+ [31mÔŁ»[39m tests/unit/smoke.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôä╣ tests 1
+Ôä╣ suites 0
+Ôä╣ pass 1
+Ôä╣ fail 0
+Ôä╣ cancelled 0
+Ôä╣ skipped 0
+Ôä╣ todo 0
+Ôä╣ duration_ms 29.6402
+Ôťö rbac owner has wildcard permission (1.4453ms)
+Ôťö rbac manager can manage employees and view finance (2.5974ms)
+Ôťö rbac employee cannot view finance by default (0.1939ms)
+ [31mÔŁ»[39m tests/unit/rbac-role-maps.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31mÔŁ»[39m tests/integration/rls-isolation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+[90mstdout[2m | tests/integration/booksy-processor-idempotency.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.252Z","level":"info","message":"[Booksy] Processing email start","environment":"test"}
+
+Ôťö BooksyProcessor: idempotency returns existing booking for duplicated eventId before parsing (4.0495ms)
+ [31mÔŁ»[39m tests/integration/booksy-processor-idempotency.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôä╣ tests 1
+Ôä╣ suites 0
+Ôä╣ pass 1
+Ôä╣ fail 0
+Ôä╣ cancelled 0
+Ôä╣ skipped 0
+Ôä╣ todo 0
+Ôä╣ duration_ms 21.0698
+Ôťö employee validator accepts valid employee payload (2.7174ms)
+Ôťö employee validator rejects invalid employee email (3.1759ms)
+Ôťö client validator accepts valid client payload (0.4102ms)
+Ôťö client validator rejects invalid phone format (0.3397ms)
+ [31mÔŁ»[39m tests/unit/validators.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťľ sets CORS headers for allowed origin (8.5339ms)
+Ôťľ returns 200 for valid preflight request (1.0892ms)
+ [31mÔŁ»[39m tests/unit/cors-middleware.test.ts [2m([22m[2m0 test[22m[2m)[22m
+[90mstdout[2m | tests/unit/payments/subscription-manager-payment-success.test.ts
+[22m[39m[SUBSCRIPTION] Payment success for salon salon-1, subscription sub-1
+
+Ôťö normalizePolishPhoneToE164 normalizes PL local number (1.7434ms)
+Ôťö normalizePolishPhoneToE164 keeps valid E.164 (2.7472ms)
+Ôťö normalizePolishPhoneToE164 throws on invalid number (0.3561ms)
+[90mstdout[2m | tests/unit/payments/subscription-manager-payment-success.test.ts
+[22m[39m[SUBSCRIPTION] Payment success for salon salon-1, subscription sub-1
+
+ [31mÔŁ»[39m tests/unit/messaging/sms-sender.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťö handlePaymentSuccess: retry with existing invoice is idempotent and does not insert duplicate invoice (5.462ms)
+Ôťö handlePaymentSuccess: invoice failure blocks activation and feature enablement (failure-order safety) (2.1303ms)
+ [31mÔŁ»[39m tests/unit/payments/subscription-manager-payment-success.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťö SMSAPI webhook rejects unauthorized callback (10.3594ms)
+Ôťö SMSAPI webhook rejects callback with invalid token (1.7277ms)
+Ôťľ SMSAPI webhook updates exactly one row for valid callback (4.0382ms)
+Ôťľ SMSAPI webhook rejects ambiguous multi-row update (1.7286ms)
+Ôťö SMSAPI webhook GET transport is rejected with 405 (0.5382ms)
+Ôťö SMSAPI webhook rejects token passed as query param (1.0332ms)
+Ôťľ SMSAPI webhook malformed payload is ignored (200) (1.5403ms)
+Ôťö SMSAPI webhook route exports POST handler (1.8148ms)
+Ôťö SMSAPI webhook route exports GET handler returning 405 (0.5972ms)
+Ôťľ SMSAPI webhook rejects replayed callback with same event-id (1.3712ms)
+Ôťö SMSAPI webhook rejects stale timestamp outside replay window (0.9483ms)
+ [31mÔŁ»[39m tests/integration/smsapi-webhook.test.ts [2m([22m[2m0 test[22m[2m)[22m
+node.exe : [90mstderr[2m | tests/integration/booksy-webho
+ok.test.ts
+At line:1 char:1
++ & "D:\NodeJS/node.exe" "D:\NodeJS/node_modules/npm/bin/np
+x-cli.js" vi ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([90mstderr[ 
+   2m...webhook.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[22m[39m{"timestamp":"2026-03-08T10:29:14.354Z","level":"
+warn","message":"Booksy webhook: unauthorized request","env
+ironment":"test","action":"booksy_webhook_auth"}
+
+[90mstdout[2m | tests/integration/booksy-webhook.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.361Z","level":"info","message":"Booksy webhook received","environment":"test","action":"booksy_webhook","salonId":"c0f4c8d8-5ab4-4cfd-8f6d-6e5e7f4da4a8","emails":2}
+
+[90mstdout[2m | tests/integration/booksy-webhook.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.361Z","level":"info","message":"Booksy webhook processed","environment":"test","action":"booksy_webhook_end","salonId":"c0f4c8d8-5ab4-4cfd-8f6d-6e5e7f4da4a8","processed":2,"success":1,"errors":1}
+
+Ôťö Booksy webhook: rejects when secret is missing on server (9.6276ms)
+Ôťö Booksy webhook: rejects unauthorized request (3.2012ms)
+Ôťö Booksy webhook: rejects invalid JSON payload (1.3219ms)
+Ôťö Booksy webhook: validates payload schema (2.3834ms)
+Ôťö Booksy webhook: processes emails, forwards eventId, aggregates results and preserves tenant salonId (2.1594ms)
+ [31mÔŁ»[39m tests/integration/booksy-webhook.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťö employee link branch is not blocked by JWT role gate (7.5494ms)
+Ôťö employee link branch returns generic non-enumerating error for missing auth account (0.9235ms)
+Ôťö employee link branch returns generic non-enumerating error for permission failures (0.7467ms)
+Ôťö employee role-change branch keeps strict JWT role gate (0.5582ms)
+ [31mÔŁ»[39m tests/integration/employees-link-api.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťľ SMS settings GET masks token and returns has_smsapi_token (7.8135ms)
+Ôťö SMS settings GET returns 401 for unauthorized user (0.4386ms)
+Ôťö SMS settings GET returns 403 when user is not a salon member (0.4153ms)
+Ôťö SMS settings GET returns 400 when salonId is missing (0.3242ms)
+Ôťľ SMS settings PUT supports __UNCHANGED__ sentinel (does not overwrite token) (3.6431ms)
+Ôťľ SMS settings PUT encrypts plaintext token before save (1.5933ms)
+Ôťö SMS settings PUT returns 401 for unauthorized user (0.4049ms)
+Ôťö SMS settings PUT returns 403 when user is not a salon member (0.4779ms)
+Ôťö SMS settings PUT returns 400 when salonId is missing (0.4558ms)
+Ôťľ SMS settings PUT clears token when empty string is provided (0.8707ms)
+ [31mÔŁ»[39m tests/integration/sms-settings-api.test.ts [2m([22m[2m0 test[22m[2m)[22m
+Ôťö payroll RBAC: manager can view but cannot generate payroll (1.1627ms)
+Ôťö payroll RBAC: employee cannot view or generate payroll (1.7715ms)
+Ôťö payroll email RBAC: owner and manager can send, employee cannot (0.1596ms)
+Ôťö payroll month parser accepts valid YYYY-MM and computes period boundaries (1.4279ms)
+Ôťö payroll month parser rejects invalid month values (0.6093ms)
+Ôťö send payroll email schema validates strict payload (0.5594ms)
+Ôťö send payroll email schema rejects malformed payload (0.2537ms)
+ [31mÔŁ»[39m tests/unit/payroll-security-and-validation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+[90mstderr[2m | tests/unit/error-handler.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.731Z","level":"
+error","message":"Application error","environment":"test","
+code":"NOT_FOUND","statusCode":404,"error":"Client with id 
+123 not found","stack":"NotFoundError: Client with id 123 n
+ot found\n    at TestContext.<anonymous> (D:/SimpliSalonCLo
+ud/tests/unit/error-handler.test.ts:8:37)\n    at Test.runI
+nAsyncScope (node:async_hooks:214:14)\n    at Test.run (nod
+e:internal/test_runner/test:1106:25)\n    at Test.start (no
+de:internal/test_runner/test:1003:17)\n    at startSubtestA
+fterBootstrap (node:internal/test_runner/harness:358:17)\n 
+   at processTicksAndRejections (node:internal/process/task
+_queues:103:5)","name":"NotFoundError"}
+
+[90mstderr[2m | tests/unit/error-handler.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.737Z","level":"
+warn","message":"Validation error","environment":"test","de
+tails":[{"field":"name","message":"String must contain at l
+east 2 character(s)"}]}
+
+[90mstderr[2m | tests/unit/error-handler.test.ts
+[22m[39m{"timestamp":"2026-03-08T10:29:14.738Z","level":"
+error","message":"duplicate key value violates unique const
+raint","environment":"test","code":"23505","details":"Key (
+email)=(x@example.com) already exists.","error":"duplicate 
+key value violates unique constraint"}
+
+Ôťö handleApiError maps AppError to status code and payload (7.1649ms)
+Ôťö handleApiError maps Zod error to validation response (1.6458ms)
+Ôťö handleApiError maps postgres unique constraint to conflict (0.4641ms)
+ [31mÔŁ»[39m tests/unit/error-handler.test.ts [2m([22m[2m0 test[22m[2m)[22m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m[41m Failed Suites 14 [49
+m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m tests/integration/booksy-processo
+r-idempotency.test.ts[2m [ tests/integration/booksy-proces
+sor-idempotency.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/booksy-processor-idempotency.te
+st.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/booksy-webhook.
+test.ts[2m [ tests/integration/booksy-webhook.test.ts ][2
+2m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/booksy-webhook.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/employees-link-
+api.test.ts[2m [ tests/integration/employees-link-api.test
+.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/employees-link-api.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/rls-isolation.t
+est.ts[2m [ tests/integration/rls-isolation.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/rls-isolation.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/sms-settings-ap
+i.test.ts[2m [ tests/integration/sms-settings-api.test.ts 
+][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/sms-settings-api.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[5/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/smsapi-webhook.
+test.ts[2m [ tests/integration/smsapi-webhook.test.ts ][2
+2m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/integration/smsapi-webhook.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[6/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/cors-middleware.test.t
+s[2m [ tests/unit/cors-middleware.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/cors-middleware.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[7/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/error-handler.test.ts
+[2m [ tests/unit/error-handler.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/error-handler.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[8/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/payroll-security-and-v
+alidation.test.ts[2m [ tests/unit/payroll-security-and-val
+idation.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/payroll-security-and-validation.test.t
+s[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[9/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/rbac-role-maps.test.ts
+[2m [ tests/unit/rbac-role-maps.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/rbac-role-maps.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[10/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/smoke.test.ts[2m [ te
+sts/unit/smoke.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/smoke.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[11/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/validators.test.ts[2m
+ [ tests/unit/validators.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/validators.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[12/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/messaging/sms-sender.t
+est.ts[2m [ tests/unit/messaging/sms-sender.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/messaging/sms-sender.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[13/14]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/payments/subscription-
+manager-payment-success.test.ts[2m [ tests/unit/payments/s
+ubscription-manager-payment-success.test.ts ][22m
+[31m[1mError[22m: No test suite found in file D:/SimpliS
+alonCLoud/tests/unit/payments/subscription-manager-payment-
+success.test.ts[39m
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[14/14]ÔÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m14 failed[39m[22m[90m (14)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 11:29:13
+[2m   Duration [22m 1.13s[2m (transform 1.35s, setup 0ms, import 3.17s, tests 0ms, environment 2ms)[22m
+

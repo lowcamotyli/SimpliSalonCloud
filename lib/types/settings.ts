@@ -158,6 +158,15 @@ export interface NotificationSettings {
     time: string
     recipients: string[]
   }
+  surveys: {
+    enabled: boolean
+  }
+  crmAutomations: {
+    enabled: boolean
+  }
+  preAppointmentForms: {
+    enabled: boolean
+  }
 }
 
 export interface Integration {

@@ -140,10 +140,25 @@ export async function GET(request: NextRequest) {
     const activeAutomations = (automations || []) as unknown as Automation[]
     results.automationsScanned = activeAutomations.length
 
+    // Batch-fetch notification settings per salon
+    const salonIds = [...new Set(activeAutomations.map(a => a.salon_id))]
+    const { data: salonSettingsRows } = await admin
+      .from('salon_settings')
+      .select('salon_id, notification_settings')
+      .in('salon_id', salonIds)
+    const notifSettingsMap = new Map<string, any>(
+      (salonSettingsRows || []).map((s: any) => [s.salon_id, s.notification_settings])
+    )
+
     for (const automation of activeAutomations) {
       if (results.jobsQueued >= MAX_TOTAL_JOBS_PER_RUN) {
         results.stoppedBySafetyLimit = true
         break
+      }
+
+      const notifSettings = notifSettingsMap.get(automation.salon_id)
+      if (!notifSettings?.crmAutomations?.enabled) {
+        continue
       }
 
       try {

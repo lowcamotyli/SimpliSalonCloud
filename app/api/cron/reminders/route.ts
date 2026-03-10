@@ -67,8 +67,23 @@ export async function GET(request: NextRequest) {
     const typedRules: ReminderRule[] = rules || []
     result.rulesScanned = typedRules.length
 
+    // Batch-fetch notification settings per salon
+    const salonIds = [...new Set(typedRules.map(r => r.salon_id))]
+    const { data: salonSettingsRows } = await (admin as any)
+      .from('salon_settings')
+      .select('salon_id, notification_settings')
+      .in('salon_id', salonIds)
+    const notifSettingsMap = new Map<string, any>(
+      (salonSettingsRows || []).map((s: any) => [s.salon_id, s.notification_settings])
+    )
+
     for (const rule of typedRules) {
       if (!hasFeature(rule.salons?.features || null, 'sms_chat')) {
+        continue
+      }
+
+      const notifSettings = notifSettingsMap.get(rule.salon_id)
+      if (!notifSettings?.clientReminders?.enabled) {
         continue
       }
 

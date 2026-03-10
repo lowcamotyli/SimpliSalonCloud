@@ -71,6 +71,10 @@
     {
       "path": "/api/cron/surveys",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/pre-appointment-forms",
+      "schedule": "0 10 * * *"
     }
   ]
 }

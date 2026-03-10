@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       audit_logs: {
@@ -209,6 +234,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: string | null
+          pre_form_sent: boolean
           reminder_sent: boolean
           salon_id: string
           service_id: string
@@ -235,6 +261,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string | null
+          pre_form_sent?: boolean
           reminder_sent?: boolean
           salon_id: string
           service_id: string
@@ -261,6 +288,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string | null
+          pre_form_sent?: boolean
           reminder_sent?: boolean
           salon_id?: string
           service_id?: string
@@ -1588,6 +1616,70 @@ export type Database = {
           },
         ]
       }
+      pre_appointment_responses: {
+        Row: {
+          answers: Json | null
+          booking_id: string
+          client_id: string
+          created_at: string
+          fill_token: string | null
+          fill_token_exp: string | null
+          form_template_id: string
+          id: string
+          salon_id: string
+          sent_at: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          answers?: Json | null
+          booking_id: string
+          client_id: string
+          created_at?: string
+          fill_token?: string | null
+          fill_token_exp?: string | null
+          form_template_id?: string
+          id?: string
+          salon_id: string
+          sent_at?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          answers?: Json | null
+          booking_id?: string
+          client_id?: string
+          created_at?: string
+          fill_token?: string | null
+          fill_token_exp?: string | null
+          form_template_id?: string
+          id?: string
+          salon_id?: string
+          sent_at?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_appointment_responses_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_appointment_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_appointment_responses_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -2449,6 +2541,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: string | null
+          pre_form_sent: boolean
           reminder_sent: boolean
           salon_id: string
           service_id: string
@@ -2643,6 +2736,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

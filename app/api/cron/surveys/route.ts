@@ -69,6 +69,16 @@ export async function GET(request: NextRequest) {
 
     const bookings = (data || []) as BookingCandidate[]
 
+    // Batch-fetch notification settings per salon
+    const uniqueSalonIds = [...new Set(bookings.map(b => b.salon_id))]
+    const { data: salonSettingsRows } = await admin
+      .from('salon_settings')
+      .select('salon_id, notification_settings')
+      .in('salon_id', uniqueSalonIds)
+    const notifSettingsMap = new Map<string, any>(
+      (salonSettingsRows || []).map((s: any) => [s.salon_id, s.notification_settings])
+    )
+
     for (const booking of bookings) {
       const endsAtMs = toDateTime(booking.booking_date, booking.booking_time).getTime() + booking.duration * 60_000
 
@@ -78,6 +88,12 @@ export async function GET(request: NextRequest) {
       }
 
       if (!hasFeature(booking.salons?.features || null, 'surveys')) {
+        skipped += 1
+        continue
+      }
+
+      const notifSettings = notifSettingsMap.get(booking.salon_id)
+      if (!notifSettings?.surveys?.enabled) {
         skipped += 1
         continue
       }
