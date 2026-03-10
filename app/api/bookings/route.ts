@@ -203,7 +203,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // 3. Check equipment availability for the service
   const duration = validatedData.duration || (service as any).duration || 30
-  const startsAt = new Date(`${validatedData.date}T${validatedData.start_time}`)
+  const startsAt = new Date(`${validatedData.date}T${validatedData.start_time}:00Z`)
   const endsAt = new Date(startsAt.getTime() + duration * 60_000)
   const requiredEquipment = await getRequiredEquipmentForService(validatedData.service_id as string)
   if (requiredEquipment.length > 0) {

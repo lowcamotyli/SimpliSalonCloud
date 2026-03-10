@@ -216,6 +216,7 @@ export default function BookingsPage() {
         </div>
       ) : filteredBookings.length > 0 ? (
         <motion.div
+          key={`${dateFilter}-${statusFilter}-${employeeFilter}-${search}`}
           className="grid gap-4"
           variants={containerVariants}
           initial="hidden"

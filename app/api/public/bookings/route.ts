@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
 
         // sprawdź dostępność sprzętu
         if (requiredEquipmentIds.length > 0) {
-            const startsAt = new Date(`${date}T${time}`)
+            const startsAt = new Date(`${date}T${time}:00Z`)
             const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
             const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
                 p_equipment_ids: requiredEquipmentIds,
@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
 
         // zarezerwuj sprzęt
         if (requiredEquipmentIds.length > 0) {
-            const startsAt = new Date(`${date}T${time}`)
+            const startsAt = new Date(`${date}T${time}:00Z`)
             const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
             await supabase.from('equipment_bookings').insert(
                 requiredEquipmentIds.map((eqId: string) => ({
