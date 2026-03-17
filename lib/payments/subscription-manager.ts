@@ -131,7 +131,7 @@ export class SubscriptionManager {
     // Oblicz cenę
     const plan = PLANS[planType]
     const amount = billingInterval === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice
-    const isStarterTrialWithoutPayment = planType === 'starter' && salon.subscription_status === 'trialing'
+    const isStarterTrialWithoutPayment = planType === 'solo' && salon.subscription_status === 'trialing'
 
     // Oblicz daty okresu
     const now = new Date()
@@ -555,7 +555,7 @@ export class SubscriptionManager {
       .eq('id', salonId)
 
     // Ustaw starter feature flags
-    await this.enablePlanFeatures(salonId, 'starter')
+    await this.enablePlanFeatures(salonId, 'solo')
   }
 
   /**
