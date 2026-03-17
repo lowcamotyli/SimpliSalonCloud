@@ -43,7 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { data, error } = await admin
       .from('bookings')
       .select('id, salon_id, client_id, booking_date, booking_time, salons(features), clients(id, phone, full_name)')
-      .in('status', ['confirmed', 'pending'])
+      .in('status', ['scheduled', 'confirmed', 'pending'])
       .eq('pre_form_sent', false)
       .gte('booking_date', windowStartDate)
       .lte('booking_date', windowEndDate)
