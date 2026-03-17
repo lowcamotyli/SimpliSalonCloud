@@ -1,0 +1,777 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "Francuski_Karta_Zabiegowa_Ciało__Fiche_Pour_Le_Corps.md",
+    "language": "fr",
+    "category": "Karta",
+    "serviceName": "Karta Zabiegowa Ciało / Fiche Pour Le Corps"
+  },
+  "extraction": {
+    "title": "Francuski: Karta Zabiegowa Ciało / Fiche Pour Le Corps",
+    "questionBlocks": [
+      "Suivez-vous actuellement un traitement médical ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nPrenez-vous des médicaments de manière régulière ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nÊtes-vous allergique à quelque chose ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nPrenez-vous ou avez-vous pris de l’isotrétinoïne ou d’autres médicaments/crèmes  contre l’acné au cours des 6 derniers mois ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nDans quel délai souhaitez-vous obtenir des résultats visibles ?\nImmédiatementD’ici environ un moisD’ici environ trois mois\nJe n’ai pas de délai précis\nSouffrez-vous ou avez-vous souffert de l'une des maladies suivantes ?\nCANCERSMALADIES CARDIAQUESMALADIES DU SYSTÈME CIRCULATOIREMALADIES VASCULAIRESMALADIES PULMONAIRESMALADIES DU SYSTÈME DIGESTIFMALADIES DU FOIEMALADIES DU SYSTÈME URINAIREMALADIES OCULAIRESTROUBLES MÉTABOLIQUESMALADIES DE LA THYROÏDETROUBLES HORMONAUXMALADIES DU SYSTÈME NERVEUXMALADIES DU SANG ET TROUBLES DE LA COAGULATIONAUCUNE\nCONTINUATION DE LA QUESTION PRÉCÉDENTE :\nMALADIES DU SYSTÈME OSSEUXMALADIES INFECTIEUSESMALADIES DE LA PEAUMALADIES PSYCHOSOMATIQUESAUCUNE\nSi vous souffrez d’une des maladies mentionnées, veuillez préciser laquelle. Sinon, écrivez « X ».\nAvez-vous subi des traitements esthétiques invasifs ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nAvez-vous réalisé des traitements de médecine esthétique ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nAvez-vous déjà observe des effets indésirables suite à des traitements esthétiques, cosmétiques ou à l’application de produits ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nQuels sont actuellement vos principaux défis pour la peau ?\nCicatrices\nCellulite\nRelâchement cutané\nTensions musculaires\nVergetures\nHyperpigmentation\nAppliquez-vous des soins corporels ?\nOuiJ’essaie\nNon\nComment évaluez-vous l’état de votre peau ?\nTrès bon\nBonÀ améliorer\nComment évaluez-vous l’état de votre peau ?\nTrès bon\nBonÀ améliorer\nVous êtes fumeur ?\nOui\nNon\nSi oui, combien par jour, si non, inscrivez « X ».\nAvez-vous des prothèses, implants, stimulateurs cardiaques ou dispositifs intra-utérins ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nQuelle quantité d'eau buvez-vous quotidiennement ?\n1 litre1-1,5 litre1,5-2 litres2-2,5 litres<2,5 litres\nAvez-vous suivi un traitement hormonal ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nCombien d’heures dormez-vous per nuit ?\n<7 heures7-8 heures8-9 heures9 heures\nPassez-vous la majorité de votre temps dans des espaces fermés ou en extérieur (au soleil) ?\nEspaces climatisés\nEspaces non climatisés\nExtérieur\nFaites-vous des séances de bronzage ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nÊtes-vous enceinte ?\nOui\nNon\nNon applicable\nAllaitez-vous ?\nOui\nNon\nNon applicable\nAvez-vous des problèmes digestifs ou intestinaux ?\nOui\nNon\nSi oui, veuillez préciser, sinon, inscrivez « X ».\nPratiquez-vous une activité physique régulière ?\n01-2 fois par semaine3-4 fois par semaine\nPlus de 5 fois par semaine\nQuelle est votre activité physique principale:\nNon applicable\nEntraînement de force\nCardio\nÉtirements/yoga/pilates\nAutres\nPrenez-vous des compléments alimentaires ? Veuillez choisir parmi les options ci-dessous :\nVitamine DVitamine AVitamine EVitamines du groupe BVitamine COméga 3Fer\nMagnésium\nBiotine\nCollagène\nJe ne prends pas de complémentsAUTRES - INDIQUEZ CI-DESSOUS :\nSi vous prenez d’autres compléments non mentionnés, précisez lesquels. Si ce n’est pas le cas, écrivez « X ».\nCochez toutes les options correspondant à votre régime alimentaire :\nRégime végétarien\nRégime végétalien\nJe consomme de la viandeJ’évite les sucreries et la restauration rapide\nJe consomme beaucoup de sucreries et de restauration rapide\nRégime riche en fruits et légumes\nRégime pauvre en fruits et légumes\nRégime riche en protéines\nRégime hyperprotéiné\nRégime hypercalorique\nRégime cétogène\nCuisine traditionnelle polonaise\nAucune attention particulière à l’alimentation\nRégime riche en gluten (pâtes, pain, pâtisseries)\nEspace pour informations/remarques supplémentaires (si aucune, écrivez « X ») :\nWyrażam zgodę na przetwarzanie moich danych dotyczących zdrowia na potrzeby przeprowadzenia zabiegu."
+    ],
+    "legalBlocks": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty\nPlanów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty\nPlanów\nPODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty\nPlanu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).\nDo czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.\nCEL: Odpowiedzi na zapytania\nPODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]W przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).\nCEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów\nPODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.\nCEL: Reklamacje\nPODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]\nCzy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.\nJak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.\nGdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.\nKomu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).\nJakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail [EMAIL SALONU] lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.\nJeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.\nZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO."
+    ],
+    "warnings": [
+      "Wykryto linie dluzsza niz 300 znakow."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Pytania",
+        "fields": [
+          {
+            "id": "suivez_vous_actuellement_un_traitement_m",
+            "type": "radio",
+            "label": "Suivez-vous actuellement un traitement médical ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "prenez_vous_des_m_dicaments_de_mani_re_r",
+            "type": "radio",
+            "label": "Prenez-vous des médicaments de manière régulière ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "tes_vous_allergique_quelque_chose",
+            "type": "radio",
+            "label": "Êtes-vous allergique à quelque chose ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "prenez_vous_ou_avez_vous_pris_de_l_isotr",
+            "type": "radio",
+            "label": "Prenez-vous ou avez-vous pris de l’isotrétinoïne ou d’autres médicaments/crèmes  contre l’acné au cours des 6 derniers mois ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "dans_quel_d_lai_souhaitez_vous_obtenir_d",
+            "type": "radio",
+            "label": "Dans quel délai souhaitez-vous obtenir des résultats visibles ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Immédiatement",
+              "D’ici environ un mois",
+              "D’ici environ trois mois",
+              "Je n’ai pas de délai précis"
+            ]
+          },
+          {
+            "id": "souffrez_vous_ou_avez_vous_souffert_de_l",
+            "type": "text",
+            "label": "Souffrez-vous ou avez-vous souffert de l'une des maladies suivantes ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false
+          },
+          {
+            "id": "avez_vous_subi_des_traitements_esth_tiqu",
+            "type": "radio",
+            "label": "Avez-vous subi des traitements esthétiques invasifs ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "avez_vous_r_alis_des_traitements_de_m_de",
+            "type": "radio",
+            "label": "Avez-vous réalisé des traitements de médecine esthétique ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "avez_vous_d_j_observe_des_effets_ind_sir",
+            "type": "radio",
+            "label": "Avez-vous déjà observe des effets indésirables suite à des traitements esthétiques, cosmétiques ou à l’application de produits ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "quels_sont_actuellement_vos_principaux_d",
+            "type": "select",
+            "label": "Quels sont actuellement vos principaux défis pour la peau ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Cicatrices",
+              "Cellulite",
+              "Relâchement cutané",
+              "Tensions musculaires",
+              "Vergetures",
+              "Hyperpigmentation"
+            ]
+          },
+          {
+            "id": "appliquez_vous_des_soins_corporels",
+            "type": "radio",
+            "label": "Appliquez-vous des soins corporels ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "J’essaie",
+              "Non",
+              "Oui"
+            ]
+          },
+          {
+            "id": "comment_valuez_vous_l_tat_de_votre_peau",
+            "type": "radio",
+            "label": "Comment évaluez-vous l’état de votre peau ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Très bon",
+              "Bon",
+              "À améliorer"
+            ]
+          },
+          {
+            "id": "comment_valuez_vous_l_tat_de_votre_peau_2",
+            "type": "radio",
+            "label": "Comment évaluez-vous l’état de votre peau ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Très bon",
+              "Bon",
+              "À améliorer"
+            ]
+          },
+          {
+            "id": "vous_tes_fumeur",
+            "type": "radio",
+            "label": "Vous êtes fumeur ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, combien par jour, si non, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "pacemaker",
+            "type": "radio",
+            "label": "Avez-vous des prothèses, implants, stimulateurs cardiaques ou dispositifs intra-utérins ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "quelle_quantit_d_eau_buvez_vous_quotidie",
+            "type": "radio",
+            "label": "Quelle quantité d'eau buvez-vous quotidiennement ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "1 litre",
+              "1-1,5 litre",
+              "1,5-2 litres",
+              "2-2,5 litres<2,5 litres"
+            ]
+          },
+          {
+            "id": "avez_vous_suivi_un_traitement_hormonal",
+            "type": "radio",
+            "label": "Avez-vous suivi un traitement hormonal ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "combien_d_heures_dormez_vous_per_nuit",
+            "type": "radio",
+            "label": "Combien d’heures dormez-vous per nuit ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "<7 heures",
+              "7-8 heures",
+              "8-9 heures",
+              "9 heures"
+            ]
+          },
+          {
+            "id": "passez_vous_la_majorit_de_votre_temps_da",
+            "type": "radio",
+            "label": "Passez-vous la majorité de votre temps dans des espaces fermés ou en extérieur (au soleil) ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Espaces climatisés",
+              "Espaces non climatisés",
+              "Extérieur"
+            ]
+          },
+          {
+            "id": "faites_vous_des_s_ances_de_bronzage",
+            "type": "radio",
+            "label": "Faites-vous des séances de bronzage ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "tes_vous_enceinte",
+            "type": "radio",
+            "label": "Êtes-vous enceinte ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Non applicable"
+            ]
+          },
+          {
+            "id": "allaitez_vous",
+            "type": "radio",
+            "label": "Allaitez-vous ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Non applicable"
+            ]
+          },
+          {
+            "id": "avez_vous_des_probl_mes_digestifs_ou_int",
+            "type": "radio",
+            "label": "Avez-vous des problèmes digestifs ou intestinaux ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Oui",
+              "Non",
+              "Si oui, veuillez préciser, sinon, inscrivez « X »."
+            ]
+          },
+          {
+            "id": "pratiquez_vous_une_activit_physique_r_gu",
+            "type": "select",
+            "label": "Pratiquez-vous une activité physique régulière ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "01-2 fois par semaine",
+              "3-4 fois par semaine",
+              "Plus de 5 fois par semaine",
+              "Quelle est votre activité physique principale:",
+              "Non applicable",
+              "Entraînement de force",
+              "Cardio",
+              "Étirements/yoga/pilates",
+              "Autres"
+            ]
+          },
+          {
+            "id": "vitamine_dvitamine_avitamine_evitamines",
+            "type": "radio",
+            "label": "Vitamine DVitamine AVitamine EVitamines du groupe BVitamine COméga 3Fer",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Magnésium",
+              "Biotine",
+              "Collagène",
+              "Je ne prends pas de compléments",
+              "AUTRES - INDIQUEZ CI-DESSOUS :"
+            ]
+          },
+          {
+            "id": "cochez_toutes_les_options_correspondant",
+            "type": "select",
+            "label": "Cochez toutes les options correspondant à votre régime alimentaire :",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Régime végétarien",
+              "Régime végétalien",
+              "Je consomme de la viande",
+              "J’évite les sucreries et la restauration rapide",
+              "Je consomme beaucoup de sucreries et de restauration rapide",
+              "Régime riche en fruits et légumes",
+              "Régime pauvre en fruits et légumes",
+              "Régime riche en protéines",
+              "Régime hyperprotéiné",
+              "Régime hypercalorique",
+              "Régime cétogène",
+              "Cuisine traditionnelle polonaise",
+              "Aucune attention particulière à l’alimentation",
+              "Régime riche en gluten (pâtes, pain, pâtisseries)"
+            ]
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beau"
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "health",
+    "healthFieldCount": 2,
+    "sensitiveFieldCount": 1,
+    "requiresHealthConsent": true,
+    "reviewRequired": true,
+    "reviewNotes": []
+  },
+  "templateDraft": {
+    "name": "Karta Zabiegowa Ciało / Fiche Pour Le Corps",
+    "description": "Zaimportowane z biblioteki kart zabiegowych",
+    "data_category": "health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Administratorem Twoich danych osobowych jest [NAZWA SALONU] z siedziba pod adresem [ADRES] (\"Administrator\").\n\nW sprawach zwiazanych z przetwarzaniem danych osobowych mozesz skontaktowac sie z Administratorem pod adresem e-mail: [EMAIL SALONU].\n\nTwoje dane osobowe przetwarzane sa w celu realizacji uslug i wykonania zawartej umowy (art. 6 ust. 1 lit. b RODO). W zakresie, w jakim dane dotycza zdrowia, podstawa przetwarzania jest Twoja wyrazna zgoda (art. 9 ust. 2 lit. a RODO).\n\nDane beda przechowywane przez okres niezbedny do realizacji uslugi, a po jej wykonaniu przez okres wynikajacy z przepisow prawa oraz do czasu przedawnienia ewentualnych roszczen.\n\nPrzysluguje Ci prawo dostepu do danych, ich sprostowania, usuniecia, ograniczenia przetwarzania, przenoszenia danych, wycofania zgody oraz wniesienia sprzeciwu - w przypadkach przewidzianych prawem. Masz takze prawo wniesienia skargi do Prezesa Urzedu Ochrony Danych Osobowych.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "suivez_vous_actuellement_un_traitement_m",
+        "type": "radio",
+        "label": "Suivez-vous actuellement un traitement médical ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "prenez_vous_des_m_dicaments_de_mani_re_r",
+        "type": "radio",
+        "label": "Prenez-vous des médicaments de manière régulière ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "tes_vous_allergique_quelque_chose",
+        "type": "radio",
+        "label": "Êtes-vous allergique à quelque chose ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "prenez_vous_ou_avez_vous_pris_de_l_isotr",
+        "type": "radio",
+        "label": "Prenez-vous ou avez-vous pris de l’isotrétinoïne ou d’autres médicaments/crèmes  contre l’acné au cours des 6 derniers mois ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "dans_quel_d_lai_souhaitez_vous_obtenir_d",
+        "type": "radio",
+        "label": "Dans quel délai souhaitez-vous obtenir des résultats visibles ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Immédiatement",
+          "D’ici environ un mois",
+          "D’ici environ trois mois",
+          "Je n’ai pas de délai précis"
+        ]
+      },
+      {
+        "id": "souffrez_vous_ou_avez_vous_souffert_de_l",
+        "type": "text",
+        "label": "Souffrez-vous ou avez-vous souffert de l'une des maladies suivantes ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false
+      },
+      {
+        "id": "avez_vous_subi_des_traitements_esth_tiqu",
+        "type": "radio",
+        "label": "Avez-vous subi des traitements esthétiques invasifs ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "avez_vous_r_alis_des_traitements_de_m_de",
+        "type": "radio",
+        "label": "Avez-vous réalisé des traitements de médecine esthétique ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "avez_vous_d_j_observe_des_effets_ind_sir",
+        "type": "radio",
+        "label": "Avez-vous déjà observe des effets indésirables suite à des traitements esthétiques, cosmétiques ou à l’application de produits ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "quels_sont_actuellement_vos_principaux_d",
+        "type": "select",
+        "label": "Quels sont actuellement vos principaux défis pour la peau ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Cicatrices",
+          "Cellulite",
+          "Relâchement cutané",
+          "Tensions musculaires",
+          "Vergetures",
+          "Hyperpigmentation"
+        ]
+      },
+      {
+        "id": "appliquez_vous_des_soins_corporels",
+        "type": "radio",
+        "label": "Appliquez-vous des soins corporels ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "J’essaie",
+          "Non",
+          "Oui"
+        ]
+      },
+      {
+        "id": "comment_valuez_vous_l_tat_de_votre_peau",
+        "type": "radio",
+        "label": "Comment évaluez-vous l’état de votre peau ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Très bon",
+          "Bon",
+          "À améliorer"
+        ]
+      },
+      {
+        "id": "comment_valuez_vous_l_tat_de_votre_peau_2",
+        "type": "radio",
+        "label": "Comment évaluez-vous l’état de votre peau ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Très bon",
+          "Bon",
+          "À améliorer"
+        ]
+      },
+      {
+        "id": "vous_tes_fumeur",
+        "type": "radio",
+        "label": "Vous êtes fumeur ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, combien par jour, si non, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "pacemaker",
+        "type": "radio",
+        "label": "Avez-vous des prothèses, implants, stimulateurs cardiaques ou dispositifs intra-utérins ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "quelle_quantit_d_eau_buvez_vous_quotidie",
+        "type": "radio",
+        "label": "Quelle quantité d'eau buvez-vous quotidiennement ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "1 litre",
+          "1-1,5 litre",
+          "1,5-2 litres",
+          "2-2,5 litres<2,5 litres"
+        ]
+      },
+      {
+        "id": "avez_vous_suivi_un_traitement_hormonal",
+        "type": "radio",
+        "label": "Avez-vous suivi un traitement hormonal ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "combien_d_heures_dormez_vous_per_nuit",
+        "type": "radio",
+        "label": "Combien d’heures dormez-vous per nuit ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "<7 heures",
+          "7-8 heures",
+          "8-9 heures",
+          "9 heures"
+        ]
+      },
+      {
+        "id": "passez_vous_la_majorit_de_votre_temps_da",
+        "type": "radio",
+        "label": "Passez-vous la majorité de votre temps dans des espaces fermés ou en extérieur (au soleil) ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Espaces climatisés",
+          "Espaces non climatisés",
+          "Extérieur"
+        ]
+      },
+      {
+        "id": "faites_vous_des_s_ances_de_bronzage",
+        "type": "radio",
+        "label": "Faites-vous des séances de bronzage ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "tes_vous_enceinte",
+        "type": "radio",
+        "label": "Êtes-vous enceinte ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Non applicable"
+        ]
+      },
+      {
+        "id": "allaitez_vous",
+        "type": "radio",
+        "label": "Allaitez-vous ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Non applicable"
+        ]
+      },
+      {
+        "id": "avez_vous_des_probl_mes_digestifs_ou_int",
+        "type": "radio",
+        "label": "Avez-vous des problèmes digestifs ou intestinaux ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Oui",
+          "Non",
+          "Si oui, veuillez préciser, sinon, inscrivez « X »."
+        ]
+      },
+      {
+        "id": "pratiquez_vous_une_activit_physique_r_gu",
+        "type": "select",
+        "label": "Pratiquez-vous une activité physique régulière ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "01-2 fois par semaine",
+          "3-4 fois par semaine",
+          "Plus de 5 fois par semaine",
+          "Quelle est votre activité physique principale:",
+          "Non applicable",
+          "Entraînement de force",
+          "Cardio",
+          "Étirements/yoga/pilates",
+          "Autres"
+        ]
+      },
+      {
+        "id": "vitamine_dvitamine_avitamine_evitamines",
+        "type": "radio",
+        "label": "Vitamine DVitamine AVitamine EVitamines du groupe BVitamine COméga 3Fer",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Magnésium",
+          "Biotine",
+          "Collagène",
+          "Je ne prends pas de compléments",
+          "AUTRES - INDIQUEZ CI-DESSOUS :"
+        ]
+      },
+      {
+        "id": "cochez_toutes_les_options_correspondant",
+        "type": "select",
+        "label": "Cochez toutes les options correspondant à votre régime alimentaire :",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Régime végétarien",
+          "Régime végétalien",
+          "Je consomme de la viande",
+          "J’évite les sucreries et la restauration rapide",
+          "Je consomme beaucoup de sucreries et de restauration rapide",
+          "Régime riche en fruits et légumes",
+          "Régime pauvre en fruits et légumes",
+          "Régime riche en protéines",
+          "Régime hyperprotéiné",
+          "Régime hypercalorique",
+          "Régime cétogène",
+          "Cuisine traditionnelle polonaise",
+          "Aucune attention particulière à l’alimentation",
+          "Régime riche en gluten (pâtes, pain, pâtisseries)"
+        ]
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "karta",
+      "Karta Zabiegowa Ciało / Fiche Pour Le Corps"
+    ],
+    "confidence": 0.7999999999999999,
+    "needsManualReview": true
+  },
+  "approved": true
+}

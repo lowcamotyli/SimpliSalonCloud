@@ -46,16 +46,16 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const PLAN_LABELS: Record<string, string> = {
-  starter: 'Starter',
-  professional: 'Professional',
-  business: 'Business',
+  solo: 'Solo',
+  studio: 'Studio',
+  clinic: 'Clinic',
   enterprise: 'Enterprise',
 }
 
 const PLAN_COLORS: Record<string, { from: string; to: string; badge: string; shadow: string }> = {
-  starter: { from: 'from-slate-400', to: 'to-slate-600', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400', shadow: 'shadow-slate-500/20' },
-  professional: { from: 'from-blue-500', to: 'to-indigo-600', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', shadow: 'shadow-blue-500/20' },
-  business: { from: 'from-violet-500', to: 'to-purple-600', badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', shadow: 'shadow-violet-500/20' },
+  solo: { from: 'from-slate-400', to: 'to-slate-600', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400', shadow: 'shadow-slate-500/20' },
+  studio: { from: 'from-blue-500', to: 'to-indigo-600', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', shadow: 'shadow-blue-500/20' },
+  clinic: { from: 'from-violet-500', to: 'to-purple-600', badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', shadow: 'shadow-violet-500/20' },
   enterprise: { from: 'from-amber-400', to: 'to-orange-500', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', shadow: 'shadow-amber-500/20' },
 }
 

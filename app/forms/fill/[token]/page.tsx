@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import type { DataCategory } from '@/types/forms'
 
 interface Field {
   id: string
@@ -10,12 +11,23 @@ interface Field {
   required?: boolean
   options?: string[]
   placeholder?: string
+  conditionalShowIf?: { fieldId: string; value: string }
+}
+
+function isFieldVisible(field: Field, answers: Record<string, unknown>): boolean {
+  if (!field.conditionalShowIf) return true
+  const { fieldId, value } = field.conditionalShowIf
+  const answer = answers[fieldId]
+  if (Array.isArray(answer)) return answer.includes(value)
+  if (typeof answer === 'boolean') return answer === true && (value === 'true' || value === 'Tak')
+  return answer === value
 }
 
 interface Template {
   name: string
   fields: Field[]
   gdpr_consent_text?: string
+  data_category?: DataCategory
 }
 
 interface FormData {
@@ -23,6 +35,9 @@ interface FormData {
   clientName: string
   salonName: string
 }
+
+const HEALTH_CONSENT_TEXT =
+  'Wyrazam wyrazna zgode na przetwarzanie podanych przeze mnie danych dotyczacych zdrowia zawartych w formularzu w celu oceny przeciwskazan oraz bezpiecznego wykonania wybranej uslugi. Przyjmuje do wiadomosci, ze brak tej zgody moze uniemozliwic wykonanie zabiegu.'
 
 export default function PublicFormPage() {
   const params = useParams()
@@ -119,9 +134,11 @@ export default function PublicFormPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {}
     if (!data) return false
+    const requiresHealthConsent =
+      data.template.data_category === 'health' || data.template.data_category === 'sensitive_health'
 
     data.template.fields.forEach(field => {
-      if (field.required && field.type !== 'section_header') {
+      if (field.required && field.type !== 'section_header' && isFieldVisible(field, answers)) {
         const val = answers[field.id]
         if (!val || (Array.isArray(val) && val.length === 0)) {
           newErrors[field.id] = 'To pole jest wymagane'
@@ -131,6 +148,10 @@ export default function PublicFormPage() {
 
     if (data.template.gdpr_consent_text && !answers.gdpr_consent) {
       newErrors.gdpr_consent = 'Zgoda jest wymagana'
+    }
+
+    if (requiresHealthConsent && !answers.health_consent) {
+      newErrors.health_consent = 'Wyrazna zgoda na przetwarzanie danych zdrowotnych jest wymagana'
     }
 
     setErrors(newErrors)
@@ -211,9 +232,12 @@ export default function PublicFormPage() {
     )
   }
 
-  const totalFields = data?.template.fields.filter(f => f.type !== 'section_header').length || 0
-  const filledFields = Object.keys(answers).filter(k => answers[k] && k !== 'gdpr_consent').length
+  const visibleFields = data?.template.fields.filter(f => f.type !== 'section_header' && isFieldVisible(f, answers)) || []
+  const totalFields = visibleFields.length
+  const filledFields = visibleFields.filter(f => { const v = answers[f.id]; return v && !(Array.isArray(v) && v.length === 0) }).length
   const progress = totalFields > 0 ? (filledFields / totalFields) * 100 : 0
+  const requiresHealthConsent =
+    data?.template.data_category === 'health' || data?.template.data_category === 'sensitive_health'
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12 font-sans text-gray-900">
@@ -247,7 +271,7 @@ export default function PublicFormPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-12">
-            {data?.template.fields.map((field) => (
+            {data?.template.fields.map((field) => isFieldVisible(field, answers) ? (
               <div key={field.id} className="space-y-4" data-error={!!errors[field.id]}>
                 {field.type === 'section_header' ? (
                   <div className="pt-8 border-t border-gray-100 mt-8 first:mt-0 first:pt-0 first:border-0">
@@ -458,7 +482,7 @@ export default function PublicFormPage() {
                   </>
                 )}
               </div>
-            ))}
+            ) : null)}
 
             {data?.template.gdpr_consent_text && (
               <div className="pt-12 border-t border-gray-100 space-y-5">
@@ -486,6 +510,37 @@ export default function PublicFormPage() {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <span className="text-sm font-black">{errors.gdpr_consent}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {requiresHealthConsent && (
+              <div className="space-y-5">
+                <label className={`flex items-start space-x-5 p-6 border-2 rounded-3xl cursor-pointer transition-all hover:shadow-lg ${answers.health_consent ? 'border-emerald-600 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/50'}`}>
+                  <div className={`mt-1 w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${answers.health_consent ? 'border-emerald-600 bg-emerald-600' : 'border-amber-400 bg-white'}`}>
+                    {answers.health_consent && (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={!!answers.health_consent}
+                    onChange={(e) => setAnswers({ ...answers, health_consent: e.target.checked })}
+                  />
+                  <span className={`text-sm md:text-base leading-relaxed font-medium ${answers.health_consent ? 'text-emerald-950' : 'text-amber-900'}`}>
+                    {HEALTH_CONSENT_TEXT}
+                  </span>
+                </label>
+                {errors.health_consent && (
+                  <div className="flex items-center space-x-2 text-red-600 px-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-black">{errors.health_consent}</span>
                   </div>
                 )}
               </div>

@@ -1,0 +1,777 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "PIELĘGNACJA_DŁONI_I_STÓP_manicure__pedicure_(karta_ogólna).md",
+    "language": "pl",
+    "category": "PIELĘGNACJA",
+    "serviceName": "manicure / pedicure (karta ogólna)"
+  },
+  "extraction": {
+    "title": "PIELĘGNACJA DŁONI I STÓP: manicure / pedicure (karta ogólna)",
+    "questionBlocks": [
+      "Czy to Pana/i pierwszy zabieg manicure lub pedicure?\nTak    Nie\nCzy pozostaje Pan/i obecnie pod opieką lekarza lub przyjmuje na stałe jakiekolwiek leki?\nNie, jestem zdrowy/a i nie przyjmuję żadnych leków\nTak, przyjmuję leki okresowo (np. doraźnie lub sezonowo)\nTak, przyjmuję leki na stałe (np. związane z chorobą przewlekłą)\nTak, pozostaję pod opieką lekarza specjalisty\nJeśli pozostaje Pan/i pod opieką lekarza, proszę zaznaczyć, czego dotyczy leczenie:\nChoroby serca / układu krążenia\nCukrzyca / zaburzenia metaboliczne\nChoroby tarczycy / hormonalne\nChoroby autoimmunologiczne (np. Hashimoto, RZS, toczeń)\nChoroby skóry (np. trądzik, łuszczyca, AZS, opryszczka)\nChoroby neurologiczne / psychosomatyczne\nChoroby nowotworowe (obecne lub przebyte)\nInne\nCzy ma Pan/i alergię?\nNie\nLeki\nKosmetyki\nNikiel\nMetale\nLateks\nPokarmy\nPyłki\nKurz\nSierść\nInne\nCzy jest Pani w ciąży?\nNie dotyczy\nTak\nNie\nCzy karmi Pani piersią?\nNie dotyczy\nTak\nNie\nCzy przebył/a Pan/i operacje w obrębie dłoni lub stóp?\nNie\nHaluksy\nUsuwanie odcisków / modzeli\nKorekta wrastających paznokci\nZabiegi ortopedyczne\nInne\nKiedy wykonano zabieg?\nNie dotyczy<3 miesiące3–12 miesięcy>1 rok\nCzy cierpi Pan/i na zaburzenia ukrwienia kończyn?\nNie\nŻylaki\nPajączki naczyniowe\nObrzęki\nZimne dłonie / stopy\nZakrzepica\nCzy występują zmiany w obrębie skóry dłoni, stóp lub paznokci?\nNie\nGrzybica skóry lub paznokci\nŁuszczyca\nBruzdy / rozdwajanie paznokci\nWrastające paznokcie\nOdciski / modzele\nPękające pięty\nPrzebarwienia płytki\nOnycholiza\nKurzajki\nInne\nCzy odczuwa Pan/i ból w obrębie dłoni lub stóp?\nNie<1 miesiąc1–6 miesięcy>6 miesięcy\nCzy korzystał/a Pan/i wcześniej z zabiegów manicure lub pedicure?\nNie<1 miesiąc temu1–3 miesiące temu3–6 miesięcy temu>6 miesięcy temu\nCzy kiedykolwiek wystąpiła reakcja niepożądana po zabiegu manicure/pedicure lub po produktach do stylizacji paznokci?\nTak    Nie\nJeśli tak, proszę opisać reakcję:\nCzy wykonuje Pan/i stylizację paznokci?\nNie\nTak, lakier klasyczny\nTak, hybryda\nTak, żel / akryl\nCzy samodzielnie usuwa Pan/i stylizację paznokci w domu?\nTak    Nie\nCzy dłonie lub stopy nadmiernie się pocą?\nTak    Nie\nCzy pali Pan/i papierosy?\nTak    Nie\nCzy stosuje Pan/i suplementację?\nNie stosuję suplementów\nWit. AWit. BWit. CWit. DWit. EMultiwitamina\nŻelazo\nMagnez\nPotas\nCynk\nKolagen\nOmega-3Probiotyki\nInne\nJak ocenia Pan/i stan swojej skóry?\nBardzo dobry\nDobry\nDo poprawy\nInne\nIle wody wypija Pan/i dziennie?\n<1 l1–1,5 l1,5–2 l2–2,5 l>2,5 l\nO której godzinie zazwyczaj chodzi Pan/i spać?\nPrzed 22:0022:00–23:0023:00–24:00Po 24:00\nIle godzin snu ma Pan/i średnio na dobę?\n<7 h7–8 h8–9 h9 h\nJakiego efektu zabiegu Pan/i oczekuje?\nPielęgnacyjnego\nRegeneracyjnego\nEstetycznego\nLeczniczego\nInne\nWyrażam zgodę na przetwarzanie moich danych dotyczących zdrowia na potrzeby przeprowadzenia zabiegu."
+    ],
+    "legalBlocks": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty\nPlanów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty\nPlanów\nPODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty\nPlanu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).\nDo czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.\nCEL: Odpowiedzi na zapytania\nPODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]W przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).\nCEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów\nPODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.\nCEL: Reklamacje\nPODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]\nCzy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.\nJak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.\nGdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.\nKomu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).\nJakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail [EMAIL SALONU] lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.\nJeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.\nZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO."
+    ],
+    "warnings": [
+      "Wykryto linie dluzsza niz 300 znakow."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Pytania",
+        "fields": [
+          {
+            "id": "czy_to_pana_i_pierwszy_zabieg_manicure_l",
+            "type": "radio",
+            "label": "Czy to Pana/i pierwszy zabieg manicure lub pedicure?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_pozostaje_pan_i_obecnie_pod_opieka_l",
+            "type": "radio",
+            "label": "Czy pozostaje Pan/i obecnie pod opieką lekarza lub przyjmuje na stałe jakiekolwiek leki?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie, jestem zdrowy/a i nie przyjmuję żadnych leków",
+              "Tak, przyjmuję leki okresowo (np. doraźnie lub sezonowo)"
+            ]
+          },
+          {
+            "id": "medications",
+            "type": "radio",
+            "label": "Tak, przyjmuję leki na stałe (np. związane z chorobą przewlekłą)",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Tak, pozostaję pod opieką lekarza specjalisty"
+            ]
+          },
+          {
+            "id": "jesli_pozostaje_pan_i_pod_opieka_lekarza",
+            "type": "select",
+            "label": "Jeśli pozostaje Pan/i pod opieką lekarza, proszę zaznaczyć, czego dotyczy leczenie:",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Choroby serca / układu krążenia",
+              "Cukrzyca / zaburzenia metaboliczne",
+              "Choroby tarczycy / hormonalne",
+              "Choroby autoimmunologiczne (np. Hashimoto, RZS, toczeń)",
+              "Choroby skóry (np. trądzik, łuszczyca, AZS, opryszczka)",
+              "Choroby neurologiczne / psychosomatyczne",
+              "Choroby nowotworowe (obecne lub przebyte)",
+              "Inne"
+            ]
+          },
+          {
+            "id": "allergies",
+            "type": "radio",
+            "label": "Czy ma Pan/i alergię?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Inne",
+              "Kosmetyki",
+              "Kurz",
+              "Lateks",
+              "Leki",
+              "Metale",
+              "Nie",
+              "Nikiel",
+              "Pokarmy",
+              "Pyłki",
+              "Sierść"
+            ]
+          },
+          {
+            "id": "pregnancy",
+            "type": "radio",
+            "label": "Czy jest Pani w ciąży?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie dotyczy",
+              "Tak",
+              "Nie"
+            ]
+          },
+          {
+            "id": "czy_karmi_pani_piersia",
+            "type": "radio",
+            "label": "Czy karmi Pani piersią?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie dotyczy",
+              "Tak",
+              "Nie"
+            ]
+          },
+          {
+            "id": "czy_przebyl_a_pan_i_operacje_w_obrebie_d",
+            "type": "select",
+            "label": "Czy przebył/a Pan/i operacje w obrębie dłoni lub stóp?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Haluksy",
+              "Usuwanie odcisków / modzeli",
+              "Korekta wrastających paznokci",
+              "Zabiegi ortopedyczne",
+              "Inne"
+            ]
+          },
+          {
+            "id": "kiedy_wykonano_zabieg",
+            "type": "radio",
+            "label": "Kiedy wykonano zabieg?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie dotyczy<3 miesiące",
+              "3–12 miesięcy>1 rok"
+            ]
+          },
+          {
+            "id": "czy_cierpi_pan_i_na_zaburzenia_ukrwienia",
+            "type": "select",
+            "label": "Czy cierpi Pan/i na zaburzenia ukrwienia kończyn?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Żylaki",
+              "Pajączki naczyniowe",
+              "Obrzęki",
+              "Zimne dłonie / stopy",
+              "Zakrzepica"
+            ]
+          },
+          {
+            "id": "czy_wystepuja_zmiany_w_obrebie_skory_dlo",
+            "type": "select",
+            "label": "Czy występują zmiany w obrębie skóry dłoni, stóp lub paznokci?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Grzybica skóry lub paznokci",
+              "Łuszczyca",
+              "Bruzdy / rozdwajanie paznokci",
+              "Wrastające paznokcie",
+              "Odciski / modzele",
+              "Pękające pięty",
+              "Przebarwienia płytki",
+              "Onycholiza",
+              "Kurzajki",
+              "Inne"
+            ]
+          },
+          {
+            "id": "czy_odczuwa_pan_i_bol_w_obrebie_dloni_lu",
+            "type": "radio",
+            "label": "Czy odczuwa Pan/i ból w obrębie dłoni lub stóp?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie<1 miesiąc",
+              "1–6 miesięcy>6 miesięcy"
+            ]
+          },
+          {
+            "id": "czy_korzystal_a_pan_i_wczesniej_z_zabieg",
+            "type": "radio",
+            "label": "Czy korzystał/a Pan/i wcześniej z zabiegów manicure lub pedicure?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie<1 miesiąc temu",
+              "1–3 miesiące temu",
+              "3–6 miesięcy temu>6 miesięcy temu"
+            ]
+          },
+          {
+            "id": "czy_kiedykolwiek_wystapila_reakcja_niepo",
+            "type": "radio",
+            "label": "Czy kiedykolwiek wystąpiła reakcja niepożądana po zabiegu manicure/pedicure lub po produktach do stylizacji paznokci?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_prosze_opisac_reakcje",
+            "type": "textarea",
+            "label": "Jeśli tak, proszę opisać reakcję:",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_kiedykolwiek_wystapila_reakcja_niepo",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_wykonuje_pan_i_stylizacje_paznokci",
+            "type": "radio",
+            "label": "Czy wykonuje Pan/i stylizację paznokci?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak, lakier klasyczny",
+              "Tak, hybryda",
+              "Tak, żel / akryl"
+            ]
+          },
+          {
+            "id": "czy_samodzielnie_usuwa_pan_i_stylizacje",
+            "type": "radio",
+            "label": "Czy samodzielnie usuwa Pan/i stylizację paznokci w domu?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_dlonie_lub_stopy_nadmiernie_sie_poca",
+            "type": "radio",
+            "label": "Czy dłonie lub stopy nadmiernie się pocą?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_pali_pan_i_papierosy",
+            "type": "radio",
+            "label": "Czy pali Pan/i papierosy?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_stosuje_pan_i_suplementacje",
+            "type": "select",
+            "label": "Czy stosuje Pan/i suplementację?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie stosuję suplementów",
+              "Wit. A",
+              "Wit. B",
+              "Wit. C",
+              "Wit. D",
+              "Wit. E",
+              "Multiwitamina",
+              "Żelazo",
+              "Magnez",
+              "Potas",
+              "Cynk",
+              "Kolagen",
+              "Omega-3",
+              "Probiotyki",
+              "Inne"
+            ]
+          },
+          {
+            "id": "hair_condition",
+            "type": "radio",
+            "label": "Jak ocenia Pan/i stan swojej skóry?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Bardzo dobry",
+              "Dobry",
+              "Do poprawy",
+              "Inne"
+            ]
+          },
+          {
+            "id": "ile_wody_wypija_pan_i_dziennie",
+            "type": "radio",
+            "label": "Ile wody wypija Pan/i dziennie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "<1 l",
+              "1–1,5 l",
+              "1,5–2 l",
+              "2–2,5 l>2,5 l"
+            ]
+          },
+          {
+            "id": "o_ktorej_godzinie_zazwyczaj_chodzi_pan_i",
+            "type": "radio",
+            "label": "O której godzinie zazwyczaj chodzi Pan/i spać?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Przed 22:0022:00–23:0023:00–24:00",
+              "Po 24:00"
+            ]
+          },
+          {
+            "id": "ile_godzin_snu_ma_pan_i_srednio_na_dobe",
+            "type": "radio",
+            "label": "Ile godzin snu ma Pan/i średnio na dobę?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "<7 h",
+              "7–8 h",
+              "8–9 h",
+              "9 h"
+            ]
+          },
+          {
+            "id": "service_expectation",
+            "type": "select",
+            "label": "Jakiego efektu zabiegu Pan/i oczekuje?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Estetycznego",
+              "Inne",
+              "Leczniczego",
+              "Pielęgnacyjnego",
+              "Regeneracyjnego"
+            ]
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beau"
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "health",
+    "healthFieldCount": 5,
+    "sensitiveFieldCount": 0,
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  "templateDraft": {
+    "name": "manicure / pedicure (karta ogólna)",
+    "description": "Zaimportowane z biblioteki kart zabiegowych",
+    "data_category": "health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Administratorem Twoich danych osobowych jest [NAZWA SALONU] z siedziba pod adresem [ADRES] (\"Administrator\").\n\nW sprawach zwiazanych z przetwarzaniem danych osobowych mozesz skontaktowac sie z Administratorem pod adresem e-mail: [EMAIL SALONU].\n\nTwoje dane osobowe przetwarzane sa w celu realizacji uslug i wykonania zawartej umowy (art. 6 ust. 1 lit. b RODO). W zakresie, w jakim dane dotycza zdrowia, podstawa przetwarzania jest Twoja wyrazna zgoda (art. 9 ust. 2 lit. a RODO).\n\nDane beda przechowywane przez okres niezbedny do realizacji uslugi, a po jej wykonaniu przez okres wynikajacy z przepisow prawa oraz do czasu przedawnienia ewentualnych roszczen.\n\nPrzysluguje Ci prawo dostepu do danych, ich sprostowania, usuniecia, ograniczenia przetwarzania, przenoszenia danych, wycofania zgody oraz wniesienia sprzeciwu - w przypadkach przewidzianych prawem. Masz takze prawo wniesienia skargi do Prezesa Urzedu Ochrony Danych Osobowych.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "czy_to_pana_i_pierwszy_zabieg_manicure_l",
+        "type": "radio",
+        "label": "Czy to Pana/i pierwszy zabieg manicure lub pedicure?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_pozostaje_pan_i_obecnie_pod_opieka_l",
+        "type": "radio",
+        "label": "Czy pozostaje Pan/i obecnie pod opieką lekarza lub przyjmuje na stałe jakiekolwiek leki?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie, jestem zdrowy/a i nie przyjmuję żadnych leków",
+          "Tak, przyjmuję leki okresowo (np. doraźnie lub sezonowo)"
+        ]
+      },
+      {
+        "id": "medications",
+        "type": "radio",
+        "label": "Tak, przyjmuję leki na stałe (np. związane z chorobą przewlekłą)",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Tak, pozostaję pod opieką lekarza specjalisty"
+        ]
+      },
+      {
+        "id": "jesli_pozostaje_pan_i_pod_opieka_lekarza",
+        "type": "select",
+        "label": "Jeśli pozostaje Pan/i pod opieką lekarza, proszę zaznaczyć, czego dotyczy leczenie:",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Choroby serca / układu krążenia",
+          "Cukrzyca / zaburzenia metaboliczne",
+          "Choroby tarczycy / hormonalne",
+          "Choroby autoimmunologiczne (np. Hashimoto, RZS, toczeń)",
+          "Choroby skóry (np. trądzik, łuszczyca, AZS, opryszczka)",
+          "Choroby neurologiczne / psychosomatyczne",
+          "Choroby nowotworowe (obecne lub przebyte)",
+          "Inne"
+        ]
+      },
+      {
+        "id": "allergies",
+        "type": "radio",
+        "label": "Czy ma Pan/i alergię?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Inne",
+          "Kosmetyki",
+          "Kurz",
+          "Lateks",
+          "Leki",
+          "Metale",
+          "Nie",
+          "Nikiel",
+          "Pokarmy",
+          "Pyłki",
+          "Sierść"
+        ]
+      },
+      {
+        "id": "pregnancy",
+        "type": "radio",
+        "label": "Czy jest Pani w ciąży?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie dotyczy",
+          "Tak",
+          "Nie"
+        ]
+      },
+      {
+        "id": "czy_karmi_pani_piersia",
+        "type": "radio",
+        "label": "Czy karmi Pani piersią?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie dotyczy",
+          "Tak",
+          "Nie"
+        ]
+      },
+      {
+        "id": "czy_przebyl_a_pan_i_operacje_w_obrebie_d",
+        "type": "select",
+        "label": "Czy przebył/a Pan/i operacje w obrębie dłoni lub stóp?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Haluksy",
+          "Usuwanie odcisków / modzeli",
+          "Korekta wrastających paznokci",
+          "Zabiegi ortopedyczne",
+          "Inne"
+        ]
+      },
+      {
+        "id": "kiedy_wykonano_zabieg",
+        "type": "radio",
+        "label": "Kiedy wykonano zabieg?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie dotyczy<3 miesiące",
+          "3–12 miesięcy>1 rok"
+        ]
+      },
+      {
+        "id": "czy_cierpi_pan_i_na_zaburzenia_ukrwienia",
+        "type": "select",
+        "label": "Czy cierpi Pan/i na zaburzenia ukrwienia kończyn?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Żylaki",
+          "Pajączki naczyniowe",
+          "Obrzęki",
+          "Zimne dłonie / stopy",
+          "Zakrzepica"
+        ]
+      },
+      {
+        "id": "czy_wystepuja_zmiany_w_obrebie_skory_dlo",
+        "type": "select",
+        "label": "Czy występują zmiany w obrębie skóry dłoni, stóp lub paznokci?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Grzybica skóry lub paznokci",
+          "Łuszczyca",
+          "Bruzdy / rozdwajanie paznokci",
+          "Wrastające paznokcie",
+          "Odciski / modzele",
+          "Pękające pięty",
+          "Przebarwienia płytki",
+          "Onycholiza",
+          "Kurzajki",
+          "Inne"
+        ]
+      },
+      {
+        "id": "czy_odczuwa_pan_i_bol_w_obrebie_dloni_lu",
+        "type": "radio",
+        "label": "Czy odczuwa Pan/i ból w obrębie dłoni lub stóp?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie<1 miesiąc",
+          "1–6 miesięcy>6 miesięcy"
+        ]
+      },
+      {
+        "id": "czy_korzystal_a_pan_i_wczesniej_z_zabieg",
+        "type": "radio",
+        "label": "Czy korzystał/a Pan/i wcześniej z zabiegów manicure lub pedicure?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie<1 miesiąc temu",
+          "1–3 miesiące temu",
+          "3–6 miesięcy temu>6 miesięcy temu"
+        ]
+      },
+      {
+        "id": "czy_kiedykolwiek_wystapila_reakcja_niepo",
+        "type": "radio",
+        "label": "Czy kiedykolwiek wystąpiła reakcja niepożądana po zabiegu manicure/pedicure lub po produktach do stylizacji paznokci?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_prosze_opisac_reakcje",
+        "type": "textarea",
+        "label": "Jeśli tak, proszę opisać reakcję:",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_kiedykolwiek_wystapila_reakcja_niepo",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_wykonuje_pan_i_stylizacje_paznokci",
+        "type": "radio",
+        "label": "Czy wykonuje Pan/i stylizację paznokci?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak, lakier klasyczny",
+          "Tak, hybryda",
+          "Tak, żel / akryl"
+        ]
+      },
+      {
+        "id": "czy_samodzielnie_usuwa_pan_i_stylizacje",
+        "type": "radio",
+        "label": "Czy samodzielnie usuwa Pan/i stylizację paznokci w domu?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_dlonie_lub_stopy_nadmiernie_sie_poca",
+        "type": "radio",
+        "label": "Czy dłonie lub stopy nadmiernie się pocą?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_pali_pan_i_papierosy",
+        "type": "radio",
+        "label": "Czy pali Pan/i papierosy?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_stosuje_pan_i_suplementacje",
+        "type": "select",
+        "label": "Czy stosuje Pan/i suplementację?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie stosuję suplementów",
+          "Wit. A",
+          "Wit. B",
+          "Wit. C",
+          "Wit. D",
+          "Wit. E",
+          "Multiwitamina",
+          "Żelazo",
+          "Magnez",
+          "Potas",
+          "Cynk",
+          "Kolagen",
+          "Omega-3",
+          "Probiotyki",
+          "Inne"
+        ]
+      },
+      {
+        "id": "hair_condition",
+        "type": "radio",
+        "label": "Jak ocenia Pan/i stan swojej skóry?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Bardzo dobry",
+          "Dobry",
+          "Do poprawy",
+          "Inne"
+        ]
+      },
+      {
+        "id": "ile_wody_wypija_pan_i_dziennie",
+        "type": "radio",
+        "label": "Ile wody wypija Pan/i dziennie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "<1 l",
+          "1–1,5 l",
+          "1,5–2 l",
+          "2–2,5 l>2,5 l"
+        ]
+      },
+      {
+        "id": "o_ktorej_godzinie_zazwyczaj_chodzi_pan_i",
+        "type": "radio",
+        "label": "O której godzinie zazwyczaj chodzi Pan/i spać?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Przed 22:0022:00–23:0023:00–24:00",
+          "Po 24:00"
+        ]
+      },
+      {
+        "id": "ile_godzin_snu_ma_pan_i_srednio_na_dobe",
+        "type": "radio",
+        "label": "Ile godzin snu ma Pan/i średnio na dobę?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "<7 h",
+          "7–8 h",
+          "8–9 h",
+          "9 h"
+        ]
+      },
+      {
+        "id": "service_expectation",
+        "type": "select",
+        "label": "Jakiego efektu zabiegu Pan/i oczekuje?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Estetycznego",
+          "Inne",
+          "Leczniczego",
+          "Pielęgnacyjnego",
+          "Regeneracyjnego"
+        ]
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "pielęgnacja",
+      "manicure / pedicure (karta ogólna)"
+    ],
+    "confidence": 0.95,
+    "needsManualReview": false
+  },
+  "approved": true
+}

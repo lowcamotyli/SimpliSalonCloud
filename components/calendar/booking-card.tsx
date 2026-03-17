@@ -99,22 +99,22 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
 
   return (
     <Card
-      className={`h-full w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
+      className={`theme-booking-card h-full w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
       onClick={onClick}
     >
       <div className="flex-1 flex flex-col justify-between min-h-0">
         <div className="flex items-start justify-between gap-1 overflow-hidden">
           <div className="flex-1 min-w-0 pr-1">
-            <p className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
+            <p className="theme-booking-card-title font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
               {booking.client?.full_name || 'Nieznany klient'}
             </p>
-            <p className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+            <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
               {booking.service.name}
             </p>
           </div>
           <div className="relative shrink-0 flex items-start justify-end w-[30px] h-[24px]">
             {booking.duration >= 45 && (
-              <Badge className={`absolute right-0 top-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
+              <Badge className={`theme-booking-card-status absolute right-0 top-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
                 {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
               </Badge>
             )}
@@ -133,13 +133,13 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
 
         {booking.duration >= 60 && (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto overflow-hidden">
-            <div className="flex items-center gap-1 text-gray-600">
-              <Clock className="h-2.5 w-2.5 text-purple-600" />
+            <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600">
+              <Clock className="theme-booking-card-meta-icon h-2.5 w-2.5 text-purple-600" />
               <span className="text-[10px] font-medium">{booking.booking_time.substring(0, 5)}</span>
             </div>
             {booking.duration >= 90 && (
-              <div className="flex items-center gap-1 text-gray-600">
-                <DollarSign className="h-2.5 w-2.5 text-purple-600" />
+              <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600">
+                <DollarSign className="theme-booking-card-meta-icon h-2.5 w-2.5 text-purple-600" />
                 <span className="text-[10px] font-bold text-purple-600">{(booking.total_price || 0).toFixed(0)} zł</span>
               </div>
             )}
@@ -147,7 +147,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
         )}
 
         {booking.notes && booking.duration >= 90 && (
-          <p className="text-[9px] text-gray-500 italic mt-1 truncate border-t border-black/5 pt-1">
+          <p className="theme-booking-card-notes text-[9px] text-gray-500 italic mt-1 truncate border-t border-black/5 pt-1">
             {booking.notes}
           </p>
         )}

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { verifyFormToken } from '@/lib/forms/token'
 import { encryptAnswers } from '@/lib/forms/encryption'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import type { FormField } from '@/types/forms'
+import type { DataCategory, FormField } from '@/types/forms'
 
 interface SubmitPayload {
   answers: Record<string, unknown>
@@ -61,7 +61,7 @@ export async function POST(
 
     const { data: template, error: templateError } = await adminClient
       .from('form_templates')
-      .select('fields')
+      .select('fields, data_category')
       .eq('id', clientForm.form_template_id)
       .limit(1)
       .maybeSingle()
@@ -75,6 +75,8 @@ export async function POST(
     }
 
     const fields = (template.fields ?? []) as unknown as FormField[]
+    const dataCategory = (template.data_category ?? 'general') as DataCategory
+    const requiresHealthConsent = dataCategory === 'health' || dataCategory === 'sensitive_health'
     const missingRequired = fields
       .filter((field) => field.required)
       .filter((field) => !hasValue(answers[field.id]))
@@ -84,6 +86,13 @@ export async function POST(
       return NextResponse.json(
         { error: 'Brak wymaganych odpowiedzi', missingFields: missingRequired },
         { status: 400 }
+      )
+    }
+
+    if (requiresHealthConsent && answers.health_consent !== true) {
+      return NextResponse.json(
+        { error: 'Wyrazna zgoda na przetwarzanie danych zdrowotnych jest wymagana' },
+        { status: 422 }
       )
     }
 
@@ -124,6 +133,7 @@ export async function POST(
       answers_iv: string
       answers_tag: string
       submitted_at: string
+      health_consent_at?: string
       signed_at?: string
       signature_url?: string | null
       fill_token: null
@@ -133,6 +143,10 @@ export async function POST(
       answers_tag: hexTag,
       submitted_at: now,
       fill_token: null,
+    }
+
+    if (requiresHealthConsent) {
+      updatePayload.health_consent_at = now
     }
 
     if (signatureUrl) {

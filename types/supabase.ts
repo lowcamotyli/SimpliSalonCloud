@@ -446,6 +446,7 @@ export type Database = {
           fill_token: string | null
           fill_token_exp: string | null
           form_template_id: string
+          health_consent_at: string | null
           id: string
           signature_url: string | null
           signed_at: string | null
@@ -461,6 +462,7 @@ export type Database = {
           fill_token?: string | null
           fill_token_exp?: string | null
           form_template_id: string
+          health_consent_at?: string | null
           id?: string
           signature_url?: string | null
           signed_at?: string | null
@@ -476,6 +478,7 @@ export type Database = {
           fill_token?: string | null
           fill_token_exp?: string | null
           form_template_id?: string
+          health_consent_at?: string | null
           id?: string
           signature_url?: string | null
           signed_at?: string | null
@@ -1132,6 +1135,7 @@ export type Database = {
       form_templates: {
         Row: {
           created_at: string
+          data_category: Database["public"]["Enums"]["form_data_category"]
           description: string | null
           fields: Json
           gdpr_consent_text: string | null
@@ -1144,6 +1148,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_category?: Database["public"]["Enums"]["form_data_category"]
           description?: string | null
           fields?: Json
           gdpr_consent_text?: string | null
@@ -1156,6 +1161,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          data_category?: Database["public"]["Enums"]["form_data_category"]
           description?: string | null
           fields?: Json
           gdpr_consent_text?: string | null
@@ -1169,6 +1175,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "form_templates_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_data_access_logs: {
+        Row: {
+          accessed_at: string
+          accessed_by: string
+          accessed_by_role: string
+          action: string
+          client_id: string | null
+          data_category: string
+          id: string
+          ip_address: string | null
+          resource_id: string
+          resource_type: string
+          salon_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          accessed_by: string
+          accessed_by_role: string
+          action: string
+          client_id?: string | null
+          data_category: string
+          id?: string
+          ip_address?: string | null
+          resource_id: string
+          resource_type: string
+          salon_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          accessed_by?: string
+          accessed_by_role?: string
+          action?: string
+          client_id?: string | null
+          data_category?: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string
+          resource_type?: string
+          salon_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_data_access_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_data_access_logs_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -2413,6 +2479,353 @@ export type Database = {
           },
         ]
       }
+      treatment_photos: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          photo_type: string
+          salon_id: string
+          storage_path: string
+          taken_at: string
+          treatment_record_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          photo_type: string
+          salon_id: string
+          storage_path: string
+          taken_at?: string
+          treatment_record_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          photo_type?: string
+          salon_id?: string
+          storage_path?: string
+          taken_at?: string
+          treatment_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_photos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_photos_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_photos_treatment_record_id_fkey"
+            columns: ["treatment_record_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          protocol_id: string | null
+          salon_id: string
+          service_id: string | null
+          started_at: string | null
+          status: string
+          total_sessions: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          protocol_id?: string | null
+          salon_id: string
+          service_id?: string | null
+          started_at?: string | null
+          status?: string
+          total_sessions: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          protocol_id?: string | null
+          salon_id?: string
+          service_id?: string | null
+          started_at?: string | null
+          status?: string
+          total_sessions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_protocols: {
+        Row: {
+          created_at: string
+          description: string | null
+          fields: Json
+          id: string
+          is_active: boolean
+          name: string
+          salon_id: string
+          service_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          salon_id: string
+          service_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_protocols_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_protocols_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_records: {
+        Row: {
+          booking_id: string | null
+          client_id: string
+          created_at: string
+          data_category: string
+          employee_id: string
+          id: string
+          notes_encrypted: string | null
+          parameters: Json
+          performed_at: string
+          salon_id: string
+          service_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_id: string
+          created_at?: string
+          data_category?: string
+          employee_id: string
+          id?: string
+          notes_encrypted?: string | null
+          parameters?: Json
+          performed_at?: string
+          salon_id: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_id?: string
+          created_at?: string
+          data_category?: string
+          employee_id?: string
+          id?: string
+          notes_encrypted?: string | null
+          parameters?: Json
+          performed_at?: string
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_records_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_sessions: {
+        Row: {
+          booking_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          plan_id: string
+          salon_id: string
+          scheduled_at: string | null
+          session_number: number
+          status: string
+          treatment_record_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id: string
+          salon_id: string
+          scheduled_at?: string | null
+          session_number: number
+          status?: string
+          treatment_record_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          salon_id?: string
+          scheduled_at?: string | null
+          session_number?: number
+          status?: string
+          treatment_record_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_treatment_record_id_fkey"
+            columns: ["treatment_record_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_tracking: {
         Row: {
           api_calls_count: number | null
@@ -2610,7 +3023,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      form_data_category: "general" | "health" | "sensitive_health"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2740,6 +3153,8 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      form_data_category: ["general", "health", "sensitive_health"],
+    },
   },
 } as const

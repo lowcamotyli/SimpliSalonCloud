@@ -35,6 +35,7 @@ import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from
 import { toast } from 'sonner'
 import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, UserX, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter, useParams } from "next/navigation"
 
 const bookingFormSchema = z.object({
   employeeId: z.string().min(1, 'Wybierz pracownika'),
@@ -56,6 +57,8 @@ interface BookingDialogProps {
 }
 
 export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: BookingDialogProps) {
+  const router = useRouter()
+  const params = useParams<{ slug: string }>()
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
   const { data: clients } = useClients()
@@ -424,6 +427,18 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                     </Button>
                   </div>
                 </>
+              )}
+              {booking.status === "completed" && (
+                <div className="flex items-center justify-end w-full">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => router.push(`/${params.slug}/clients/${booking.client_id}/treatment-records/new?bookingId=${booking.id}`)}
+                    className="h-10 rounded-full px-4"
+                  >
+                    Utwórz kartę zabiegu
+                  </Button>
+                </div>
               )}
             </DialogFooter>
           </div>

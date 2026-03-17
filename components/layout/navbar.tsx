@@ -1,10 +1,10 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { Bell, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { LogOut, Bell } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 
 export function Navbar({ salonName }: { salonName: string }) {
   const router = useRouter()
@@ -12,22 +12,22 @@ export function Navbar({ salonName }: { salonName: string }) {
   const handleLogout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success('Wylogowano pomyślnie')
+    toast.success('Wylogowano pomyslnie')
     router.push('/login')
     router.refresh()
   }
 
   return (
-    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
-      <div className="flex h-16 items-center justify-between px-6">
+    <nav className="theme-navbar sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="theme-navbar-inner flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <div className="flex flex-col">
+          <div className="theme-navbar-title flex flex-col">
             <h1 className="text-xl font-bold text-foreground">{salonName}</h1>
-            <p className="text-xs text-muted-foreground">Zarządzaj swoim salonem</p>
+            <p className="text-sm text-muted-foreground">Zarzadzaj swoim salonem</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="theme-navbar-actions flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -37,7 +37,7 @@ export function Navbar({ salonName }: { salonName: string }) {
           </Button>
           <Button
             onClick={handleLogout}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-md transition-all"
+            className="rounded-lg bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90"
             size="sm"
           >
             <LogOut className="mr-2 h-4 w-4" />

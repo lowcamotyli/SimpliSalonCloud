@@ -9,6 +9,8 @@ export type FieldType =
   | 'photo_upload'
   | 'section_header'
 
+export type DataCategory = 'general' | 'health' | 'sensitive_health'
+
 export interface FormField {
   id: string
   type: FieldType
@@ -31,6 +33,7 @@ export interface FormTemplate {
   fields: FormField[]
   requires_signature: boolean
   gdpr_consent_text?: string
+  data_category?: DataCategory
   is_active: boolean
   created_at: string
   updated_at: string

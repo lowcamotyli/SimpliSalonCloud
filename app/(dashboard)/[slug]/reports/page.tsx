@@ -198,31 +198,31 @@ export default function ReportsPage(): JSX.Element {
           <TabsList className="bg-transparent h-auto p-0 gap-2 flex w-max sm:w-auto">
             <TabsTrigger
               value="overview"
-              className="glass data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary/20 data-[state=active]:shadow-lg"
             >
               Przegląd
             </TabsTrigger>
             <TabsTrigger
               value="revenue"
-              className="glass data-[state=active]:bg-emerald-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:border-emerald-600/20 data-[state=active]:shadow-lg"
             >
               Przychody
             </TabsTrigger>
             <TabsTrigger
               value="visits"
-              className="glass data-[state=active]:bg-blue-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600/20 data-[state=active]:shadow-lg"
             >
               Wizyty i Usługi
             </TabsTrigger>
             <TabsTrigger
               value="employees"
-              className="glass data-[state=active]:bg-purple-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:border-purple-600/20 data-[state=active]:shadow-lg"
             >
               Pracownicy
             </TabsTrigger>
             <TabsTrigger
               value="nps"
-              className="glass data-[state=active]:bg-orange-500 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:border-orange-500/20 data-[state=active]:shadow-lg"
             >
               Opinie i NPS
             </TabsTrigger>

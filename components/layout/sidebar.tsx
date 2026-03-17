@@ -22,6 +22,8 @@ import {
   MessageSquare,
   List,
   ChevronDown,
+  ClipboardList,
+  Inbox,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -42,6 +44,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
   requiredPermission?: 'employees:manage' | 'finance:view' | 'reports:view' | 'settings:view'
   ownerOnly?: boolean
+  managerOnly?: boolean
   subItems?: SubNavItem[]
 }
 
@@ -61,6 +64,11 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     (item) => !item.requiresManage || hasPermission('clients:manage')
   )
 
+  const formsSubItems: SubNavItem[] = [
+    { href: `/${salonSlug}/forms/templates`, label: 'Szablony', icon: ClipboardList },
+    { href: `/${salonSlug}/forms/submissions`, label: 'Zgłoszenia', icon: Inbox },
+  ]
+
   const navItems: NavItem[] = [
     { href: `/${salonSlug}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { href: `/${salonSlug}/calendar`, label: 'Kalendarz', icon: Calendar },
@@ -68,6 +76,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     { href: `/${salonSlug}/services`, label: 'Usługi', icon: Scissors },
     { href: `/${salonSlug}/employees`, label: 'Pracownicy', icon: Users, requiredPermission: 'employees:manage' },
     { href: `/${salonSlug}/clients`, label: 'Klienci', icon: UserCircle, subItems: crmSubItems },
+    { href: `/${salonSlug}/forms`, label: 'Formularze', icon: ClipboardList, managerOnly: true, subItems: formsSubItems },
     { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign, requiredPermission: 'finance:view' },
     { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3, requiredPermission: 'reports:view' },
     { href: `/${salonSlug}/billing`, label: 'Subskrypcja', icon: CreditCard, ownerOnly: true },
@@ -90,23 +99,24 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
   }
 
   return (
-    <aside className="w-64 bg-background/95 backdrop-blur-xl border-r border-border flex flex-col shadow-2xl">
+    <aside className="theme-sidebar w-64 bg-background/95 backdrop-blur-xl border-r border-border flex flex-col shadow-2xl">
       {/* Logo Section */}
-      <div className="p-6 border-b border-border/10">
+      <div className="theme-sidebar-brand p-6 border-b border-border/10">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-primary">SimpliSalon</h2>
         </div>
-        <p className="text-xs text-muted-foreground ml-12">Premium Salon Manager</p>
+        <p className="text-sm text-muted-foreground ml-12">Premium Salon Manager</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+      <nav className="theme-sidebar-nav flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navItems
           .filter((item) => {
             if (item.ownerOnly) return currentRole === RBAC_ROLES.OWNER
+            if (item.managerOnly) return isOwnerOrManager()
             if (!item.requiredPermission) return true
             if (item.requiredPermission === 'employees:manage') {
               return isOwnerOrManager()
@@ -126,7 +136,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
                   <div
                     style={{ animationDelay: `${index * 50}ms` }}
                     className={cn(
-                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium',
                       'bg-primary/10 text-primary border border-primary/20'
                     )}
                   >
@@ -143,7 +153,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
                           key={sub.href}
                           href={sub.href}
                           className={cn(
-                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 group',
+                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 group',
                             isSubActive
                               ? 'bg-primary/10 text-primary'
                               : 'text-foreground/60 hover:bg-primary/5 hover:text-foreground/90'
@@ -168,7 +178,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
                   animationDelay: `${index * 50}ms`,
                 }}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-300 group',
                   isActive || isInSection
                     ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
                     : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
@@ -184,8 +194,8 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t border-border p-4 space-y-3 bg-primary/5">
-        <div className="flex items-center gap-3 px-3 py-3 rounded-xl glass">
+      <div className="theme-sidebar-footer border-t border-border p-4 space-y-3 bg-primary/5">
+        <div className="theme-sidebar-user flex items-center gap-3 px-3 py-3 rounded-xl glass">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-lg">
             <User className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -193,7 +203,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
             <p className="text-sm font-semibold text-foreground truncate">
               {userName || 'Użytkownik'}
             </p>
-            <p className="text-xs text-primary font-medium">{roleLabel}</p>
+            <p className="text-sm text-primary font-medium">{roleLabel}</p>
           </div>
         </div>
 

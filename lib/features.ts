@@ -6,6 +6,9 @@ export type FeatureFlag =
   | 'blacklist'
   | 'surveys'
   | 'forms'
+  | 'treatment_records'
+  | 'treatment_photos'
+  | 'audit_trail'
 
 export function hasFeature(
   salonFeatures: Record<string, boolean> | null | undefined,

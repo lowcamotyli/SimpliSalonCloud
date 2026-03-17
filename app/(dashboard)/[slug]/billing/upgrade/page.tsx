@@ -23,82 +23,85 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 
 const PLANS = {
-  starter: {
-    name: 'Starter',
-    monthlyPrice: 99,
-    yearlyPrice: 990,
-    description: 'Dla małych salonów i solo-preneurów',
+  solo: {
+    name: "Solo",
+    monthlyPrice: 149,
+    yearlyPrice: 1490,
+    description: "Dla solistów i jednoosobowych salonów",
     icon: Zap,
-    gradient: 'from-muted-foreground/50 to-muted-foreground',
-    highlight: 'border-muted-foreground/20',
+    gradient: "from-muted-foreground/50 to-muted-foreground",
+    highlight: "border-muted-foreground/20",
     badge: null,
     features: [
-      '2 pracowników',
-      '100 rezerwacji/miesiąc',
-      '50 klientów',
-      'Podstawowy kalendarz',
-      'Kalendarz Google',
-      'Eksport PDF',
-      'Powiadomienia Email',
+      "1 pracownik",
+      "300 rezerwacji/miesiąc",
+      "500 klientów",
+      "Kalendarz + Google Calendar",
+      "Eksport PDF",
+      "Powiadomienia Email",
+      "Ankiety satysfakcji",
     ],
     popular: false,
   },
-  professional: {
-    name: 'Professional',
-    monthlyPrice: 299,
-    yearlyPrice: 2990,
-    description: 'Dla średnich salonów (3–10 stanowisk)',
+  studio: {
+    name: "Studio",
+    monthlyPrice: 349,
+    yearlyPrice: 3490,
+    description: "Dla typowych salonów (2–5 stanowisk)",
     icon: Sparkles,
-    gradient: 'from-primary to-primary/80',
-    highlight: 'border-primary/50',
-    badge: 'Najpopularniejszy',
+    gradient: "from-primary to-primary/80",
+    highlight: "border-primary/50",
+    badge: "Najpopularniejszy",
     features: [
-      '10 pracowników',
-      'Nieograniczone rezerwacje',
-      'Nieograniczona baza klientów',
-      'Wszystko ze Starter',
-      'Integracja z Booksy',
-      'Powiadomienia SMS',
-      'Zaawansowana analityka',
+      "Do 5 pracowników",
+      "2000 rezerwacji/miesiąc",
+      "3000 klientów",
+      "Wszystko z Solo",
+      "SMS i kampanie CRM",
+      "Automatyzacje CRM",
+      "Integracja z Booksy",
+      "Formularze przed wizytą",
     ],
     popular: true,
   },
-  business: {
-    name: 'Business',
-    monthlyPrice: 599,
-    yearlyPrice: 5990,
-    description: 'Dla sieci salonów i franczyz',
+  clinic: {
+    name: "Clinic",
+    monthlyPrice: 779,
+    yearlyPrice: 7790,
+    description: "Dla klinik beauty i salonów zabiegowych",
     icon: Building2,
-    gradient: 'from-secondary to-secondary/80',
-    highlight: 'border-secondary/50',
-    badge: null,
+    gradient: "from-secondary to-secondary/80",
+    highlight: "border-secondary/50",
+    badge: "Dla klinik",
     features: [
-      'Nieograniczona liczba pracowników',
-      'Multi-salon (3 lokalizacje)',
-      'Wszystko z Professional',
-      'Dostęp do API',
-      'Webhooki',
-      'Marka własna (White-label)',
-      'Dedykowany opiekun',
+      "Do 20 pracowników",
+      "10 000 klientów",
+      "Nieograniczone rezerwacje",
+      "Wszystko ze Studio",
+      "Karty zabiegowe",
+      "Zgody i kwestionariusze",
+      "Historia leczenia",
+      "Zaawansowane raporty + audit trail",
     ],
     popular: false,
   },
   enterprise: {
-    name: 'Enterprise',
-    monthlyPrice: 1500,
-    yearlyPrice: 15000,
-    description: 'Dla dużych sieci i korporacji',
+    name: "Enterprise",
+    monthlyPrice: 1299,
+    yearlyPrice: 12990,
+    description: "Dla sieci salonów i korporacji",
     icon: Crown,
-    gradient: 'from-accent to-accent/80',
-    highlight: 'border-accent/50',
-    badge: 'Dla sieci',
+    gradient: "from-accent to-accent/80",
+    highlight: "border-accent/50",
+    badge: "Multi-lokalizacja",
     features: [
-      'Nieograniczone wszystko',
-      'Wszystko z Business',
-      'Wdrożenie on-premise',
-      'Rozwój dedykowany',
-      'Wsparcie 24/7',
-      'SLA 99.9%',
+      "Nieograniczone wszystko",
+      "Wszystko z Clinic",
+      "Multi-lokalizacja",
+      "Dostęp do API",
+      "White-label",
+      "Wsparcie 24/7",
+      "SLA 99.9%",
     ],
     popular: false,
   },
@@ -144,7 +147,9 @@ export default function UpgradePage() {
     },
   })
 
-  const currentPlan = subscription?.plan || 'starter'
+  const currentPlan = subscription?.plan || 'solo'
+
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING === 'true'
 
   const handleSelectPlan = async (planType: PlanType) => {
     if (planType === currentPlan) {
@@ -154,6 +159,22 @@ export default function UpgradePage() {
     setLoading(planType)
 
     try {
+      if (isDevMode) {
+        const res = await fetch('/api/payments/dev-switch-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planType }),
+        })
+        if (!res.ok) {
+          const error = await res.json()
+          throw new Error(error.message || 'Failed to switch plan')
+        }
+        toast.success(`[DEV] Przełączono na plan ${planType}`)
+        router.push(`/${slug}/billing`)
+        router.refresh()
+        return
+      }
+
       const res = await fetch('/api/payments/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -210,6 +231,14 @@ export default function UpgradePage() {
           </p>
         </div>
       </div>
+
+      {/* Dev Mode Banner */}
+      {isDevMode && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+          <span className="font-bold">⚠ DEV MODE</span>
+          — zmiana planu bez płatności (NEXT_PUBLIC_DEV_BILLING=true)
+        </div>
+      )}
 
       {/* Billing Toggle */}
       <div className="flex justify-center">

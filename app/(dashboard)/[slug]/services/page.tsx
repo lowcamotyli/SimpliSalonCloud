@@ -298,7 +298,7 @@ export default function ServicesPage() {
             <Layers className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Usługi</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Usługi</p>
             <p className="text-2xl font-black text-gray-900">{stats.total}</p>
           </div>
         </Card>
@@ -307,7 +307,7 @@ export default function ServicesPage() {
             <DollarSign className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Śr. Cena</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Śr. Cena</p>
             <p className="text-2xl font-black text-gray-900">{formatPrice(stats.avgPrice)}</p>
           </div>
         </Card>
@@ -316,7 +316,7 @@ export default function ServicesPage() {
             <Clock className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Śr. Czas</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Śr. Czas</p>
             <p className="text-2xl font-black text-gray-900">{Math.round(stats.avgDuration)} min</p>
           </div>
         </Card>
@@ -365,7 +365,7 @@ export default function ServicesPage() {
             >
               {cat}
               <span className={cn(
-                "px-2 py-0.5 rounded-full text-xs",
+                "px-2 py-0.5 rounded-full text-sm",
                 activeCategory === cat ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
               )}>
                 {allServices.filter(s => s.category === cat).length}
@@ -400,11 +400,11 @@ export default function ServicesPage() {
                   {Object.entries(subcategories).map(([subcategory, services]) => (
                     <div key={subcategory} className="space-y-4">
                       <div className="flex items-center justify-between px-2">
-                        <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-lg font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                           <ChevronRight className="h-4 w-4 text-primary/60" />
                           {subcategory}
                         </h3>
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold">
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold text-sm">
                           {services.length} {services.length === 1 ? 'usługa' : 'usługi'}
                         </Badge>
                       </div>
@@ -425,18 +425,18 @@ export default function ServicesPage() {
                                     {service.name}
                                   </h4>
                                   {!service.active && (
-                                    <Badge variant="outline" className="bg-white text-gray-400 border-gray-200 font-bold text-[10px] uppercase">
+                                    <Badge variant="outline" className="bg-white text-gray-400 border-gray-200 font-bold text-xs uppercase">
                                       Nieaktywna
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-gray-500 font-medium">
                                   <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                                    <DollarSign className="h-3.5 w-3.5" />
+                                    <DollarSign className="h-4 w-4" />
                                     {formatPrice(service.price)}
                                   </span>
                                   <span className="flex items-center gap-1.5">
-                                    <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                    <Clock className="h-4 w-4 text-gray-400" />
                                     {service.duration} min
                                   </span>
                                 </div>
@@ -528,7 +528,7 @@ export default function ServicesPage() {
                   <Layers className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
                 {form.formState.errors.category && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.category.message}
                   </p>
@@ -547,7 +547,7 @@ export default function ServicesPage() {
                   <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
                 {form.formState.errors.subcategory && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.subcategory.message}
                   </p>
@@ -563,7 +563,7 @@ export default function ServicesPage() {
                   className="glass h-11 rounded-xl focus:bg-white"
                 />
                 {form.formState.errors.name && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.name.message}
                   </p>
@@ -585,7 +585,7 @@ export default function ServicesPage() {
                     <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
                   {form.formState.errors.price && (
-                    <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                    <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.price.message}
                     </p>
@@ -606,7 +606,7 @@ export default function ServicesPage() {
                     <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
                   {form.formState.errors.duration && (
-                    <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                    <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.duration.message}
                     </p>
@@ -644,7 +644,7 @@ export default function ServicesPage() {
                   ))}
                 </div>
                 {selectedEquipmentIds.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Rezerwacja sprzętu będzie sprawdzana przy każdej nowej wizycie.
                   </p>
                 )}

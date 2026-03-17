@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['starter', 'professional', 'business', 'enterprise'].includes(planType)) {
+    if (!['solo', 'studio', 'clinic', 'enterprise'].includes(planType)) {
       return NextResponse.json({ error: 'Invalid planType' }, { status: 400 })
     }
 

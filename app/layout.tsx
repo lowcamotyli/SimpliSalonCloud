@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Cormorant_Garamond, Inter, Manrope } from "next/font/google"
 import { Toaster } from "sonner"
 import { validateEnv } from "@/lib/config/validate-env"
 import { QueryProvider } from "@/lib/providers/query-provider"
@@ -14,6 +14,19 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+const previewUi = Manrope({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-preview-ui',
+})
+
+const previewDisplay = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-preview-display',
+})
+
 export const metadata: Metadata = {
   title: "SimpliSalon - System zarządzania salonem",
   description: "Kompleksowy system do zarządzania salonem piękności",
@@ -26,7 +39,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${previewUi.variable} ${previewDisplay.variable}`}>
         <QueryProvider>
           {children}
         </QueryProvider>

@@ -14,7 +14,7 @@ const COLORS = ['#6320ee', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899'
 
 export default function ServicesChart({ data }: ServicesChartProps) {
     return (
-        <Card className="glass border-none overflow-hidden">
+        <Card className="theme-chart-card glass border-none overflow-hidden">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-bold text-gray-900">Popularność usług</CardTitle>
             </CardHeader>

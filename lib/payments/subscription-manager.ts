@@ -8,7 +8,7 @@ import { createPrzelewy24Client, Przelewy24Client } from './przelewy24-client'
  * Zarządza subskrypcjami, płatnościami i limitami użycia
  */
 
-export type PlanType = 'starter' | 'professional' | 'business' | 'enterprise'
+export type PlanType = 'solo' | 'studio' | 'clinic' | 'enterprise'
 export type BillingInterval = 'monthly' | 'yearly'
 export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'paused'
 
@@ -26,87 +26,47 @@ interface PlanConfig {
 
 // Konfiguracja planów
 const PLANS: Record<PlanType, PlanConfig> = {
-  starter: {
-    name: 'Starter',
-    monthlyPrice: 9900, // 99 PLN
-    yearlyPrice: 99000, // 990 PLN (2 miesiące gratis)
-    limits: {
-      employees: 2,
-      bookings: 100,
-      clients: 50,
-    },
-    features: ['google_calendar', 'pdf_export', 'email_notifications'],
+  solo: {
+    name: 'Solo',
+    monthlyPrice: 14900,
+    yearlyPrice: 149000,
+    limits: { employees: 1, bookings: 300, clients: 500 },
+    features: ['google_calendar', 'pdf_export', 'email_notifications', 'surveys'],
   },
-  professional: {
-    name: 'Professional',
-    monthlyPrice: 29900, // 299 PLN
-    yearlyPrice: 299000, // 2990 PLN
-    limits: {
-      employees: 10,
-      bookings: Infinity,
-      clients: Infinity,
-    },
+  studio: {
+    name: 'Studio',
+    monthlyPrice: 34900,
+    yearlyPrice: 349000,
+    limits: { employees: 5, bookings: 2000, clients: 3000 },
     features: [
-      'google_calendar',
-      'pdf_export',
-      'email_notifications',
-      'sms_notifications',
-      'crm_sms',
-      'crm_campaigns',
-      'crm_automations',
-      'booksy_integration',
-      'advanced_analytics',
+      'google_calendar', 'pdf_export', 'email_notifications', 'surveys',
+      'sms_notifications', 'crm_sms', 'crm_campaigns', 'crm_automations',
+      'booksy_integration', 'pre_appointment_forms',
     ],
   },
-  business: {
-    name: 'Business',
-    monthlyPrice: 59900, // 599 PLN
-    yearlyPrice: 599000, // 5990 PLN
-    limits: {
-      employees: Infinity,
-      bookings: Infinity,
-      clients: Infinity,
-    },
+  clinic: {
+    name: 'Clinic',
+    monthlyPrice: 77900,
+    yearlyPrice: 779000,
+    limits: { employees: 20, bookings: Infinity, clients: 10000 },
     features: [
-      'google_calendar',
-      'pdf_export',
-      'email_notifications',
-      'sms_notifications',
-      'crm_sms',
-      'crm_campaigns',
-      'crm_automations',
-      'booksy_integration',
-      'advanced_analytics',
-      'api_access',
-      'multi_salon',
-      'white_label',
+      'google_calendar', 'pdf_export', 'email_notifications', 'surveys',
+      'sms_notifications', 'crm_sms', 'crm_campaigns', 'crm_automations',
+      'booksy_integration', 'pre_appointment_forms',
+      'treatment_records', 'treatment_photos', 'advanced_analytics', 'audit_trail',
     ],
   },
   enterprise: {
     name: 'Enterprise',
-    monthlyPrice: 150000, // 1500 PLN (startowa cena)
-    yearlyPrice: 1500000, // Custom pricing
-    limits: {
-      employees: Infinity,
-      bookings: Infinity,
-      clients: Infinity,
-    },
+    monthlyPrice: 129900,
+    yearlyPrice: 1299000,
+    limits: { employees: Infinity, bookings: Infinity, clients: Infinity },
     features: [
-      'google_calendar',
-      'pdf_export',
-      'email_notifications',
-      'sms_notifications',
-      'crm_sms',
-      'crm_campaigns',
-      'crm_automations',
-      'booksy_integration',
-      'advanced_analytics',
-      'api_access',
-      'multi_salon',
-      'white_label',
-      'dedicated_support',
-      'custom_development',
-      'sla_guarantee',
+      'google_calendar', 'pdf_export', 'email_notifications', 'surveys',
+      'sms_notifications', 'crm_sms', 'crm_campaigns', 'crm_automations',
+      'booksy_integration', 'pre_appointment_forms',
+      'treatment_records', 'treatment_photos', 'advanced_analytics', 'audit_trail',
+      'api_access', 'multi_salon', 'white_label', 'dedicated_support', 'sla_guarantee',
     ],
   },
 }
@@ -527,9 +487,9 @@ export class SubscriptionManager {
   private async enablePlanFeatures(salonId: string, planType: PlanType): Promise<void> {
     const plan = PLANS[planType]
     const crmAutomationsLimitByPlan: Record<PlanType, number | null> = {
-      starter: null,
-      professional: 2,
-      business: 10,
+      solo: null,
+      studio: 2,
+      clinic: 10,
       enterprise: null,
     }
 
@@ -691,6 +651,50 @@ export class SubscriptionManager {
    */
   static getAllPlans(): Record<PlanType, PlanConfig> {
     return PLANS
+  }
+
+  /**
+   * Dev/test only: force-switch plan without payment
+   */
+  async forceSetPlan(salonId: string, planType: PlanType): Promise<void> {
+    const now = new Date()
+    const periodEnd = new Date(now)
+    periodEnd.setMonth(periodEnd.getMonth() + 1)
+
+    const { data: existingSub } = await this.supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('salon_id', salonId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingSub) {
+      await this.supabase.from('subscriptions').update({
+        plan_type: planType,
+        status: 'active',
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+      }).eq('id', existingSub.id)
+    } else {
+      await this.supabase.from('subscriptions').insert({
+        salon_id: salonId,
+        plan_type: planType,
+        billing_interval: 'monthly' as BillingInterval,
+        status: 'active',
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        amount_cents: 0,
+        currency: 'PLN',
+      })
+    }
+
+    await this.supabase.from('salons').update({
+      subscription_plan: planType,
+      subscription_status: 'active',
+    }).eq('id', salonId)
+
+    await this.enablePlanFeatures(salonId, planType)
   }
 }
 

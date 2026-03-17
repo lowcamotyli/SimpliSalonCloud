@@ -257,11 +257,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-base font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
+          <p className="text-muted-foreground text-lg font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${slug}/bookings`}>
-            <Button size="lg" className="gradient-button rounded-xl h-12 px-6 font-bold flex gap-2">
+            <Button size="lg" className="rounded-xl h-12 px-6 font-bold flex gap-2">
               <Plus className="h-5 w-5" />
               Nowa wizyta
             </Button>
@@ -281,53 +281,53 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
         <RevenueChart data={chartData} />
 
         {/* Quick Actions */}
-        <div className="glass p-6 rounded-2xl flex flex-col h-full bg-white/50 backdrop-blur-sm border-none">
-          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+        <div className="theme-quick-actions glass p-6 rounded-2xl flex flex-col h-full bg-white/50 backdrop-blur-sm border-none">
+          <h2 className="theme-section-title text-xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-600" />
             Szybkie akcje
           </h2>
           <div className="grid grid-cols-1 gap-3 flex-1">
             <Link href={`/${slug}/clients`} className="group">
-              <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
-                <div className="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+                <div className="theme-quick-action-icon p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
                   <Users className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Dodaj klienta</p>
-                  <p className="text-sm text-muted-foreground">Powiększ swoją bazę</p>
+                  <p className="text-base text-muted-foreground">Powiększ swoją bazę</p>
                 </div>
               </div>
             </Link>
             <Link href={`/${slug}/employees`} className="group">
-              <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
-                <div className="p-3 rounded-lg bg-green-100 text-green-600 group-hover:scale-110 transition-transform">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+                <div className="theme-quick-action-icon p-3 rounded-lg bg-green-100 text-green-600 group-hover:scale-110 transition-transform">
                   <Clock className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Zarządzaj zespołem</p>
-                  <p className="text-sm text-muted-foreground">Pracownicy i grafik</p>
+                  <p className="text-base text-muted-foreground">Pracownicy i grafik</p>
                 </div>
               </div>
             </Link>
             <Link href={`/${slug}/calendar`} className="group">
-              <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
-                <div className="p-3 rounded-lg bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+                <div className="theme-quick-action-icon p-3 rounded-lg bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Kalendarz</p>
-                  <p className="text-sm text-muted-foreground">Przeglądaj harmonogram</p>
+                  <p className="text-base text-muted-foreground">Przeglądaj harmonogram</p>
                 </div>
               </div>
             </Link>
             <Link href={`/${slug}/settings`} className="group">
-              <div className="flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
-                <div className="p-3 rounded-lg bg-rose-100 text-rose-600 group-hover:scale-110 transition-transform">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+                <div className="theme-quick-action-icon p-3 rounded-lg bg-rose-100 text-rose-600 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Ustawienia</p>
-                  <p className="text-sm text-muted-foreground">Konfiguracja salonu</p>
+                  <p className="text-base text-muted-foreground">Konfiguracja salonu</p>
                 </div>
               </div>
             </Link>
@@ -344,10 +344,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       <div className="grid gap-6 lg:grid-cols-1">
 
         {/* Upcoming Bookings */}
-        <div className="glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
+        <div className="theme-upcoming-bookings glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Dzisiejsze wizyty</h2>
-            <Link href={`/${slug}/calendar`} className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
+            <h2 className="theme-section-title text-xl font-bold text-foreground">Dzisiejsze wizyty</h2>
+            <Link href={`/${slug}/calendar`} className="theme-inline-link text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
               Zobacz wszystkie
             </Link>
           </div>
@@ -357,20 +357,20 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
                 <div
                   key={booking.id}
                   style={{ animationDelay: `${index * 50}ms` }}
-                  className="flex items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
+                  className="theme-upcoming-item flex items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">
+                    <div className="theme-upcoming-avatar h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">
                       {booking.clients?.full_name?.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-foreground group-hover:text-purple-600 transition-colors">{booking.clients?.full_name}</p>
-                      <p className="text-sm text-muted-foreground">{booking.services?.name}</p>
+                      <p className="theme-upcoming-name font-bold text-foreground group-hover:text-purple-600 transition-colors">{booking.clients?.full_name}</p>
+                      <p className="text-base text-muted-foreground">{booking.services?.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-foreground">{booking.booking_time?.slice(0, 5)}</p>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    <span className={`theme-upcoming-status text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                       }`}>
                       {booking.status}
                     </span>
@@ -390,7 +390,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       </div>
 
       {/* Recent Activity Footnote */}
-      <div className="flex items-center justify-center gap-2 text-xs text-gray-400 pt-4">
+      <div className="theme-footer-note flex items-center justify-center gap-2 text-sm text-gray-400 pt-4">
         <Activity className="h-3 w-3" />
         <span>Dane aktualizowane w czasie rzeczywistym</span>
       </div>

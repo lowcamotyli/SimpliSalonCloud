@@ -84,6 +84,7 @@ export default function NotificationsPage() {
     surveys: { enabled: false },
     crmAutomations: { enabled: false },
     preAppointmentForms: { enabled: false },
+    campaigns: { enabled: true },
   })
 
   useEffect(() => {
@@ -351,6 +352,27 @@ export default function NotificationsPage() {
                 id="crmAutomations"
                 checked={notifications.crmAutomations?.enabled ?? false}
                 onCheckedChange={(enabled) => updateNotification("crmAutomations", { enabled })}
+              />
+            </div>
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          title="Kampanie CRM"
+          description="Ręczne i zaplanowane kampanie SMS/email wysyłane do segmentów klientów"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="campaigns">Włącz kampanie</Label>
+                <p className="text-sm text-muted-foreground">
+                  Zezwól na wysyłanie kampanii i wiadomości bezpośrednich z modułu CRM. Wyłącz aby zablokować wszystkie wysyłki kampanii.
+                </p>
+              </div>
+              <Switch
+                id="campaigns"
+                checked={notifications.campaigns?.enabled ?? true}
+                onCheckedChange={(enabled) => updateNotification("campaigns", { enabled })}
               />
             </div>
           </div>

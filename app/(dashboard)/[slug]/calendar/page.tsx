@@ -263,10 +263,10 @@ export default function CalendarPage() {
           <p className="text-muted-foreground text-base font-medium">{getPeriodLabel()}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant={viewType === 'day' ? 'default' : 'outline'} onClick={() => setViewType('day')} className="rounded-lg">Dzień</Button>
-          <Button variant={viewType === 'week' ? 'default' : 'outline'} onClick={() => setViewType('week')} className="rounded-lg">Tydzień</Button>
-          <Button variant={viewType === 'month' ? 'default' : 'outline'} onClick={() => setViewType('month')} className="rounded-lg">Miesiąc</Button>
+        <div className="flex items-center gap-2 p-1 glass rounded-xl w-max">
+          <Button variant={viewType === 'day' ? 'default' : 'ghost'} onClick={() => setViewType('day')} size="sm" className={`rounded-lg transition-all ${viewType === 'day' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Dzień</Button>
+          <Button variant={viewType === 'week' ? 'default' : 'ghost'} onClick={() => setViewType('week')} size="sm" className={`rounded-lg transition-all ${viewType === 'week' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Tydzień</Button>
+          <Button variant={viewType === 'month' ? 'default' : 'ghost'} onClick={() => setViewType('month')} size="sm" className={`rounded-lg transition-all ${viewType === 'month' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Miesiąc</Button>
         </div>
       </div>
 
@@ -275,34 +275,34 @@ export default function CalendarPage() {
         <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="rounded-lg"><ChevronLeft className="h-4 w-4" /></Button>
         <Button variant="outline" size="icon" onClick={handleNextPeriod} className="rounded-lg"><ChevronRight className="h-4 w-4" /></Button>
         <div className="flex-1" />
-        <Button onClick={handleAddBooking} className="gradient-button rounded-lg shadow-lg">
+        <Button onClick={handleAddBooking} className="rounded-lg shadow-lg">
           <Plus className="mr-2 h-4 w-4" />
           Nowa wizyta
         </Button>
       </div>
 
       {viewType !== 'month' && (
-        <div className="glass p-3 rounded-xl flex items-center gap-2 overflow-x-auto">
-          <span className="text-sm font-semibold text-gray-700 flex-shrink-0">Pracownicy:</span>
+        <div className="theme-employee-filter glass p-1 rounded-xl flex items-center gap-2 overflow-x-auto w-max max-w-full">
+          <span className="theme-employee-filter-label text-sm font-semibold text-gray-700 flex-shrink-0 px-2 pl-3">Pracownicy:</span>
           {employees?.map((emp, idx) => {
             const colors = getEmployeeColor(idx)
             const isVisible = visibleEmployees.has(emp.id)
             return (
-              <Button
+              <button
                 key={emp.id}
-                variant="outline"
-                size="sm"
+                type="button"
+
                 onClick={() => toggleEmployee(emp.id)}
-                className={`rounded-full text-xs flex-shrink-0 transition-all ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-md scale-105` : 'hover:bg-gray-100'}`}
+                className={`theme-employee-chip rounded-full text-xs flex-shrink-0 font-medium px-3 py-1.5 border transition-all ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-md scale-105` : 'hover:bg-gray-100 bg-white border-gray-200 text-gray-700'}`}
               >
                 {emp.first_name}
-              </Button>
+              </button>
             )
           })}
         </div>
       )}
 
-      <Card className="flex-1 overflow-hidden glass rounded-2xl">
+      <Card className="theme-calendar-shell flex-1 overflow-hidden glass rounded-2xl">
         {viewType === 'day' && (
           <DayView
             currentDate={currentDate}
@@ -405,33 +405,33 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
 
   return (
     <div className="flex h-full flex-col min-w-0 overflow-hidden">
-      <div className="grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
-        <div className="border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
+      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
+        <div className="theme-calendar-time-head border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
         {visibleEmployeesList.map((emp: any) => {
           const empIdx = employees.findIndex((e: any) => e.id === emp.id)
           const colors = getEmployeeColor(empIdx)
-          return <div key={emp.id} className={`p-3 border-r text-center overflow-hidden bg-gradient-to-b ${colors.gradient}`}><p className={`font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
+          return <div key={emp.id} className={`theme-calendar-employee-head p-3 border-r text-center overflow-hidden bg-gradient-to-b ${colors.gradient}`}><p className={`theme-calendar-employee-head-text font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
         })}
         {columnCount === 0 && <div className="p-3 text-center text-gray-500 text-sm">Brak wybranych pracowników</div>}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minHeight: '100%' }}>
-          <div className="border-r bg-gray-50/80 sticky left-0 z-20">
-            {timeSlots.map((hour: number) => <div key={hour} className="h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center">{String(hour).padStart(2, '0')}:00</div>)}
+          <div className="theme-calendar-time-column border-r bg-gray-50/80 sticky left-0 z-20">
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {visibleEmployeesList.map((employee: any) => {
             const empIdx = employees.findIndex((e: any) => e.id === employee.id)
             const colors = getEmployeeColor(empIdx)
             return (
-              <div key={employee.id} className={`relative border-r hover:${colors.bg}/30 transition-colors`}>
+              <div key={employee.id} className={`theme-calendar-day-column relative border-r hover:${colors.bg}/30 transition-colors`}>
                 {timeSlots.map((hour: number) => {
                   const dropTime = `${String(hour).padStart(2, '0')}:00`
                   return (
                     <div
                       key={hour}
-                      className="h-24 border-b cursor-pointer transition-colors group relative"
+                      className="theme-calendar-drop-slot h-24 border-b cursor-pointer transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][DayView] slot-click:suppressed', { dateStr, dropTime, employeeId: employee.id })
@@ -578,14 +578,14 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
   return (
     <div className="flex h-full flex-col">
-      <div className="grid grid-cols-8 border-b bg-slate-50/50">
-        <div className="border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
+      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50">
+        <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
         {weekDays.map((day) => {
           const today = isSameDay(day, now)
           return (
-            <div key={day.toISOString()} className={`border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
-              <p className="text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
-              <p className={`font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+            <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
+              <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
+              <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
             </div>
           )
         })}
@@ -593,21 +593,21 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
       <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-8">
-          <div className="border-r bg-gray-50">
-            {timeSlots.map((hour: number) => <div key={hour} className="h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center">{String(hour).padStart(2, '0')}:00</div>)}
+          <div className="theme-calendar-time-column border-r bg-gray-50">
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {weekDays.map((day) => {
             const dateStr = formatDate(day)
             const today = isSameDay(day, now)
             return (
-              <div key={dateStr} className={`relative border-r ${today ? 'bg-primary/5' : ''}`}>
+              <div key={dateStr} className={`theme-calendar-week-column relative border-r ${today ? 'bg-primary/5' : ''}`}>
                 {timeSlots.map((hour: number) => {
                   const dropTime = `${String(hour).padStart(2, '0')}:00`
                   return (
                     <div
                       key={hour}
-                      className="h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
+                      className="theme-calendar-drop-slot h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][WeekView] slot-click:suppressed', { dateStr, dropTime })
@@ -719,7 +719,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
   return (
     <div className="p-6">
       <div className="grid grid-cols-7 gap-2">
-        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((day) => <div key={day} className="text-center font-bold text-gray-600 py-2">{day}</div>)}
+        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((day) => <div key={day} className="theme-calendar-month-label text-center font-bold text-gray-600 py-2">{day}</div>)}
         {days.map((day) => {
           const dateStr = formatDate(day)
           const dayBookings = bookingsByDate[dateStr] || []
@@ -729,7 +729,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
             <div
               key={dateStr}
               onClick={() => onDayClick(day)}
-              className={`min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${isToday ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' : isCurrentMonth ? 'glass hover:shadow-lg' : 'bg-gray-50 text-gray-400'}`}
+              className={`theme-calendar-month-day min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${isToday ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' : isCurrentMonth ? 'glass hover:shadow-lg' : 'bg-gray-50 text-gray-400'}`}
             >
               <p className={`font-bold text-sm mb-1 ${isToday ? 'text-white' : ''}`}>{format(day, 'd')}</p>
               <div className="relative mt-1">
@@ -739,7 +739,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
                   return (
                     <div
                       key={booking.id}
-                      className={`text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isToday ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
+                      className={`theme-calendar-month-booking text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isToday ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
                       style={{ marginLeft: `${idx * 4}px`, width: `calc(100% - ${idx * 4}px)` }}
                       onClick={(e) => {
                         e.stopPropagation()
