@@ -1,31 +1,69 @@
-# TASK — L2-B: Treatment Records UI — 2026-03-13
+# TASK — Testowanie E2E: formularze, SMS przed wizytą, ankiety
 
-## Objective
-Zbudować UI do tworzenia i przeglądania kart zabiegowych w dashboardzie.
-Zaszyfrować `notes_encrypted` w API (AES-256-GCM). Połączyć booking dialog z nowym formularzem.
+## Branch
+`feature/forms-treatment-records`
 
-## Sprint file
-`docs/sprints/L2-B_treatment-records-ui.md` — pełna specyfikacja, prompty, typy
+## Baza danych
+**STAGING** — `https://bxkxvrhspklpkkgmzcge.supabase.co`
+`.env.local` już przełączony na staging.
 
-## Status
+## Bugi naprawione dziś podczas testów
 
-### Sesja 1
-- [ ] NEXT Encrypt notes_encrypted w POST — `app/api/treatment-records/route.ts` (Claude, ~15 linii)
-- [ ] NEXT Decrypt notes_encrypted w GET [id] — `app/api/treatment-records/[id]/route.ts` (Claude, ~15 linii)
-- [ ] TODO Strona lista kart — `app/(dashboard)/[slug]/clients/[id]/treatment-records/page.tsx` (Gemini, ~180 linii)
+1. **CRON pre-appointment** — `status = 'scheduled'` akceptowany (był: tylko confirmed/pending)
+2. **CRON pre-appointment** — używa formularza przypisanego do usługi zamiast hardcoded built-in
+3. **CRON pre-appointment** — skipuje jeśli usługa nie ma przypisanego formularza
+4. **`/api/forms/pre/[token]` GET+POST** — ładuje i waliduje custom template z DB (był: zawsze built-in)
+5. **Submissions page** — pokazuje `pre_appointment_responses` obok `client_forms` z badge "Przed wizytą"
+6. **SubmissionViewDialog** — nowy komponent pokazujący odpowiedzi klienta
 
-### Sesja 2
-- [ ] TODO Formularz nowej karty — `.../treatment-records/new/page.tsx` (Gemini, ~200 linii)
-- [ ] TODO Widok pojedynczej karty — `.../treatment-records/[recordId]/page.tsx` (Gemini, ~150 linii)
+## Status testów
 
-### Sesja 3
-- [ ] TODO Link z bookingu do listy kart — `components/calendar/booking-dialog.tsx` (Codex, ~20 linii)
-- [ ] TODO tsc check + fixy (Claude)
+### BLOK A — Formularze dashboard
+- [ ] Tworzenie szablonu przez UI
+- [ ] Podgląd szablonu
+- [ ] "Przypisz do usług" dialog
+- [x] Submissions page wyświetla wpisy
+- [ ] "Zobacz" dialog — zaimplementowany, jeszcze NIE przetestowany
 
-## Resume command
+### BLOK B — Formularz przed wizytą
+- [x] CRON znajduje wizytę i tworzy token
+- [x] Formularz ładuje custom template (formularz usługi)
+- [x] Submit działa, pojawia się w submissions
+- [ ] Test podwójnego submit
+- [ ] Test wygasłego tokenu
+- [ ] SMS — nie działa na staging (brak kredencjałów SMSAPI)
+
+### BLOK C — Ankiety po wizycie
+- [ ] Nic nie przetestowane — ZACZNIJ TU
+
+## Konfiguracja staging (gotowe)
+- Salon ANASTAZJA: `f5d0f479-5959-4cf8-8a3f-24f63a981f9b`
+- features.forms = true
+- preAppointmentForms.enabled = true
+- Usługa "Strzyzenie damskie" (967638b5) ma przypisany formularz (040a619c)
+
+## Polecenia PowerShell
+
+```powershell
+# CRON pre-appointment
+Invoke-WebRequest -Uri "http://localhost:3000/api/cron/pre-appointment-forms" -Headers @{"Authorization"="Bearer f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21"} | Select-Object -ExpandProperty Content
+
+# CRON ankiety
+Invoke-WebRequest -Uri "http://localhost:3000/api/cron/surveys" -Headers @{"Authorization"="Bearer f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21"} | Select-Object -ExpandProperty Content
 ```
-Przeczytaj docs/sprints/L2-B_treatment-records-ui.md.
-Sprawdź: ls app/(dashboard)/[slug]/clients/[id]/treatment-records/
-Sprawdź: grep -n 'encryptField' app/api/treatment-records/route.ts
-Kontynuuj od pierwszego niezamkniętego task.
-```
+
+## Supabase REST
+- Base: `https://bxkxvrhspklpkkgmzcge.supabase.co/rest/v1/`
+- Key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4a3h2cmhzcGtscGtrZ216Y2dlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzgyNjIzMiwiZXhwIjoyMDg5NDAyMjMyfQ.1ffgncO6lnmdOub_xNAu_aY2W0YGY4Cgaf9FFpY-1gg`
+
+## Jak zacząć BLOK C
+1. Znajdź booking_id na staging dla salonu ANASTAZJA
+2. Ustaw: status=completed, survey_sent=false, booking_date=today, booking_time=2.5h temu
+3. Wywołaj CRON surveys (polecenie wyżej)
+4. Sprawdź token w satisfaction_surveys
+5. Otwórz /survey/[token], wypełnij
+6. Sprawdź NPS w /[slug]/reports
+
+## Znane problemy
+- SMS na staging nie wysyła (brak SMSAPI credentials)
+- pre_appointment_responses.form_template_id to TEXT bez FK (do migracji później)
