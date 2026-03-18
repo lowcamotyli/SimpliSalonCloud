@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { SubmissionViewDialog } from '@/components/forms/submission-view-dialog'
 import {
   CheckCircle2,
   Clock,
@@ -32,6 +33,7 @@ type SubmissionRow = {
   booking_id: string | null
   form_templates: { name: string } | null
   clients: { full_name: string | null } | null
+  source: 'client_form' | 'pre_appointment'
 }
 
 function getRelation<T>(value: T | T[] | null): T | null {
@@ -58,6 +60,7 @@ export default function FormSubmissionsPage() {
   const [submissions, setSubmissions] = useState<SubmissionRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [viewingSubmission, setViewingSubmission] = useState<SubmissionRow | null>(null)
 
   useEffect(() => {
     const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug
@@ -73,28 +76,64 @@ export default function FormSubmissionsPage() {
     const fetchSubmissions = async () => {
       setIsLoading(true)
 
-      const { data, error } = await supabase
-        .from('client_forms')
-        .select(
-          'id, submitted_at, signed_at, form_template_id, client_id, booking_id, form_templates(name), clients(full_name)'
-        )
-        .not('submitted_at', 'is', null)
-        .order('submitted_at', { ascending: false })
-        .limit(50)
+      const [clientFormsResult, preAppResult] = await Promise.all([
+        supabase
+          .from('client_forms')
+          .select('id, submitted_at, signed_at, form_template_id, client_id, booking_id, form_templates(name), clients(full_name)')
+          .not('submitted_at', 'is', null)
+          .order('submitted_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('pre_appointment_responses')
+          .select('id, submitted_at, client_id, booking_id, form_template_id, clients(full_name)')
+          .not('submitted_at', 'is', null)
+          .order('submitted_at', { ascending: false })
+          .limit(50),
+      ])
 
-      if (error) {
+      if (clientFormsResult.error || preAppResult.error) {
         toast.error('Nie udało się pobrać formularzy')
-
         if (isMounted) {
           setSubmissions([])
           setIsLoading(false)
         }
-
         return
       }
 
+      // Fetch template names for pre_appointment_responses (TEXT field, no FK)
+      const preAppRaw = preAppResult.data ?? []
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      const templateIds = [...new Set(preAppRaw.map((r: any) => r.form_template_id).filter((id: string) => uuidRegex.test(id)))]
+      const templateNameMap = new Map<string, string>()
+      if (templateIds.length > 0) {
+        const { data: tplRows } = await supabase
+          .from('form_templates')
+          .select('id, name')
+          .in('id', templateIds)
+        for (const t of tplRows ?? []) templateNameMap.set(t.id, t.name)
+      }
+
+      const clientForms: SubmissionRow[] = (clientFormsResult.data ?? []).map(
+        (r: any) => ({ ...r, signed_at: r.signed_at ?? null, source: 'client_form' as const })
+      )
+
+      const preAppForms: SubmissionRow[] = preAppRaw.map(
+        (r: any) => ({
+          ...r,
+          signed_at: null,
+          source: 'pre_appointment' as const,
+          form_templates: { name: templateNameMap.get(r.form_template_id) ?? 'Formularz przed wizytą' },
+        })
+      )
+
+      const merged = [...clientForms, ...preAppForms].sort((a, b) => {
+        if (!a.submitted_at) return 1
+        if (!b.submitted_at) return -1
+        return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+      })
+
       if (isMounted) {
-        setSubmissions((data as unknown as SubmissionRow[]) ?? [])
+        setSubmissions(merged.slice(0, 50))
         setIsLoading(false)
       }
     }
@@ -183,9 +222,13 @@ export default function FormSubmissionsPage() {
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span>{clientName}</span>
                           </div>
-                          <Badge variant={submission.signed_at ? 'success' : 'secondary'}>
-                            {submission.signed_at ? 'Podpisany' : 'Bez podpisu'}
-                          </Badge>
+                          {submission.source === 'pre_appointment' ? (
+                            <Badge variant="outline" className="border-blue-400 text-blue-600 bg-blue-50">Przed wizytą</Badge>
+                          ) : (
+                            <Badge variant={submission.signed_at ? 'success' : 'secondary'}>
+                              {submission.signed_at ? 'Podpisany' : 'Bez podpisu'}
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:gap-4">
@@ -210,9 +253,7 @@ export default function FormSubmissionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            toast.info('Podgląd formularza będzie dostępny w kolejnym kroku')
-                          }
+                          onClick={() => setViewingSubmission(submission)}
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Zobacz
@@ -226,6 +267,11 @@ export default function FormSubmissionsPage() {
           )}
         </CardContent>
       </Card>
+      <SubmissionViewDialog
+        submission={viewingSubmission}
+        open={!!viewingSubmission}
+        onOpenChange={(open) => { if (!open) setViewingSubmission(null) }}
+      />
     </div>
   )
 }

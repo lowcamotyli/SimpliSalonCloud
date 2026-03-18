@@ -9,6 +9,7 @@ type BookingCandidate = {
   id: string
   salon_id: string
   client_id: string
+  service_id: string | null
   booking_date: string
   booking_time: string
   salons?: { features?: Record<string, boolean> } | null
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const { data, error } = await admin
       .from('bookings')
-      .select('id, salon_id, client_id, booking_date, booking_time, salons(features), clients(id, phone, full_name)')
+      .select('id, salon_id, client_id, service_id, booking_date, booking_time, salons(features), clients(id, phone, full_name)')
       .in('status', ['scheduled', 'confirmed', 'pending'])
       .eq('pre_form_sent', false)
       .gte('booking_date', windowStartDate)
@@ -69,6 +70,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       (salonSettingsRows || []).map((s: any) => [s.salon_id, s.notification_settings])
     )
 
+    const uniqueServiceIds = filtered.map((b) => b.service_id).filter(Boolean) as string[]
+    const { data: serviceFormRows } = await admin
+      .from('service_forms')
+      .select('service_id, form_template_id')
+      .in('service_id', uniqueServiceIds)
+
+    // Map: service_id → first assigned form_template_id
+    const serviceFormMap = new Map<string, string>()
+    for (const row of serviceFormRows || []) {
+      if (!serviceFormMap.has(row.service_id)) {
+        serviceFormMap.set(row.service_id, row.form_template_id)
+      }
+    }
+
     for (const booking of filtered) {
       try {
         if (!hasFeature(booking.salons?.features || null, 'forms')) {
@@ -87,9 +102,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           continue
         }
 
+        // Skip if no form template is assigned to this service
+        const formTemplateId = booking.service_id ? serviceFormMap.get(booking.service_id) : undefined
+        if (!formTemplateId) {
+          skipped++
+          continue
+        }
+
         const token = await generateFormToken(
           {
-            formTemplateId: 'pre_appointment',
+            formTemplateId,
             clientId: booking.client_id,
             bookingId: booking.id,
             salonId: booking.salon_id,
@@ -103,7 +125,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           booking_id: booking.id,
           client_id: booking.client_id,
           salon_id: booking.salon_id,
-          form_template_id: 'pre_appointment',
+          form_template_id: formTemplateId,
           fill_token: token,
           fill_token_exp: fillTokenExp,
           sent_at: new Date().toISOString(),

@@ -1,43 +1,8 @@
 import { NextResponse } from 'next/server'
-import { BUILTIN_TEMPLATES, type FormField } from '@/lib/forms/builtin-templates'
 import { verifyFormToken } from '@/lib/forms/token'
+import { isFieldVisible, isValuePresent } from '@/lib/forms/field-visibility'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-
-function isValuePresent(value: unknown): boolean {
-  if (value === null || value === undefined) {
-    return false
-  }
-
-  if (typeof value === 'string') {
-    return value.trim().length > 0
-  }
-
-  if (Array.isArray(value)) {
-    return value.length > 0
-  }
-
-  return true
-}
-
-function getPreAppointmentTemplate(): {
-  name: string
-  fields: FormField[]
-  requires_signature: boolean
-} | null {
-  const template = BUILTIN_TEMPLATES.find(
-    (item) => item.name === 'Formularz przed wizytą'
-  )
-
-  if (!template) {
-    return null
-  }
-
-  return {
-    name: template.name,
-    fields: template.fields,
-    requires_signature: template.requires_signature,
-  }
-}
+import type { FormField } from '@/types/forms'
 
 export async function GET(
   _request: Request,
@@ -56,7 +21,7 @@ export async function GET(
 
     const { data: responseRow, error: rowError } = await adminClient
       .from('pre_appointment_responses')
-      .select('booking_id, client_id, salon_id, fill_token_exp, submitted_at')
+      .select('booking_id, client_id, salon_id, form_template_id, fill_token_exp, submitted_at')
       .eq('fill_token', token)
       .limit(1)
       .maybeSingle()
@@ -111,17 +76,23 @@ export async function GET(
       return NextResponse.json({ error: 'Nie znaleziono salonu' }, { status: 404 })
     }
 
-    const template = getPreAppointmentTemplate()
+    const { data: templateRow, error: templateError } = await adminClient
+      .from('form_templates')
+      .select('name, fields, requires_signature')
+      .eq('id', responseRow.form_template_id)
+      .limit(1)
+      .maybeSingle()
 
-    if (!template) {
-      return NextResponse.json(
-        { error: 'Nie znaleziono wbudowanego szablonu formularza' },
-        { status: 500 }
-      )
+    if (templateError) {
+      return NextResponse.json({ error: templateError.message }, { status: 500 })
+    }
+
+    if (!templateRow) {
+      return NextResponse.json({ error: 'Nie znaleziono szablonu formularza' }, { status: 404 })
     }
 
     return NextResponse.json({
-      template,
+      template: templateRow,
       clientName: client.full_name,
       salonName: salon.name,
       bookingId: responseRow.booking_id,
@@ -149,7 +120,7 @@ export async function POST(
 
     const { data: responseRow, error: rowError } = await adminClient
       .from('pre_appointment_responses')
-      .select('id, fill_token_exp, submitted_at')
+      .select('id, form_template_id, fill_token_exp, submitted_at')
       .eq('fill_token', token)
       .limit(1)
       .maybeSingle()
@@ -190,18 +161,24 @@ export async function POST(
       return NextResponse.json({ error: 'Missing answers field' }, { status: 400 })
     }
 
-    const template = getPreAppointmentTemplate()
+    const { data: templateRow, error: templateError } = await adminClient
+      .from('form_templates')
+      .select('fields')
+      .eq('id', responseRow.form_template_id)
+      .limit(1)
+      .maybeSingle()
 
-    if (!template) {
-      return NextResponse.json(
-        { error: 'Nie znaleziono wbudowanego szablonu formularza' },
-        { status: 500 }
-      )
+    if (templateError || !templateRow) {
+      return NextResponse.json({ error: 'Nie znaleziono szablonu formularza' }, { status: 404 })
     }
 
-    const missingFields = template.fields
+    const formFields = (templateRow.fields ?? []) as unknown as FormField[]
+    const answerMap = answers as Record<string, unknown>
+    const missingFields = formFields
       .filter((field) => field.required)
-      .filter((field) => !isValuePresent((answers as Record<string, unknown>)[field.id]))
+      .filter((field) => field.type !== 'section_header')
+      .filter((field) => isFieldVisible(field, answerMap))
+      .filter((field) => !isValuePresent(answerMap[field.id]))
       .map((field) => field.id)
 
     if (missingFields.length > 0) {
