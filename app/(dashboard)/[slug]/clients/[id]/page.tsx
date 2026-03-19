@@ -28,6 +28,8 @@ import {
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { SmsChat } from '@/components/crm/SmsChat'
+import { SubmissionViewDialog } from '@/components/forms/submission-view-dialog'
+import { createClient } from '@/lib/supabase/client'
 
 interface Client {
   id: string;
@@ -40,12 +42,14 @@ interface Client {
 
 interface ClientForm {
   id: string;
-  template_name: string;
+  template_name: string | null;
   submitted_at?: string;
   signed_at?: string;
   signature_url?: string;
   created_at: string;
   fill_token_exp?: string;
+  form_template_id: string;
+  source: 'client_form' | 'pre_appointment';
 }
 
 interface BeautyPlanStep {
@@ -67,18 +71,17 @@ interface BeautyPlan {
   beauty_plan_steps: BeautyPlanStep[];
 }
 
-interface FormDetail {
-  answers: Record<string, any>;
-  template: {
-    name: string;
-    fields: Array<{
-      id: string;
-      label: string;
-      type: string;
-    }>;
-  };
-  signature_url?: string;
+interface Voucher {
+  id: string;
+  code: string;
+  initial_value: number;
+  current_balance: number;
+  status: 'active' | 'used' | 'expired';
+  expires_at: string;
+  buyer_client_id: string | null;
+  beneficiary_client_id: string | null;
 }
+
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -88,11 +91,15 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null>(null)
   const [forms, setForms] = useState<ClientForm[]>([])
   const [beautyPlans, setBeautyPlans] = useState<BeautyPlan[]>([])
+  const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddVoucher, setShowAddVoucher] = useState(false)
+  const [newVoucherValue, setNewVoucherValue] = useState(100)
+  const [newVoucherDays, setNewVoucherDays] = useState(365)
+  const [addingVoucher, setAddingVoucher] = useState(false)
 
-  const [selectedForm, setSelectedForm] = useState<FormDetail | null>(null)
+  const [selectedForm, setSelectedForm] = useState<ClientForm | null>(null)
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
-  const [loadingForm, setLoadingForm] = useState(false)
 
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false)
   const [newPlanData, setNewPlanData] = useState({ title: '', description: '' })
@@ -100,46 +107,104 @@ export default function ClientDetailPage() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
   const [newStepData, setNewStepData] = useState({ service_id: '', planned_date: '', notes: '', step_order: 1 })
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'PLN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  const handleAddVoucher = async () => {
+    if (!id || newVoucherValue <= 0 || newVoucherDays <= 0) return
+    setAddingVoucher(true)
+    try {
+      const res = await fetch('/api/vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          beneficiaryClientId: id,
+          initialValue: newVoucherValue,
+          validityDays: newVoucherDays,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      const created = await res.json()
+      setVouchers(prev => [created, ...prev])
+      setShowAddVoucher(false)
+      setNewVoucherValue(100)
+      setNewVoucherDays(365)
+      toast.success(`Voucher ${created.code} utworzony`)
+    } catch {
+      toast.error('Błąd podczas tworzenia vouchera')
+    } finally {
+      setAddingVoucher(false)
+    }
+  }
+
+  const getVoucherStatusBadgeClass = (status: Voucher['status']) => {
+    if (status === 'active') return 'bg-green-500 hover:bg-green-600'
+    if (status === 'used') return 'bg-gray-500 hover:bg-gray-600'
+    return 'bg-red-500 hover:bg-red-600'
+  }
+
+  const getVoucherStatusLabel = (status: Voucher['status']) => {
+    if (status === 'active') return 'Aktywny'
+    if (status === 'used') return 'Wykorzystany'
+    return 'Wygasły'
+  }
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const [clientRes, formsRes, plansRes] = await Promise.all([
+      const supabase = createClient()
+      const { data: salonData } = await supabase
+        .from('salons')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+
+      const salonId = salonData?.id ?? ''
+
+      const [clientRes, formsRes, plansRes, vouchersRes] = await Promise.all([
         fetch(`/api/clients/${id}`),
         fetch(`/api/clients/${id}/forms`),
-        fetch(`/api/clients/${id}/beauty-plans`)
+        fetch(`/api/clients/${id}/beauty-plans`),
+        salonId ? fetch(`/api/vouchers?salonId=${salonId}&clientId=${id}`) : Promise.resolve(null),
       ])
 
-      if (clientRes.ok) setClient(await clientRes.json())
-      if (formsRes.ok) setForms(await formsRes.json())
-      if (plansRes.ok) setBeautyPlans(await plansRes.json())
+      if (clientRes.ok) { const cd = await clientRes.json(); setClient(cd.client ?? cd) }
+      if (formsRes.ok) { const fd = await formsRes.json(); setForms(fd.forms ?? fd) }
+      if (plansRes.ok) { const pd = await plansRes.json(); setBeautyPlans(pd.plans ?? pd) }
+      if (vouchersRes?.ok) {
+        const rawVouchers = await vouchersRes.json()
+        const vouchersList = Array.isArray(rawVouchers) ? rawVouchers : (rawVouchers.vouchers ?? [])
+        const clientVouchers = vouchersList.filter((voucher: Voucher) =>
+          voucher.buyer_client_id === id || voucher.beneficiary_client_id === id
+        )
+        setVouchers(clientVouchers)
+      } else {
+        setVouchers([])
+      }
     } catch (error) {
-      toast.error('BĹ‚Ä…d podczas pobierania danych')
+      toast.error('Błąd podczas pobierania danych')
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, slug])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
-  const handleShowForm = async (formId: string) => {
-    try {
-      setLoadingForm(true)
-      setIsFormDialogOpen(true)
-      const res = await fetch(`/api/clients/${id}/forms/${formId}`)
-      if (res.ok) {
-        setSelectedForm(await res.json())
-      }
-    } catch (error) {
-      toast.error('BĹ‚Ä…d podczas pobierania szczegĂłĹ‚Ăłw formularza')
-    } finally {
-      setLoadingForm(false)
-    }
+  const handleShowForm = (form: ClientForm) => {
+    setSelectedForm(form)
+    setIsFormDialogOpen(true)
   }
 
   const handleResendLink = (formId: string) => {
-    toast.success('Link zostaĹ‚ wysĹ‚any ponownie')
+    toast.success('Link został wysłany ponownie')
   }
 
   const handleCreatePlan = async () => {
@@ -150,12 +215,12 @@ export default function ClientDetailPage() {
         body: JSON.stringify(newPlanData)
       })
       if (res.ok) {
-        toast.success('Plan zostaĹ‚ utworzony')
+        toast.success('Plan został utworzony')
         setIsNewPlanOpen(false)
         fetchData()
       }
     } catch (error) {
-      toast.error('BĹ‚Ä…d podczas tworzenia planu')
+      toast.error('Błąd podczas tworzenia planu')
     }
   }
 
@@ -168,12 +233,12 @@ export default function ClientDetailPage() {
         body: JSON.stringify(newStepData)
       })
       if (res.ok) {
-        toast.success('Krok zostaĹ‚ dodany')
+        toast.success('Krok został dodany')
         setIsAddStepOpen(false)
         fetchData()
       }
     } catch (error) {
-      toast.error('BĹ‚Ä…d podczas dodawania kroku')
+      toast.error('Błąd podczas dodawania kroku')
     }
   }
 
@@ -188,7 +253,7 @@ export default function ClientDetailPage() {
         fetchData()
       }
     } catch (error) {
-      toast.error('BĹ‚Ä…d podczas aktualizacji kroku')
+      toast.error('Błąd podczas aktualizacji kroku')
     }
   }
 
@@ -204,7 +269,7 @@ export default function ClientDetailPage() {
     <div className="p-6 space-y-6">
       <Link href={`/${slug}/clients`} className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" />
-        WrĂłÄ‡ do klientĂłw
+        Wróć do klientów
       </Link>
 
       <div className="flex justify-between items-start">
@@ -218,11 +283,12 @@ export default function ClientDetailPage() {
       </div>
 
       <Tabs defaultValue="ogolne" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[540px]">
-          <TabsTrigger value="ogolne">OgĂłlne</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 lg:w-[720px]">
+          <TabsTrigger value="ogolne">Ogólne</TabsTrigger>
           <TabsTrigger value="karty">Karty medyczne</TabsTrigger>
           <TabsTrigger value="beauty">Beauty Plan</TabsTrigger>
           <TabsTrigger value="sms">SMS</TabsTrigger>
+          <TabsTrigger value="vouchery">Vouchery</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ogolne" className="mt-6">
@@ -233,7 +299,7 @@ export default function ClientDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">ImiÄ™ i nazwisko</Label>
+                  <Label className="text-muted-foreground">Imię i nazwisko</Label>
                   <p className="font-medium text-lg">{client?.full_name}</p>
                 </div>
                 <div>
@@ -262,13 +328,13 @@ export default function ClientDetailPage() {
         <TabsContent value="karty" className="mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>WypeĹ‚nione formularze</CardTitle>
+              <CardTitle>Wypełnione formularze</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data przesĹ‚ania</TableHead>
+                    <TableHead>Data przesłania</TableHead>
                     <TableHead>Nazwa szablonu</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Podpis</TableHead>
@@ -284,12 +350,12 @@ export default function ClientDetailPage() {
                     </TableRow>
                   ) : (
                     forms.map((form) => (
-                      <TableRow key={form.id} className="cursor-pointer" onClick={() => handleShowForm(form.id)}>
+                      <TableRow key={form.id} className="cursor-pointer" onClick={() => form.submitted_at && handleShowForm(form)}>
                         <TableCell>{form.submitted_at ? new Date(form.submitted_at).toLocaleDateString('pl-PL') : '-'}</TableCell>
                         <TableCell className="font-medium">{form.template_name}</TableCell>
                         <TableCell>
                           {form.submitted_at ? (
-                            <Badge className="bg-green-500 hover:bg-green-600">WypeĹ‚niony</Badge>
+                            <Badge className="bg-green-500 hover:bg-green-600">Wypełniony</Badge>
                           ) : (
                             <Badge className="bg-yellow-500 hover:bg-yellow-600">Oczekuje</Badge>
                           )}
@@ -300,7 +366,7 @@ export default function ClientDetailPage() {
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="sm" onClick={() => handleResendLink(form.id)}>
                             <RefreshCw className="w-4 h-4 mr-2" />
-                            WyĹ›lij ponownie
+                            Wyślij ponownie
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -311,40 +377,18 @@ export default function ClientDetailPage() {
             </CardContent>
           </Card>
 
-          <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{selectedForm?.template.name || 'SzczegĂłĹ‚y formularza'}</DialogTitle>
-              </DialogHeader>
-              {loadingForm ? (
-                <div className="py-12 flex justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-              ) : selectedForm ? (
-                <div className="space-y-6 py-4">
-                  {selectedForm.template.fields.map((field) => (
-                    <div key={field.id} className="space-y-1">
-                      <Label className="text-muted-foreground">{field.label}</Label>
-                      <div className="p-2 border rounded-md bg-muted/20">
-                        {String(selectedForm.answers[field.id] || '-')}
-                      </div>
-                    </div>
-                  ))}
-                  {selectedForm.signature_url && (
-                    <div className="pt-4 border-t">
-                      <Label className="block mb-2">Podpis klienta</Label>
-                      <div className="border rounded-md p-2 bg-white inline-block">
-                        <img src={selectedForm.signature_url} alt="Podpis" className="max-h-32" />
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex justify-end pt-4">
-                    <Button onClick={() => setIsFormDialogOpen(false)}>Zamknij</Button>
-                  </div>
-                </div>
-              ) : null}
-            </DialogContent>
-          </Dialog>
+          <SubmissionViewDialog
+            submission={selectedForm ? {
+              id: selectedForm.id,
+              source: selectedForm.source,
+              form_template_id: selectedForm.form_template_id,
+              form_templates: selectedForm.template_name ? { name: selectedForm.template_name } : null,
+              clients: client ? { full_name: client.full_name } : null,
+              submitted_at: selectedForm.submitted_at ?? null,
+            } : null}
+            open={isFormDialogOpen}
+            onOpenChange={setIsFormDialogOpen}
+          />
         </TabsContent>
 
         <TabsContent value="beauty" className="mt-6">
@@ -359,7 +403,7 @@ export default function ClientDetailPage() {
             {beautyPlans.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
-                  Klient nie posiada jeszcze planĂłw zabiegowych.
+                  Klient nie posiada jeszcze planów zabiegowych.
                 </CardContent>
               </Card>
             ) : (
@@ -376,7 +420,7 @@ export default function ClientDetailPage() {
                       'bg-gray-500'
                     }>
                       {plan.status === 'active' ? 'Aktywny' :
-                       plan.status === 'completed' ? 'UkoĹ„czony' : 'Pauzowany'}
+                       plan.status === 'completed' ? 'Ukończony' : 'Pauzowany'}
                     </Badge>
                   </CardHeader>
                   <CardContent>
@@ -405,7 +449,7 @@ export default function ClientDetailPage() {
                                   </Badge>
                                 )}
                               </div>
-                              {step.is_completed && <span className="text-xs text-green-600 font-medium">ZakoĹ„czono</span>}
+                              {step.is_completed && <span className="text-xs text-green-600 font-medium">Zakończono</span>}
                             </div>
                           </div>
                         ))}
@@ -431,7 +475,7 @@ export default function ClientDetailPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>TytuĹ‚ planu</Label>
+                  <Label>Tytuł planu</Label>
                   <Input 
                     placeholder="np. Terapia przeciwstarzeniowa" 
                     value={newPlanData.title}
@@ -441,13 +485,13 @@ export default function ClientDetailPage() {
                 <div className="space-y-2">
                   <Label>Opis (opcjonalnie)</Label>
                   <Textarea 
-                    placeholder="KrĂłtki opis celĂłw planu..." 
+                    placeholder="Krótki opis celów planu..." 
                     value={newPlanData.description}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewPlanData({...newPlanData, description: e.target.value})}
                   />
                 </div>
                 <Button className="w-full" onClick={handleCreatePlan} disabled={!newPlanData.title}>
-                  UtwĂłrz plan
+                  Utwórz plan
                 </Button>
               </div>
             </DialogContent>
@@ -476,7 +520,7 @@ export default function ClientDetailPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>KolejnoĹ›Ä‡</Label>
+                  <Label>Kolejność</Label>
                   <Input 
                     type="number" 
                     value={newStepData.step_order}
@@ -493,9 +537,71 @@ export default function ClientDetailPage() {
         <TabsContent value="sms" className="mt-6">
           <SmsChat clientId={id} />
         </TabsContent>
+        <TabsContent value="vouchery" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Vouchery klienta</CardTitle>
+              <Button size="sm" onClick={() => setShowAddVoucher(v => !v)} className="gradient-button rounded-lg">
+                <Plus className="h-4 w-4 mr-1" /> Dodaj voucher
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {showAddVoucher && (
+                <div className="mb-4 p-4 border rounded-lg space-y-3 bg-muted/30">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>Wartość (zł)</Label>
+                      <Input type="number" min={1} value={newVoucherValue} onChange={e => setNewVoucherValue(Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Ważność (dni)</Label>
+                      <Input type="number" min={1} value={newVoucherDays} onChange={e => setNewVoucherDays(Number(e.target.value))} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setShowAddVoucher(false)}>Anuluj</Button>
+                    <Button size="sm" onClick={handleAddVoucher} disabled={addingVoucher} className="gradient-button rounded-lg">
+                      {addingVoucher ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Utwórz'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {vouchers.length === 0 ? (
+                <div className="py-10 text-center text-muted-foreground">
+                  Klient nie posiada voucherów.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kod</TableHead>
+                      <TableHead>Saldo / Wartość</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Wygasa</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vouchers.map((voucher) => (
+                      <TableRow key={voucher.id}>
+                        <TableCell className="font-medium">{voucher.code}</TableCell>
+                        <TableCell>
+                          {formatCurrency(Number(voucher.current_balance))} / {formatCurrency(Number(voucher.initial_value))}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getVoucherStatusBadgeClass(voucher.status)}>
+                            {getVoucherStatusLabel(voucher.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(voucher.expires_at).toLocaleDateString('pl-PL')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )
 }
-
-

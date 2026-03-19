@@ -21,6 +21,10 @@ yarn-error.log*
 # Environment variables
 .env
 .env*.local
+.env.staging
+.env.prod
+.env.vercel
+.env.vercel-*
 
 # Vercel
 .vercel

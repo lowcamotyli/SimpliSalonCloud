@@ -34,7 +34,8 @@ DO $$ BEGIN
     WHERE tablename = 'booksy_pending_emails'
       AND policyname = 'salon_members_select_pending_emails'
   ) THEN
-    CREATE POLICY "salon_members_select_pending_emails"
+    DROP POLICY IF EXISTS "salon_members_select_pending_emails" ON public.booksy_pending_emails;
+CREATE POLICY "salon_members_select_pending_emails"
       ON booksy_pending_emails FOR SELECT
       USING (salon_id = public.get_user_salon_id());
   END IF;
@@ -44,7 +45,8 @@ DO $$ BEGIN
     WHERE tablename = 'booksy_pending_emails'
       AND policyname = 'salon_members_update_pending_emails'
   ) THEN
-    CREATE POLICY "salon_members_update_pending_emails"
+    DROP POLICY IF EXISTS "salon_members_update_pending_emails" ON public.booksy_pending_emails;
+CREATE POLICY "salon_members_update_pending_emails"
       ON booksy_pending_emails FOR UPDATE
       USING (salon_id = public.get_user_salon_id());
   END IF;

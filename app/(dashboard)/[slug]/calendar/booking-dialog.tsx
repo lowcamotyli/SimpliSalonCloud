@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useParams } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,8 @@ import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/constants'
 import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from '@/lib/formatters'
 import { toast } from 'sonner'
 import { Clock, DollarSign, AlertCircle } from 'lucide-react'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const bookingFormSchema = z.object({
   employeeId: z.string().min(1, 'Wybierz pracownika'),
@@ -36,6 +39,14 @@ const bookingFormSchema = z.object({
 
 type BookingFormData = z.infer<typeof bookingFormSchema>
 
+interface ServiceAddon {
+  id: string
+  name: string
+  price_delta: number
+  duration_delta: number
+  is_active: boolean
+}
+
 interface BookingDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -44,11 +55,21 @@ interface BookingDialogProps {
 }
 
 export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: BookingDialogProps) {
+  const params = useParams<{ slug: string | string[] }>()
+  const salonId = Array.isArray(params?.slug) ? params.slug[0] : params?.slug
   const { data: employees } = useEmployees()
-  const { data: services } = useServices()
+  const { data: servicesData } = useServices()
   const { data: clients } = useClients()
   const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
   const [surcharge, setSurcharge] = useState<number>(booking?.surcharge || 0)
+  const [addons, setAddons] = useState<ServiceAddon[]>([])
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([])
+  const [showVoucherPanel, setShowVoucherPanel] = useState(false)
+  const [voucherCode, setVoucherCode] = useState("")
+  const [voucherData, setVoucherData] = useState<{ id: string; code: string; current_balance: number; status: string } | null>(null)
+  const [voucherLoading, setVoucherLoading] = useState(false)
+  const [clientVouchers, setClientVouchers] = useState<Array<{ id: string; code: string; current_balance: number }>>([])
+  const [clientVouchersLoaded, setClientVouchersLoaded] = useState(false)
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -114,10 +135,93 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     }
   }, [clientNameValue, clients])
 
-  const selectedService = services
+  useEffect(() => {
+    if (!showVoucherPanel || !booking?.client_id || !salonId || clientVouchersLoaded) {
+      return
+    }
+
+    let active = true
+    const fetchClientVouchers = async () => {
+      setVoucherLoading(true)
+      try {
+        const response = await fetch(
+          `/api/vouchers?salonId=${encodeURIComponent(salonId)}&clientId=${encodeURIComponent(booking.client_id)}&status=active`
+        )
+        if (!response.ok) {
+          throw new Error('Failed to fetch vouchers')
+        }
+
+        const data = await response.json()
+        const vouchers = Array.isArray(data) ? data : []
+        if (active) {
+          setClientVouchers(
+            vouchers.map((voucher: any) => ({
+              id: voucher.id,
+              code: voucher.code,
+              current_balance: Number(voucher.current_balance) || 0,
+            }))
+          )
+          setClientVouchersLoaded(true)
+        }
+      } catch (error) {
+        if (active) {
+          setClientVouchers([])
+        }
+      } finally {
+        if (active) {
+          setVoucherLoading(false)
+        }
+      }
+    }
+
+    fetchClientVouchers()
+
+    return () => {
+      active = false
+    }
+  }, [showVoucherPanel, booking?.client_id, salonId, clientVouchersLoaded])
+
+  useEffect(() => {
+    setShowVoucherPanel(false)
+    setVoucherCode("")
+    setVoucherData(null)
+    setVoucherLoading(false)
+    setClientVouchers([])
+    setClientVouchersLoaded(false)
+  }, [booking?.id, isOpen])
+
+  const watchedServiceId = form.watch('serviceId')
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      if (!watchedServiceId) {
+        setAddons([])
+        setSelectedAddonIds([])
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/services/${watchedServiceId}/addons`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch addons')
+        }
+        const data = await response.json()
+        setAddons(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Error fetching service addons:', error)
+        setAddons([])
+      } finally {
+        setSelectedAddonIds([])
+      }
+    }
+
+    fetchAddons()
+  }, [watchedServiceId])
+
+  const selectedService = servicesData
     ?.flatMap((cat) => cat.subcategories)
     .flatMap((sub) => sub.services)
-    .find((svc) => svc.id === form.watch('serviceId'))
+    .find((svc) => svc.id === watchedServiceId)
 
   const handleSelectClient = (client: any) => {
     form.setValue('clientName', client.full_name)
@@ -130,6 +234,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       if (booking) {
         await updateMutation.mutateAsync({
           notes: data.notes,
+          addon_ids: selectedAddonIds,
         })
         toast.success('Wizyta zaktualizowana')
       } else {
@@ -138,6 +243,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
           clientPhone: parsePhoneNumber(data.clientPhone),
           duration: selectedService?.duration || 60,
           source: 'manual',
+          addon_ids: selectedAddonIds,
         })
         toast.success('Wizyta dodana')
       }
@@ -157,6 +263,70 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       onClose()
     } catch (error) {
       toast.error('Błąd podczas kończenia wizyty')
+    }
+  }
+
+  const handleValidateVoucher = async () => {
+    const normalizedCode = voucherCode.trim()
+    if (!normalizedCode || !salonId) return
+
+    setVoucherLoading(true)
+    try {
+      const response = await fetch(
+        `/api/vouchers?salonId=${encodeURIComponent(salonId)}&code=${encodeURIComponent(normalizedCode)}`
+      )
+      if (!response.ok) {
+        throw new Error('Failed to validate voucher')
+      }
+      const data = await response.json()
+      const validatedVoucher = Array.isArray(data) ? data[0] : null
+
+      if (!validatedVoucher) {
+        setVoucherData(null)
+        toast.error('Nie znaleziono vouchera')
+        return
+      }
+
+      setVoucherData({
+        id: validatedVoucher.id,
+        code: validatedVoucher.code,
+        current_balance: Number(validatedVoucher.current_balance) || 0,
+        status: validatedVoucher.status || 'active',
+      })
+      setVoucherCode(validatedVoucher.code ?? normalizedCode)
+    } catch (error) {
+      setVoucherData(null)
+      toast.error('Nie znaleziono vouchera')
+    } finally {
+      setVoucherLoading(false)
+    }
+  }
+
+  const handleCompleteWithVoucher = async () => {
+    if (!voucherData || !booking?.id) {
+      return
+    }
+
+    setVoucherLoading(true)
+    try {
+      const response = await fetch(`/api/vouchers/${voucherData.id}/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          amount: booking.price ?? 0,
+        }),
+      })
+
+      if (response.ok) {
+        await handleCompleteBooking('voucher')
+      } else {
+        toast.error('Błąd przy potrąceniu vouchera')
+      }
+    } catch (error) {
+      toast.error('Błąd przy potrąceniu vouchera')
+    } finally {
+      setVoucherLoading(false)
     }
   }
 
@@ -205,6 +375,18 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       }
     }
   }
+
+  const serviceId = watchedServiceId
+  const activeAddons = addons.filter((addon) => addon.is_active)
+  const selectedAddons = activeAddons.filter((addon) => selectedAddonIds.includes(addon.id))
+  const totalAddonPrice = selectedAddons.reduce((sum, addon) => sum + addon.price_delta, 0)
+  const totalAddonDuration = selectedAddons.reduce((sum, addon) => sum + addon.duration_delta, 0)
+  const totalPrice = (selectedService?.price || 0) + totalAddonPrice
+  const totalDuration = (selectedService?.duration || 0) + totalAddonDuration
+  const categorizedServices = servicesData?.filter(cat => cat.category && cat.subcategories.some(sub => sub.services.length > 0)) || [];
+  const uncategorizedServicesRaw = servicesData?.filter(cat => !cat.category && cat.subcategories.some(sub => sub.services.length > 0)) || [];
+  const uncategorizedServices = uncategorizedServicesRaw.flatMap(cat => cat.subcategories.flatMap(sub => sub.services));
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -325,7 +507,75 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                     >
                       Karta
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowVoucherPanel(!showVoucherPanel)}
+                      className="rounded-lg"
+                    >
+                      Voucher
+                    </Button>
                   </div>
+                  {showVoucherPanel && (
+                    <div className="w-full space-y-3 glass p-3 rounded-lg">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Input
+                          value={voucherCode}
+                          onChange={(e) => setVoucherCode(e.target.value)}
+                          placeholder="Kod vouchera"
+                          className="glass rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleValidateVoucher}
+                          disabled={voucherLoading || !voucherCode.trim()}
+                          className="rounded-lg"
+                        >
+                          Sprawdz
+                        </Button>
+                      </div>
+
+                      {clientVouchers.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {clientVouchers.map((voucher) => (
+                            <Badge
+                              key={voucher.id}
+                              className="cursor-pointer rounded-lg px-3 py-1"
+                              variant={voucherData?.id === voucher.id ? 'default' : 'secondary'}
+                              onClick={() => {
+                                setVoucherCode(voucher.code)
+                                setVoucherData({
+                                  id: voucher.id,
+                                  code: voucher.code,
+                                  current_balance: voucher.current_balance,
+                                  status: 'active',
+                                })
+                              }}
+                            >
+                              {voucher.code} ({formatPrice(voucher.current_balance)})
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {voucherData && (
+                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 space-y-2">
+                          <p className="text-sm text-green-800 font-semibold">Voucher: {voucherData.code}</p>
+                          <p className="text-sm text-green-700">
+                            Saldo: {formatPrice(voucherData.current_balance)}
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={handleCompleteWithVoucher}
+                            disabled={voucherLoading}
+                            className="rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            Zatwierdz
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </DialogFooter>
@@ -357,21 +607,111 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
               <div className="space-y-2">
                 <Label className="font-semibold">Usługa *</Label>
-                <select
-                  {...form.register('serviceId')}
-                  className="w-full glass rounded-lg px-3 py-2"
-                >
-                  <option value="">Wybierz usługę</option>
-                  {services?.map((cat) =>
-                    cat.subcategories.map((sub) =>
-                      sub.services.map((svc) => (
-                        <option key={svc.id} value={svc.id}>
-                          {svc.name} - {formatPrice(svc.price)} ({svc.duration} min)
-                        </option>
-                      ))
-                    )
+                <input type="hidden" {...form.register('serviceId')} />
+                <Accordion type="single" className="w-full" defaultValue={categorizedServices[0]?.category}>
+                  {categorizedServices.map((cat) => (
+                    <AccordionItem value={cat.category} key={cat.category}>
+                      <AccordionTrigger>{cat.category}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-3">
+                          {cat.subcategories.filter(sub => sub.services.length > 0).map((sub, index) => (
+                            <div key={`${cat.category}-${sub.name}-${index}`}>
+                              <p className="mb-2 text-sm font-medium text-muted-foreground">{sub.name}</p>
+                              <div className="grid grid-cols-1 gap-2">
+                                {sub.services.map((svc) => (
+                                  <button
+                                    type="button"
+                                    key={svc.id}
+                                    onClick={() => form.setValue('serviceId', svc.id, { shouldValidate: true, shouldDirty: true })}
+                                    className={`w-full text-left p-2 border rounded-md text-sm transition-colors flex justify-between items-center ${
+                                      serviceId === svc.id
+                                        ? "bg-primary/10 border-primary"
+                                        : "hover:bg-muted/50"
+                                    }`}
+                                  >
+                                    <span>{svc.name}</span>
+                                    <span className="text-muted-foreground text-xs whitespace-nowrap pl-2">
+                                      {formatPrice(svc.price)} / {svc.duration} min
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                  {uncategorizedServices.length > 0 && (
+                    <AccordionItem value="other-services">
+                      <AccordionTrigger>Inne</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="grid grid-cols-1 gap-2">
+                            {uncategorizedServices.map(svc => (
+                                <button
+                                    type="button"
+                                    key={svc.id}
+                                    onClick={() => form.setValue('serviceId', svc.id, { shouldValidate: true, shouldDirty: true })}
+                                    className={`w-full text-left p-2 border rounded-md text-sm transition-colors flex justify-between items-center ${
+                                        serviceId === svc.id
+                                        ? "bg-primary/10 border-primary"
+                                        : "hover:bg-muted/50"
+                                    }`}
+                                >
+                                    <span>{svc.name}</span>
+                                    <span className="text-muted-foreground text-xs whitespace-nowrap pl-2">
+                                    {formatPrice(svc.price)} / {svc.duration} min
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
                   )}
-                </select>
+                </Accordion>
+                {form.formState.errors.serviceId && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {form.formState.errors.serviceId.message}
+                  </p>
+                )}
+                {selectedService && activeAddons.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <Label className="font-semibold">Dodatki</Label>
+                    <div className="space-y-2">
+                      {activeAddons.map((addon) => {
+                        const isChecked = selectedAddonIds.includes(addon.id)
+                        return (
+                          <label key={addon.id} className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                setSelectedAddonIds((prev) =>
+                                  checked
+                                    ? [...prev, addon.id]
+                                    : prev.filter((id) => id !== addon.id)
+                                )
+                              }}
+                            />
+                            <span>
+                              {addon.name} +{addon.duration_delta}min +{addon.price_delta} PLN
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <div className="glass p-2 rounded-lg text-sm">
+                      <p>
+                        Cena łącznie: {formatPrice(selectedService.price)} + {formatPrice(totalAddonPrice)} ={' '}
+                        <span className="font-semibold">{formatPrice(totalPrice)}</span>
+                      </p>
+                      <p>
+                        Czas łącznie: {selectedService.duration} min + {totalAddonDuration} min ={' '}
+                        <span className="font-semibold">{totalDuration} min</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 relative">

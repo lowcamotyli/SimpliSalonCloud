@@ -30,7 +30,8 @@ BEGIN
         SELECT 1 FROM pg_policies 
         WHERE tablename = 'sms_wallet' AND policyname = 'salon_members_read_sms_wallet'
     ) THEN
-        CREATE POLICY "salon_members_read_sms_wallet" ON public.sms_wallet 
+        DROP POLICY IF EXISTS "salon_members_read_sms_wallet" ON public.sms_wallet;
+CREATE POLICY "salon_members_read_sms_wallet" ON public.sms_wallet 
         FOR SELECT USING (salon_id = public.get_user_salon_id());
     END IF;
 END $$;

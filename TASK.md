@@ -34,7 +34,16 @@
 - [ ] SMS — nie działa na staging (brak kredencjałów SMSAPI)
 
 ### BLOK C — Ankiety po wizycie
-- [ ] Nic nie przetestowane — ZACZNIJ TU
+- [x] CRON survey — znajdowanie bookingu (features.surveys + notif_settings.surveys.enabled)
+- [x] CRON survey — tworzenie satisfaction_survey + fill_token
+- [x] Submit ankiety (rating/NPS/comment zapisane, fill_token=null po submit)
+- [x] Double-submit protection (fill_token=null → 404)
+- [x] CRON de-duplikacja (UNIQUE booking_id blokuje podwójne wysłanie)
+- [ ] UI ankiety w przeglądarce — świeży token gotowy (patrz niżej)
+- [ ] NPS w /anastazja/reports — wymaga auth w przeglądarce
+
+### URL do testu UI ankiety (ważny do 2026-03-20):
+http://localhost:3000/survey/eyJhbGciOiJIUzI1NiJ9.eyJib29raW5nSWQiOiI0NGEyMWU5NC1lYzYxLTRiOTMtOGQ5YS03MDQ4ZmNiODQ1MTAiLCJzYWxvbklkIjoiZjVkMGY0NzktNTk1OS00Y2Y4LThhM2YtMjRmNjNhOTgxZjliIiwidHlwIjoic3VydmV5IiwiaWF0IjoxNzczODQyNTQ0LCJleHAiOjE3NzQwMTUzNDR9.KHVxBynagYnRXLMJODhIWmqn4QZNnLb9csaHXHVoCmw
 
 ## Konfiguracja staging (gotowe)
 - Salon ANASTAZJA: `f5d0f479-5959-4cf8-8a3f-24f63a981f9b`

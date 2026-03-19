@@ -2,7 +2,7 @@
 -- Description: Updates auth.get_user_salon_id and other helpers to prefer JWT Claims over DB lookups.
 
 -- 1. Update get_user_salon_id
-CREATE OR REPLACE FUNCTION auth.get_user_salon_id() RETURNS UUID AS $$
+CREATE OR REPLACE FUNCTION public.get_user_salon_id() RETURNS UUID AS $$
 DECLARE 
   jwt_salon_id TEXT;
   profile_salon_id UUID;
@@ -31,7 +31,7 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 -- 2. Update has_salon_role
-CREATE OR REPLACE FUNCTION auth.has_salon_role(required_role TEXT) RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION public.has_salon_role(required_role TEXT) RETURNS BOOLEAN AS $$
 DECLARE 
   jwt_role TEXT;
   db_role TEXT;
@@ -49,7 +49,7 @@ BEGIN
   END IF;
 
   -- 2. DB Fallback
-  user_salon_id := auth.get_user_salon_id();
+  user_salon_id := public.get_user_salon_id();
   IF user_salon_id IS NULL THEN RETURN FALSE; END IF;
   
   SELECT role INTO db_role
@@ -63,7 +63,7 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 -- 3. Update has_any_salon_role
-CREATE OR REPLACE FUNCTION auth.has_any_salon_role(required_roles TEXT[]) RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION public.has_any_salon_role(required_roles TEXT[]) RETURNS BOOLEAN AS $$
 DECLARE 
   jwt_role TEXT;
   db_role TEXT;
@@ -81,7 +81,7 @@ BEGIN
   END IF;
 
   -- 2. DB Fallback
-  user_salon_id := auth.get_user_salon_id();
+  user_salon_id := public.get_user_salon_id();
   IF user_salon_id IS NULL THEN RETURN FALSE; END IF;
   
   SELECT role INTO db_role

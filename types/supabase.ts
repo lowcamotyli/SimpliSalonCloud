@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
   }
   graphql_public: {
     Tables: {
@@ -215,6 +215,45 @@ export type Database = {
             columns: ["salon_id"]
             isOneToOne: true
             referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_addons: {
+        Row: {
+          addon_id: string
+          booking_id: string
+          duration_at_booking: number
+          id: string
+          price_at_booking: number
+        }
+        Insert: {
+          addon_id: string
+          booking_id: string
+          duration_at_booking: number
+          id?: string
+          price_at_booking: number
+        }
+        Update: {
+          addon_id?: string
+          booking_id?: string
+          duration_at_booking?: number
+          id?: string
+          price_at_booking?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "service_addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_addons_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -2191,6 +2230,54 @@ export type Database = {
           },
         ]
       }
+      service_addons: {
+        Row: {
+          created_at: string
+          duration_delta: number
+          id: string
+          is_active: boolean
+          name: string
+          price_delta: number
+          salon_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_delta?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_delta?: number
+          salon_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_delta?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_delta?: number
+          salon_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_addons_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_equipment: {
         Row: {
           equipment_id: string
@@ -2891,6 +2978,118 @@ export type Database = {
           },
         ]
       }
+      voucher_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          booking_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          voucher_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          voucher_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_transactions_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          beneficiary_client_id: string | null
+          buyer_client_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_balance: number
+          expires_at: string
+          id: string
+          initial_value: number
+          salon_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_client_id?: string | null
+          buyer_client_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_balance: number
+          expires_at: string
+          id?: string
+          initial_value: number
+          salon_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_client_id?: string | null
+          buyer_client_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_balance?: number
+          expires_at?: string
+          id?: string
+          initial_value?: number
+          salon_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_beneficiary_client_id_fkey"
+            columns: ["beneficiary_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_buyer_client_id_fkey"
+            columns: ["buyer_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_replay_cache: {
         Row: {
           event_id: string
@@ -3016,6 +3215,10 @@ export type Database = {
           employee_id: string
           user_id: string
         }[]
+      }
+      replace_equipment_services: {
+        Args: { p_equipment_id: string; p_service_ids: string[] }
+        Returns: undefined
       }
       seed_default_crm_templates: {
         Args: { p_salon_id: string }

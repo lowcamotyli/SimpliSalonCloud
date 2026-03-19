@@ -6,7 +6,7 @@
 ALTER TABLE public.employees
 ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE
 SET NULL;
--- Create unique index to ensure one employee per user
+-- CREATE UNIQUE INDEX IF NOT EXISTS to ensure one employee per user
 CREATE UNIQUE INDEX IF NOT EXISTS idx_employees_user_id ON public.employees(user_id)
 WHERE user_id IS NOT NULL;
 -- Add index for performance

@@ -11,6 +11,7 @@
 
 DROP POLICY IF EXISTS "client_forms_select" ON public.client_forms;
 
+DROP POLICY IF EXISTS "client_forms_select" ON public.client_forms;
 CREATE POLICY "client_forms_select" ON public.client_forms
     FOR SELECT USING (
         client_id IN (

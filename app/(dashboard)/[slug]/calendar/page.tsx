@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
 import { BUSINESS_HOURS } from '@/lib/constants'
 import { toast } from 'sonner'
+import MiniCalendar from './mini-calendar'
 
 const BookingDialog = dynamic(() => import('@/components/calendar/booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
@@ -281,28 +282,37 @@ export default function CalendarPage() {
         </Button>
       </div>
 
-      {viewType !== 'month' && (
-        <div className="theme-employee-filter glass p-1 rounded-xl flex items-center gap-2 overflow-x-auto w-max max-w-full">
-          <span className="theme-employee-filter-label text-sm font-semibold text-gray-700 flex-shrink-0 px-2 pl-3">Pracownicy:</span>
-          {employees?.map((emp, idx) => {
-            const colors = getEmployeeColor(idx)
-            const isVisible = visibleEmployees.has(emp.id)
-            return (
-              <button
-                key={emp.id}
-                type="button"
+      <div className="flex gap-4 items-start">
+        {viewType !== 'month' && (
+          <div className="w-[240px] flex-shrink-0 space-y-3">
+            <MiniCalendar
+              currentDate={currentDate}
+              onDayClick={(date) => {
+                setCurrentDate(date)
+                setViewType('day')
+              }}
+            />
+            <div className="theme-employee-filter glass p-3 rounded-xl flex flex-col gap-1.5">
+              <span className="theme-employee-filter-label text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">Pracownicy</span>
+              {employees?.map((emp, idx) => {
+                const colors = getEmployeeColor(idx)
+                const isVisible = visibleEmployees.has(emp.id)
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => toggleEmployee(emp.id)}
+                    className={`theme-employee-chip rounded-lg text-xs font-medium px-3 py-2 border transition-all text-left ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-sm` : 'hover:bg-gray-100 bg-white border-gray-200 text-gray-700'}`}
+                  >
+                    {emp.first_name} {emp.last_name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
-                onClick={() => toggleEmployee(emp.id)}
-                className={`theme-employee-chip rounded-full text-xs flex-shrink-0 font-medium px-3 py-1.5 border transition-all ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-md scale-105` : 'hover:bg-gray-100 bg-white border-gray-200 text-gray-700'}`}
-              >
-                {emp.first_name}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      <Card className="theme-calendar-shell flex-1 overflow-hidden glass rounded-2xl">
+        <Card className="theme-calendar-shell flex-1 overflow-hidden glass rounded-2xl min-w-0">
         {viewType === 'day' && (
           <DayView
             currentDate={currentDate}
@@ -337,6 +347,7 @@ export default function CalendarPage() {
         )}
         {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} onBookingClick={handleBookingClick} employees={employees} getEmployeeColor={getEmployeeColor} />}
       </Card>
+      </div>
 
       {isDialogOpen && (
         <BookingDialog
@@ -724,14 +735,23 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
           const dateStr = formatDate(day)
           const dayBookings = bookingsByDate[dateStr] || []
           const isToday = isSameDay(day, now)
+          const isSelected = isSameDay(day, currentDate)
           const isCurrentMonth = isSameMonth(day, currentDate)
           return (
             <div
               key={dateStr}
               onClick={() => onDayClick(day)}
-              className={`theme-calendar-month-day min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${isToday ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' : isCurrentMonth ? 'glass hover:shadow-lg' : 'bg-gray-50 text-gray-400'}`}
+              className={`theme-calendar-month-day min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${
+                isSelected 
+                  ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' 
+                  : isToday 
+                    ? 'border-2 border-primary/30 glass' 
+                    : isCurrentMonth 
+                      ? 'glass hover:shadow-lg' 
+                      : 'bg-gray-50 text-gray-400'
+              }`}
             >
-              <p className={`font-bold text-sm mb-1 ${isToday ? 'text-white' : ''}`}>{format(day, 'd')}</p>
+              <p className={`font-bold text-sm mb-1 ${isSelected ? 'text-white' : isToday ? 'text-primary' : ''}`}>{format(day, 'd')}</p>
               <div className="relative mt-1">
                 {dayBookings.slice(0, 4).map((booking: any, idx: number) => {
                   const empIdx = employees.findIndex((e: any) => e.id === booking.employee?.id)
@@ -739,7 +759,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
                   return (
                     <div
                       key={booking.id}
-                      className={`theme-calendar-month-booking text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isToday ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
+                      className={`theme-calendar-month-booking text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isSelected ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
                       style={{ marginLeft: `${idx * 4}px`, width: `calc(100% - ${idx * 4}px)` }}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -751,7 +771,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
                     </div>
                   )
                 })}
-                {dayBookings.length > 4 && <p className={`text-[10px] font-bold mt-1 text-center ${isToday ? 'text-white/90' : 'text-primary'}`}>+ {dayBookings.length - 4} więcej</p>}
+                {dayBookings.length > 4 && <p className={`text-[10px] font-bold mt-1 text-center ${isSelected ? 'text-white/90' : 'text-primary'}`}>+ {dayBookings.length - 4} więcej</p>}
               </div>
             </div>
           )

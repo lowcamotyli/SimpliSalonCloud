@@ -6,12 +6,14 @@
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 -- POLICY 1: Użytkownicy widzą tylko profile z swojego salonu
 DROP POLICY IF EXISTS "Users can view salon profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view salon profiles" ON public.profiles;
 CREATE POLICY "Users can view salon profiles" ON public.profiles FOR
 SELECT TO authenticated USING (
     user_id = auth.uid()
     OR salon_id = public.get_user_salon_id()
   );
 -- POLICY 2: Użytkownicy mogą aktualizować swój profil
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile" ON public.profiles FOR
 UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (

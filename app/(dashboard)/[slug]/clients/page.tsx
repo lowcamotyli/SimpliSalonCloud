@@ -521,9 +521,11 @@ export default function ClientsPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center">
-                            <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                              {client.full_name}
-                            </h3>
+                            <Link href={`/${slug}/clients/${client.id}`} onClick={(e) => e.stopPropagation()}>
+                              <h3 className="font-bold text-foreground hover:text-primary transition-colors truncate">
+                                {client.full_name}
+                              </h3>
+                            </Link>
                             {getBlacklistBadge((client.blacklist_status || 'clean') as BlacklistStatus)}
                           </div>
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

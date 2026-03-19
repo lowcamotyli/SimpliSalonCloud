@@ -1,5 +1,5 @@
 -- Create the health_data_access_logs table
-CREATE TABLE public.health_data_access_logs (
+CREATE TABLE IF NOT EXISTS public.health_data_access_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     salon_id uuid NOT NULL REFERENCES public.salons(id) ON DELETE CASCADE,
     accessed_by uuid NOT NULL REFERENCES auth.users(id),
@@ -29,15 +29,16 @@ COMMENT ON COLUMN public.health_data_access_logs.ip_address IS 'The IP address f
 COMMENT ON COLUMN public.health_data_access_logs.user_agent IS 'The user agent of the client that made the request.';
 
 -- Create indexes for performance
-CREATE INDEX idx_health_logs_salon_accessed_at ON public.health_data_access_logs(salon_id, accessed_at DESC);
-CREATE INDEX idx_health_logs_salon_client_id ON public.health_data_access_logs(salon_id, client_id);
-CREATE INDEX idx_health_logs_salon_accessed_by ON public.health_data_access_logs(salon_id, accessed_by);
+CREATE INDEX IF NOT EXISTS idx_health_logs_salon_accessed_at ON public.health_data_access_logs(salon_id, accessed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_health_logs_salon_client_id ON public.health_data_access_logs(salon_id, client_id);
+CREATE INDEX IF NOT EXISTS idx_health_logs_salon_accessed_by ON public.health_data_access_logs(salon_id, accessed_by);
 
 -- Enable Row-Level Security
 ALTER TABLE public.health_data_access_logs ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
 -- SELECT policy for salon owners
+DROP POLICY IF EXISTS "Allow salon owners to read access logs" ON public.health_data_access_logs;
 CREATE POLICY "Allow salon owners to read access logs"
 ON public.health_data_access_logs
 FOR SELECT

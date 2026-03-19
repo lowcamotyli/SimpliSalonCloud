@@ -15,7 +15,7 @@
 -- to health data processing at a specific timestamp (demonstrability, Art. 5(2)).
 
 ALTER TABLE public.client_forms
-    ADD COLUMN health_consent_at TIMESTAMPTZ;
+    ADD COLUMN IF NOT EXISTS health_consent_at TIMESTAMPTZ;
 
 COMMENT ON COLUMN public.client_forms.health_consent_at IS
     'Timestamp of explicit health data consent per GDPR Art. 9(2)(a). '
@@ -23,6 +23,6 @@ COMMENT ON COLUMN public.client_forms.health_consent_at IS
     'Null for general templates or where consent was not yet collected.';
 
 -- Partial index for compliance queries: find health forms without recorded consent
-CREATE INDEX idx_client_forms_health_consent
+CREATE INDEX IF NOT EXISTS idx_client_forms_health_consent
     ON public.client_forms (health_consent_at)
     WHERE health_consent_at IS NOT NULL;

@@ -6,12 +6,14 @@
 ALTER TABLE public.salons ENABLE ROW LEVEL SECURITY;
 -- POLICY 1: Użytkownicy widzą TYLKO swój salon
 DROP POLICY IF EXISTS "Users can view their own salon" ON public.salons;
+DROP POLICY IF EXISTS "Users can view their own salon" ON public.salons;
 CREATE POLICY "Users can view their own salon" ON public.salons FOR
 SELECT TO authenticated USING (
     id = public.get_user_salon_id()
     AND deleted_at IS NULL
   );
 -- POLICY 2: Tylko właściciel może edytować salon
+DROP POLICY IF EXISTS "Salon owners can update their salon" ON public.salons;
 DROP POLICY IF EXISTS "Salon owners can update their salon" ON public.salons;
 CREATE POLICY "Salon owners can update their salon" ON public.salons FOR
 UPDATE TO authenticated USING (

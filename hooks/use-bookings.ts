@@ -41,6 +41,7 @@ type BookingFilters = {
 type CreateBookingData = {
   employeeId: string
   serviceId: string
+  addon_ids?: string[]
   clientId?: string
   clientName?: string
   clientPhone?: string
@@ -56,6 +57,7 @@ type UpdateBookingData = {
   paymentMethod?: string
   surcharge?: number
   notes?: string
+  addon_ids?: string[]
   duration?: number
   bookingDate?: string
   bookingTime?: string

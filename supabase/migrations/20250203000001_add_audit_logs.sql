@@ -23,11 +23,13 @@ CREATE INDEX IF NOT EXISTS audit_logs_changed_at_idx ON public.audit_logs(change
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Only Owners can view audit logs for their salon
+DROP POLICY IF EXISTS "Owners view audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Owners view audit logs" ON public.audit_logs;
 CREATE POLICY "Owners view audit logs" ON public.audit_logs
   FOR SELECT TO authenticated
   USING (
-    salon_id = auth.get_user_salon_id() 
-    AND auth.has_salon_role('owner')
+    salon_id = public.get_user_salon_id()
+    AND public.has_salon_role('owner')
   );
 
 -- 4. Generic Audit Trigger Function

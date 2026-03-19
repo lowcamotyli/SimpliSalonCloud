@@ -4,8 +4,6 @@ import { Calendar, Users, DollarSign, TrendingUp, Plus, Clock, ArrowUpRight, Act
 import Link from 'next/link'
 import { StatCard } from '@/components/dashboard/stat-card'
 import RevenueChart from '@/components/dashboard/revenue-chart'
-import ServicesChart from '@/components/dashboard/services-chart'
-import EmployeeRevenueChart from '@/components/dashboard/employee-revenue-chart'
 import { format, subDays, startOfDay, endOfDay } from 'date-fns'
 
 import { EmptyState } from '@/components/ui/empty-state'
@@ -132,13 +130,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       .neq('status', 'cancelled')
       .neq('status', 'completed')
       .order('booking_time', { ascending: true })
-      .limit(5),
-
-    // All employees for revenue breakdown
-    supabase
-      .from('employees')
-      .select('id, first_name, last_name')
-      .eq('salon_id', typedSalon.id)
+      .limit(5)
   ])
 
   const todayBookings = todayBookingsResponse.count
@@ -151,7 +143,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
   const typedCompletedBookingsYesterday = (completedBookingsYesterdayResponse.data as any[]) || []
   const typedLast7DaysBookings = (last7DaysBookingsResponse.data as any[]) || []
   const typedUpcomingBookings = (upcomingBookingsTodayResponse.data as any[]) || []
-  const typedEmployees = (totalEmployeesResponse.data as any[]) || []
 
   // Process data for charts and stats
   const todayRevenue = typedCompletedBookingsToday?.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0) || 0
@@ -178,37 +169,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       amount: dailyRevenue
     }
   })
-
-  // Services distribution data
-  const serviceCounts: Record<string, number> = {}
-  typedLast7DaysBookings?.forEach((b: any) => {
-    const name = b.services?.name || 'Inne'
-    serviceCounts[name] = (serviceCounts[name] || 0) + 1
-  })
-
-  const servicesData = Object.entries(serviceCounts)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5)
-
-  // Employee revenue data
-  const employeeRevenue: Record<string, number> = {}
-  typedLast7DaysBookings
-    ?.filter((b: any) => b.status === 'completed')
-    .forEach((b: any) => {
-      const empId = b.employee_id
-      if (empId) {
-        employeeRevenue[empId] = (employeeRevenue[empId] || 0) + (Number(b.total_price) || 0)
-      }
-    })
-
-  const employeeRevenueData = typedEmployees
-    .map((emp: any) => ({
-      name: `${emp.first_name} ${emp.last_name.charAt(0)}.`,
-      amount: employeeRevenue[emp.id] || 0
-    }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5)
 
   const stats = [
     {
@@ -336,13 +296,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       </div>
 
       <div className="grid gap-6 lg:grid-cols-1">
-
-        {/* Employee Revenue Chart */}
-        <EmployeeRevenueChart data={employeeRevenueData} />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-1">
-
         {/* Upcoming Bookings */}
         <div className="theme-upcoming-bookings glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
           <div className="flex items-center justify-between mb-6">

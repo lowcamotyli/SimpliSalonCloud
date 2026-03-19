@@ -50,6 +50,8 @@ COMMENT ON FUNCTION public.sync_user_claims IS 'Synchronizes public.profiles dat
 -- Kontrola, co dokładnie jest zmieniane (np. rola), zostanie przeniesiona do logiki API Next.js.
 DROP POLICY IF EXISTS "Owner and Manager can update profiles in salon" ON public.profiles;
 
+DROP POLICY IF EXISTS "Owner and Manager can update profiles in salon" ON public.profiles;
+DROP POLICY IF EXISTS "Owner and Manager can update profiles in salon" ON public.profiles;
 CREATE POLICY "Owner and Manager can update profiles in salon" ON public.profiles FOR
 UPDATE TO authenticated
 USING (
