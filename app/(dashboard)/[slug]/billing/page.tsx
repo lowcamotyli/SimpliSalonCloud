@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import SmsWalletCard from '@/components/billing/SmsWalletCard'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -598,21 +597,6 @@ export default function BillingPage() {
           </div>
         </section>
 
-        {/* Sekcja: Dodatki */}
-        <section>
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
-              <Zap className="h-5 w-5" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
-              Usługi Dodatkowe
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <SmsWalletCard />
-          </div>
-        </section>
       </div>
     </div>
   )

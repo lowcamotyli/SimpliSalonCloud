@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   Palette, Building2, Bell, Link as LinkIcon, MessageSquare,
-  LayoutDashboard, Wrench, ShieldAlert, Star, Database, FlaskConical, ScrollText, Gift
+  LayoutDashboard, ShieldAlert, Star, Database, FlaskConical, ScrollText
 } from 'lucide-react'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
@@ -17,12 +17,10 @@ const NAV_ITEMS = [
   { href: '/business', label: 'Biznes', icon: Building2, ownerOnly: true },
   { href: '/integrations', label: 'Integracje', icon: LinkIcon, ownerOnly: true },
   { href: '/sms', label: 'SMS', icon: MessageSquare, ownerOnly: true },
-  { href: '/equipment', label: 'Sprzęt', icon: Wrench, ownerOnly: true },
   { href: '/crm', label: 'CRM', icon: ShieldAlert, ownerOnly: false },
   { href: '/surveys', label: 'Ankiety', icon: Star, ownerOnly: false },
   { href: '/protocols', label: 'Protokoły', icon: FlaskConical, ownerOnly: true },
   { href: '/import', label: 'Import danych', icon: Database, ownerOnly: true },
-  { href: '/vouchers', label: 'Vouchery', icon: Gift, ownerOnly: false },
   { href: '/notifications', label: 'Powiadomienia', icon: Bell, ownerOnly: false },
   { href: '/audit-log', label: 'Audit Trail', icon: ScrollText, ownerOnly: true },
 ]

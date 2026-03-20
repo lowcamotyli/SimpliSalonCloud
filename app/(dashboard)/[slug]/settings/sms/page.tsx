@@ -188,6 +188,13 @@ export default function SmsSettingsPage() {
             </>
           )}
 
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            <strong>Własna integracja = SMS bez portfela.</strong> Po skonfigurowaniu tokena powyżej
+            wiadomości są wysyłane bezpośrednio przez Twoje konto SMSAPI
+            {smsProvider === 'bulkgate' ? '/BulkGate' : ''} — bez potrzeby doładowania portfela SMS
+            w SimpliSalon.
+          </div>
+
           <div className="flex gap-2">
             <Input
               value={testSmsTo}
