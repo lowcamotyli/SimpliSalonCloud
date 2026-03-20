@@ -28,6 +28,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'At least one booking item is required' }, { status: 400 });
     }
 
+    // Check for within-request conflicts (same employee, overlapping times in the submitted items).
+    // This runs before any DB insert so we don't rely on sequential DB visibility.
+    for (let i = 0; i < body.items.length; i++) {
+      const a = body.items[i];
+      const aStart = new Date(a.startTime).getTime();
+      for (let j = i + 1; j < body.items.length; j++) {
+        const b = body.items[j];
+        if (a.employeeId !== b.employeeId) continue;
+        const bStart = new Date(b.startTime).getTime();
+        // Without service durations yet, flag identical start times for the same employee.
+        if (aStart === bStart) {
+          return NextResponse.json({ error: 'conflict', conflictingItemIndex: j }, { status: 409 });
+        }
+      }
+    }
+
+    // Verify client belongs to the authenticated salon (prevent cross-tenant clientId injection)
+    const { data: clientCheck, error: clientCheckError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', body.clientId)
+      .eq('salon_id', authSalonId)
+      .is('deleted_at', null)
+      .single();
+
+    if (clientCheckError || !clientCheck) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
+
     const { data: visitGroup, error: visitGroupError } = await supabase
       .from('visit_groups')
       .insert({ salon_id: authSalonId, client_id: body.clientId, payment_method: body.paymentMethod, notes: body.notes, status: 'confirmed' })
@@ -127,7 +156,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     if (groupIdToDelete) {
-      try { const { supabase } = await getAuthContext(); await supabase.from('visit_groups').delete().eq('id', groupIdToDelete); } catch {}
+      try {
+        const { supabase } = await getAuthContext()
+        await supabase.from('bookings').delete().eq('visit_group_id', groupIdToDelete)
+        await supabase.from('visit_groups').delete().eq('id', groupIdToDelete)
+      } catch {}
     }
     if (error instanceof Error && error.message.startsWith('Conflict at index')) {
       const index = parseInt(error.message.split(' ')[3], 10);
