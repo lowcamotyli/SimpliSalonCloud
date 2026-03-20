@@ -16,7 +16,7 @@ import { BUSINESS_HOURS } from '@/lib/constants'
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
 
-const BookingDialog = dynamic(() => import('@/components/calendar/booking-dialog').then(mod => mod.BookingDialog), {
+const BookingDialog = dynamic(() => import('./booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
 })
 
@@ -46,12 +46,52 @@ const minutesToTime = (minutes: number) => {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
 }
 
+function buildCalendarEntries(dayBookings: any[], previewDurations: Record<string, number>) {
+  const rendered = new Set<string>()
+  const entries: Array<{
+    booking: any
+    groupBookings?: any[]
+    displayDuration: number
+  }> = []
+
+  for (const booking of dayBookings) {
+    const groupId = booking.visit_group_id
+    if (groupId && rendered.has(groupId)) continue
+
+    if (groupId) {
+      const groupBookings = dayBookings
+        .filter((b: any) => b.visit_group_id === groupId)
+        .sort((a: any, b: any) => timeToMinutes(a.booking_time) - timeToMinutes(b.booking_time))
+
+      const firstStart = timeToMinutes(groupBookings[0].booking_time)
+      const lastEnd = Math.max(...groupBookings.map((b: any) =>
+        timeToMinutes(b.booking_time) + (previewDurations[b.id] ?? b.duration)
+      ))
+
+      rendered.add(groupId)
+      entries.push({
+        booking: groupBookings[0],
+        groupBookings,
+        displayDuration: lastEnd - firstStart,
+      })
+    } else {
+      entries.push({
+        booking,
+        displayDuration: previewDurations[booking.id] ?? booking.duration,
+      })
+    }
+  }
+
+  return entries
+}
+
 const snapMinutes = (minutes: number) => Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewType, setViewType] = useState<ViewType>('week')
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
+  const [selectedGroupBookings, setSelectedGroupBookings] = useState<any[] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
@@ -206,6 +246,12 @@ export default function CalendarPage() {
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
     setSelectedSlot(null)
+    if (booking.visit_group_id) {
+      const siblings = bookings?.filter((b: any) => b.visit_group_id === booking.visit_group_id) || []
+      setSelectedGroupBookings(siblings)
+    } else {
+      setSelectedGroupBookings(null)
+    }
     setIsDialogOpen(true)
   }
 
@@ -357,6 +403,7 @@ export default function CalendarPage() {
             setSelectedSlot(null)
           }}
           booking={selectedBooking}
+          preloadedGroupBookings={selectedGroupBookings}
           prefilledSlot={selectedSlot}
         />
       )}
@@ -468,23 +515,25 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   )
                 })}
 
-                {(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []).map((booking: any, index: number, allBookings: any[]) => {
+                {buildCalendarEntries(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || [], previewDurations).map((entry, index, allEntries) => {
+                  const booking = entry.booking
                   const timeStr = booking.booking_time
                   if (!timeStr) return null
                   const startMinutes = timeToMinutes(timeStr) - BUSINESS_HOURS.START * 60
-                  const duration = previewDurations[booking.id] ?? booking.duration
+                  const duration = entry.displayDuration
 
-                  const overlappingBookings = allBookings.filter((other, idx) => {
-                    if (idx === index || other.id === booking.id) return false
-                    const otherDuration = previewDurations[other.id] ?? other.duration
-                    const oStart = timeToMinutes(other.booking_time) - BUSINESS_HOURS.START * 60
+                  const overlappingBookings = allEntries.filter((otherEntry, idx) => {
+                    const otherBooking = otherEntry.booking
+                    if (idx === index || otherBooking.id === booking.id) return false
+                    const otherDuration = otherEntry.displayDuration
+                    const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
                     const oEnd = oStart + otherDuration
                     return (startMinutes < oEnd && (startMinutes + duration) > oStart)
                   })
 
-                  const previousOverlaps = allBookings.slice(0, index).filter((prev: any) => {
-                    const prevDuration = previewDurations[prev.id] ?? prev.duration
-                    const pStart = timeToMinutes(prev.booking_time) - BUSINESS_HOURS.START * 60
+                  const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                    const prevDuration = prevEntry.displayDuration
+                    const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
                     const pEnd = pStart + prevDuration
                     return (startMinutes < pEnd && (startMinutes + duration) > pStart)
                   })
@@ -521,7 +570,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                         onBookingClick(booking)
                       }}
                     >
-                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} />
+                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} groupBookings={entry.groupBookings} />
                       <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                     </div>
                   )
@@ -648,21 +697,23 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                   if (!visibleEmployees.has(employee.id)) return null
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
 
-                  return dayBookings.map((booking: any, index: number, allBookings: any[]) => {
+                  return buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
+                    const booking = entry.booking
                     const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
-                    const duration = previewDurations[booking.id] ?? booking.duration
+                    const duration = entry.displayDuration
 
-                    const overlappingBookings = allBookings.filter((other: any, idx: number) => {
-                      if (idx === index || other.id === booking.id) return false
-                      const otherDuration = previewDurations[other.id] ?? other.duration
-                      const oStart = timeToMinutes(other.booking_time) - BUSINESS_HOURS.START * 60
+                    const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
+                      const otherBooking = otherEntry.booking
+                      if (idx === index || otherBooking.id === booking.id) return false
+                      const otherDuration = otherEntry.displayDuration
+                      const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
                       const oEnd = oStart + otherDuration
                       return (startMinutes < oEnd && (startMinutes + duration) > oStart)
                     })
 
-                    const previousOverlaps = allBookings.slice(0, index).filter((prev: any) => {
-                      const prevDuration = previewDurations[prev.id] ?? prev.duration
-                      const pStart = timeToMinutes(prev.booking_time) - BUSINESS_HOURS.START * 60
+                    const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                      const prevDuration = prevEntry.displayDuration
+                      const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
                       const pEnd = pStart + prevDuration
                       return (startMinutes < pEnd && (startMinutes + duration) > pStart)
                     })
@@ -699,7 +750,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                           onBookingClick(booking)
                         }}
                       >
-                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} />
+                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
                         <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                       </div>
                     )

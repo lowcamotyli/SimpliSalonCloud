@@ -21,7 +21,7 @@ import {
   XCircle,
   CalendarDays
 } from 'lucide-react'
-import { BookingDialog } from '@/components/calendar/booking-dialog'
+import { BookingDialog } from '@/app/(dashboard)/[slug]/calendar/booking-dialog'
 import { formatPrice, formatDateTime } from '@/lib/formatters'
 import { cn } from '@/lib/utils/cn'
 import { motion, AnimatePresence } from 'framer-motion'

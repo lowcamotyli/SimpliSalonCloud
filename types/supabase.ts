@@ -285,6 +285,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           version: number
+          visit_group_id: string | null
         }
         Insert: {
           base_price: number
@@ -312,6 +313,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           version?: number
+          visit_group_id?: string | null
         }
         Update: {
           base_price?: number
@@ -339,6 +341,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           version?: number
+          visit_group_id?: string | null
         }
         Relationships: [
           {
@@ -367,6 +370,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_visit_group_id_fkey"
+            columns: ["visit_group_id"]
+            isOneToOne: false
+            referencedRelation: "visit_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -2978,6 +2988,63 @@ export type Database = {
           },
         ]
       }
+      visit_groups: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          salon_id: string
+          status: string
+          total_duration: number | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          salon_id: string
+          status?: string
+          total_duration?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          salon_id?: string
+          status?: string
+          total_duration?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_groups_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_groups_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voucher_transactions: {
         Row: {
           amount: number
@@ -3165,6 +3232,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           version: number
+          visit_group_id: string | null
         }[]
         SetofOptions: {
           from: "*"

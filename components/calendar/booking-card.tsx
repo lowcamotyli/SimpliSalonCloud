@@ -42,6 +42,7 @@ interface BookingCardProps {
   serviceCategory?: string
   onDelete?: () => void
   employeeColors?: any
+  groupBookings?: Booking[]
 }
 
 const statusColors = {
@@ -52,7 +53,8 @@ const statusColors = {
   pending: 'bg-amber-100 text-amber-800 border-amber-200',
 }
 
-export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors }: BookingCardProps) {
+export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors, groupBookings }: BookingCardProps) {
+  const isGroup = groupBookings && groupBookings.length > 1
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const categoryColor = getServiceCategoryColor(serviceCategory)
@@ -107,10 +109,21 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
           <div className="flex-1 min-w-0 pr-1">
             <p className="theme-booking-card-title font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
               {booking.client?.full_name || 'Nieznany klient'}
+              {isGroup && <span className="ml-1 text-[9px] font-semibold text-purple-500 bg-purple-50 px-1 rounded">×{groupBookings!.length}</span>}
             </p>
-            <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
-              {booking.service.name}
-            </p>
+            {isGroup ? (
+              <div className="flex flex-col gap-0.5">
+                {groupBookings!.map((b) => (
+                  <p key={b.id} className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+                    {b.service.name}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+                {booking.service.name}
+              </p>
+            )}
           </div>
           <div className="relative shrink-0 flex items-start justify-end w-[30px] h-[24px]">
             {booking.duration >= 45 && (
