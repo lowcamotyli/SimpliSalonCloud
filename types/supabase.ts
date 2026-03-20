@@ -3241,6 +3241,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      create_group_booking_atomic: {
+        Args: {
+          p_client_id: string
+          p_items?: Json
+          p_notes?: string
+          p_payment_method?: string
+          p_salon_id: string
+        }
+        Returns: Json
+      }
       crm_increment_campaign_counter: {
         Args: {
           p_campaign_id: string

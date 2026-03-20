@@ -113,6 +113,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [clientVouchersLoaded, setClientVouchersLoaded] = useState(false)
   const [groupBookings, setGroupBookings] = useState<any[]>([])
 
+  const [isSaving, setIsSaving] = useState(false)
   const [step, setStep] = useState<DialogStep>('client')
   const [selectedClient, setSelectedClient] = useState<ClientOption | null>(null)
   const [newClientName, setNewClientName] = useState('')
@@ -265,6 +266,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   }
 
   const handleSave = async () => {
+    if (isSaving) return
     if (!salonId) {
       toast.error('Nie znaleziono salonu')
       return
@@ -277,6 +279,17 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
       }
     }
 
+    const seenSlots = new Set<string>()
+    for (const item of cartItems) {
+      const slotKey = `${item.employeeId}|${item.bookingDate}|${item.bookingTime}`
+      if (seenSlots.has(slotKey)) {
+        toast.error('Dwie wizyty u tego samego pracownika w tej samej godzinie — zmień termin jednej z nich')
+        return
+      }
+      seenSlots.add(slotKey)
+    }
+
+    setIsSaving(true)
     try {
       const clientId = await resolveClientId()
       if (!clientId) {
@@ -331,6 +344,8 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac wizyty'
       toast.error(message)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -1124,7 +1139,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={createBookingMutation.isPending || createClientMutation.isPending}
+                  disabled={isSaving || createBookingMutation.isPending || createClientMutation.isPending}
                 >
                   Zapisz wizyte
                 </Button>
