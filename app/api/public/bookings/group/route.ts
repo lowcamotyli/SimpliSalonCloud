@@ -203,43 +203,6 @@ export async function POST(request: NextRequest) {
                 )
             }
 
-            const { data: bookings, error: bookingsError } = await supabase
-                .from('bookings')
-                .select('booking_time, duration')
-                .eq('salon_id', salonId)
-                .eq('employee_id', item.employeeId)
-                .eq('booking_date', item.date)
-                .not('status', 'eq', 'cancelled')
-                .is('deleted_at', null)
-
-            if (bookingsError) {
-                logger.error('[PUBLIC_GROUP_BOOKINGS] bookings fetch error', bookingsError)
-                return NextResponse.json({ error: 'Bookings fetch failed' }, { status: 500 })
-            }
-
-            const [h, m] = item.time.split(':').map(Number)
-            const newStart = h * 60 + m
-            const newEnd = newStart + service.duration
-
-            const conflict = bookings?.some((booking: any) => {
-                const [bh, bm] = booking.booking_time.split(':').map(Number)
-                const bStart = bh * 60 + bm
-                const bEnd = bStart + booking.duration
-                return newStart < bEnd && newEnd > bStart
-            })
-
-            if (conflict) {
-                logger.warn('[PUBLIC_GROUP_BOOKINGS] time slot conflict', {
-                    date: item.date,
-                    time: item.time,
-                    index: i,
-                })
-                return NextResponse.json(
-                    { error: 'Time slot not available', conflictingItemIndex: i },
-                    { status: 409 }
-                )
-            }
-
             const { data: serviceEquipmentRows } = await supabase
                 .from('service_equipment')
                 .select('equipment_id')
@@ -274,91 +237,62 @@ export async function POST(request: NextRequest) {
             resolvedItems.push({ service, employee, requiredEquipmentIds })
         }
 
-        const { data: visitGroup, error: visitGroupError } = await supabase
-            .from('visit_groups')
-            .insert({
-                salon_id: salonId,
-                client_id: client.id,
-                status: 'confirmed',
-                total_price: 0,
-                total_duration: 0,
-            })
-            .select('id')
-            .single()
+        const rpcItems = items.map((item, i) => ({
+            service_id: item.serviceId,
+            employee_id: item.employeeId,
+            booking_date: item.date,
+            booking_time: item.time,
+            duration: resolvedItems[i].service.duration,
+            base_price: resolvedItems[i].service.price,
+        }))
 
-        if (visitGroupError || !visitGroup) {
-            logger.error('[PUBLIC_GROUP_BOOKINGS] visit group create error', visitGroupError)
-            return NextResponse.json({ error: 'Visit group create failed' }, { status: 500 })
+        const { data: rpcResult, error: rpcError } = await (supabase as any).rpc(
+            'create_group_booking_atomic',
+            {
+                p_salon_id: salonId,
+                p_client_id: client.id,
+                p_payment_method: null,
+                p_notes: null,
+                p_items: rpcItems,
+            }
+        )
+
+        if (rpcError) {
+            if (rpcError.code === '23P01') {
+                const detail: string = rpcError.details ?? rpcError.detail ?? ''
+                const itemMatch = detail.match(/item[s]?\s+(\d+)/)
+                const conflictingItemIndex = itemMatch ? parseInt(itemMatch[1], 10) : 0
+                return NextResponse.json({ error: 'Time slot not available', conflictingItemIndex }, { status: 409 })
+            }
+            logger.error('[PUBLIC_GROUP_BOOKINGS] rpc error', rpcError)
+            return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
         }
 
-        const createdBookings: Array<{ id: string; status: string; booking_date: string; booking_time: string }> = []
-        let totalPrice = 0
-        let totalDuration = 0
-
+        // Create equipment bookings using booking IDs returned from RPC (rpcResult.bookings[i].id matches items[i])
         for (const [i, item] of items.entries()) {
             const resolved = resolvedItems[i]
-            const { data: booking, error: bookingError } = await supabase
-                .from('bookings')
-                .insert({
-                    salon_id: salonId,
-                    employee_id: resolved.employee.id,
-                    client_id: client.id,
-                    service_id: item.serviceId,
-                    booking_date: item.date,
-                    booking_time: item.time,
-                    duration: resolved.service.duration,
-                    base_price: resolved.service.price,
-                    status: 'scheduled',
-                    source: 'website',
-                    visit_group_id: visitGroup.id,
-                } as any)
-                .select('id, status, booking_date, booking_time')
-                .single()
-
-            if (bookingError || !booking) {
-                logger.error('[PUBLIC_GROUP_BOOKINGS] booking create error', bookingError)
-                await supabase.from('visit_groups').delete().eq('id', visitGroup.id)
-                return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
-            }
-
             if (resolved.requiredEquipmentIds.length > 0) {
-                const startsAt = new Date(`${item.date}T${item.time}:00Z`)
-                const endsAt = new Date(startsAt.getTime() + resolved.service.duration * 60_000)
-                await supabase.from('equipment_bookings').insert(
-                    resolved.requiredEquipmentIds.map(eqId => ({
-                        booking_id: booking.id,
-                        equipment_id: eqId,
-                        starts_at: startsAt.toISOString(),
-                        ends_at: endsAt.toISOString(),
-                    }))
-                )
+                const bookingId = rpcResult.bookings[i]?.id
+                if (bookingId) {
+                    const startsAt = new Date()
+                    const endsAt = new Date(startsAt.getTime() + resolved.service.duration * 60_000)
+                    await supabase.from('equipment_bookings').insert(
+                        resolved.requiredEquipmentIds.map((eqId: string) => ({
+                            booking_id: bookingId,
+                            equipment_id: eqId,
+                            starts_at: startsAt.toISOString(),
+                            ends_at: endsAt.toISOString(),
+                        }))
+                    )
+                }
             }
-
-            createdBookings.push(booking)
-            totalPrice += resolved.service.price
-            totalDuration += resolved.service.duration
         }
 
-        const { data: updatedGroup } = await supabase
-            .from('visit_groups')
-            .update({
-                total_price: totalPrice,
-                total_duration: totalDuration,
-            })
-            .eq('id', visitGroup.id)
-            .select('id, status, total_price, total_duration')
-            .single()
-
-        logger.info('[PUBLIC_GROUP_BOOKINGS] success', { visitGroupId: visitGroup.id, bookingsCount: createdBookings.length })
+        logger.info('[PUBLIC_GROUP_BOOKINGS] success', { visitGroupId: rpcResult.visit_group_id, bookingsCount: rpcResult.bookings.length })
         return NextResponse.json(
             {
-                visitGroup: updatedGroup ?? {
-                    id: visitGroup.id,
-                    status: 'confirmed',
-                    total_price: totalPrice,
-                    total_duration: totalDuration,
-                },
-                bookings: createdBookings,
+                visitGroup: { id: rpcResult.visit_group_id, status: 'confirmed' },
+                bookings: rpcResult.bookings,
             },
             { status: 201 }
         )
