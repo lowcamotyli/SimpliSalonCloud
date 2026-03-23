@@ -103,6 +103,15 @@ export const PATCH = withErrorHandling(async (
   const targetStartTime = validatedData.start_time ?? currentBooking.booking_time
   const targetDuration = Number(validatedData.duration ?? currentBooking.duration)
 
+  // Only run scheduling validation when scheduling fields actually change
+  const schedulingChanged =
+    validatedData.date !== undefined ||
+    validatedData.start_time !== undefined ||
+    validatedData.duration !== undefined ||
+    validatedData.employee_id !== undefined
+
+  if (schedulingChanged) {
+
   if (!Number.isFinite(targetDuration) || targetDuration <= 0) {
     throw new ValidationError('Długość wizyty musi być większa od 0')
   }
@@ -139,6 +148,8 @@ export const PATCH = withErrorHandling(async (
 
   if (hasConflict) {
     throw new ConflictError('Wybrany termin koliduje z inną wizytą')
+  }
+
   }
 
   // Re-validate equipment availability when time changes

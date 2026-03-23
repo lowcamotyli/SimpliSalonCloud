@@ -279,14 +279,27 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
       }
     }
 
-    const seenSlots = new Set<string>()
-    for (const item of cartItems) {
-      const slotKey = `${item.employeeId}|${item.bookingDate}|${item.bookingTime}`
-      if (seenSlots.has(slotKey)) {
-        toast.error('Dwie wizyty u tego samego pracownika w tej samej godzinie — zmień termin jednej z nich')
-        return
+    const timeToMinutes = (t: string) => {
+      const [h, m] = t.split(':').map(Number)
+      return h * 60 + (m || 0)
+    }
+    for (let i = 0; i < cartItems.length; i++) {
+      for (let j = i + 1; j < cartItems.length; j++) {
+        const a = cartItems[i]
+        const b = cartItems[j]
+        if (a.employeeId !== b.employeeId || a.bookingDate !== b.bookingDate) continue
+        if (!a.bookingTime || !b.bookingTime) continue
+        const svcA = services.find((s) => s.id === a.serviceId)
+        const svcB = services.find((s) => s.id === b.serviceId)
+        const startA = timeToMinutes(a.bookingTime)
+        const endA = startA + (svcA?.duration ?? 0)
+        const startB = timeToMinutes(b.bookingTime)
+        const endB = startB + (svcB?.duration ?? 0)
+        if (startA < endB && startB < endA) {
+          toast.error(`Pozycje ${i + 1} i ${j + 1} nakładają się u tego samego pracownika — zmień termin jednej z nich`)
+          return
+        }
       }
-      seenSlots.add(slotKey)
     }
 
     setIsSaving(true)
@@ -333,7 +346,12 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           if (response.status === 409 && error?.conflictingItemIndex !== undefined) {
             throw new Error(`Termin niedostępny dla usługi ${error.conflictingItemIndex + 1}. Wybierz inny termin.`)
           }
-          throw new Error(error?.error || 'Nie udało się zapisać grupy wizyt')
+          const errorCode = error?.error
+          const errorMessage =
+            errorCode === 'EQUIPMENT_CONFLICT'
+              ? 'Wybrany sprzęt jest już zajęty w tym terminie. Wybierz inny termin lub innego pracownika.'
+              : errorCode || 'Nie udało się zapisać grupy wizyt'
+          throw new Error(errorMessage)
         }
 
         await queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
