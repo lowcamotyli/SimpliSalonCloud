@@ -158,12 +158,14 @@ export interface NotificationSettings {
   }
   surveys: {
     enabled: boolean
+    channel?: 'sms' | 'email' | 'both'
   }
   crmAutomations: {
     enabled: boolean
   }
   preAppointmentForms: {
     enabled: boolean
+    channel?: 'sms' | 'email' | 'both'
   }
   campaigns: {
     enabled: boolean

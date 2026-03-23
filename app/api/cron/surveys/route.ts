@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { hasFeature } from '@/lib/features'
 import { generateSurveyToken } from '@/lib/messaging/survey-token'
+import { sendTransactionalEmail } from '@/lib/messaging/email-sender'
 import { sendSms } from '@/lib/messaging/sms-sender'
 import { getAppUrl } from '@/lib/config/app-url'
 
@@ -20,6 +21,7 @@ type BookingCandidate = {
   clients?: {
     id: string
     phone: string | null
+    email: string | null
     full_name: string | null
   } | null
   services?: {
@@ -35,6 +37,7 @@ type SkipReason =
   | 'notif_disabled'
   | 'service_survey_disabled'
   | 'no_phone'
+  | 'no_contact'
   | 'insert_error'
   | 'sent'
 
@@ -62,6 +65,19 @@ function toDateTime(bookingDate: string, bookingTime: string): Date {
   return new Date(asIfUtc.getTime() + offsetMs)
 }
 
+function buildSurveyEmailHtml(name: string | null, url: string): string {
+  return `<div style='font-family:sans-serif;max-width:500px;margin:0 auto'>
+    <p>Cześć ${name || 'Kliencie'},</p>
+    <p>Dziękujemy za wizytę! Oceń nas w 30 sekund — to pomoże nam się rozwijać.</p>
+    <p style='margin-top:24px'>
+      <a href='${url}' style='background:#18181b;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600'>
+        Wypełnij ankietę →
+      </a>
+    </p>
+    <p style='margin-top:24px;font-size:12px;color:#6b7280'>Lub wejdź bezpośrednio: ${url}</p>
+  </div>`
+}
+
 export async function GET(request: NextRequest) {
   const authError = validateCronSecret(request)
   if (authError) return authError
@@ -82,7 +98,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await admin
       .from('bookings')
       .select(
-        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, full_name), services(id, survey_enabled, survey_custom_message)'
+        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, email, full_name), services(id, survey_enabled, survey_custom_message)'
       )
       .eq('status', 'completed')
       .eq('survey_sent', false)
@@ -138,6 +154,7 @@ export async function GET(request: NextRequest) {
         skipped += 1
         continue
       }
+      const channel: 'sms' | 'email' | 'both' = notifSettings?.surveys?.channel ?? 'sms'
 
       // Skip if the specific service has surveys disabled
       if (booking.services?.survey_enabled === false) {
@@ -147,8 +164,12 @@ export async function GET(request: NextRequest) {
       }
 
       const client = booking.clients
-      if (!client?.phone) {
-        debugLog.push({ ...debugEntryBase, skipReason: 'no_phone' })
+      if (
+        !client ||
+        (channel === 'sms' || channel === 'both') && !client?.phone ||
+        (channel === 'email' || channel === 'both') && !client?.email
+      ) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'no_contact' })
         skipped += 1
         continue
       }
@@ -185,12 +206,23 @@ export async function GET(request: NextRequest) {
           ? booking.services.survey_custom_message.replace('{{url}}', surveyUrl)
           : `Dzi\u0119kujemy za wizyt\u0119! Oce\u0144 nas w 30 sekund: ${surveyUrl}`
 
-        await sendSms({
-          salonId: booking.salon_id,
-          clientId: client.id,
-          to: client.phone,
-          body: smsBody,
-        })
+        if (channel === 'sms' || channel === 'both') {
+          await sendSms({
+            salonId: booking.salon_id,
+            clientId: client.id,
+            to: client.phone!,
+            body: smsBody,
+          })
+        }
+
+        if (channel === 'email' || channel === 'both') {
+          await sendTransactionalEmail({
+            salonId: booking.salon_id,
+            to: client.email!,
+            subject: 'Oceń swoją wizytę',
+            html: buildSurveyEmailHtml(client.full_name, surveyUrl),
+          })
+        }
 
         // 3. Mark booking as sent — if this fails, UNIQUE on survey row prevents duplicate
         //    insert on retry, so SMS won't be sent twice.

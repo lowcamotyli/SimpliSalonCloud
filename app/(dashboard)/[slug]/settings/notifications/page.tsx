@@ -7,6 +7,7 @@ import { SettingsCard } from '@/components/settings/settings-card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -81,9 +82,9 @@ export default function NotificationsPage() {
     newBooking: { enabled: false, channels: ['email'] },
     cancellation: { enabled: false, channels: ['email'] },
     dailySummary: { enabled: false, time: '08:00', recipients: [] },
-    surveys: { enabled: false },
+    surveys: { enabled: false, channel: 'sms' },
     crmAutomations: { enabled: false },
-    preAppointmentForms: { enabled: false },
+    preAppointmentForms: { enabled: false, channel: 'sms' },
     campaigns: { enabled: true },
   })
 
@@ -285,7 +286,7 @@ export default function NotificationsPage() {
 
         <SettingsCard
           title="Ankiety po wizycie"
-          description="SMS z linkiem do oceny wizyty — wysyłany 2 godziny po zakończeniu"
+          description="Wysyłany 2 godziny po zakończeniu wizyty"
         >
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -312,12 +313,33 @@ export default function NotificationsPage() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Kanał wysyłki</Label>
+              <RadioGroup
+                value={notifications.surveys?.channel ?? "sms"}
+                onValueChange={(v: string) => updateNotification("surveys", { channel: v })}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="surveys-channel-sms" value="sms" />
+                  <Label htmlFor="surveys-channel-sms">SMS</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="surveys-channel-email" value="email" />
+                  <Label htmlFor="surveys-channel-email">Email</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="surveys-channel-both" value="both" />
+                  <Label htmlFor="surveys-channel-both">SMS + Email</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </div>
         </SettingsCard>
 
         <SettingsCard
           title="Formularz przed wizytą"
-          description="SMS z linkiem do krótkiego formularza — wysyłany 24h przed wizytą"
+          description="Wysyłany 24h przed wizytą"
         >
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -332,6 +354,27 @@ export default function NotificationsPage() {
                 checked={notifications.preAppointmentForms?.enabled ?? false}
                 onCheckedChange={(enabled) => updateNotification("preAppointmentForms", { enabled })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Kanał wysyłki</Label>
+              <RadioGroup
+                value={notifications.preAppointmentForms?.channel ?? "sms"}
+                onValueChange={(v: string) => updateNotification("preAppointmentForms", { channel: v })}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="pre-forms-channel-sms" value="sms" />
+                  <Label htmlFor="pre-forms-channel-sms">SMS</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="pre-forms-channel-email" value="email" />
+                  <Label htmlFor="pre-forms-channel-email">Email</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="pre-forms-channel-both" value="both" />
+                  <Label htmlFor="pre-forms-channel-both">SMS + Email</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
         </SettingsCard>
