@@ -1,3 +1,22 @@
+## Czytanie i interpretacja plików — ZAWSZE Gemini powyżej progu
+
+Claude NIE czyta plików > 50 linii przez Read tool — każda linia to token kontekstu.
+
+```bash
+gemini -p "Read [ścieżka]. [co konkretnie wyjaśnić/podsumować]. Max 30 lines." \
+  --output-format text 2>/dev/null | grep -v "^Loaded"
+```
+
+**Kiedy co:**
+| Sytuacja | Narzędzie |
+|---|---|
+| Plik < 50 linii | Read (cały) |
+| Plik > 50 linii — rozumienie, "jak działa X" | Gemini reader |
+| Edycja z konkretnym numerem linii (z błędu tsc) | Read z view_range |
+| Multi-section edit bez numeru linii | Gemini reader → potem Edit |
+
+---
+
 ## Docs architektury — mapa referencyjna
 
 Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj Gemini:

@@ -32,6 +32,8 @@ export const metadata: Metadata = {
   description: "Kompleksowy system do zarządzania salonem piękności",
 }
 
+import { TooltipProvider } from "@/components/ui/tooltip"
+
 export default function RootLayout({
   children,
 }: {
@@ -41,7 +43,9 @@ export default function RootLayout({
     <html lang="pl">
       <body className={`${inter.className} ${previewUi.variable} ${previewDisplay.variable}`}>
         <QueryProvider>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </QueryProvider>
         <Toaster position="top-right" richColors />
       </body>

@@ -1,78 +1,49 @@
-# TASK — Testowanie E2E: formularze, SMS przed wizytą, ankiety
+# TASK — Email channel dla ankiet i formularzy przed wizytą
 
 ## Branch
-`feature/forms-treatment-records`
+`feature/multi-booking`
 
-## Baza danych
-**STAGING** — `https://bxkxvrhspklpkkgmzcge.supabase.co`
-`.env.local` już przełączony na staging.
+## Cel
+Dodać obsługę email (obok SMS) dla CRONów surveys i pre-appointment-forms.
+Motywacja: SMSAPI blokuje linki dla sendera "Test" na staging → email jest jedyną opcją do testów E2E z linkiem.
 
-## Bugi naprawione dziś podczas testów
+## Infrastruktura już gotowa
+- lib/messaging/email-sender.ts → sendTransactionalEmail() — działa, Resend
+- lib/messaging/sms-sender.ts → sendSms() — działa (bez linków na staging)
 
-1. **CRON pre-appointment** — `status = 'scheduled'` akceptowany (był: tylko confirmed/pending)
-2. **CRON pre-appointment** — używa formularza przypisanego do usługi zamiast hardcoded built-in
-3. **CRON pre-appointment** — skipuje jeśli usługa nie ma przypisanego formularza
-4. **`/api/forms/pre/[token]` GET+POST** — ładuje i waliduje custom template z DB (był: zawsze built-in)
-5. **Submissions page** — pokazuje `pre_appointment_responses` obok `client_forms` z badge "Przed wizytą"
-6. **SubmissionViewDialog** — nowy komponent pokazujący odpowiedzi klienta
+## Co zrobić (w kolejności)
 
-## Status testów
+### 1. Typy (Claude bezpośrednio)
+lib/types/settings.ts — dodać channel do:
+  surveys: { enabled: boolean, channel?: 'sms' | 'email' | 'both' }
+  preAppointmentForms: { enabled: boolean, channel?: 'sms' | 'email' | 'both' }
 
-### BLOK A — Formularze dashboard
-- [ ] Tworzenie szablonu przez UI
-- [ ] Podgląd szablonu
-- [ ] "Przypisz do usług" dialog
-- [x] Submissions page wyświetla wpisy
-- [ ] "Zobacz" dialog — zaimplementowany, jeszcze NIE przetestowany
+### 2. UI — selektor kanału (codex-dad)
+app/(dashboard)/[slug]/settings/notifications/page.tsx
+- Przy sekcji "Ankiety" i "Formularz przed wizytą" dodać radio: SMS / Email / Oba
+- Default: sms
 
-### BLOK B — Formularz przed wizytą
-- [x] CRON znajduje wizytę i tworzy token
-- [x] Formularz ładuje custom template (formularz usługi)
-- [x] Submit działa, pojawia się w submissions
-- [ ] Test podwójnego submit
-- [ ] Test wygasłego tokenu
-- [ ] SMS — nie działa na staging (brak kredencjałów SMSAPI)
+### 3. CRON surveys (codex-main)
+app/api/cron/surveys/route.ts
+- Odczytać notifSettings?.surveys?.channel (default sms)
+- email/both: pobrać clients.email, wywołać sendTransactionalEmail z HTML + linkiem
+- sms/both: obecna logika SMS
 
-### BLOK C — Ankiety po wizycie
-- [x] CRON survey — znajdowanie bookingu (features.surveys + notif_settings.surveys.enabled)
-- [x] CRON survey — tworzenie satisfaction_survey + fill_token
-- [x] Submit ankiety (rating/NPS/comment zapisane, fill_token=null po submit)
-- [x] Double-submit protection (fill_token=null → 404)
-- [x] CRON de-duplikacja (UNIQUE booking_id blokuje podwójne wysłanie)
-- [ ] UI ankiety w przeglądarce — świeży token gotowy (patrz niżej)
-- [ ] NPS w /anastazja/reports — wymaga auth w przeglądarce
+### 4. CRON pre-appointment-forms (codex-dad)
+app/api/cron/pre-appointment-forms/route.ts — analogicznie
 
-### URL do testu UI ankiety (ważny do 2026-03-20):
-http://localhost:3000/survey/eyJhbGciOiJIUzI1NiJ9.eyJib29raW5nSWQiOiI0NGEyMWU5NC1lYzYxLTRiOTMtOGQ5YS03MDQ4ZmNiODQ1MTAiLCJzYWxvbklkIjoiZjVkMGY0NzktNTk1OS00Y2Y4LThhM2YtMjRmNjNhOTgxZjliIiwidHlwIjoic3VydmV5IiwiaWF0IjoxNzczODQyNTQ0LCJleHAiOjE3NzQwMTUzNDR9.KHVxBynagYnRXLMJODhIWmqn4QZNnLb9csaHXHVoCmw
+### 5. HTML templates (Claude, ~10 linii)
+Prosty inline HTML: nazwa salonu, imię klienta, przycisk z linkiem.
 
-## Konfiguracja staging (gotowe)
-- Salon ANASTAZJA: `f5d0f479-5959-4cf8-8a3f-24f63a981f9b`
-- features.forms = true
-- preAppointmentForms.enabled = true
-- Usługa "Strzyzenie damskie" (967638b5) ma przypisany formularz (040a619c)
+## Kontekst staging
+- Vercel bypass token: rIsqg8tG3f6uqxH6SSjOrTPfAtn0NPuc
+- Staging CRON secret: 22bd38fe56ea19359d04f2a0ebf9340379ab4c7c3703d2e5e6c3f22ab27115c5
+- Staging Supabase: bxkxvrhspklpkkgmzcge.supabase.co (service role w .env.local)
+- Salon ID: f5d0f479-5959-4cf8-8a3f-24f63a981f9b
+- Klient testowy: 8ba57a15-7070-4958-9104-ef18bbaa78ae (Bartosz Rogala, +48 575 011 093)
 
-## Polecenia PowerShell
-
-```powershell
-# CRON pre-appointment
-Invoke-WebRequest -Uri "http://localhost:3000/api/cron/pre-appointment-forms" -Headers @{"Authorization"="Bearer f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21"} | Select-Object -ExpandProperty Content
-
-# CRON ankiety
-Invoke-WebRequest -Uri "http://localhost:3000/api/cron/surveys" -Headers @{"Authorization"="Bearer f4339491fbb19089839f4ba9ba27232786b85d750b0e0fd3e2ee008ec7bc4b21"} | Select-Object -ExpandProperty Content
-```
-
-## Supabase REST
-- Base: `https://bxkxvrhspklpkkgmzcge.supabase.co/rest/v1/`
-- Key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4a3h2cmhzcGtscGtrZ216Y2dlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzgyNjIzMiwiZXhwIjoyMDg5NDAyMjMyfQ.1ffgncO6lnmdOub_xNAu_aY2W0YGY4Cgaf9FFpY-1gg`
-
-## Jak zacząć BLOK C
-1. Znajdź booking_id na staging dla salonu ANASTAZJA
-2. Ustaw: status=completed, survey_sent=false, booking_date=today, booking_time=2.5h temu
-3. Wywołaj CRON surveys (polecenie wyżej)
-4. Sprawdź token w satisfaction_surveys
-5. Otwórz /survey/[token], wypełnij
-6. Sprawdź NPS w /[slug]/reports
-
-## Znane problemy
-- SMS na staging nie wysyła (brak SMSAPI credentials)
-- pre_appointment_responses.form_template_id to TEXT bez FK (do migracji później)
+## Lekcje z sesji testowej
+- toDateTime w surveys CRON miał bug timezone (UTC vs Warsaw) → JUZ NAPRAWIONE
+- Orphaned satisfaction_surveys rows blokują retry → czyść przez REST API przed re-testem
+- CRON surveys ma debug logging (debug[] w response) — zostaw
+- curl na Windows wymaga -k (schannel SSL)
