@@ -181,9 +181,10 @@ export async function GET(request: NextRequest) {
         //    by the UNIQUE constraint (no duplicate sent), but survey row is orphaned.
         //    Acceptable tradeoff vs sending duplicate SMS.
         const surveyUrl = `${appUrl}/survey/${token}`
-        const smsBody = booking.services?.survey_custom_message
-          ? booking.services.survey_custom_message.replace('{{url}}', surveyUrl)
-          : `Dzi\u0119kujemy za wizyt\u0119! Oce\u0144 nas w 30 sekund: ${surveyUrl}`
+        // TODO: remove TEST override before production — link sending blocked on staging SMSAPI account
+        const smsBody = `TEST: Dziekujemy za wizyte! Ocen nas (link wkrotce): ${booking.id.slice(0, 8)}`
+        void surveyUrl
+        void booking.services?.survey_custom_message
 
         await sendSms({
           salonId: booking.salon_id,
