@@ -46,6 +46,7 @@ type BookingDebugLog = {
   windowMin: string
   windowMax: string
   skipReason: SkipReason
+  error?: string
 }
 
 function toIsoDateString(date: Date): string {
@@ -200,8 +201,8 @@ export async function GET(request: NextRequest) {
 
         sent += 1
         debugLog.push({ ...debugEntryBase, skipReason: 'sent' })
-      } catch {
-        debugLog.push({ ...debugEntryBase, skipReason: 'insert_error' })
+      } catch (e) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'insert_error', error: e instanceof Error ? e.message : String(e) })
         skipped += 1
       }
     }
