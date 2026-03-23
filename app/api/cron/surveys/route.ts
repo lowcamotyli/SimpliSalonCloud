@@ -28,13 +28,36 @@ type BookingCandidate = {
   } | null
 }
 
+type SkipReason =
+  | 'timing'
+  | 'no_feature_surveys'
+  | 'notif_disabled'
+  | 'service_survey_disabled'
+  | 'no_phone'
+  | 'insert_error'
+  | 'sent'
+
+type BookingDebugLog = {
+  id: string
+  date: string
+  time: string
+  duration: number
+  endsAt: string
+  windowMin: string
+  windowMax: string
+  skipReason: SkipReason
+}
+
 function toIsoDateString(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
 function toDateTime(bookingDate: string, bookingTime: string): Date {
   const safeTime = bookingTime.length === 5 ? `${bookingTime}:00` : bookingTime
-  return new Date(`${bookingDate}T${safeTime}`)
+  const asIfUtc = new Date(`${bookingDate}T${safeTime}Z`)
+  const utcInWarsaw = new Date(asIfUtc.toLocaleString("en-US", { timeZone: "Europe/Warsaw" }))
+  const offsetMs = asIfUtc.getTime() - utcInWarsaw.getTime()
+  return new Date(asIfUtc.getTime() + offsetMs)
 }
 
 export async function GET(request: NextRequest) {
@@ -51,6 +74,7 @@ export async function GET(request: NextRequest) {
 
   let sent = 0
   let skipped = 0
+  const debugLog: BookingDebugLog[] = []
 
   try {
     const { data, error } = await admin
@@ -68,6 +92,8 @@ export async function GET(request: NextRequest) {
     }
 
     const bookings = (data || []) as BookingCandidate[]
+    const windowMinIso = new Date(minEndMs).toISOString()
+    const windowMaxIso = new Date(maxEndMs).toISOString()
 
     // Batch-fetch notification settings per salon
     const uniqueSalonIds = [...new Set(bookings.map(b => b.salon_id))]
@@ -81,31 +107,46 @@ export async function GET(request: NextRequest) {
 
     for (const booking of bookings) {
       const endsAtMs = toDateTime(booking.booking_date, booking.booking_time).getTime() + booking.duration * 60_000
+      const endsAtIso = Number.isNaN(endsAtMs) ? 'Invalid Date' : new Date(endsAtMs).toISOString()
+      const debugEntryBase = {
+        id: booking.id,
+        date: booking.booking_date,
+        time: booking.booking_time,
+        duration: booking.duration,
+        endsAt: endsAtIso,
+        windowMin: windowMinIso,
+        windowMax: windowMaxIso,
+      }
 
       if (Number.isNaN(endsAtMs) || endsAtMs < minEndMs || endsAtMs > maxEndMs) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'timing' })
         skipped += 1
         continue
       }
 
       if (!hasFeature(booking.salons?.features || null, 'surveys')) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'no_feature_surveys' })
         skipped += 1
         continue
       }
 
       const notifSettings = notifSettingsMap.get(booking.salon_id)
       if (!notifSettings?.surveys?.enabled) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'notif_disabled' })
         skipped += 1
         continue
       }
 
       // Skip if the specific service has surveys disabled
       if (booking.services?.survey_enabled === false) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'service_survey_disabled' })
         skipped += 1
         continue
       }
 
       const client = booking.clients
       if (!client?.phone) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'no_phone' })
         skipped += 1
         continue
       }
@@ -129,6 +170,7 @@ export async function GET(request: NextRequest) {
         })
 
         if (insertError) {
+          debugLog.push({ ...debugEntryBase, skipReason: 'insert_error' })
           skipped += 1
           continue
         }
@@ -157,12 +199,14 @@ export async function GET(request: NextRequest) {
           .eq('salon_id', booking.salon_id)
 
         sent += 1
+        debugLog.push({ ...debugEntryBase, skipReason: 'sent' })
       } catch {
+        debugLog.push({ ...debugEntryBase, skipReason: 'insert_error' })
         skipped += 1
       }
     }
 
-    return NextResponse.json({ ok: true, sent, skipped })
+    return NextResponse.json({ ok: true, sent, skipped, debug: debugLog })
   } catch (error) {
     return NextResponse.json(
       {
