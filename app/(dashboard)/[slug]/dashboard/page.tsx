@@ -211,7 +211,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
   ]
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0 animate-luxe-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">

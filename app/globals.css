@@ -146,14 +146,32 @@
     transform: translateX(-120%);
     opacity: 0;
   }
-
   20% {
-    opacity: 0.6;
+    opacity: 0.3;
   }
-
   100% {
     transform: translateX(220%);
     opacity: 0;
+  }
+}
+
+@keyframes luxe-fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes luxe-bg-drift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
 
@@ -193,19 +211,18 @@
     box-shadow: 0 24px 45px rgba(194, 174, 140, 0.18);
   }
 
-  .luxe-sheen {
-    position: relative;
-    overflow: hidden;
+  .animate-luxe-fade-in-up {
+    animation: luxe-fade-in-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .luxe-sheen::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    width: 40%;
-    background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
-    animation: luxe-sheen 4.6s ease-in-out infinite;
-    pointer-events: none;
+  .hover-luxe-soft-glow:hover {
+    box-shadow: 0 0 30px rgba(214, 176, 122, 0.08), 0 20px 40px rgba(194, 174, 140, 0.12);
+    transform: translateY(-2px) scale(1.005);
+  }
+
+  .luxe-bg-animated {
+    background-size: 200% 200% !important;
+    animation: luxe-bg-drift 40s ease infinite;
   }
 }
 
@@ -217,14 +234,18 @@ html[data-theme-key='auto_service'] {
 html[data-theme-key='auto_service'] body {
   font-family: var(--font-preview-ui), var(--font-inter), sans-serif !important;
   background:
-    radial-gradient(circle at top left, rgba(214, 176, 122, 0.10), transparent 28%),
-    linear-gradient(180deg, #fffdf9 0%, #f7f0e5 100%);
+    radial-gradient(circle at top left, rgba(214, 176, 122, 0.15), transparent 35%),
+    linear-gradient(135deg, #fffdf9 0%, #f7f0e5 50%, #fffdf9 100%);
+  animation: luxe-bg-drift 60s ease-in-out infinite;
+  background-size: 200% 200%;
 }
 
 html[data-theme-key='auto_service'] .theme-dashboard-shell {
   background:
-    radial-gradient(circle at top left, rgba(214, 176, 122, 0.08), transparent 22%),
-    linear-gradient(180deg, #fffdf9 0%, #f7f0e5 100%);
+    radial-gradient(circle at top left, rgba(214, 176, 122, 0.12), transparent 30%),
+    linear-gradient(135deg, #fffdf9 0%, #f7f0e5 50%, #fffdf9 100%);
+  animation: luxe-bg-drift 60s ease-in-out infinite;
+  background-size: 200% 200%;
 }
 
 html[data-theme-key='auto_service'] .theme-dashboard-main {
@@ -437,16 +458,18 @@ html[data-theme-key='auto_service'] .theme-header-subtitle {
 html[data-theme-key='auto_service'] .theme-header-subtitle {
   font-weight: 500 !important;
   letter-spacing: -0.01em !important;
-  color: #000 !important;
+  color: #1a1a1a !important;
   font-size: 1.15em !important;
+  line-height: 1.4 !important;
   opacity: 1 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-service-name {
   font-family: var(--font-preview-display), serif !important;
   font-weight: 700 !important;
-  color: #000 !important;
+  color: #1a1a1a !important;
   font-size: 1.15em !important;
+  line-height: 1.4 !important;
   opacity: 1 !important;
 }
 
@@ -466,19 +489,21 @@ html[data-theme-key='auto_service'] .theme-chart-card .text-gray-900 {
 }
 
 html[data-theme-key='auto_service'] .theme-booking-card-title {
-  color: #2a1f14 !important;
+  color: #1a1a1a !important;
   font-family: var(--font-preview-display), serif !important;
-  font-size: 11.5px !important;
-  font-weight: 700 !important;
-  line-height: 1.1 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em !important;
 }
 
 html[data-theme-key='auto_service'] .theme-booking-card-service {
   font-family: var(--font-preview-display), serif !important;
-  font-size: 9.5px !important;
-  color: #4a3c2e !important;
-  line-height: 1 !important;
+  font-size: 13px !important;
+  color: #1a1a1a !important;
+  line-height: 1.3 !important;
   font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-value {
@@ -494,7 +519,7 @@ html[data-theme-key='auto_service'] .theme-calendar-week-day-label,
 html[data-theme-key='auto_service'] .theme-calendar-month-label,
 html[data-theme-key='auto_service'] .theme-calendar-time-slot,
 html[data-theme-key='auto_service'] .theme-calendar-time-head p {
-  color: #9a896f !important;
+  color: #867459 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-icon {

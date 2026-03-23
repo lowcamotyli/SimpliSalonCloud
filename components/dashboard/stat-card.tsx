@@ -31,8 +31,8 @@ export function StatCard({
     href
 }: StatCardProps) {
     const cardContent = (
-        <Card className="stat-card overflow-hidden group border-none bg-white/50 backdrop-blur-sm h-full">
-            <div className={`absolute inset-0 bg-gradient-to-br ${lightColor} opacity-0 group-hover:opacity-100 transition-opacity duration-500 theme-stat-card-glow`} />
+        <Card className="stat-card overflow-hidden group border-none bg-white/50 backdrop-blur-sm h-full hover-luxe-soft-glow transition-all duration-500">
+            <div className={`absolute inset-0 bg-gradient-to-br ${lightColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 theme-stat-card-glow`} />
             <CardHeader className="relative pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="theme-stat-card-title text-base font-medium text-gray-600">{title}</CardTitle>
