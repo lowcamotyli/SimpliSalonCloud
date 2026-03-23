@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createEmployeeSchema } from '@/lib/validators/employee.validators'
 import { z } from 'zod'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { getAppUrl } from '@/lib/config/app-url'
 
 // GET /api/employees - List all employees
 export async function GET(request: NextRequest) {
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
             salon_id: (profile as any).salon_id,
             role: 'employee',
           },
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite`,
+          redirectTo: `${getAppUrl()}/invite`,
         }
       )
 

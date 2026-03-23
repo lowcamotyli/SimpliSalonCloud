@@ -4,6 +4,7 @@ import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { hasFeature } from '@/lib/features'
 import { generateFormToken } from '@/lib/forms/token'
 import { sendSms } from '@/lib/messaging/sms-sender'
+import { getAppUrl } from '@/lib/config/app-url'
 
 type BookingCandidate = {
   id: string
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (authError) return authError
 
   const admin = createAdminSupabaseClient()
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = getAppUrl()
   let sent = 0
   let skipped = 0
 

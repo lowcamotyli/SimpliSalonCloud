@@ -1,6 +1,7 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
 import { createPrzelewy24Client, Przelewy24Client } from './przelewy24-client'
+import { getAppUrl } from '@/lib/config/app-url'
 
 /**
  * Subscription Manager
@@ -183,7 +184,7 @@ export class SubscriptionManager {
         description: `SimpliSalon - ${plan.name} (${billingInterval === 'monthly' ? 'miesięcznie' : 'rocznie'})`,
         email: salon.billing_email || salon.owner_email,
         client: salon.name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/${salon.slug}/billing/success?session=${sessionId}`,
+        returnUrl: `${getAppUrl()}/${salon.slug}/billing/success?session=${sessionId}`,
       })
 
       // Zapisz transaction ID
@@ -278,7 +279,7 @@ export class SubscriptionManager {
         description: `SimpliSalon - Upgrade do ${newPlan.name} (dopłata proporcjonalna)`,
         email: salon.billing_email || salon.owner_email,
         client: salon.name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/${salon.slug}/billing/success?session=${sessionId}`,
+        returnUrl: `${getAppUrl()}/${salon.slug}/billing/success?session=${sessionId}`,
       })
 
       const { error: pendingUpdateError } = await this.supabase

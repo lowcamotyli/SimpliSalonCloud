@@ -6,6 +6,7 @@ import { checkFeatureAccess } from '@/lib/middleware/feature-gate'
 import { checkProtectedApiRateLimit } from '@/lib/middleware/rate-limit'
 import { sendEmailMessage } from '@/lib/messaging/email-sender'
 import { sendSmsMessage } from '@/lib/messaging/sms-sender'
+import { getAppUrl } from '@/lib/config/app-url'
 
 const quickSendSchema = z.object({
   salonId: z.string().uuid(),
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
     }
 
     const firstName = client.full_name.split(' ')[0] || ''
-    const unsubscribeLink = `${request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?c=${client.id}&s=${payload.salonId}`
+    const unsubscribeLink = `${request.headers.get('origin') || getAppUrl()}/unsubscribe?c=${client.id}&s=${payload.salonId}`
 
     const finalSubjectParsed = finalSubject
       ? finalSubject

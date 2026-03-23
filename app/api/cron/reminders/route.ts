@@ -5,6 +5,7 @@ import { hasFeature } from '@/lib/features'
 import { renderTemplate } from '@/lib/messaging/template-renderer'
 import { sendSms } from '@/lib/messaging/sms-sender'
 import { generateBookingConfirmToken } from '@/lib/messaging/booking-confirm-token'
+import { getAppUrl } from '@/lib/config/app-url'
 
 type ReminderRule = {
   id: string
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
             bookingId: booking.id,
             salonId: booking.salon_id,
           })
-          const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          const appUrl = getAppUrl()
           confirmUrl = `${appUrl}/api/bookings/confirm/${token}?action=confirm`
         }
 

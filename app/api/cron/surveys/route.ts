@@ -4,6 +4,7 @@ import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { hasFeature } from '@/lib/features'
 import { generateSurveyToken } from '@/lib/messaging/survey-token'
 import { sendSms } from '@/lib/messaging/sms-sender'
+import { getAppUrl } from '@/lib/config/app-url'
 
 type BookingCandidate = {
   id: string
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
   const minEndMs = nowMs - 2.5 * 60 * 60 * 1000
   const maxEndMs = nowMs - 2 * 60 * 60 * 1000
   const yesterday = new Date(nowMs - 24 * 60 * 60 * 1000)
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = getAppUrl()
 
   let sent = 0
   let skipped = 0
