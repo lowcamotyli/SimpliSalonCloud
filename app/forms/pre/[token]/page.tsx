@@ -29,10 +29,17 @@ export default function PreAppointmentFormPage(): JSX.Element {
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const bypassSuffix =
+    typeof window !== "undefined"
+      ? (() => {
+          const bypass = new URLSearchParams(window.location.search).get("x-vercel-protection-bypass")
+          return bypass ? `?x-vercel-protection-bypass=${encodeURIComponent(bypass)}` : ""
+        })()
+      : ""
 
   const fetchData = useCallback(async (): Promise<void> => {
     try {
-      const res = await fetch(`/api/forms/pre/${token}`)
+      const res = await fetch(`/api/forms/pre/${token}${bypassSuffix}`)
       
       if (res.status === 410) {
         setStatus('expired')
@@ -64,7 +71,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
       setError("Nie udało się połączyć z serwerem.")
       setStatus('error')
     }
-  }, [token])
+  }, [token, bypassSuffix])
 
   useEffect(() => {
     fetchData()
@@ -110,7 +117,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
     setStatus('submitting')
     try {
-      const res = await fetch(`/api/forms/pre/${token}`, {
+      const res = await fetch(`/api/forms/pre/${token}${bypassSuffix}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers })

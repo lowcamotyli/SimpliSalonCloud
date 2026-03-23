@@ -10,9 +10,10 @@ export async function GET(
 ) {
   try {
     const { token } = await params
+    let tokenPayload: { bookingId?: string; salonId: string; clientId: string; formTemplateId: string }
 
     try {
-      await verifyFormToken(token)
+      tokenPayload = await verifyFormToken(token)
     } catch {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
@@ -28,6 +29,25 @@ export async function GET(
 
     if (rowError) {
       return NextResponse.json({ error: rowError.message }, { status: 500 })
+    }
+
+    if (!responseRow && tokenPayload.bookingId) {
+      const { data: submittedRow, error: submittedRowError } = await adminClient
+        .from('pre_appointment_responses')
+        .select('booking_id, client_id, salon_id, form_template_id, fill_token_exp, submitted_at')
+        .eq('booking_id', tokenPayload.bookingId)
+        .eq('salon_id', tokenPayload.salonId)
+        .eq('client_id', tokenPayload.clientId)
+        .limit(1)
+        .maybeSingle()
+
+      if (submittedRowError) {
+        return NextResponse.json({ error: submittedRowError.message }, { status: 500 })
+      }
+
+      if (submittedRow?.submitted_at) {
+        return NextResponse.json({ alreadySubmitted: true })
+      }
     }
 
     if (!responseRow) {
@@ -109,9 +129,10 @@ export async function POST(
 ) {
   try {
     const { token } = await params
+    let tokenPayload: { bookingId?: string; salonId: string; clientId: string; formTemplateId: string }
 
     try {
-      await verifyFormToken(token)
+      tokenPayload = await verifyFormToken(token)
     } catch {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
@@ -127,6 +148,28 @@ export async function POST(
 
     if (rowError) {
       return NextResponse.json({ error: rowError.message }, { status: 500 })
+    }
+
+    if (!responseRow && tokenPayload.bookingId) {
+      const { data: submittedRow, error: submittedRowError } = await adminClient
+        .from('pre_appointment_responses')
+        .select('id, form_template_id, fill_token_exp, submitted_at')
+        .eq('booking_id', tokenPayload.bookingId)
+        .eq('salon_id', tokenPayload.salonId)
+        .eq('client_id', tokenPayload.clientId)
+        .limit(1)
+        .maybeSingle()
+
+      if (submittedRowError) {
+        return NextResponse.json({ error: submittedRowError.message }, { status: 500 })
+      }
+
+      if (submittedRow?.submitted_at) {
+        return NextResponse.json(
+          { error: 'Formularz juz zostal wypelniony' },
+          { status: 409 }
+        )
+      }
     }
 
     if (!responseRow) {
