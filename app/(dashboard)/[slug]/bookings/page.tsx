@@ -24,7 +24,7 @@ import {
 import { BookingDialog } from '@/app/(dashboard)/[slug]/calendar/booking-dialog'
 import { formatPrice, formatDateTime } from '@/lib/formatters'
 import { cn } from '@/lib/utils/cn'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import Image from 'next/image'
 
 const STATUS_TABS = [
@@ -110,7 +110,7 @@ export default function BookingsPage() {
     pending: 'bg-amber-50 text-amber-700 border-amber-200',
   }
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -120,14 +120,14 @@ export default function BookingsPage() {
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 10, opacity: 0 },
     visible: { 
       y: 0, 
       opacity: 1,
       transition: {
         duration: 0.5,
-        ease: "easeOut"
+        ease: [0.22, 1, 0.36, 1]
       }
     }
   }

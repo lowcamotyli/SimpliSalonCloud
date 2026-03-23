@@ -27,19 +27,20 @@ export async function PATCH(
       .from('visit_groups')
       .select('*')
       .eq('id', id)
+      .eq('salon_id', authSalonId)
       .single()
 
     if (visitGroupError || !existingVisitGroup) {
       return NextResponse.json({ error: 'Visit group not found' }, { status: 404 })
     }
 
-    if (existingVisitGroup.salon_id !== authSalonId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const shouldRegisterNoShow =
+      body.status === 'no_show' &&
+      existingVisitGroup.status !== 'no_show' &&
+      !!existingVisitGroup.client_id
 
-    const groupStatus = body.status === 'completed' ? 'completed' : 'cancelled'
-    const visitGroupUpdate: { status: 'completed' | 'cancelled'; payment_method?: string } = {
-      status: groupStatus,
+    const visitGroupUpdate: { status: GroupStatus; payment_method?: string } = {
+      status: body.status,
     }
 
     if (body.paymentMethod !== undefined) {
@@ -67,6 +68,27 @@ export async function PATCH(
 
     if (updateBookingsError) {
       return NextResponse.json({ error: 'Failed to update bookings' }, { status: 500 })
+    }
+
+    if (shouldRegisterNoShow && existingVisitGroup.client_id) {
+      const { error: violationError } = await (supabase as any).from('client_violations').insert({
+        client_id: existingVisitGroup.client_id,
+        booking_id: null,
+        violation_type: 'no_show',
+        occurred_at: new Date().toISOString(),
+      })
+
+      if (violationError) {
+        return NextResponse.json({ error: 'Failed to register no-show violation' }, { status: 500 })
+      }
+
+      const { error: noShowError } = await (supabase as any).rpc('increment_client_no_show', {
+        p_client_id: existingVisitGroup.client_id,
+      })
+
+      if (noShowError) {
+        return NextResponse.json({ error: 'Failed to update client no-show count' }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ visitGroup, bookings: bookings ?? [] })
