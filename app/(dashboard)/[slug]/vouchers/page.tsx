@@ -228,7 +228,7 @@ export default function VouchersSettingsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vouchery</h1>
-          <p className="text-sm text-muted-foreground">Zarzadzanie voucherami salonu.</p>
+          <p className="text-sm text-muted-foreground theme-header-subtitle">Zarzadzanie voucherami salonu.</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>Wystaw voucher</Button>
       </div>

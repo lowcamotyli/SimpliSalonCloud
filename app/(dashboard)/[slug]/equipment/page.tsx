@@ -346,7 +346,7 @@ export default function EquipmentPage() {
               onClick={() => handleOpenServicesDialog(item)}
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-xl font-semibold truncate pr-2">
+                <CardTitle className="text-xl font-semibold truncate pr-2 theme-service-name">
                   {item.name}
                 </CardTitle>
                 <Badge variant={item.is_active ? 'default' : 'secondary'}>

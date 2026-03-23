@@ -130,7 +130,7 @@ export default function BookingsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Rezerwacje</h1>
-          <p className="mt-2 text-lg text-muted-foreground font-medium">Zarządzaj wizytami w swoim salonie</p>
+          <p className="mt-2 text-lg text-muted-foreground font-medium theme-header-subtitle">Zarządzaj wizytami w swoim salonie</p>
         </div>
         <Button
           size="lg"
@@ -262,7 +262,7 @@ export default function BookingsPage() {
                     {/* Service Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-gray-700">
+                        <span className="text-sm font-bold text-gray-700 theme-service-name">
                           {booking.service?.name || 'Usunięta usługa'}
                         </span>
                         <span className="text-xs font-semibold text-gray-400 flex items-center gap-1">

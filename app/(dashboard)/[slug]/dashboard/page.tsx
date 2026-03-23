@@ -7,6 +7,7 @@ import RevenueChart from '@/components/dashboard/revenue-chart'
 import { format, subDays, startOfDay, endOfDay } from 'date-fns'
 
 import { EmptyState } from '@/components/ui/empty-state'
+import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 
 export default async function DashboardPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -217,7 +218,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-lg font-medium">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
+          <p className="text-muted-foreground text-lg font-medium theme-header-subtitle">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${slug}/bookings`}>
@@ -318,14 +319,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
                     </div>
                     <div>
                       <p className="theme-upcoming-name font-bold text-foreground group-hover:text-purple-600 transition-colors">{booking.clients?.full_name}</p>
-                      <p className="text-base text-muted-foreground">{booking.services?.name}</p>
+                      <p className="text-base text-muted-foreground theme-service-name">{booking.services?.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-foreground">{booking.booking_time?.slice(0, 5)}</p>
                     <span className={`theme-upcoming-status text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                       }`}>
-                      {booking.status}
+                      {BOOKING_STATUS_LABELS[booking.status] || booking.status}
                     </span>
                   </div>
                 </div>

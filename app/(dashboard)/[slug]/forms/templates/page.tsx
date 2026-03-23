@@ -15,6 +15,7 @@ import {
   Upload,
   Library,
   Eye,
+  Search,
 } from 'lucide-react';
 import { FormPreviewDialog } from '@/components/forms/form-preview-dialog';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -72,10 +74,31 @@ export default function FormTemplatesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [builtinSearch, setBuiltinSearch] = useState('');
   const [editingTemplate, setEditingTemplate] = useState<Partial<FormTemplate> | null>(null);
   const [assigningTemplate, setAssigningTemplate] = useState<FormTemplate | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<FormTemplate | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
+
+  const normalizeText = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+  const filteredBuiltinTemplates = BUILTIN_TEMPLATES.filter((template) => {
+    const query = normalizeText(builtinSearch.trim());
+
+    if (!query) {
+      return true;
+    }
+
+    const searchableText = normalizeText(
+      `${template.name} ${template.description ?? ''} ${template.fields.map((field) => field.label).join(' ')}`
+    );
+
+    return searchableText.includes(query);
+  });
 
   useEffect(() => {
     fetchTemplates();
@@ -364,65 +387,110 @@ export default function FormTemplatesPage() {
         onOpenChange={(open) => { if (!open) setAssigningTemplate(null) }}
       />
 
-      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
+      <Dialog
+        open={isImportDialogOpen}
+        onOpenChange={(open) => {
+          setIsImportDialogOpen(open);
+          if (!open) {
+            setBuiltinSearch('');
+          }
+        }}
+      >
+        <DialogContent className="flex max-h-[85vh] max-w-4xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b px-6 py-5">
             <DialogTitle>Importuj szablon formularza</DialogTitle>
             <DialogDescription>
               Możesz przesłać własny plik JSON lub skorzystać z gotowych szablonów.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Prześlij plik JSON</h3>
-              <input
-                ref={importFileRef}
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={handleImportFile}
-              />
-              <div
-                className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center transition-colors hover:border-primary"
-                onClick={() => importFileRef.current?.click()}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    importFileRef.current?.click();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <Upload className="mb-2 h-6 w-6 text-muted-foreground" />
-                <p className="text-sm font-medium">Kliknij, aby wybrać plik .json</p>
-                <p className="text-xs text-muted-foreground">Zaimportujemy pojedynczy szablon formularza</p>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Prześlij plik JSON</h3>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportFile}
+                />
+                <div
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center transition-colors hover:border-primary"
+                  onClick={() => importFileRef.current?.click()}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      importFileRef.current?.click();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <Upload className="mb-2 h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm font-medium">Kliknij, aby wybrać plik .json</p>
+                  <p className="text-xs text-muted-foreground">Zaimportujemy pojedynczy szablon formularza</p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Library className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium">Lub wybierz z biblioteki</h3>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {BUILTIN_TEMPLATES.map((template) => (
-                  <Card key={template.name} className="flex flex-col">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">{template.name}</CardTitle>
-                      <CardDescription className="line-clamp-2">{template.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <Badge variant="secondary">Pola: {template.fields.length}</Badge>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full" variant="outline" onClick={() => handleImportBuiltin(template)}>
-                        Dodaj
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Library className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium">Lub wybierz z biblioteki</h3>
+                </div>
+                <div className="rounded-xl border bg-muted/20">
+                  <div className="border-b px-4 py-4">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={builtinSearch}
+                        onChange={(event) => setBuiltinSearch(event.target.value)}
+                        placeholder="Szukaj po nazwie, opisie lub polach formularza"
+                        className="pl-9"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {filteredBuiltinTemplates.length} z {BUILTIN_TEMPLATES.length} szablonów
+                    </p>
+                  </div>
+                  <ScrollArea className="h-[420px]">
+                    <div className="divide-y">
+                      {filteredBuiltinTemplates.map((template) => (
+                        <div
+                          key={template.name}
+                          className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between"
+                        >
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm font-semibold leading-6">{template.name}</h4>
+                              <Badge variant="secondary">Pola: {template.fields.length}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {template.description || 'Brak opisu'}
+                            </p>
+                          </div>
+                          <Button
+                            className="w-full shrink-0 sm:w-auto"
+                            variant="outline"
+                            onClick={() => handleImportBuiltin(template)}
+                          >
+                            Dodaj
+                          </Button>
+                        </div>
+                      ))}
+
+                      {filteredBuiltinTemplates.length === 0 && (
+                        <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                          <Library className="mb-3 h-8 w-8 text-muted-foreground/40" />
+                          <p className="text-sm font-medium">Nie znaleziono pasujących szablonów</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Spróbuj innej frazy albo wyczyść wyszukiwanie.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
               </div>
             </div>
           </div>
@@ -561,7 +629,7 @@ export default function FormTemplatesPage() {
                   {(!editingTemplate?.fields || editingTemplate.fields.length === 0) && (
                     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center text-muted-foreground">
                       <Settings2 className="mb-2 h-8 w-8 opacity-20" />
-                      <p className="text-sm">Brak zdefiniowanych pól. Kliknij "Dodaj pole", aby rozpocząć.</p>
+                      <p className="text-sm">Brak zdefiniowanych pól. Kliknij &quot;Dodaj pole&quot;, aby rozpocząć.</p>
                     </div>
                   )}
                 </div>

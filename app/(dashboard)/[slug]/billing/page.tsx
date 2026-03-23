@@ -200,7 +200,7 @@ export default function BillingPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
             Subskrypcja i Płatności
           </h1>
-          <p className="text-muted-foreground text-base max-w-xl">
+          <p className="text-muted-foreground text-base max-w-xl theme-header-subtitle">
             Zarządzaj swoim planem, limitami wykorzystania oraz historią płatności
           </p>
         </div>

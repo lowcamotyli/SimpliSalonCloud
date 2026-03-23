@@ -422,7 +422,7 @@ export default function ClientsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Klienci
           </h1>
-          <p className="text-muted-foreground text-base font-medium">Buduj trwałe relacje ze swoimi klientami</p>
+          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${slug}/clients/templates`}>

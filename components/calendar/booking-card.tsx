@@ -114,13 +114,13 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
             {isGroup ? (
               <div className="flex flex-col gap-0.5">
                 {groupBookings!.map((b) => (
-                  <p key={b.id} className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+                  <p key={b.id} className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight theme-service-name`}>
                     {b.service.name}
                   </p>
                 ))}
               </div>
             ) : (
-              <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight`}>
+              <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight theme-service-name`}>
                 {booking.service.name}
               </p>
             )}

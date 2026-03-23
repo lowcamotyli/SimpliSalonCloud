@@ -427,11 +427,29 @@ html[data-theme-key='auto_service'] .theme-navbar-title h1,
 html[data-theme-key='auto_service'] .theme-section-title,
 html[data-theme-key='auto_service'] .theme-chart-title,
 html[data-theme-key='auto_service'] .theme-card h1,
-html[data-theme-key='auto_service'] .theme-card h2 {
+html[data-theme-key='auto_service'] .theme-card h2,
+html[data-theme-key='auto_service'] .theme-header-subtitle {
   font-family: var(--font-preview-display), serif !important;
   font-weight: 600;
   letter-spacing: -0.03em;
 }
+
+html[data-theme-key='auto_service'] .theme-header-subtitle {
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  color: #000 !important;
+  font-size: 1.15em !important;
+  opacity: 1 !important;
+}
+
+html[data-theme-key='auto_service'] .theme-service-name {
+  font-family: var(--font-preview-display), serif !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+  font-size: 1.15em !important;
+  opacity: 1 !important;
+}
+
 
 html[data-theme-key='auto_service'] .theme-chart-card,
 html[data-theme-key='auto_service'] .theme-quick-actions,
@@ -443,9 +461,24 @@ html[data-theme-key='auto_service'] .theme-calendar-shell {
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-title,
-html[data-theme-key='auto_service'] .theme-chart-card .text-gray-900,
-html[data-theme-key='auto_service'] .theme-booking-card-title {
+html[data-theme-key='auto_service'] .theme-chart-card .text-gray-900 {
   color: #5c4a39 !important;
+}
+
+html[data-theme-key='auto_service'] .theme-booking-card-title {
+  color: #2a1f14 !important;
+  font-family: var(--font-preview-display), serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+html[data-theme-key='auto_service'] .theme-booking-card-service {
+  font-family: var(--font-preview-display), serif !important;
+  font-size: 9.5px !important;
+  color: #4a3c2e !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-value {

@@ -176,7 +176,7 @@ export default function ReportsPage(): JSX.Element {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Raporty i analityka</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Zarządzaj wynikami i zadowoleniem klientów w jednym miejscu.</p>
+          <p className="text-muted-foreground mt-1 text-sm theme-header-subtitle">Zarządzaj wynikami i zadowoleniem klientów w jednym miejscu.</p>
         </div>
         <div className="flex items-center gap-2 p-1 glass rounded-xl">
           {[7, 30, 90].map((d) => (
@@ -347,7 +347,7 @@ export default function ReportsPage(): JSX.Element {
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold truncate text-foreground">{service.service_name}</p>
+                          <p className="font-bold truncate text-foreground theme-service-name">{service.service_name}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{service.booking_count} wizyt</span>
                             {service.avg_rating && (

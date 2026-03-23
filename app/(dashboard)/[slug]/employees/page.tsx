@@ -265,7 +265,7 @@ export default function EmployeesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Pracownicy
           </h1>
-          <p className="text-muted-foreground text-base font-medium">Zarządzaj zespołem swojego salonu</p>
+          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Zarządzaj zespołem swojego salonu</p>
         </div>
         <Button
           size="lg"

@@ -69,7 +69,11 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
         checked={isChecked}
         onChange={handleChange}
         className={cn(
-          "h-4 w-4 border border-primary text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "relative h-4 w-4 cursor-pointer appearance-none rounded-full border border-primary bg-background ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary",
+          // The "dot" effect using a thick border on checked state
+          "checked:border-[4px] checked:border-background",
+          // Add a subtle shadow when checked to make it pop
+          "checked:shadow-[0_0_0_1px_hsl(var(--primary))]",
           className
         )}
         {...props}
