@@ -29,6 +29,8 @@ export interface CartItemProps {
   addons: CartAddon[]
   selectedAddonIds: string[]
   startTime: string
+  warnings?: string[]
+  isCheckingAvailability?: boolean
   onRemove: () => void
   onChange: (
     updates: Partial<{
@@ -52,6 +54,8 @@ export function BookingCartItem({
   addons,
   selectedAddonIds,
   startTime,
+  warnings = [],
+  isCheckingAvailability = false,
   onRemove,
 }: CartItemProps) {
   const selectedAddons = addons.filter((addon) => selectedAddonIds.includes(addon.id))
@@ -108,6 +112,19 @@ export function BookingCartItem({
             <p className="text-sm text-muted-foreground">Brak wybranych dodatkow</p>
           )}
         </div>
+
+        {isCheckingAvailability || warnings.length > 0 ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            {isCheckingAvailability ? (
+              <p className="text-sm text-amber-800">Sprawdzam dostepnosc terminu i sprzetu...</p>
+            ) : null}
+            {warnings.map((warning) => (
+              <p key={warning} className="text-sm text-amber-900">
+                {warning}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         <div className="flex items-center justify-between border-t pt-3">
           <div className="text-sm text-muted-foreground">

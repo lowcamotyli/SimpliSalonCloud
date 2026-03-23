@@ -243,7 +243,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (bookingError) {
     if (bookingError.code === '23P01') {
-      throw new ConflictError('Termin jest już zajęty')
+      throw new ConflictError('Wybrany termin jest juz zajety. Wybierz inna godzine lub pracownika.')
     }
     logger.error('Failed to create booking', bookingError, {
       code: bookingError.code,

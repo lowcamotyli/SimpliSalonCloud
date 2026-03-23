@@ -61,6 +61,10 @@ type CartItemState = {
   selectedAddonIds: string[]
 }
 
+type DraftValidationResult = {
+  warnings: string[]
+}
+
 const getInitialCartItem = (
   prefilledSlot?: { date: string; time: string; employeeId?: string } | null
 ): CartItemState => ({
@@ -120,6 +124,8 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [newClientPhone, setNewClientPhone] = useState('')
   const [cartItems, setCartItems] = useState<CartItemState[]>([getInitialCartItem(prefilledSlot)])
   const [categoryFilters, setCategoryFilters] = useState<Map<number, string>>(new Map())
+  const [remoteValidationResults, setRemoteValidationResults] = useState<DraftValidationResult[]>([])
+  const [isCheckingDraftAvailability, setIsCheckingDraftAvailability] = useState(false)
 
   const employees = (employeesData ?? []) as EmployeeOption[]
   const categories = useMemo(
@@ -147,6 +153,8 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     setNewClientPhone('')
     setCartItems([getInitialCartItem(prefilledSlot)])
     setCategoryFilters(new Map())
+    setRemoteValidationResults([])
+    setIsCheckingDraftAvailability(false)
   }, [isOpen, prefilledSlot])
 
   const handleItemChange = (
@@ -249,6 +257,112 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     return sum + (service?.price ?? 0)
   }, 0)
 
+  const localValidationResults = useMemo<DraftValidationResult[]>(() => {
+    const results = cartItems.map(() => ({ warnings: [] as string[] }))
+
+    const timeToMinutes = (value: string) => {
+      const [hours, minutes] = value.split(':').map(Number)
+      return hours * 60 + (minutes || 0)
+    }
+
+    for (let i = 0; i < cartItems.length; i++) {
+      for (let j = i + 1; j < cartItems.length; j++) {
+        const first = cartItems[i]
+        const second = cartItems[j]
+
+        if (!first.serviceId || !second.serviceId || !first.employeeId || !second.employeeId) continue
+        if (!first.bookingDate || !second.bookingDate || !first.bookingTime || !second.bookingTime) continue
+        if (first.employeeId !== second.employeeId || first.bookingDate !== second.bookingDate) continue
+
+        const firstService = services.find((entry) => entry.id === first.serviceId)
+        const secondService = services.find((entry) => entry.id === second.serviceId)
+        const firstStart = timeToMinutes(first.bookingTime)
+        const firstEnd = firstStart + (firstService?.duration ?? 0)
+        const secondStart = timeToMinutes(second.bookingTime)
+        const secondEnd = secondStart + (secondService?.duration ?? 0)
+
+        if (firstStart < secondEnd && secondStart < firstEnd) {
+          results[i].warnings.push(`Naklada sie z pozycja ${j + 1} u tego samego pracownika.`)
+          results[j].warnings.push(`Naklada sie z pozycja ${i + 1} u tego samego pracownika.`)
+        }
+      }
+    }
+
+    return results
+  }, [cartItems, services])
+
+  useEffect(() => {
+    if (!isOpen || step !== 'cart') {
+      setRemoteValidationResults([])
+      setIsCheckingDraftAvailability(false)
+      return
+    }
+
+    const hasCompleteItem = cartItems.some(
+      (item) => item.serviceId && item.employeeId && item.bookingDate && item.bookingTime
+    )
+
+    if (!hasCompleteItem) {
+      setRemoteValidationResults([])
+      setIsCheckingDraftAvailability(false)
+      return
+    }
+
+    let active = true
+    const timeoutId = window.setTimeout(async () => {
+      setIsCheckingDraftAvailability(true)
+      try {
+        const response = await fetch('/api/bookings/validate-draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cartItems.map((item) => ({
+              serviceId: item.serviceId,
+              employeeId: item.employeeId,
+              bookingDate: item.bookingDate,
+              bookingTime: item.bookingTime,
+            })),
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Nie udalo sie sprawdzic dostepnosci terminu')
+        }
+
+        const data = await response.json()
+        if (active) {
+          setRemoteValidationResults(Array.isArray(data.results) ? data.results : [])
+        }
+      } catch {
+        if (active) {
+          setRemoteValidationResults([])
+        }
+      } finally {
+        if (active) {
+          setIsCheckingDraftAvailability(false)
+        }
+      }
+    }, 350)
+
+    return () => {
+      active = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [cartItems, isOpen, step])
+
+  const combinedValidationResults = useMemo<DraftValidationResult[]>(
+    () =>
+      cartItems.map((_, index) => ({
+        warnings: [
+          ...(localValidationResults[index]?.warnings ?? []),
+          ...(remoteValidationResults[index]?.warnings ?? []),
+        ].filter((warning, warningIndex, warnings) => warnings.indexOf(warning) === warningIndex),
+      })),
+    [cartItems, localValidationResults, remoteValidationResults]
+  )
+
+  const hasDraftWarnings = combinedValidationResults.some((result) => result.warnings.length > 0)
+
   const canContinueToCart =
     selectedClient !== null || (newClientName.trim().length >= 2 && newClientPhone.trim().length >= 3)
 
@@ -302,6 +416,11 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
       }
     }
 
+    if (hasDraftWarnings) {
+      toast.error('Popraw terminy oznaczone ostrzezeniami przed zapisaniem wizyty')
+      return
+    }
+
     setIsSaving(true)
     try {
       const clientId = await resolveClientId()
@@ -350,7 +469,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           const errorMessage =
             errorCode === 'EQUIPMENT_CONFLICT'
               ? 'Wybrany sprzęt jest już zajęty w tym terminie. Wybierz inny termin lub innego pracownika.'
-              : errorCode || 'Nie udało się zapisać grupy wizyt'
+              : error?.message || errorCode || 'Nie udało się zapisać grupy wizyt'
           throw new Error(errorMessage)
         }
 
@@ -1011,7 +1130,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   : services
 
                 return (
-                  <div key={`${index}-${item.bookingDate}-${item.bookingTime}-${item.serviceId ?? 'empty'}`} className="space-y-3">
+                  <div key={index} className="space-y-3">
                     <BookingCartItem
                       index={index}
                       service={service}
@@ -1023,6 +1142,14 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                       addons={[]}
                       selectedAddonIds={item.selectedAddonIds}
                       startTime={formatCartStartTime(item)}
+                      warnings={combinedValidationResults[index]?.warnings ?? []}
+                      isCheckingAvailability={
+                        isCheckingDraftAvailability &&
+                        !!item.serviceId &&
+                        !!item.employeeId &&
+                        !!item.bookingDate &&
+                        !!item.bookingTime
+                      }
                       onRemove={() => handleRemoveItem(index)}
                       onChange={(updates) => handleItemChange(index, updates)}
                     />
@@ -1145,6 +1272,9 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               <div className="space-y-1 text-sm">
                 <div>Laczny czas: {totalDuration} min</div>
                 <div>Laczna cena: {formatPrice(totalPrice)}</div>
+                {hasDraftWarnings ? (
+                  <div className="text-amber-700">Popraw oznaczone konflikty przed zapisem.</div>
+                ) : null}
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -1157,9 +1287,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={isSaving || createBookingMutation.isPending || createClientMutation.isPending}
+                  disabled={
+                    isSaving ||
+                    isCheckingDraftAvailability ||
+                    hasDraftWarnings ||
+                    createBookingMutation.isPending ||
+                    createClientMutation.isPending
+                  }
                 >
-                  Zapisz wizyte
+                  {isCheckingDraftAvailability ? 'Sprawdzam...' : 'Zapisz wizyte'}
                 </Button>
               </div>
             </DialogFooter>
@@ -1169,4 +1305,3 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     </Dialog>
   )
 }
-
