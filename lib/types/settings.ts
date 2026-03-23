@@ -14,21 +14,21 @@ export const THEMES = {
     shadows: true,
   },
   auto_service: {
-    name: 'Auto & Moto',
-    description: 'Tech-focused design z głębokim kontrastem',
-    primary: '#3B82F6', // Vibrant blue
-    secondary: '#1E293B', // Slate 800
-    accent: '#EF4444', // Red 500
-    background: '#0F172A', // Slate 900
-    card: '#1E293B', // Slate 800 (slightly lighter than bg)
-    text: '#F1F5F9', // Slate 100
-    font: 'Inter',
-    borderRadius: 'sm',
-    shadows: false,
+    name: 'Testowy',
+    description: 'Slot do testowania nowych wzorow UI',
+    primary: '#CAA164',
+    secondary: '#F3E7D5',
+    accent: '#B48A52',
+    background: '#FFFDF9',
+    card: '#FFF8F0',
+    text: '#2D241C',
+    font: 'Cormorant Garamond',
+    borderRadius: 'lg',
+    shadows: true,
   },
   ski_resort: {
     name: 'Outdoor & Sport',
-    description: 'Dynamiczny design i świeżość',
+    description: 'Dynamiczny design i swiezosc',
     primary: '#2563EB',
     secondary: '#DBEAFE',
     accent: '#F97316',
@@ -81,7 +81,6 @@ export interface SalonSettings {
   language: string
   timezone: string
   notification_settings: NotificationSettings
-  // Przelewy24 Integration (per-salon — do przyjmowania płatności od klientów)
   p24_merchant_id?: string
   p24_pos_id?: string
   p24_crc?: string
@@ -90,7 +89,6 @@ export interface SalonSettings {
   p24_sandbox_mode?: boolean
   has_p24_crc?: boolean
   has_p24_api_key?: boolean
-  // Booksy Integration
   booksy_enabled?: boolean
   booksy_gmail_email?: string
   booksy_gmail_tokens?: any
@@ -160,11 +158,16 @@ export interface NotificationSettings {
   }
   surveys: {
     enabled: boolean
+    channel?: 'sms' | 'email' | 'both'
   }
   crmAutomations: {
     enabled: boolean
   }
   preAppointmentForms: {
+    enabled: boolean
+    channel?: 'sms' | 'email' | 'both'
+  }
+  campaigns: {
     enabled: boolean
   }
 }
@@ -184,7 +187,7 @@ export const INTEGRATIONS: Integration[] = [
     id: 'booksy',
     name: 'Booksy',
     description: 'Synchronizacja rezerwacji z Booksy',
-    icon: '📅',
+    icon: 'calendar',
     type: 'booksy',
     status: 'available',
     config: '/settings/integrations/booksy'
@@ -193,15 +196,15 @@ export const INTEGRATIONS: Integration[] = [
     id: 'google_calendar',
     name: 'Kalendarz Google',
     description: 'Dwukierunkowa synchronizacja z Kalendarzem Google',
-    icon: '📆',
+    icon: 'calendar-sync',
     type: 'google_calendar',
     status: 'available'
   },
   {
     id: 'przelewy24',
     name: 'Przelewy24',
-    description: 'Bramka płatności online — karty, BLIK, przelew',
-    icon: '🏦',
+    description: 'Bramka platnosci online - karty, BLIK, przelew',
+    icon: 'bank',
     type: 'przelewy24',
     status: 'available',
     config: '/settings/integrations/przelewy24'
@@ -209,8 +212,8 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'twilio',
     name: 'SMS Twilio',
-    description: 'Wysyłaj przypomnienia SMS',
-    icon: '💬',
+    description: 'Wysylaj przypomnienia SMS',
+    icon: 'message',
     type: 'twilio',
     status: 'available'
   }

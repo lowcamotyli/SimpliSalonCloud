@@ -62,6 +62,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const auth = await authorize(supabase as any, payload.salonId, user.id)
     if (!auth.ok) return auth.response
 
+    const { data: salonSettings } = await (supabase as any)
+      .from('salon_settings')
+      .select('notification_settings')
+      .eq('salon_id', payload.salonId)
+      .maybeSingle()
+    const notifSettings = salonSettings?.notification_settings as Record<string, any> | null
+    if (notifSettings?.campaigns?.enabled === false) {
+      return NextResponse.json({ error: 'Kampanie SMS/email są wyłączone w ustawieniach salonu' }, { status: 403 })
+    }
+
     const { data: campaign, error: campaignError } = await (supabase as any)
       .from('crm_campaigns')
       .select('id, salon_id, status, channel, segment_filters, scheduled_at')

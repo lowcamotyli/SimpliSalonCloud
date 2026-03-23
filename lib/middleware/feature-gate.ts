@@ -231,7 +231,7 @@ function getMinimalPlanForFeature(featureName: FeatureName): string {
   const plans = SubscriptionManager.getAllPlans()
 
   // Sprawdź plany od najtańszego do najdroższego
-  const planOrder: PlanType[] = ['starter', 'professional', 'business', 'enterprise']
+  const planOrder: PlanType[] = ['solo', 'studio', 'clinic', 'enterprise']
 
   for (const planType of planOrder) {
     const plan = plans[planType]

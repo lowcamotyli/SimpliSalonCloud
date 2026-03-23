@@ -9,9 +9,9 @@ const querySchema = z.object({
 })
 
 const CRM_LIMITS_BY_PLAN: Record<PlanType, { email: number; sms: number }> = {
-  starter: { email: 500, sms: 0 },
-  professional: { email: 2000, sms: 200 },
-  business: { email: 10000, sms: 1000 },
+  solo: { email: 500, sms: 0 },
+  studio: { email: 2000, sms: 200 },
+  clinic: { email: 10000, sms: 1000 },
   enterprise: { email: Number.POSITIVE_INFINITY, sms: Number.POSITIVE_INFINITY },
 }
 

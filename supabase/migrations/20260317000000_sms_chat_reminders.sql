@@ -78,7 +78,8 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'sms_messages' AND policyname = 'salon_rw_sms_messages'
   ) THEN
-    CREATE POLICY "salon_rw_sms_messages"
+    DROP POLICY IF EXISTS "salon_rw_sms_messages" ON public.sms_messages;
+CREATE POLICY "salon_rw_sms_messages"
       ON public.sms_messages
       FOR ALL
       USING (salon_id = public.get_user_salon_id())
@@ -89,7 +90,8 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'reminder_rules' AND policyname = 'salon_rw_reminder_rules'
   ) THEN
-    CREATE POLICY "salon_rw_reminder_rules"
+    DROP POLICY IF EXISTS "salon_rw_reminder_rules" ON public.reminder_rules;
+CREATE POLICY "salon_rw_reminder_rules"
       ON public.reminder_rules
       FOR ALL
       USING (salon_id = public.get_user_salon_id())

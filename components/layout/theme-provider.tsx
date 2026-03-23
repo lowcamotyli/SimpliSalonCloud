@@ -15,6 +15,7 @@ export function ThemeProvider({ themeKey, children }: ThemeProviderProps) {
     if (!theme) return
 
     const root = document.documentElement
+    root.setAttribute('data-theme-key', themeKey)
 
     // Helper to set HSL variable
     const setHslVar = (name: string, hex: string) => {
@@ -37,8 +38,15 @@ export function ThemeProvider({ themeKey, children }: ThemeProviderProps) {
     setHslVar('--card-foreground', theme.text)
     setHslVar('--popover-foreground', theme.text)
 
-    // Set border based on background brightness (simplified)
-    root.style.setProperty('--border', '214.3 31.8% 91.4%') // Default border
+    // Dynamic primary foreground for better contrast
+    if (themeKey === 'auto_service' || themeKey === 'beauty_salon') {
+      root.style.setProperty('--primary-foreground', '25 15% 15%') // Dark Brown/Black
+    } else {
+      root.style.setProperty('--primary-foreground', '0 0% 100%') // White
+    }
+
+    // Theme-specific border tuning
+    root.style.setProperty('--border', themeKey === 'auto_service' ? '36 32% 83%' : '214.3 31.8% 91.4%')
 
     // Set radius
     const radiusMap = {

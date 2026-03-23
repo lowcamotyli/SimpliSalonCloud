@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "karty_zabiegowe/do_wysylki_klientom/KOSMETOLOGIA_BB_Glow_(zabieg_rozjasniajacy).md",
+    "fallbackFile": "karty_zabiegowe/KOSMETOLOGIA_BB_Glow_(zabieg_rozjasniajacy).md",
+    "language": "pl",
+    "category": "KOSMETOLOGIA",
+    "serviceName": "BB Glow (zabieg rozjasniajacy)"
+  },
+  "extraction": {
+    "title": "KOSMETOLOGIA: BB Glow (zabieg rozjasniajacy)",
+    "intro": "Prosimy o wypelnienie ankiety przed zabiegiem BB Glow. Informacje sa niezbedne do bezpiecznego przeprowadzenia zabiegu i doboru odpowiednich produktow.",
+    "questionBlocks": [
+      "Czy stosujesz lub stosowales/as izotretynoine w ostatnich 6 miesiacach? [TAK / NIE]",
+      "Czy masz alergie na skladniki kosmetyczne lub barwniki? Jesli tak, podaj jakie.",
+      "Czy skora jest aktualnie podrazniona, poparzona sloncem lub uszkodzona?",
+      "Czy przyjmujesz leki rozrzedzajace krew lub immunosupresyjne?",
+      "Ciaza lub karmienie piersia? [TAK / NIE / NIE DOTYCZY]",
+      "Czy miales/as wczesniej zabiegi mikronaklucia lub mezoterapii? Jesli tak, kiedy?"
+    ],
+    "legalBlocks": [
+      "Klauzula informacyjna RODO: Administratorem Pani/Pana danych osobowych jest salon kosmetyczny. Dane sa przetwarzane wylacznie w celu realizacji zabiegu i prowadzenia dokumentacji zabiegowej. Podanie danych jest dobrowolne.",
+      "Oswiadczam, ze podane informacje sa zgodne z prawda i wyrazam swiadoma zgode na wykonanie zabiegu BB Glow."
+    ],
+    "warnings": [
+      "Pole 'leki rozrzedzajace krew' moze wskazywac na dane wrazliwe — zweryfikuj kategorie danych."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Wywiad zdrowotny",
+        "fields": [
+          {
+            "id": "isotretinoin",
+            "type": "radio",
+            "label": "Czy stosujesz lub stosowales/as izotretynoine w ostatnich 6 miesiacach?",
+            "required": true,
+            "options": ["Tak", "Nie"],
+            "isHealthField": true,
+            "isSensitiveField": false
+          },
+          {
+            "id": "allergies_cosmetic",
+            "type": "textarea",
+            "label": "Alergie na skladniki kosmetyczne lub barwniki",
+            "required": false,
+            "helpText": "Podaj nazwy skladnikow, jesli znasz",
+            "isHealthField": true,
+            "isSensitiveField": false
+          },
+          {
+            "id": "skin_condition",
+            "type": "radio",
+            "label": "Czy skora jest aktualnie podrazniona, poparzona sloncem lub uszkodzona?",
+            "required": true,
+            "options": ["Tak", "Nie"],
+            "isHealthField": true,
+            "isSensitiveField": false
+          },
+          {
+            "id": "medications_blood",
+            "type": "textarea",
+            "label": "Przyjmowane leki rozrzedzajace krew lub immunosupresyjne",
+            "required": false,
+            "helpText": "Wypelnij jesli dotyczy",
+            "isHealthField": true,
+            "isSensitiveField": true
+          },
+          {
+            "id": "pregnancy",
+            "type": "radio",
+            "label": "Ciaza lub karmienie piersia",
+            "required": true,
+            "options": ["Tak", "Nie", "Nie dotyczy"],
+            "isHealthField": true,
+            "isSensitiveField": false
+          },
+          {
+            "id": "previous_microneedling",
+            "type": "textarea",
+            "label": "Poprzednie zabiegi mikronaklucia lub mezoterapii",
+            "required": false,
+            "helpText": "Podaj date ostatniego zabiegu",
+            "isHealthField": false,
+            "isSensitiveField": false
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "Oswiadczam, ze podane informacje sa zgodne z prawda i wyrazam swiadoma zgode na wykonanie zabiegu BB Glow.",
+      "Wyrazam zgode na przetwarzanie moich danych osobowych w celu realizacji zabiegu i prowadzenia dokumentacji zabiegowej."
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "health",
+    "healthFieldCount": 5,
+    "sensitiveFieldCount": 1,
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": [
+      "Pole 'medications_blood' zawiera pytanie o leki — zaklasyfikowane jako dane wrazliwe (sensitiveField). Upewnij sie, ze RODO consent obejmuje te kategorie."
+    ]
+  },
+  "templateDraft": {
+    "name": "KOSMETOLOGIA: BB Glow (zabieg rozjasniajacy)",
+    "description": "Karta wywiadu przed zabiegiem BB Glow. Zaimportowane z biblioteki kart zabiegowych.",
+    "data_category": "health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Wyrazam zgode na przetwarzanie moich danych osobowych, w tym danych o stanie zdrowia, w celu realizacji zabiegu BB Glow i prowadzenia dokumentacji zabiegowej zgodnie z RODO.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "isotretinoin",
+        "type": "radio",
+        "label": "Czy stosujesz lub stosowales/as izotretynoine w ostatnich 6 miesiacach?",
+        "required": true,
+        "options": ["Tak", "Nie"],
+        "isHealthField": true,
+        "isSensitiveField": false
+      },
+      {
+        "id": "allergies_cosmetic",
+        "type": "textarea",
+        "label": "Alergie na skladniki kosmetyczne lub barwniki",
+        "required": false,
+        "helpText": "Podaj nazwy skladnikow, jesli znasz",
+        "isHealthField": true,
+        "isSensitiveField": false
+      },
+      {
+        "id": "skin_condition",
+        "type": "radio",
+        "label": "Czy skora jest aktualnie podrazniona, poparzona sloncem lub uszkodzona?",
+        "required": true,
+        "options": ["Tak", "Nie"],
+        "isHealthField": true,
+        "isSensitiveField": false
+      },
+      {
+        "id": "medications_blood",
+        "type": "textarea",
+        "label": "Przyjmowane leki rozrzedzajace krew lub immunosupresyjne",
+        "required": false,
+        "helpText": "Wypelnij jesli dotyczy",
+        "isHealthField": true,
+        "isSensitiveField": true
+      },
+      {
+        "id": "pregnancy",
+        "type": "radio",
+        "label": "Ciaza lub karmienie piersia",
+        "required": true,
+        "options": ["Tak", "Nie", "Nie dotyczy"],
+        "isHealthField": true,
+        "isSensitiveField": false
+      },
+      {
+        "id": "previous_microneedling",
+        "type": "textarea",
+        "label": "Poprzednie zabiegi mikronaklucia lub mezoterapii",
+        "required": false,
+        "helpText": "Podaj date ostatniego zabiegu",
+        "isHealthField": false,
+        "isSensitiveField": false
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "BB Glow",
+      "bb glow",
+      "zabieg rozjasniajacy",
+      "nanofundacja"
+    ],
+    "confidence": 0.85,
+    "needsManualReview": false
+  }
+}

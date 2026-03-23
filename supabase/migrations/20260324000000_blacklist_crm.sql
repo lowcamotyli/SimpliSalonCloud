@@ -55,7 +55,8 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'client_violations' AND policyname = 'salon_rw_client_violations'
   ) THEN
-    CREATE POLICY "salon_rw_client_violations"
+    DROP POLICY IF EXISTS "salon_rw_client_violations" ON public.client_violations;
+CREATE POLICY "salon_rw_client_violations"
       ON public.client_violations
       FOR ALL
       USING (
@@ -78,7 +79,8 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'blacklist_settings' AND policyname = 'salon_rw_blacklist_settings'
   ) THEN
-    CREATE POLICY "salon_rw_blacklist_settings"
+    DROP POLICY IF EXISTS "salon_rw_blacklist_settings" ON public.blacklist_settings;
+CREATE POLICY "salon_rw_blacklist_settings"
       ON public.blacklist_settings
       FOR ALL
       USING (salon_id = public.get_user_salon_id())

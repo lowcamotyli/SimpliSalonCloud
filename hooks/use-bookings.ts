@@ -41,6 +41,7 @@ type BookingFilters = {
 type CreateBookingData = {
   employeeId: string
   serviceId: string
+  addon_ids?: string[]
   clientId?: string
   clientName?: string
   clientPhone?: string
@@ -56,6 +57,7 @@ type UpdateBookingData = {
   paymentMethod?: string
   surcharge?: number
   notes?: string
+  addon_ids?: string[]
   duration?: number
   bookingDate?: string
   bookingTime?: string
@@ -64,6 +66,22 @@ type UpdateBookingData = {
 
 type UpdateBookingScheduleData = UpdateBookingData & {
   id: string
+}
+
+function getCreateBookingErrorMessage(error: any) {
+  if (Array.isArray(error?.details)) {
+    return error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ')
+  }
+
+  if (error?.code === 'CONFLICT') {
+    return error.message || 'Wybrany termin jest juz zajety. Wybierz inna godzine lub pracownika.'
+  }
+
+  if (error?.error === 'EQUIPMENT_CONFLICT') {
+    return error.message || 'Wybrany sprzet jest juz zajety w tym terminie. Wybierz inna godzine.'
+  }
+
+  return error?.message || error?.error || 'Nie udalo sie zapisac wizyty'
 }
 
 export function useBookings(filters?: BookingFilters) {
@@ -98,9 +116,7 @@ export function useCreateBooking() {
 
       if (!res.ok) {
         const error = await res.json()
-        const message = error.details
-          ? error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ')
-          : error.error || 'Failed to create booking'
+        const message = getCreateBookingErrorMessage(error)
         throw new Error(message)
       }
 

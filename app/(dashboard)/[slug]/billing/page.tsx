@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import SmsWalletCard from '@/components/billing/SmsWalletCard'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -46,16 +45,16 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const PLAN_LABELS: Record<string, string> = {
-  starter: 'Starter',
-  professional: 'Professional',
-  business: 'Business',
+  solo: 'Solo',
+  studio: 'Studio',
+  clinic: 'Clinic',
   enterprise: 'Enterprise',
 }
 
 const PLAN_COLORS: Record<string, { from: string; to: string; badge: string; shadow: string }> = {
-  starter: { from: 'from-slate-400', to: 'to-slate-600', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400', shadow: 'shadow-slate-500/20' },
-  professional: { from: 'from-blue-500', to: 'to-indigo-600', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', shadow: 'shadow-blue-500/20' },
-  business: { from: 'from-violet-500', to: 'to-purple-600', badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', shadow: 'shadow-violet-500/20' },
+  solo: { from: 'from-slate-400', to: 'to-slate-600', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400', shadow: 'shadow-slate-500/20' },
+  studio: { from: 'from-blue-500', to: 'to-indigo-600', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', shadow: 'shadow-blue-500/20' },
+  clinic: { from: 'from-violet-500', to: 'to-purple-600', badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', shadow: 'shadow-violet-500/20' },
   enterprise: { from: 'from-amber-400', to: 'to-orange-500', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', shadow: 'shadow-amber-500/20' },
 }
 
@@ -201,7 +200,7 @@ export default function BillingPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
             Subskrypcja i Płatności
           </h1>
-          <p className="text-muted-foreground text-base max-w-xl">
+          <p className="text-muted-foreground text-base max-w-xl theme-header-subtitle">
             Zarządzaj swoim planem, limitami wykorzystania oraz historią płatności
           </p>
         </div>
@@ -598,21 +597,6 @@ export default function BillingPage() {
           </div>
         </section>
 
-        {/* Sekcja: Dodatki */}
-        <section>
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
-              <Zap className="h-5 w-5" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
-              Usługi Dodatkowe
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <SmsWalletCard />
-          </div>
-        </section>
       </div>
     </div>
   )

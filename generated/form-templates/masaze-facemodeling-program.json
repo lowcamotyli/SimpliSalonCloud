@@ -1,0 +1,839 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "MASAŻE_Facemodeling_Program.md",
+    "language": "pl",
+    "category": "MASAŻE",
+    "serviceName": "Facemodeling Program"
+  },
+  "extraction": {
+    "title": "MASAŻE: Facemodeling Program",
+    "questionBlocks": [
+      "Dla bezpieczeństwa i lepszego dopasowania zabiegu, proszę zaznaczyć czy któraś z poniższych dolegliwości Pan/ią dotyczy:\nCukrzyca\nNadciśnienie\nChoroby serca\nEpilepsja\nChoroby skórne\nChoroby nowotworowe\nZakrzepica\nChoroby neurologiczne\nChoroby tarczycy\nPrzewlekłe stany zapalne,  w tym \"RZS\"Ciąża\nKarmienie piersią\nCzy przyjmuje Pan/i leki na stałe?\nTak    Nie\nJeśli tak, proszę podać jakie\nCzy jest Pan/i pod opieką lekarza specjalisty ?\nTak    Nie\nJeśli tak, proszę napisać pod opieką którego lekarza\nCzy ma Pan/i skłonność do alergii ?\nTak    Nie\nProszę podać alergeny (np. leki, kosmetyki, składniki)\nCzy w ciągu ostatniego miesiąca miał/a Pan/i wykonywane jakiekolwiek zabiegi kosmetologiczne ?\nTak    Nie\nProszę podać nazwy zabiegów\nCzy w ciągu ostatnich 3 miesięcy miał/a Pan/i wykonywane zabiegi z zakresu medycyny estetycznej ?\nTak    Nie\nProszę napisać jakie to były zabiegi i na którą część ciała\nCzy występują jakiekolwiek zmiany skórne w miejscu planowanego zabiegu ( np. wysypka, opryszczka, trądzik zapalny, rany)\nTak    Nie\nProszę napisać jakie to są zmiany i w jakiej okolicy\nCzy kiedykolwiek po terapiach manualnych/zabiegach kosmetycznych wystąpiły u Pan/i działania niepożądane ?\nTak    Nie\nJakie to były działania?\nCzy występują epizody zasłabnięcia lub utraty przytomności ?\nTak    Nie\nJeśli tak, proszę napisać jakie to epizody\nCzy ma Pan/i rozrusznik serca lub metalowe implanty ?\nTak    Nie\nCzy występują u Pan/i: pokrzywka, obrzęki lub swędzenie po stosowaniu kosmetyków ?\nTak    Nie\nCzy ma Pan/i blizny na ciele ?\nTak    Nie\nCzy kiedykolwiek było leczenie ortodentyczne ?\nNie\nTak\nJestem w trakcie leczenia\nJaki jest charakter Pan/i pracy ?\nSiedząca (biurowa)\nFizyczna\nStojąca\nZmienna/w ruchu\nIle godzin na dobę Pan/i śpi?\nPonad 8 h6-8 h5-6 h\nMniej niż 5h\nMam trudności ze snem\nJak wygląda Pan/i dieta ?\nJem intuicyjnie\nStosuje dietę\nZwracam uwagę na skład - eliminuję pewne produkty\nDieta ułożona przez dietetyka\nIle wody średnio Pan/i wypija w ciągu dnia ?\nMniej niż 1 litr1 – 1,5 litra2 litry\nPonad 2 litry\nCzy pije Pan/i kawę lub napoje z kofeiną ?\nTak    Nie\nProszę napisać ile dziennie\nCzy pali Pan/i papierosy lub papierosy elektroniczne ?\nTak    Nie\nCzy w ciągu 72 h pił/a Pan/i alkohol ?\nTak    Nie\nJaki rodzaj atmosfery preferuje Pan/i podczas wizyty?\nW ciszyW rozmowie\nDelikatna rozmowa w razie potrzeby\nPreferowana głośność muzyki podczas wizyty?\nCicho w tle\nUmiarkowana w tle\nWyraźniejsza, dobrze słyszalna\nBrak muzyki\nCzy zapalne świece i zapachy w gabinecie są dla Pan/i komfortowe?\nTak, bardzo lubię\nSą w porządku\nWolę bez zapachów i świec\nJaki dotyk preferuje Pan/i podczas terapii manualnej?\nMocny i głęboki\nŚredni i zrównoważony\nBardzo delikatny\nNie wiem - zdaję się na terapeutę\nSkąd dowiedziała się Pani/Pan o gabinecie Facemodeling Academy ?\nZ poleceniaZ InternetuZ Booksy\nOtrzymałem/am voucher\nCzy wyraża Pan/i zgodę na zdjęcie przed i po okolicy zabiegowej oraz opublikowanie na nasze media społecznościowe w celach reklamowych?\nTak    Nie\nWyrażam zgodę na przetwarzanie moich danych dotyczących zdrowia na potrzeby przeprowadzenia zabiegu."
+    ],
+    "legalBlocks": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty\nPlanów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty\nPlanów\nPODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty\nPlanu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).\nDo czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.\nCEL: Odpowiedzi na zapytania\nPODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]W przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).\nCEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów\nPODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.\nCEL: Reklamacje\nPODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]\nCzy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.\nJak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.\nGdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.\nKomu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).\nJakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail [EMAIL SALONU] lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.\nJeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.\nZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO."
+    ],
+    "warnings": [
+      "Wykryto linie dluzsza niz 300 znakow."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Pytania",
+        "fields": [
+          {
+            "id": "dla_bezpieczenstwa_i_lepszego_dopasowani",
+            "type": "select",
+            "label": "Dla bezpieczeństwa i lepszego dopasowania zabiegu, proszę zaznaczyć czy któraś z poniższych dolegliwości Pan/ią dotyczy:",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Cukrzyca",
+              "Nadciśnienie",
+              "Choroby serca",
+              "Epilepsja",
+              "Choroby skórne",
+              "Choroby nowotworowe",
+              "Zakrzepica",
+              "Choroby neurologiczne",
+              "Choroby tarczycy",
+              "Przewlekłe stany zapalne,",
+              "w tym \"RZS\"Ciąża",
+              "Karmienie piersią"
+            ]
+          },
+          {
+            "id": "medications",
+            "type": "radio",
+            "label": "Czy przyjmuje Pan/i leki na stałe?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_prosze_podac_jakie",
+            "type": "text",
+            "label": "Jeśli tak, proszę podać jakie",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "medications",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_jest_pan_i_pod_opieka_lekarza_specja",
+            "type": "radio",
+            "label": "Czy jest Pan/i pod opieką lekarza specjalisty ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_prosze_napisac_pod_opieka_ktor",
+            "type": "text",
+            "label": "Jeśli tak, proszę napisać pod opieką którego lekarza",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_jest_pan_i_pod_opieka_lekarza_specja",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "allergies",
+            "type": "radio",
+            "label": "Czy ma Pan/i skłonność do alergii ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Tak",
+              "Nie",
+              "Proszę podać alergeny (np. leki, kosmetyki, składniki)"
+            ]
+          },
+          {
+            "id": "czy_w_ciagu_ostatniego_miesiaca_mial_a_p",
+            "type": "radio",
+            "label": "Czy w ciągu ostatniego miesiąca miał/a Pan/i wykonywane jakiekolwiek zabiegi kosmetologiczne ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak",
+              "Nie",
+              "Proszę podać nazwy zabiegów"
+            ]
+          },
+          {
+            "id": "czy_w_ciagu_ostatnich_3_miesiecy_mial_a",
+            "type": "radio",
+            "label": "Czy w ciągu ostatnich 3 miesięcy miał/a Pan/i wykonywane zabiegi z zakresu medycyny estetycznej ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak",
+              "Nie",
+              "Proszę napisać jakie to były zabiegi i na którą część ciała"
+            ]
+          },
+          {
+            "id": "skin_conditions",
+            "type": "select",
+            "label": "Czy występują jakiekolwiek zmiany skórne w miejscu planowanego zabiegu ( np. wysypka, opryszczka, trądzik zapalny, rany)",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak",
+              "Nie",
+              "Proszę napisać jakie to są zmiany i w jakiej okolicy"
+            ]
+          },
+          {
+            "id": "czy_kiedykolwiek_po_terapiach_manualnych",
+            "type": "radio",
+            "label": "Czy kiedykolwiek po terapiach manualnych/zabiegach kosmetycznych wystąpiły u Pan/i działania niepożądane ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jakie_to_byly_dzialania",
+            "type": "text",
+            "label": "Jakie to były działania?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false
+          },
+          {
+            "id": "fainting_history",
+            "type": "radio",
+            "label": "Czy występują epizody zasłabnięcia lub utraty przytomności ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_prosze_napisac_jakie_to_epizod",
+            "type": "text",
+            "label": "Jeśli tak, proszę napisać jakie to epizody",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "fainting_history",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "pacemaker",
+            "type": "radio",
+            "label": "Czy ma Pan/i rozrusznik serca lub metalowe implanty ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_wystepuja_u_pan_i_pokrzywka_obrzeki",
+            "type": "radio",
+            "label": "Czy występują u Pan/i: pokrzywka, obrzęki lub swędzenie po stosowaniu kosmetyków ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_ma_pan_i_blizny_na_ciele",
+            "type": "radio",
+            "label": "Czy ma Pan/i blizny na ciele ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_kiedykolwiek_bylo_leczenie_ortodenty",
+            "type": "radio",
+            "label": "Czy kiedykolwiek było leczenie ortodentyczne ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak",
+              "Jestem w trakcie leczenia"
+            ]
+          },
+          {
+            "id": "cancer_history",
+            "type": "radio",
+            "label": "Jaki jest charakter Pan/i pracy ?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Siedząca (biurowa)",
+              "Fizyczna",
+              "Stojąca",
+              "Zmienna/w ruchu"
+            ]
+          },
+          {
+            "id": "ile_godzin_na_dobe_pan_i_spi",
+            "type": "radio",
+            "label": "Ile godzin na dobę Pan/i śpi?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Ponad 8 h",
+              "6-8 h",
+              "5-6 h",
+              "Mniej niż 5h",
+              "Mam trudności ze snem"
+            ]
+          },
+          {
+            "id": "jak_wyglada_pan_i_dieta",
+            "type": "radio",
+            "label": "Jak wygląda Pan/i dieta ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Jem intuicyjnie",
+              "Stosuje dietę",
+              "Zwracam uwagę na skład - eliminuję pewne produkty",
+              "Dieta ułożona przez dietetyka"
+            ]
+          },
+          {
+            "id": "ile_wody_srednio_pan_i_wypija_w_ciagu_dn",
+            "type": "radio",
+            "label": "Ile wody średnio Pan/i wypija w ciągu dnia ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Mniej niż 1 litr",
+              "1 – 1,5 litra",
+              "2 litry",
+              "Ponad 2 litry"
+            ]
+          },
+          {
+            "id": "czy_pije_pan_i_kawe_lub_napoje_z_kofeina",
+            "type": "radio",
+            "label": "Czy pije Pan/i kawę lub napoje z kofeiną ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak",
+              "Nie",
+              "Proszę napisać ile dziennie"
+            ]
+          },
+          {
+            "id": "czy_pali_pan_i_papierosy_lub_papierosy_e",
+            "type": "radio",
+            "label": "Czy pali Pan/i papierosy lub papierosy elektroniczne ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_w_ciagu_72_h_pil_a_pan_i_alkohol",
+            "type": "radio",
+            "label": "Czy w ciągu 72 h pił/a Pan/i alkohol ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jaki_rodzaj_atmosfery_preferuje_pan_i_po",
+            "type": "radio",
+            "label": "Jaki rodzaj atmosfery preferuje Pan/i podczas wizyty?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "W ciszy",
+              "W rozmowie",
+              "Delikatna rozmowa w razie potrzeby"
+            ]
+          },
+          {
+            "id": "preferowana_glosnosc_muzyki_podczas_wizy",
+            "type": "radio",
+            "label": "Preferowana głośność muzyki podczas wizyty?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Cicho w tle",
+              "Umiarkowana w tle",
+              "Wyraźniejsza, dobrze słyszalna",
+              "Brak muzyki"
+            ]
+          },
+          {
+            "id": "czy_zapalne_swiece_i_zapachy_w_gabinecie",
+            "type": "radio",
+            "label": "Czy zapalne świece i zapachy w gabinecie są dla Pan/i komfortowe?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak, bardzo lubię",
+              "Są w porządku",
+              "Wolę bez zapachów i świec"
+            ]
+          },
+          {
+            "id": "jaki_dotyk_preferuje_pan_i_podczas_terap",
+            "type": "radio",
+            "label": "Jaki dotyk preferuje Pan/i podczas terapii manualnej?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Mocny i głęboki",
+              "Średni i zrównoważony",
+              "Bardzo delikatny",
+              "Nie wiem - zdaję się na terapeutę"
+            ]
+          },
+          {
+            "id": "skad_dowiedziala_sie_pani_pan_o_gabineci",
+            "type": "radio",
+            "label": "Skąd dowiedziała się Pani/Pan o gabinecie Facemodeling Academy ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Z polecenia",
+              "Z Internetu",
+              "Z Booksy",
+              "Otrzymałem/am voucher"
+            ]
+          },
+          {
+            "id": "czy_wyraza_pan_i_zgode_na_zdjecie_przed",
+            "type": "radio",
+            "label": "Czy wyraża Pan/i zgodę na zdjęcie przed i po okolicy zabiegowej oraz opublikowanie na nasze media społecznościowe w celach reklamowych?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beau"
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "health",
+    "healthFieldCount": 6,
+    "sensitiveFieldCount": 2,
+    "requiresHealthConsent": true,
+    "reviewRequired": true,
+    "reviewNotes": []
+  },
+  "templateDraft": {
+    "name": "Facemodeling Program",
+    "description": "Zaimportowane z biblioteki kart zabiegowych",
+    "data_category": "health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Administratorem Twoich danych osobowych jest [NAZWA SALONU] z siedziba pod adresem [ADRES] (\"Administrator\").\n\nW sprawach zwiazanych z przetwarzaniem danych osobowych mozesz skontaktowac sie z Administratorem pod adresem e-mail: [EMAIL SALONU].\n\nTwoje dane osobowe przetwarzane sa w celu realizacji uslug i wykonania zawartej umowy (art. 6 ust. 1 lit. b RODO). W zakresie, w jakim dane dotycza zdrowia, podstawa przetwarzania jest Twoja wyrazna zgoda (art. 9 ust. 2 lit. a RODO).\n\nDane beda przechowywane przez okres niezbedny do realizacji uslugi, a po jej wykonaniu przez okres wynikajacy z przepisow prawa oraz do czasu przedawnienia ewentualnych roszczen.\n\nPrzysluguje Ci prawo dostepu do danych, ich sprostowania, usuniecia, ograniczenia przetwarzania, przenoszenia danych, wycofania zgody oraz wniesienia sprzeciwu - w przypadkach przewidzianych prawem. Masz takze prawo wniesienia skargi do Prezesa Urzedu Ochrony Danych Osobowych.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "dla_bezpieczenstwa_i_lepszego_dopasowani",
+        "type": "select",
+        "label": "Dla bezpieczeństwa i lepszego dopasowania zabiegu, proszę zaznaczyć czy któraś z poniższych dolegliwości Pan/ią dotyczy:",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Cukrzyca",
+          "Nadciśnienie",
+          "Choroby serca",
+          "Epilepsja",
+          "Choroby skórne",
+          "Choroby nowotworowe",
+          "Zakrzepica",
+          "Choroby neurologiczne",
+          "Choroby tarczycy",
+          "Przewlekłe stany zapalne,",
+          "w tym \"RZS\"Ciąża",
+          "Karmienie piersią"
+        ]
+      },
+      {
+        "id": "medications",
+        "type": "radio",
+        "label": "Czy przyjmuje Pan/i leki na stałe?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_prosze_podac_jakie",
+        "type": "text",
+        "label": "Jeśli tak, proszę podać jakie",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "medications",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_jest_pan_i_pod_opieka_lekarza_specja",
+        "type": "radio",
+        "label": "Czy jest Pan/i pod opieką lekarza specjalisty ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_prosze_napisac_pod_opieka_ktor",
+        "type": "text",
+        "label": "Jeśli tak, proszę napisać pod opieką którego lekarza",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_jest_pan_i_pod_opieka_lekarza_specja",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "allergies",
+        "type": "radio",
+        "label": "Czy ma Pan/i skłonność do alergii ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Tak",
+          "Nie",
+          "Proszę podać alergeny (np. leki, kosmetyki, składniki)"
+        ]
+      },
+      {
+        "id": "czy_w_ciagu_ostatniego_miesiaca_mial_a_p",
+        "type": "radio",
+        "label": "Czy w ciągu ostatniego miesiąca miał/a Pan/i wykonywane jakiekolwiek zabiegi kosmetologiczne ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak",
+          "Nie",
+          "Proszę podać nazwy zabiegów"
+        ]
+      },
+      {
+        "id": "czy_w_ciagu_ostatnich_3_miesiecy_mial_a",
+        "type": "radio",
+        "label": "Czy w ciągu ostatnich 3 miesięcy miał/a Pan/i wykonywane zabiegi z zakresu medycyny estetycznej ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak",
+          "Nie",
+          "Proszę napisać jakie to były zabiegi i na którą część ciała"
+        ]
+      },
+      {
+        "id": "skin_conditions",
+        "type": "select",
+        "label": "Czy występują jakiekolwiek zmiany skórne w miejscu planowanego zabiegu ( np. wysypka, opryszczka, trądzik zapalny, rany)",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak",
+          "Nie",
+          "Proszę napisać jakie to są zmiany i w jakiej okolicy"
+        ]
+      },
+      {
+        "id": "czy_kiedykolwiek_po_terapiach_manualnych",
+        "type": "radio",
+        "label": "Czy kiedykolwiek po terapiach manualnych/zabiegach kosmetycznych wystąpiły u Pan/i działania niepożądane ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jakie_to_byly_dzialania",
+        "type": "text",
+        "label": "Jakie to były działania?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false
+      },
+      {
+        "id": "fainting_history",
+        "type": "radio",
+        "label": "Czy występują epizody zasłabnięcia lub utraty przytomności ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_prosze_napisac_jakie_to_epizod",
+        "type": "text",
+        "label": "Jeśli tak, proszę napisać jakie to epizody",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "fainting_history",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "pacemaker",
+        "type": "radio",
+        "label": "Czy ma Pan/i rozrusznik serca lub metalowe implanty ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_wystepuja_u_pan_i_pokrzywka_obrzeki",
+        "type": "radio",
+        "label": "Czy występują u Pan/i: pokrzywka, obrzęki lub swędzenie po stosowaniu kosmetyków ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_ma_pan_i_blizny_na_ciele",
+        "type": "radio",
+        "label": "Czy ma Pan/i blizny na ciele ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_kiedykolwiek_bylo_leczenie_ortodenty",
+        "type": "radio",
+        "label": "Czy kiedykolwiek było leczenie ortodentyczne ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak",
+          "Jestem w trakcie leczenia"
+        ]
+      },
+      {
+        "id": "cancer_history",
+        "type": "radio",
+        "label": "Jaki jest charakter Pan/i pracy ?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Siedząca (biurowa)",
+          "Fizyczna",
+          "Stojąca",
+          "Zmienna/w ruchu"
+        ]
+      },
+      {
+        "id": "ile_godzin_na_dobe_pan_i_spi",
+        "type": "radio",
+        "label": "Ile godzin na dobę Pan/i śpi?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Ponad 8 h",
+          "6-8 h",
+          "5-6 h",
+          "Mniej niż 5h",
+          "Mam trudności ze snem"
+        ]
+      },
+      {
+        "id": "jak_wyglada_pan_i_dieta",
+        "type": "radio",
+        "label": "Jak wygląda Pan/i dieta ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Jem intuicyjnie",
+          "Stosuje dietę",
+          "Zwracam uwagę na skład - eliminuję pewne produkty",
+          "Dieta ułożona przez dietetyka"
+        ]
+      },
+      {
+        "id": "ile_wody_srednio_pan_i_wypija_w_ciagu_dn",
+        "type": "radio",
+        "label": "Ile wody średnio Pan/i wypija w ciągu dnia ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Mniej niż 1 litr",
+          "1 – 1,5 litra",
+          "2 litry",
+          "Ponad 2 litry"
+        ]
+      },
+      {
+        "id": "czy_pije_pan_i_kawe_lub_napoje_z_kofeina",
+        "type": "radio",
+        "label": "Czy pije Pan/i kawę lub napoje z kofeiną ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak",
+          "Nie",
+          "Proszę napisać ile dziennie"
+        ]
+      },
+      {
+        "id": "czy_pali_pan_i_papierosy_lub_papierosy_e",
+        "type": "radio",
+        "label": "Czy pali Pan/i papierosy lub papierosy elektroniczne ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_w_ciagu_72_h_pil_a_pan_i_alkohol",
+        "type": "radio",
+        "label": "Czy w ciągu 72 h pił/a Pan/i alkohol ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jaki_rodzaj_atmosfery_preferuje_pan_i_po",
+        "type": "radio",
+        "label": "Jaki rodzaj atmosfery preferuje Pan/i podczas wizyty?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "W ciszy",
+          "W rozmowie",
+          "Delikatna rozmowa w razie potrzeby"
+        ]
+      },
+      {
+        "id": "preferowana_glosnosc_muzyki_podczas_wizy",
+        "type": "radio",
+        "label": "Preferowana głośność muzyki podczas wizyty?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Cicho w tle",
+          "Umiarkowana w tle",
+          "Wyraźniejsza, dobrze słyszalna",
+          "Brak muzyki"
+        ]
+      },
+      {
+        "id": "czy_zapalne_swiece_i_zapachy_w_gabinecie",
+        "type": "radio",
+        "label": "Czy zapalne świece i zapachy w gabinecie są dla Pan/i komfortowe?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak, bardzo lubię",
+          "Są w porządku",
+          "Wolę bez zapachów i świec"
+        ]
+      },
+      {
+        "id": "jaki_dotyk_preferuje_pan_i_podczas_terap",
+        "type": "radio",
+        "label": "Jaki dotyk preferuje Pan/i podczas terapii manualnej?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Mocny i głęboki",
+          "Średni i zrównoważony",
+          "Bardzo delikatny",
+          "Nie wiem - zdaję się na terapeutę"
+        ]
+      },
+      {
+        "id": "skad_dowiedziala_sie_pani_pan_o_gabineci",
+        "type": "radio",
+        "label": "Skąd dowiedziała się Pani/Pan o gabinecie Facemodeling Academy ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Z polecenia",
+          "Z Internetu",
+          "Z Booksy",
+          "Otrzymałem/am voucher"
+        ]
+      },
+      {
+        "id": "czy_wyraza_pan_i_zgode_na_zdjecie_przed",
+        "type": "radio",
+        "label": "Czy wyraża Pan/i zgodę na zdjęcie przed i po okolicy zabiegowej oraz opublikowanie na nasze media społecznościowe w celach reklamowych?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "masaże",
+      "Facemodeling Program"
+    ],
+    "confidence": 0.95,
+    "needsManualReview": true
+  },
+  "approved": true
+}

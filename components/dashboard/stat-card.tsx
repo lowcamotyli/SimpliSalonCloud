@@ -31,29 +31,29 @@ export function StatCard({
     href
 }: StatCardProps) {
     const cardContent = (
-        <Card className="stat-card overflow-hidden group border-none bg-white/50 backdrop-blur-sm h-full">
-            <div className={`absolute inset-0 bg-gradient-to-br ${lightColor} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+        <Card className="stat-card overflow-hidden group border-none bg-white/50 backdrop-blur-sm h-full hover-luxe-soft-glow transition-all duration-500">
+            <div className={`absolute inset-0 bg-gradient-to-br ${lightColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 theme-stat-card-glow`} />
             <CardHeader className="relative pb-2">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
+                    <CardTitle className="theme-stat-card-title text-base font-medium text-gray-600">{title}</CardTitle>
+                    <div className={`theme-stat-card-icon p-2.5 rounded-xl bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
                         <Icon className="h-5 w-5" />
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="relative pt-4">
-                <div className={`text-3xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+                <div className={`theme-stat-card-value text-3xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
                     {value}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                     {trend && (
-                        <div className={`flex items-center gap-0.5 text-xs font-bold ${trend.isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        <div className={`theme-stat-card-trend flex items-center gap-0.5 text-sm font-bold ${trend.isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
                             {trend.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             {trend.value}%
                         </div>
                     )}
                     {description && (
-                        <span className="text-xs text-gray-500 font-medium">{description}</span>
+                        <span className="theme-stat-card-description text-sm text-gray-500 font-medium">{description}</span>
                     )}
                 </div>
             </CardContent>

@@ -20,18 +20,21 @@ CREATE TABLE IF NOT EXISTS pre_appointment_responses (
 ALTER TABLE pre_appointment_responses ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Allow authenticated users to select responses for their salon" ON public.pre_appointment_responses;
 CREATE POLICY "Allow authenticated users to select responses for their salon"
 ON pre_appointment_responses
 FOR SELECT
 TO authenticated
 USING (salon_id = public.get_user_salon_id());
 
+DROP POLICY IF EXISTS "Allow service role to insert responses" ON public.pre_appointment_responses;
 CREATE POLICY "Allow service role to insert responses"
 ON pre_appointment_responses
 FOR INSERT
 TO service_role
 WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow service role to update responses" ON public.pre_appointment_responses;
 CREATE POLICY "Allow service role to update responses"
 ON pre_appointment_responses
 FOR UPDATE

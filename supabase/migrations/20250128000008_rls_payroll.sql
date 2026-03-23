@@ -15,6 +15,8 @@ DO $$ BEGIN IF EXISTS (
 ALTER TABLE public.payroll_runs ENABLE ROW LEVEL SECURITY;
 -- POLICY 1: Tylko owner może widzieć payroll runs
 DROP POLICY IF EXISTS "Only owners can view payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can view payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can view payroll runs" ON public.payroll_runs;
 CREATE POLICY "Only owners can view payroll runs" ON public.payroll_runs FOR
 SELECT TO authenticated USING (
         salon_id = public.get_user_salon_id()
@@ -23,12 +25,16 @@ SELECT TO authenticated USING (
     );
 -- POLICY 2: Tylko owner może tworzyć payroll runs
 DROP POLICY IF EXISTS "Only owners can create payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can create payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can create payroll runs" ON public.payroll_runs;
 CREATE POLICY "Only owners can create payroll runs" ON public.payroll_runs FOR
 INSERT TO authenticated WITH CHECK (
         salon_id = public.get_user_salon_id()
         AND public.has_salon_role('owner')
     );
 -- POLICY 3: Tylko owner może edytować payroll runs
+DROP POLICY IF EXISTS "Only owners can update payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can update payroll runs" ON public.payroll_runs;
 DROP POLICY IF EXISTS "Only owners can update payroll runs" ON public.payroll_runs;
 CREATE POLICY "Only owners can update payroll runs" ON public.payroll_runs FOR
 UPDATE TO authenticated USING (
@@ -38,6 +44,8 @@ UPDATE TO authenticated USING (
         salon_id = public.get_user_salon_id()
     );
 -- POLICY 4: Tylko owner może usuwać payroll runs
+DROP POLICY IF EXISTS "Only owners can delete payroll runs" ON public.payroll_runs;
+DROP POLICY IF EXISTS "Only owners can delete payroll runs" ON public.payroll_runs;
 DROP POLICY IF EXISTS "Only owners can delete payroll runs" ON public.payroll_runs;
 CREATE POLICY "Only owners can delete payroll runs" ON public.payroll_runs FOR DELETE TO authenticated USING (
     salon_id = public.get_user_salon_id()
@@ -59,6 +67,8 @@ DO $$ BEGIN IF EXISTS (
 ALTER TABLE public.payroll_entries ENABLE ROW LEVEL SECURITY;
 -- POLICY 1: Owner widzi wszystkie entries, employee tylko swoje
 DROP POLICY IF EXISTS "View payroll entries based on role" ON public.payroll_entries;
+DROP POLICY IF EXISTS "View payroll entries based on role" ON public.payroll_entries;
+DROP POLICY IF EXISTS "View payroll entries based on role" ON public.payroll_entries;
 CREATE POLICY "View payroll entries based on role" ON public.payroll_entries FOR
 SELECT TO authenticated USING (
         -- Musi być entry z payroll_run tego salonu
@@ -77,6 +87,8 @@ SELECT TO authenticated USING (
     );
 -- POLICY 2: Tylko owner może tworzyć entries
 DROP POLICY IF EXISTS "Only owners can create payroll entries" ON public.payroll_entries;
+DROP POLICY IF EXISTS "Only owners can create payroll entries" ON public.payroll_entries;
+DROP POLICY IF EXISTS "Only owners can create payroll entries" ON public.payroll_entries;
 CREATE POLICY "Only owners can create payroll entries" ON public.payroll_entries FOR
 INSERT TO authenticated WITH CHECK (
         payroll_run_id IN (
@@ -88,6 +100,8 @@ INSERT TO authenticated WITH CHECK (
     );
 -- POLICY 3: Tylko owner może edytować entries
 DROP POLICY IF EXISTS "Only owners can update payroll entries" ON public.payroll_entries;
+DROP POLICY IF EXISTS "Only owners can update payroll entries" ON public.payroll_entries;
+DROP POLICY IF EXISTS "Only owners can update payroll entries" ON public.payroll_entries;
 CREATE POLICY "Only owners can update payroll entries" ON public.payroll_entries FOR
 UPDATE TO authenticated USING (
         payroll_run_id IN (
@@ -98,6 +112,8 @@ UPDATE TO authenticated USING (
         )
     );
 -- POLICY 4: Tylko owner może usuwać entries
+DROP POLICY IF EXISTS "Only owners can delete payroll entries" ON public.payroll_entries;
+DROP POLICY IF EXISTS "Only owners can delete payroll entries" ON public.payroll_entries;
 DROP POLICY IF EXISTS "Only owners can delete payroll entries" ON public.payroll_entries;
 CREATE POLICY "Only owners can delete payroll entries" ON public.payroll_entries FOR DELETE TO authenticated USING (
     payroll_run_id IN (

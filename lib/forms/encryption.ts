@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
+import { logHealthDataAccess } from '@/lib/audit/health-access-log'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12
@@ -67,5 +68,55 @@ export function decryptAnswers(encrypted: Buffer, iv: Buffer, tag: Buffer): obje
     return JSON.parse(decrypted.toString('utf8'))
   } catch {
     throw new Error('Failed to decrypt form answers: authentication failed')
+  }
+}
+
+// Single-field encryption: returns base64(iv[12] + tag[16] + ciphertext)
+export function encryptField(plaintext: string): string {
+  const key = getEncryptionKey()
+  const iv = randomBytes(IV_LENGTH)
+  const cipher = createCipheriv(ALGORITHM, key, iv)
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([iv, tag, encrypted]).toString('base64')
+}
+
+export interface DecryptAuditContext {
+  salonId: string
+  userId: string
+  role: string
+  resourceType: 'form_response' | 'treatment_record'
+  resourceId: string
+  clientId?: string
+  dataCategory: 'health' | 'sensitive_health'
+}
+
+export function decryptField(packed: string, auditContext?: DecryptAuditContext): string {
+  const buf = Buffer.from(packed, 'base64')
+  const iv = buf.subarray(0, IV_LENGTH)
+  const tag = buf.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH)
+  const ciphertext = buf.subarray(IV_LENGTH + TAG_LENGTH)
+  const key = getEncryptionKey()
+  const decipher = createDecipheriv(ALGORITHM, key, iv)
+  decipher.setAuthTag(tag)
+  try {
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()])
+    const result = decrypted.toString('utf8')
+    if (auditContext) {
+      // Fire-and-forget — log failure must not break the main request
+      logHealthDataAccess({
+        salonId: auditContext.salonId,
+        accessedBy: auditContext.userId,
+        accessedByRole: auditContext.role,
+        resourceType: auditContext.resourceType,
+        resourceId: auditContext.resourceId,
+        clientId: auditContext.clientId,
+        dataCategory: auditContext.dataCategory,
+        action: 'decrypt',
+      }).catch(console.error)
+    }
+    return result
+  } catch {
+    throw new Error('Failed to decrypt field: authentication failed')
   }
 }

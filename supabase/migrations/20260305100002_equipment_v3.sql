@@ -1,7 +1,7 @@
 -- Sprint 02 v3: equipment_bookings with EXCLUDE constraint + check_equipment_availability function
 -- Requires btree_gist extension (enabled in Sprint 00 migration)
 
-CREATE TABLE public.equipment_bookings (
+CREATE TABLE IF NOT EXISTS public.equipment_bookings (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id   UUID        NOT NULL REFERENCES public.bookings(id)   ON DELETE CASCADE,
   equipment_id UUID        NOT NULL REFERENCES public.equipment(id)  ON DELETE RESTRICT,
@@ -14,13 +14,15 @@ CREATE TABLE public.equipment_bookings (
   )
 );
 
-CREATE INDEX idx_equipment_bookings_equipment ON public.equipment_bookings(equipment_id);
-CREATE INDEX idx_equipment_bookings_booking   ON public.equipment_bookings(booking_id);
-CREATE INDEX idx_equipment_bookings_time
+CREATE INDEX IF NOT EXISTS idx_equipment_bookings_equipment ON public.equipment_bookings(equipment_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_bookings_booking   ON public.equipment_bookings(booking_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_bookings_time
   ON public.equipment_bookings USING gist(equipment_id, tstzrange(starts_at, ends_at, '[)'));
 
 ALTER TABLE public.equipment_bookings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "salon_read_equipment_bookings" ON public.equipment_bookings;
+DROP POLICY IF EXISTS "salon_read_equipment_bookings" ON public.equipment_bookings;
 CREATE POLICY "salon_read_equipment_bookings" ON public.equipment_bookings
   FOR SELECT USING (
     equipment_id IN (
@@ -29,6 +31,8 @@ CREATE POLICY "salon_read_equipment_bookings" ON public.equipment_bookings
     )
   );
 
+DROP POLICY IF EXISTS "salon_write_equipment_bookings" ON public.equipment_bookings;
+DROP POLICY IF EXISTS "salon_write_equipment_bookings" ON public.equipment_bookings;
 CREATE POLICY "salon_write_equipment_bookings" ON public.equipment_bookings
   FOR ALL USING (
     equipment_id IN (

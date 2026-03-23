@@ -1,0 +1,136 @@
+Generate a Next.js 14 'use client' React component.
+
+Do NOT include any markdown fences, explanations, or prefixes. Output ONLY valid TypeScript/TSX starting directly with the literal text: 'use client'
+
+## Types (import from @/lib/forms/import-types):
+- DataCategory = 'general' | 'health' | 'sensitive_health'
+- ImportStatus = 'draft' | 'review_required' | 'approved' | 'rejected'
+- ComplianceInfo { dataCategory, healthFieldCount, sensitiveFieldCount, requiresHealthConsent, reviewRequired, reviewNotes: string[] }
+- ImportFormField { id, type, label, required, options?, helpText?, isHealthField?, isSensitiveField?, blockImport? }
+- ImportFormTemplate { name, description?, data_category, requires_signature, gdpr_consent_text?, fields: ImportFormField[] }
+- SourceInfo { preferredFile?, language, category, serviceName }
+- MappingInfo { serviceMatchers: string[], confidence: number, needsManualReview: boolean }
+- ImportArtifact { version: 1, source: SourceInfo, compliance: ComplianceInfo, templateDraft: ImportFormTemplate, mapping: MappingInfo, approved?: boolean, rejected?: boolean, dataCategory?: DataCategory, requiresHealthConsent?: boolean }
+
+Also define locally (NOT imported):
+- ReportFile { slug, file, status, confidence, dataCategory: DataCategory, warningCount, potentialHealthSensitiveFieldCount, healthFieldCount, sensitiveFieldCount }
+- Report { total, success, review_required, failed, files: ReportFile[] }
+
+## Imports to use:
+import type { DataCategory, ImportArtifact, ImportFormTemplate } from '@/lib/forms/import-types'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Loader2, CheckCircle2, XCircle, AlertTriangle, ShieldAlert, ChevronDown, ChevronUp, FileText } from 'lucide-react'
+import { toast } from 'sonner'
+import { useState, useEffect, useCallback } from 'react'
+
+## Component to generate:
+export function TreatmentCardImportReview(): JSX.Element
+
+### Full Layout:
+Two-panel flex layout with h-[calc(100vh-240px)]. Left panel w-1/3, right panel w-2/3 with overflow-y-auto.
+
+### LEFT PANEL:
+- useEffect on mount: fetch('/api/forms/import-artifacts'), parse { report: Report | null }, store in state
+- Small summary row: total/review_required counts as Badges
+- Search Input placeholder="Szukaj karty..." to filter files by name (file field)
+- List each ReportFile as a clickable div:
+  - file name (text-sm font-medium, line-clamp-2)
+  - DataCategory Badge: general=secondary, health=bg-amber-100 text-amber-800, sensitive_health=bg-red-100 text-red-800
+  - warningCount Badge (bg-orange-100 text-orange-800) only if > 0, showing warningCount + " ostrzeżeń"
+  - Status icon: status==='approved' -> CheckCircle2 className="text-green-500", status==='rejected' -> XCircle className="text-red-500", default -> AlertTriangle className="text-amber-500"
+  - Confidence text (text-xs): high=text-green-600 "Wysoka", medium=text-amber-600 "Średnia", low=text-red-600 "Niska"
+  - If local importedSlugs Set includes slug: Badge variant="default" className="bg-green-600" "Zaimportowany"
+  - On click: setSelectedSlug(file.slug), fetch /api/forms/import-artifacts/[slug], parse { artifact: ImportArtifact }, store
+  - Selected: border-2 border-blue-500 bg-blue-50
+
+### RIGHT PANEL:
+- Empty state (no selected): centered div with FileText icon h-12 w-12 text-muted-foreground and p "Wybierz kartę z listy po lewej stronie"
+- Loading state: centered Loader2 animate-spin
+- When artifact loaded, show sections in order:
+
+SECTION 1 - Header:
+  - h2 text-xl font-semibold: artifact.templateDraft.name
+  - DataCategory badge (same color scheme as left panel)
+  - Small text: "Język: " + artifact.source.language, "Kategoria: " + artifact.source.category
+  - Small text: "Plik źródłowy: " + (artifact.source.preferredFile or 'brak')
+
+SECTION 2 - Compliance Card:
+  - CardTitle "Zgodność i dane"
+  - DataCategory badge
+  - Two stat items: "Pola zdrowotne: N" and "Pola wrażliwe: N"
+  - requiresHealthConsent: Badge green "Wymaga zgody zdrowotnej" if true, else Badge secondary "Brak zgody zdrowotnej"
+  - If compliance.reviewNotes.length > 0: Alert with AlertTriangle icon, AlertTitle "Uwagi do przeglądu", list all notes as li items
+
+SECTION 3 - Fields Preview:
+  - Title "Podgląd pól formularza (N pól)"
+  - ScrollArea h-[300px]
+  - Each field row (p-2 rounded mb-1):
+    - If isSensitiveField: className="border-l-4 border-red-400 bg-red-50 pl-3"
+    - Else if isHealthField: className="border-l-4 border-amber-400 bg-amber-50 pl-3"
+    - Else: className="border-l-4 border-transparent pl-3"
+    - field.label (text-sm font-medium)
+    - type Badge (variant="outline" text-xs)
+    - if required: span className="text-red-500 text-xs ml-1" "*"
+
+SECTION 4 - GDPR consent (collapsible):
+  - Only render if artifact.templateDraft.gdpr_consent_text exists
+  - Toggle button with ChevronDown/ChevronUp "Tekst zgody RODO"
+  - When expanded: p text-sm text-muted-foreground with gdpr_consent_text
+
+SECTION 5 - Mapping:
+  - Title "Mapowanie do usług"
+  - serviceMatchers as comma-joined text
+  - confidence as percentage (Math.round(confidence * 100) + '%')
+  - if needsManualReview: Alert variant="destructive" with AlertTriangle "Wymaga ręcznej weryfikacji przypisania do usług"
+
+SECTION 6 - Import Gate:
+  - If artifact.rejected === true:
+    - Alert variant="destructive": ShieldAlert icon, "Karta odrzucona — import zablokowany"
+    - No import button
+  - Else if artifact.approved !== true:
+    - Alert: AlertTriangle icon, "Karta oczekuje na przegląd compliance — import zablokowany"
+    - No import button
+  - Else (artifact.approved === true):
+    - If importSuccess state is true: show Card with CheckCircle2 icon (green) and text "Szablon został zapisany w systemie formularzy"
+    - Else: show checkboxes + import button:
+      - Build checkboxes array dynamically:
+        - if compliance.healthFieldCount > 0: id="chk-health", label="Przejrzałem/am pytania zdrowotne i akceptuję ich zakres"
+        - if compliance.requiresHealthConsent: id="chk-gdpr", label="Akceptuję tekst zgody zdrowotnej RODO"
+        - if templateDraft.data_category !== 'general': id="chk-category", label="Potwierdzam kategorię danych: [data_category]"
+        - if mapping.needsManualReview: id="chk-mapping", label="Potwierdzam zakres przypisania do usług (wymaga ręcznej weryfikacji)"
+        - always: id="chk-confirm", label="Potwierdzam import szablonu do systemu formularzy"
+      - Track checked state as Record<string, boolean>
+      - Button "Importuj szablon" disabled if not all checkboxes checked or isImporting
+      - When clicked:
+        - setIsImporting(true)
+        - Strip isHealthField/isSensitiveField/blockImport from each field
+        - POST /api/forms/templates with { name, description, fields (stripped), requires_signature, gdpr_consent_text }
+        - On success (res.ok): toast.success("Szablon zaimportowany"), add slug to importedSlugs Set, setImportSuccess(true), reset checkboxes
+        - On error: toast.error(errorMessage from json or "Błąd importu")
+        - setIsImporting(false)
+      - Button shows Loader2 when isImporting
+
+## State variables needed:
+- report: Report | null
+- isLoadingReport: boolean
+- selectedSlug: string | null
+- artifact: ImportArtifact | null
+- isLoadingArtifact: boolean
+- searchQuery: string
+- importedSlugs: Set<string>
+- checkedItems: Record<string, boolean>
+- isImporting: boolean
+- importSuccess: boolean
+- gdprExpanded: boolean
+
+Reset importSuccess and checkedItems when selectedSlug changes.
+
+Output ONLY valid TypeScript/TSX. No markdown, no explanations. Start directly with 'use client'

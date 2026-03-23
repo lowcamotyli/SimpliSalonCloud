@@ -1,0 +1,702 @@
+[
+  {
+    "sourceFile": "Angielski_Karta_Zabiegowa_Ciało__Body_Treatment_Form.md",
+    "templateName": "Angielski Karta Zabiegowa Ciało  Body Treatment Form",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "Angielski_Karta_Zabiegowa_Twarz__Facial_Treatment_Form.md",
+    "templateName": "Angielski Karta Zabiegowa Twarz  Facial Treatment Form",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "dr_n._med._Izabela_Załęska_Mezoterapia_z_publikacji_Mezoterapia_w_praktyce.md",
+    "templateName": "dr n. med. Izabela Załęska Mezoterapia z publikacji Mezoterapia w praktyce",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "dr_n._med._Izabela_Załęska_Stymulatory_z_publikacji_„Stymulatory_tkankowe_w_medycynie_estetycznej.md",
+    "templateName": "dr n. med. Izabela Załęska Stymulatory z publikacji „Stymulatory tkankowe w medycynie estetycznej",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "Francuski_Karta_Zabiegowa_Ciało__Fiche_Pour_Le_Corps.md",
+    "templateName": "Francuski Karta Zabiegowa Ciało  Fiche Pour Le Corps",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "Francuski_Karta_Zabiegowa_Twarz__Fiche_Du_Visage.md",
+    "templateName": "Francuski Karta Zabiegowa Twarz  Fiche Du Visage",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "FRYZJERSTWO_Head_Spa_(karta_ogólna).md",
+    "templateName": "FRYZJERSTWO Head Spa (karta ogólna)",
+    "dataCategory": "general",
+    "requiresHealthConsent": false,
+    "reviewRequired": true,
+    "reviewNotes": [
+      "Treatment name 'Head Spa' might imply scalp health questions beyond general hairdressing."
+    ]
+  },
+  {
+    "sourceFile": "FRYZJERSTWO_keratynowe_prostowanie_(karta_ogólna).md",
+    "templateName": "FRYZJERSTWO keratynowe prostowanie (karta ogólna)",
+    "dataCategory": "general",
+    "requiresHealthConsent": false,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "FRYZJERSTWO_STYLISTA_ZDROWIA_Instytut_Fale_Loki_Koki.md",
+    "templateName": "FRYZJERSTWO STYLISTA ZDROWIA Instytut Fale Loki Koki",
+    "dataCategory": "general",
+    "requiresHealthConsent": false,
+    "reviewRequired": true,
+    "reviewNotes": [
+      "Title contains 'STYLISTA ZDROWIA' (Health Stylist), which suggests it might collect health-related data beyond typical hairdressing."
+    ]
+  },
+  {
+    "sourceFile": "FRYZJERSTWO_usługa_fryzjerska,_farbowanie.md",
+    "templateName": "FRYZJERSTWO usługa fryzjerska, farbowanie",
+    "dataCategory": "general",
+    "requiresHealthConsent": false,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "FRYZJERSTWO_usługa_fryzjerska_(karta_ogólna).md",
+    "templateName": "FRYZJERSTWO usługa fryzjerska (karta ogólna)",
+    "dataCategory": "general",
+    "requiresHealthConsent": false,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_HARMONY_CLEARLIFT,_przebudowa_skóry.md",
+    "templateName": "HI-TECH ALMA HARMONY CLEARLIFT, przebudowa skóry",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_HARMONY_CLEARLIFT,_usuwanie_tatuażu.md",
+    "templateName": "HI-TECH ALMA HARMONY CLEARLIFT, usuwanie tatuażu",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_HARMONY_DYE_VL,_zamykanie_naczynek.md",
+    "templateName": "HI-TECH ALMA HARMONY DYE VL, zamykanie naczynek",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_HARMONY_IPIXEL,_laser_frakcyjny.md",
+    "templateName": "HI-TECH ALMA HARMONY IPIXEL, laser frakcyjny",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_HARMONY_NIR,_zagęszczenie_owalu_twarzy.md",
+    "templateName": "HI-TECH ALMA HARMONY NIR, zagęszczenie owalu twarzy",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ALMA_SOPRANO_TITANIUM,_epilacja_laserowa.md",
+    "templateName": "HI-TECH ALMA SOPRANO TITANIUM, epilacja laserowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_BLOOMEA,_lifting_i_odmłodzenie_skóry_z_technologią_TRIO_M.M.L..md",
+    "templateName": "HI-TECH BLOOMEA, lifting i odmłodzenie skóry z technologią TRIO M.M.L.",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_CARBOXY_THERAPY_CO2,_karboksyterapia_bezigłowa.md",
+    "templateName": "HI-TECH CARBOXY THERAPY CO2, karboksyterapia bezigłowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_COOLTECH_DEFINE,_kriolipoliza.md",
+    "templateName": "HI-TECH COOLTECH DEFINE, kriolipoliza",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_DERMAPEN,_mikronakłuwanie.md",
+    "templateName": "HI-TECH DERMAPEN, mikronakłuwanie",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_elektroepilacja_(karta_ogólna).md",
+    "templateName": "HI-TECH elektroepilacja (karta ogólna)",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_EPILSTAR,_depilacja_laserowa.md",
+    "templateName": "HI-TECH EPILSTAR, depilacja laserowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_EPN,_elektroporacja_mikroigłowa.md",
+    "templateName": "HI-TECH EPN, elektroporacja mikroigłowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_EXIMIA_TITANIUM,_modelowanie_sylwetki.md",
+    "templateName": "HI-TECH EXIMIA TITANIUM, modelowanie sylwetki",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_GENEO,_zabieg_na_twarz.md",
+    "templateName": "HI-TECH GENEO, zabieg na twarz",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_HIFU.md",
+    "templateName": "HI-TECH HIFU",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_HYDRA_TOUCH_2,_oczyszczanie_wodorowe.md",
+    "templateName": "HI-TECH HYDRA TOUCH 2, oczyszczanie wodorowe",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_INNOVA_LED_LIGHT.md",
+    "templateName": "HI-TECH INNOVA LED LIGHT",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_konsultacja_(karta_ogólna).md",
+    "templateName": "HI-TECH konsultacja (karta ogólna)",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_Krioterapia.md",
+    "templateName": "HI-TECH Krioterapia",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_laser_tulowy_(karta_ogólna).md",
+    "templateName": "HI-TECH laser tulowy (karta ogólna)",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_LIGHT_SHEER,_depilacja_laserowa.md",
+    "templateName": "HI-TECH LIGHT SHEER, depilacja laserowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_LPG_ALLIANCE,_endermologia.md",
+    "templateName": "HI-TECH LPG ALLIANCE, endermologia",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_MAXIMUS_TRILIPO,_fala_radiowa.md",
+    "templateName": "HI-TECH MAXIMUS TRILIPO, fala radiowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_NANOFRAX,_mezoterepia_frakcyjna.md",
+    "templateName": "HI-TECH NANOFRAX, mezoterepia frakcyjna",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_NOBLE_SHAPE,_modelowanie_sylwetki.md",
+    "templateName": "HI-TECH NOBLE SHAPE, modelowanie sylwetki",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_RECELL_ICE,_radiofrekwencja_mikroigłowa_z_systemem_vacuum_i_głowicą_chłodzącą.md",
+    "templateName": "HI-TECH RECELL ICE, radiofrekwencja mikroigłowa z systemem vacuum i głowicą chłodzącą",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_STELLAR_M22,_zabieg_z_wykorzystaniem_technologii_laserowej.md",
+    "templateName": "HI-TECH STELLAR M22, zabieg z wykorzystaniem technologii laserowej",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_STORZ,_fala_uderzeniowa.md",
+    "templateName": "HI-TECH STORZ, fala uderzeniowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ULTRAPULSE_ALPHA,_zabieg_z_wykorzystaniem_technologii_laserowej.md",
+    "templateName": "HI-TECH ULTRAPULSE ALPHA, zabieg z wykorzystaniem technologii laserowej",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_VIRTUE_RF,_radiofrekwencja_mikroigłowa.md",
+    "templateName": "HI-TECH VIRTUE RF, radiofrekwencja mikroigłowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_VITAL_INJECTOR_2,_radiofrekwencja_mikroigłowa.md",
+    "templateName": "HI-TECH VITAL INJECTOR 2, radiofrekwencja mikroigłowa",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_Zabieg_ENDYMED_PRO__PURE_2.0.md",
+    "templateName": "HI-TECH Zabieg ENDYMED PRO  PURE 2.0",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_Zabieg_SINAPSI.md",
+    "templateName": "HI-TECH Zabieg SINAPSI",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_Zabieg_TIXEL.md",
+    "templateName": "HI-TECH Zabieg TIXEL",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "HI-TECH_ZAFFIROLIFT_-_biostymulacja,_ujędrnienie,_regeneracja.md",
+    "templateName": "HI-TECH ZAFFIROLIFT - biostymulacja, ujędrnienie, regeneracja",
+    "dataCategory": "sensitive_health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "Hiszpański_Karta_Zabiegowa_Ciało__Carta_de_tratamientos_corporales.md",
+    "templateName": "Hiszpański Karta Zabiegowa Ciało  Carta de tratamientos corporales",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "Hiszpański_Karta_Zabiegowa_Twarz__Carta_de_tratamientos_faciales.md",
+    "templateName": "Hiszpański Karta Zabiegowa Twarz  Carta de tratamientos faciales",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_BB_Glow.md",
+    "templateName": "KOSMETOLOGIA BB Glow",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_depilacja_pastą_cukrową.md",
+    "templateName": "KOSMETOLOGIA depilacja pastą cukrową",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_depilacja_woskiem.md",
+    "templateName": "KOSMETOLOGIA depilacja woskiem",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_dermabrazja_manualna_(derma_med-planning).md",
+    "templateName": "KOSMETOLOGIA dermabrazja manualna (derma med-planning)",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_Esthemax_zabieg_bankietowy__liftingujący.md",
+    "templateName": "KOSMETOLOGIA Esthemax zabieg bankietowy  liftingujący",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_GREEN_SEA_PEEL,_peeling_złuszczający.md",
+    "templateName": "KOSMETOLOGIA GREEN SEA PEEL, peeling złuszczający",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_INFLACURE_HEALING_ACITIVE,_terapia_naprawcza_dla_skóry_wrażliwej_i_problematycznej.md",
+    "templateName": "KOSMETOLOGIA INFLACURE HEALING ACITIVE, terapia naprawcza dla skóry wrażliwej i problematycznej",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_konsultacja_kosmetologiczna_(karta_ogólna).md",
+    "templateName": "KOSMETOLOGIA konsultacja kosmetologiczna (karta ogólna)",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_konsultacja_kosmetologiczna_dla_mężczyzn_(karta_ogólna).md",
+    "templateName": "KOSMETOLOGIA konsultacja kosmetologiczna dla mężczyzn (karta ogólna)",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_kwasy,_zabiegi_złuszczające.md",
+    "templateName": "KOSMETOLOGIA kwasy, zabiegi złuszczające",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_lampa_LED_od_DERMAPEN.md",
+    "templateName": "KOSMETOLOGIA lampa LED od DERMAPEN",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_LAZER_PEEL,_peeling_chemiczny.md",
+    "templateName": "KOSMETOLOGIA LAZER PEEL, peeling chemiczny",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_LiraLift.md",
+    "templateName": "KOSMETOLOGIA LiraLift",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_LiraLux.md",
+    "templateName": "KOSMETOLOGIA LiraLux",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_Lira_Green_Energy_Peel.md",
+    "templateName": "KOSMETOLOGIA Lira Green Energy Peel",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_MedEstelle_autorski_zabieg.md",
+    "templateName": "KOSMETOLOGIA MedEstelle autorski zabieg",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_MedEstelle_zabieg_z_mikro-_i_nanonakłuwaniem.md",
+    "templateName": "KOSMETOLOGIA MedEstelle zabieg z mikro- i nanonakłuwaniem",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_mikrodermabrazja_diamentowa.md",
+    "templateName": "KOSMETOLOGIA mikrodermabrazja diamentowa",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_NAQUA,_protokół_po_zabiegach_uszkadzających_naskórek.md",
+    "templateName": "KOSMETOLOGIA NAQUA, protokół po zabiegach uszkadzających naskórek",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_NEOLIFT,_pielęgnacja_skóry.md",
+    "templateName": "KOSMETOLOGIA NEOLIFT, pielęgnacja skóry",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_oczyszczanie_manualne.md",
+    "templateName": "KOSMETOLOGIA oczyszczanie manualne",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_PCA_SKIN,_zabieg_na_twarz.md",
+    "templateName": "KOSMETOLOGIA PCA SKIN, zabieg na twarz",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_peelingi_chemiczne.md",
+    "templateName": "KOSMETOLOGIA peelingi chemiczne",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_Peeling_dyniowy_Dermaquest.md",
+    "templateName": "KOSMETOLOGIA Peeling dyniowy Dermaquest",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_Peptydowy_Peeling_Biomimetyczny_Dermaquest.md",
+    "templateName": "KOSMETOLOGIA Peptydowy Peeling Biomimetyczny Dermaquest",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_PRO_XN,_autorski_zabieg_na_twarz_ACNE_RESCUE.md",
+    "templateName": "KOSMETologia PRO XN, autorski zabieg na twarz ACNE RESCUE",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_PRO_XN,_autorski_zabieg_na_twarz_III_stopnia.md",
+    "templateName": "KOSMETologia PRO XN, autorski zabieg na twarz III stopnia",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_PRO_XN,_autorski_zabieg_na_twarz_II_stopnia.md",
+    "templateName": "KOSMETologia PRO XN, autorski zabieg na twarz II stopnia",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_PRO_XN,_autorski_zabieg_na_twarz_I_stopnia.md",
+    "templateName": "KOSMETologia PRO XN, autorski zabieg na twarz I stopnia",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_RetinoLift_Dermaquest.md",
+    "templateName": "KOSMETOLOGIA RetinoLift Dermaquest",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_SCARINK,_mikropunktura.md",
+    "templateName": "KOSMETOLOGIA SCARINK, mikropunktura",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_V_TOX,_zabieg_liftingujący.md",
+    "templateName": "KOSMETOLOGIA V TOX, zabieg liftingujący",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "KOSMETOLOGIA_zgoda_rodzica_na_zabieg_(karta_ogólna).md",
+    "templateName": "KOSMETOLOGIA zgoda rodzica na zabieg (karta ogólna)",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "MAKIJAŻ_&_PMU_KW_BEAUTY_makijaż_permanentny_brwi.md",
+    "templateName": "MAKIJAŻ & PMU KW BEAUTY makijaż permanentny brwi",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "MAKIJAŻ_&_PMU_usuwanie_makijażu_permanentnego.md",
+    "templateName": "MAKIJAŻ & PMU usuwanie makijażu permanentnego",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "MASAŻE_Babuu_biolifting_twarzy_i_ciała.md",
+    "templateName": "MASAŻE Babuu biolifting twarzy i ciała",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "MASAŻE_drenaż_limfatyczny.md",
+    "templateName": "MASAŻE drenaż limfatyczny",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceFile": "MASAŻE_Facemodeling_Program.md",
+    "templateName": "MASAŻE Facemodeling Program",
+    "dataCategory": "health",
+    "requiresHealthConsent": true,
+    "reviewRequired": false,
+    "reviewNotes": []
+  }
+]

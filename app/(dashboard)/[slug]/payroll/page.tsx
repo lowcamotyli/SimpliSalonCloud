@@ -75,7 +75,7 @@ export default function PayrollPage() {
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
             Wynagrodzenia
           </h1>
-          <p className="text-gray-500 text-lg font-medium flex items-center gap-2">
+          <p className="text-gray-500 text-lg font-medium flex items-center gap-2 theme-header-subtitle">
             <Calendar className="h-4 w-4" />
             Rozliczenia i prowizje pracowników
           </p>

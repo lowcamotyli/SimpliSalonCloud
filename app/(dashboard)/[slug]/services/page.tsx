@@ -1,12 +1,21 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/use-services'
+import { useSalon } from '@/hooks/use-salon'
+import { AddonsEditor } from '@/components/services/addons-editor'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import {
   Dialog,
   DialogContent,
@@ -65,6 +74,8 @@ interface Service {
 }
 
 export default function ServicesPage() {
+  const params = useParams()
+  const slug = params.slug as string
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -73,6 +84,8 @@ export default function ServicesPage() {
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([])
 
   const { data: servicesData, isLoading } = useServices()
+  const { data: salonData } = useSalon(slug)
+  const salonId = salonData?.salon?.id ?? ''
   const createService = useCreateService()
   const updateService = useUpdateService()
   const deleteService = useDeleteService()
@@ -149,19 +162,36 @@ export default function ServicesPage() {
     })
   }, [allServices, search, activeCategory])
 
-  // Group filtered services for display
+  // Group filtered services by category/subcategory for display
   const groupedDisplay = useMemo(() => {
-    const grouped: Record<string, Record<string, Service[]>> = {}
-    filteredServices.forEach((service) => {
-      const cat = service.category || 'Inne'
-      const subcat = service.subcategory || 'Inne'
+    const grouped = new Map<string, Record<string, Service[]>>()
 
-      if (!grouped[cat]) grouped[cat] = {}
-      if (!grouped[cat][subcat]) grouped[cat][subcat] = []
-      grouped[cat][subcat].push(service)
+    filteredServices.forEach((service) => {
+      const cat = service.category?.trim() || 'Inne'
+      const subcat = service.subcategory?.trim() || 'Inne'
+
+      if (!grouped.has(cat)) {
+        grouped.set(cat, {})
+      }
+
+      const categoryGroup = grouped.get(cat)!
+      if (!categoryGroup[subcat]) {
+        categoryGroup[subcat] = []
+      }
+      categoryGroup[subcat].push(service)
     })
-    return grouped
+
+    const entries = Array.from(grouped.entries())
+    const otherIndex = entries.findIndex(([category]) => category === 'Inne')
+    if (otherIndex > -1) {
+      const [other] = entries.splice(otherIndex, 1)
+      entries.push(other)
+    }
+
+    return entries
   }, [filteredServices])
+
+  const defaultExpandedCategory = groupedDisplay[0]?.[0]
   const handleOpenDialog = (service?: Service) => {
     if (service) {
       setEditingService(service)
@@ -279,7 +309,7 @@ export default function ServicesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Usługi
           </h1>
-          <p className="text-muted-foreground text-base font-medium">Zarządzaj ofertą swojego salonu</p>
+          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Zarządzaj ofertą swojego salonu</p>
         </div>
         <Button
           size="lg"
@@ -298,7 +328,7 @@ export default function ServicesPage() {
             <Layers className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Usługi</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Usługi</p>
             <p className="text-2xl font-black text-gray-900">{stats.total}</p>
           </div>
         </Card>
@@ -307,7 +337,7 @@ export default function ServicesPage() {
             <DollarSign className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Śr. Cena</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Śr. Cena</p>
             <p className="text-2xl font-black text-gray-900">{formatPrice(stats.avgPrice)}</p>
           </div>
         </Card>
@@ -316,7 +346,7 @@ export default function ServicesPage() {
             <Clock className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Śr. Czas</p>
+            <p className="text-base font-bold text-gray-400 uppercase tracking-wider">Śr. Czas</p>
             <p className="text-2xl font-black text-gray-900">{Math.round(stats.avgDuration)} min</p>
           </div>
         </Card>
@@ -365,7 +395,7 @@ export default function ServicesPage() {
             >
               {cat}
               <span className={cn(
-                "px-2 py-0.5 rounded-full text-xs",
+                "px-2 py-0.5 rounded-full text-sm",
                 activeCategory === cat ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
               )}>
                 {allServices.filter(s => s.category === cat).length}
@@ -381,113 +411,135 @@ export default function ServicesPage() {
           <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
           <p className="text-gray-500 font-medium animate-pulse">Ładowanie usług...</p>
         </div>
-      ) : Object.keys(groupedDisplay).length > 0 ? (
+      ) : groupedDisplay.length > 0 ? (
         <motion.div
           className="space-y-10"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <AnimatePresence mode="popLayout">
-            {Object.entries(groupedDisplay).map(([category, subcategories]) => (
-              <motion.div key={category} layout variants={itemVariants} className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-1 bg-primary rounded-full" />
-                  <h2 className="text-2xl font-black text-foreground tracking-tight">{category}</h2>
-                </div>
+          <Accordion
+            type="multiple"
+            defaultValue={defaultExpandedCategory ? [defaultExpandedCategory] : []}
+            className="space-y-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {groupedDisplay.map(([category, subcategories]) => {
+                const categoryCount = Object.values(subcategories).reduce(
+                  (sum, services) => sum + services.length,
+                  0
+                )
 
-                <div className="grid gap-8">
-                  {Object.entries(subcategories).map(([subcategory, services]) => (
-                    <div key={subcategory} className="space-y-4">
-                      <div className="flex items-center justify-between px-2">
-                        <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                          <ChevronRight className="h-4 w-4 text-primary/60" />
-                          {subcategory}
-                        </h3>
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold">
-                          {services.length} {services.length === 1 ? 'usługa' : 'usługi'}
-                        </Badge>
-                      </div>
+                return (
+                  <motion.div key={category} layout variants={itemVariants}>
+                    <AccordionItem value={category} className="border border-slate-200/70 rounded-2xl px-4 bg-white/70">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-1 bg-primary rounded-full" />
+                          <span className="text-2xl font-black text-foreground tracking-tight">{category}</span>
+                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold text-sm">
+                            {categoryCount}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {(services as Service[]).map((service) => (
-                          <Card
-                            key={service.id}
-                            className={cn(
-                              "group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10",
-                              !service.active && "opacity-60 bg-gray-50/50"
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="space-y-2 flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                                    {service.name}
-                                  </h4>
-                                  {!service.active && (
-                                    <Badge variant="outline" className="bg-white text-gray-400 border-gray-200 font-bold text-[10px] uppercase">
-                                      Nieaktywna
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
-                                  <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    {formatPrice(service.price)}
-                                  </span>
-                                  <span className="flex items-center gap-1.5">
-                                    <Clock className="h-3.5 w-3.5 text-gray-400" />
-                                    {service.duration} min
-                                  </span>
-                                </div>
+                      <AccordionContent className="pt-2 pb-4">
+                        <div className="grid gap-8">
+                          {Object.entries(subcategories).map(([subcategory, services]) => (
+                            <div key={subcategory} className="space-y-4">
+                              <div className="flex items-center justify-between px-2">
+                                <h3 className="text-lg font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                  <ChevronRight className="h-4 w-4 text-primary/60" />
+                                  {subcategory}
+                                </h3>
+                                <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold text-sm">
+                                  {services.length} {services.length === 1 ? 'usługa' : 'usługi'}
+                                </Badge>
                               </div>
 
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className={cn(
-                                    "h-9 w-9 rounded-lg transition-colors",
-                                    service.active ? "text-slate-400 hover:text-amber-500 hover:bg-amber-50" : "text-slate-400 hover:text-emerald-500 hover:bg-emerald-50"
-                                  )}
-                                  onClick={() => handleToggleActive(service)}
-                                  title={service.active ? 'Dezaktywuj' : 'Aktywuj'}
-                                >
-                                  {service.active ? (
-                                    <Lock className="h-4 w-4" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-9 w-9 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
-                                  onClick={() => handleOpenDialog(service)}
-                                  title="Edytuj"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-9 w-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                                  onClick={() => handleDelete(service)}
-                                  title="Usuń"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                {(services as Service[]).map((service) => (
+                                  <Card
+                                    key={service.id}
+                                    className={cn(
+                                      "group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10",
+                                      !service.active && "opacity-60 bg-gray-50/50"
+                                    )}
+                                  >
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="space-y-2 flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate theme-service-name">
+                                            {service.name}
+                                          </h4>
+                                          {!service.active && (
+                                            <Badge variant="outline" className="bg-white text-gray-400 border-gray-200 font-bold text-xs uppercase">
+                                              Nieaktywna
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-gray-500 font-medium">
+                                          <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                                            <DollarSign className="h-4 w-4" />
+                                            {formatPrice(service.price)}
+                                          </span>
+                                          <span className="flex items-center gap-1.5">
+                                            <Clock className="h-4 w-4 text-gray-400" />
+                                            {service.duration} min
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className={cn(
+                                            "h-9 w-9 rounded-lg transition-colors",
+                                            service.active ? "text-slate-400 hover:text-amber-500 hover:bg-amber-50" : "text-slate-400 hover:text-emerald-500 hover:bg-emerald-50"
+                                          )}
+                                          onClick={() => handleToggleActive(service)}
+                                          title={service.active ? 'Dezaktywuj' : 'Aktywuj'}
+                                        >
+                                          {service.active ? (
+                                            <Lock className="h-4 w-4" />
+                                          ) : (
+                                            <Unlock className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-9 w-9 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
+                                          onClick={() => handleOpenDialog(service)}
+                                          title="Edytuj"
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-9 w-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                          onClick={() => handleDelete(service)}
+                                          title="Usuń"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
                               </div>
                             </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </Accordion>
         </motion.div>
       ) : (
         <EmptyState
@@ -505,7 +557,7 @@ export default function ServicesPage() {
 
       {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md glass rounded-2xl">
+        <DialogContent className="max-w-md glass rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl">
               {editingService ? 'Edytuj usługę' : 'Nowa usługa'}
@@ -528,7 +580,7 @@ export default function ServicesPage() {
                   <Layers className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
                 {form.formState.errors.category && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.category.message}
                   </p>
@@ -547,7 +599,7 @@ export default function ServicesPage() {
                   <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
                 {form.formState.errors.subcategory && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.subcategory.message}
                   </p>
@@ -563,7 +615,7 @@ export default function ServicesPage() {
                   className="glass h-11 rounded-xl focus:bg-white"
                 />
                 {form.formState.errors.name && (
-                  <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                  <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {form.formState.errors.name.message}
                   </p>
@@ -585,7 +637,7 @@ export default function ServicesPage() {
                     <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
                   {form.formState.errors.price && (
-                    <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                    <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.price.message}
                     </p>
@@ -606,7 +658,7 @@ export default function ServicesPage() {
                     <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
                   {form.formState.errors.duration && (
-                    <p className="text-xs text-rose-600 font-bold flex items-center gap-1">
+                    <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {form.formState.errors.duration.message}
                     </p>
@@ -644,10 +696,16 @@ export default function ServicesPage() {
                   ))}
                 </div>
                 {selectedEquipmentIds.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Rezerwacja sprzętu będzie sprawdzana przy każdej nowej wizycie.
                   </p>
                 )}
+              </div>
+            )}
+
+            {editingService && (
+              <div className="space-y-2 pt-2 border-t">
+                <AddonsEditor serviceId={editingService.id} salonId={salonId} />
               </div>
             )}
 

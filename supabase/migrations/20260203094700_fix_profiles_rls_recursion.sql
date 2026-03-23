@@ -10,6 +10,7 @@ DROP POLICY IF EXISTS "Users can view salon profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Owner and Manager can update profiles in salon" ON public.profiles;
 
+DROP POLICY IF EXISTS "Profiles are viewable by salon members." ON public.profiles;
 CREATE POLICY "Profiles are viewable by salon members."
 ON public.profiles FOR SELECT
 USING (
@@ -17,6 +18,7 @@ USING (
   OR user_id = auth.uid()
 );
 
+DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
 CREATE POLICY "Users can update their own profile."
 ON public.profiles FOR UPDATE TO authenticated
 USING (
@@ -26,6 +28,7 @@ WITH CHECK (
   user_id = auth.uid()
 );
 
+DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." ON public.profiles;
 CREATE POLICY "Owner/Manager can update employee profiles (role/data)."
 ON public.profiles FOR UPDATE TO authenticated
 USING (

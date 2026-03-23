@@ -153,19 +153,22 @@ BEGIN
       AND p.proname = 'update_updated_at_column'
   ) THEN
     DROP TRIGGER IF EXISTS update_message_templates_updated_at ON public.message_templates;
-    CREATE TRIGGER update_message_templates_updated_at
+    DROP TRIGGER IF EXISTS update_message_templates_updated_at ON public.message_templates;
+CREATE TRIGGER update_message_templates_updated_at
       BEFORE UPDATE ON public.message_templates
       FOR EACH ROW
       EXECUTE FUNCTION public.update_updated_at_column();
 
     DROP TRIGGER IF EXISTS update_crm_automations_updated_at ON public.crm_automations;
-    CREATE TRIGGER update_crm_automations_updated_at
+    DROP TRIGGER IF EXISTS update_crm_automations_updated_at ON public.crm_automations;
+CREATE TRIGGER update_crm_automations_updated_at
       BEFORE UPDATE ON public.crm_automations
       FOR EACH ROW
       EXECUTE FUNCTION public.update_updated_at_column();
 
     DROP TRIGGER IF EXISTS update_crm_campaigns_updated_at ON public.crm_campaigns;
-    CREATE TRIGGER update_crm_campaigns_updated_at
+    DROP TRIGGER IF EXISTS update_crm_campaigns_updated_at ON public.crm_campaigns;
+CREATE TRIGGER update_crm_campaigns_updated_at
       BEFORE UPDATE ON public.crm_campaigns
       FOR EACH ROW
       EXECUTE FUNCTION public.update_updated_at_column();
@@ -179,12 +182,14 @@ ALTER TABLE public.crm_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_logs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "crm_templates_select_members" ON public.message_templates;
+DROP POLICY IF EXISTS "crm_templates_select_members" ON public.message_templates;
 CREATE POLICY "crm_templates_select_members"
   ON public.message_templates
   FOR SELECT
   TO authenticated
   USING (salon_id = public.get_user_salon_id());
 
+DROP POLICY IF EXISTS "crm_templates_insert_owner_manager" ON public.message_templates;
 DROP POLICY IF EXISTS "crm_templates_insert_owner_manager" ON public.message_templates;
 CREATE POLICY "crm_templates_insert_owner_manager"
   ON public.message_templates
@@ -195,6 +200,7 @@ CREATE POLICY "crm_templates_insert_owner_manager"
     AND public.has_any_salon_role(ARRAY['owner', 'manager'])
   );
 
+DROP POLICY IF EXISTS "crm_templates_update_owner_manager" ON public.message_templates;
 DROP POLICY IF EXISTS "crm_templates_update_owner_manager" ON public.message_templates;
 CREATE POLICY "crm_templates_update_owner_manager"
   ON public.message_templates
@@ -209,6 +215,7 @@ CREATE POLICY "crm_templates_update_owner_manager"
     AND public.has_any_salon_role(ARRAY['owner', 'manager'])
   );
 
+DROP POLICY IF EXISTS "crm_templates_delete_owner_only" ON public.message_templates;
 DROP POLICY IF EXISTS "crm_templates_delete_owner_only" ON public.message_templates;
 CREATE POLICY "crm_templates_delete_owner_only"
   ON public.message_templates
@@ -227,6 +234,7 @@ CREATE POLICY "crm_campaigns_select_members"
   USING (salon_id = public.get_user_salon_id());
 
 DROP POLICY IF EXISTS "crm_campaigns_insert_owner_manager" ON public.crm_campaigns;
+DROP POLICY IF EXISTS "crm_campaigns_insert_owner_manager" ON public.crm_campaigns;
 CREATE POLICY "crm_campaigns_insert_owner_manager"
   ON public.crm_campaigns
   FOR INSERT
@@ -236,6 +244,7 @@ CREATE POLICY "crm_campaigns_insert_owner_manager"
     AND public.has_any_salon_role(ARRAY['owner', 'manager'])
   );
 
+DROP POLICY IF EXISTS "crm_campaigns_update_owner_manager" ON public.crm_campaigns;
 DROP POLICY IF EXISTS "crm_campaigns_update_owner_manager" ON public.crm_campaigns;
 CREATE POLICY "crm_campaigns_update_owner_manager"
   ON public.crm_campaigns
@@ -251,6 +260,7 @@ CREATE POLICY "crm_campaigns_update_owner_manager"
   );
 
 DROP POLICY IF EXISTS "crm_campaigns_delete_owner_only" ON public.crm_campaigns;
+DROP POLICY IF EXISTS "crm_campaigns_delete_owner_only" ON public.crm_campaigns;
 CREATE POLICY "crm_campaigns_delete_owner_only"
   ON public.crm_campaigns
   FOR DELETE
@@ -260,6 +270,7 @@ CREATE POLICY "crm_campaigns_delete_owner_only"
     AND public.has_salon_role('owner')
   );
 
+DROP POLICY IF EXISTS "crm_automations_select_owner_manager" ON public.crm_automations;
 DROP POLICY IF EXISTS "crm_automations_select_owner_manager" ON public.crm_automations;
 CREATE POLICY "crm_automations_select_owner_manager"
   ON public.crm_automations
@@ -271,6 +282,7 @@ CREATE POLICY "crm_automations_select_owner_manager"
   );
 
 DROP POLICY IF EXISTS "crm_automations_insert_owner_only" ON public.crm_automations;
+DROP POLICY IF EXISTS "crm_automations_insert_owner_only" ON public.crm_automations;
 CREATE POLICY "crm_automations_insert_owner_only"
   ON public.crm_automations
   FOR INSERT
@@ -280,6 +292,7 @@ CREATE POLICY "crm_automations_insert_owner_only"
     AND public.has_salon_role('owner')
   );
 
+DROP POLICY IF EXISTS "crm_automations_update_owner_only" ON public.crm_automations;
 DROP POLICY IF EXISTS "crm_automations_update_owner_only" ON public.crm_automations;
 CREATE POLICY "crm_automations_update_owner_only"
   ON public.crm_automations
@@ -295,6 +308,7 @@ CREATE POLICY "crm_automations_update_owner_only"
   );
 
 DROP POLICY IF EXISTS "crm_automations_delete_owner_only" ON public.crm_automations;
+DROP POLICY IF EXISTS "crm_automations_delete_owner_only" ON public.crm_automations;
 CREATE POLICY "crm_automations_delete_owner_only"
   ON public.crm_automations
   FOR DELETE
@@ -304,6 +318,7 @@ CREATE POLICY "crm_automations_delete_owner_only"
     AND public.has_salon_role('owner')
   );
 
+DROP POLICY IF EXISTS "crm_message_logs_select_owner_manager" ON public.message_logs;
 DROP POLICY IF EXISTS "crm_message_logs_select_owner_manager" ON public.message_logs;
 CREATE POLICY "crm_message_logs_select_owner_manager"
   ON public.message_logs

@@ -90,13 +90,13 @@ export default async function DashboardLayout({
 
   return (
     <ThemeProvider themeKey={themeKey}>
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="theme-dashboard-shell flex h-screen overflow-hidden bg-background">
         <Sidebar salonSlug={slug} userName={typedProfile?.full_name ?? undefined} />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar salonName={salon.name} />
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="theme-dashboard-main flex-1 overflow-y-auto p-6">
             <DunningBanner salonId={salon.id} slug={slug} />
             {children}
           </main>

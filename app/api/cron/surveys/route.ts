@@ -3,7 +3,9 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { hasFeature } from '@/lib/features'
 import { generateSurveyToken } from '@/lib/messaging/survey-token'
+import { sendTransactionalEmail } from '@/lib/messaging/email-sender'
 import { sendSms } from '@/lib/messaging/sms-sender'
+import { getAppUrl } from '@/lib/config/app-url'
 
 type BookingCandidate = {
   id: string
@@ -19,6 +21,7 @@ type BookingCandidate = {
   clients?: {
     id: string
     phone: string | null
+    email: string | null
     full_name: string | null
   } | null
   services?: {
@@ -28,13 +31,51 @@ type BookingCandidate = {
   } | null
 }
 
+type SkipReason =
+  | 'timing'
+  | 'no_feature_surveys'
+  | 'notif_disabled'
+  | 'service_survey_disabled'
+  | 'no_phone'
+  | 'no_contact'
+  | 'insert_error'
+  | 'sent'
+
+type BookingDebugLog = {
+  id: string
+  date: string
+  time: string
+  duration: number
+  endsAt: string
+  windowMin: string
+  windowMax: string
+  skipReason: SkipReason
+  error?: string
+}
+
 function toIsoDateString(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
 function toDateTime(bookingDate: string, bookingTime: string): Date {
   const safeTime = bookingTime.length === 5 ? `${bookingTime}:00` : bookingTime
-  return new Date(`${bookingDate}T${safeTime}`)
+  const asIfUtc = new Date(`${bookingDate}T${safeTime}Z`)
+  const utcInWarsaw = new Date(asIfUtc.toLocaleString("en-US", { timeZone: "Europe/Warsaw" }))
+  const offsetMs = asIfUtc.getTime() - utcInWarsaw.getTime()
+  return new Date(asIfUtc.getTime() + offsetMs)
+}
+
+function buildSurveyEmailHtml(name: string | null, url: string): string {
+  return `<div style='font-family:sans-serif;max-width:500px;margin:0 auto'>
+    <p>Cześć ${name || 'Kliencie'},</p>
+    <p>Dziękujemy za wizytę! Oceń nas w 30 sekund — to pomoże nam się rozwijać.</p>
+    <p style='margin-top:24px'>
+      <a href='${url}' style='background:#18181b;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600'>
+        Wypełnij ankietę →
+      </a>
+    </p>
+    <p style='margin-top:24px;font-size:12px;color:#6b7280'>Lub wejdź bezpośrednio: ${url}</p>
+  </div>`
 }
 
 export async function GET(request: NextRequest) {
@@ -47,16 +88,17 @@ export async function GET(request: NextRequest) {
   const minEndMs = nowMs - 2.5 * 60 * 60 * 1000
   const maxEndMs = nowMs - 2 * 60 * 60 * 1000
   const yesterday = new Date(nowMs - 24 * 60 * 60 * 1000)
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = getAppUrl()
 
   let sent = 0
   let skipped = 0
+  const debugLog: BookingDebugLog[] = []
 
   try {
     const { data, error } = await admin
       .from('bookings')
       .select(
-        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, full_name), services(id, survey_enabled, survey_custom_message)'
+        'id, salon_id, client_id, booking_date, booking_time, duration, survey_sent, salons(features), clients(id, phone, email, full_name), services(id, survey_enabled, survey_custom_message)'
       )
       .eq('status', 'completed')
       .eq('survey_sent', false)
@@ -68,6 +110,8 @@ export async function GET(request: NextRequest) {
     }
 
     const bookings = (data || []) as BookingCandidate[]
+    const windowMinIso = new Date(minEndMs).toISOString()
+    const windowMaxIso = new Date(maxEndMs).toISOString()
 
     // Batch-fetch notification settings per salon
     const uniqueSalonIds = [...new Set(bookings.map(b => b.salon_id))]
@@ -81,31 +125,51 @@ export async function GET(request: NextRequest) {
 
     for (const booking of bookings) {
       const endsAtMs = toDateTime(booking.booking_date, booking.booking_time).getTime() + booking.duration * 60_000
+      const endsAtIso = Number.isNaN(endsAtMs) ? 'Invalid Date' : new Date(endsAtMs).toISOString()
+      const debugEntryBase = {
+        id: booking.id,
+        date: booking.booking_date,
+        time: booking.booking_time,
+        duration: booking.duration,
+        endsAt: endsAtIso,
+        windowMin: windowMinIso,
+        windowMax: windowMaxIso,
+      }
 
       if (Number.isNaN(endsAtMs) || endsAtMs < minEndMs || endsAtMs > maxEndMs) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'timing' })
         skipped += 1
         continue
       }
 
       if (!hasFeature(booking.salons?.features || null, 'surveys')) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'no_feature_surveys' })
         skipped += 1
         continue
       }
 
       const notifSettings = notifSettingsMap.get(booking.salon_id)
       if (!notifSettings?.surveys?.enabled) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'notif_disabled' })
         skipped += 1
         continue
       }
+      const channel: 'sms' | 'email' | 'both' = notifSettings?.surveys?.channel ?? 'sms'
 
       // Skip if the specific service has surveys disabled
       if (booking.services?.survey_enabled === false) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'service_survey_disabled' })
         skipped += 1
         continue
       }
 
       const client = booking.clients
-      if (!client?.phone) {
+      if (
+        !client ||
+        (channel === 'sms' || channel === 'both') && !client?.phone ||
+        (channel === 'email' || channel === 'both') && !client?.email
+      ) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'no_contact' })
         skipped += 1
         continue
       }
@@ -129,6 +193,7 @@ export async function GET(request: NextRequest) {
         })
 
         if (insertError) {
+          debugLog.push({ ...debugEntryBase, skipReason: 'insert_error' })
           skipped += 1
           continue
         }
@@ -141,12 +206,23 @@ export async function GET(request: NextRequest) {
           ? booking.services.survey_custom_message.replace('{{url}}', surveyUrl)
           : `Dzi\u0119kujemy za wizyt\u0119! Oce\u0144 nas w 30 sekund: ${surveyUrl}`
 
-        await sendSms({
-          salonId: booking.salon_id,
-          clientId: client.id,
-          to: client.phone,
-          body: smsBody,
-        })
+        if (channel === 'sms' || channel === 'both') {
+          await sendSms({
+            salonId: booking.salon_id,
+            clientId: client.id,
+            to: client.phone!,
+            body: smsBody,
+          })
+        }
+
+        if (channel === 'email' || channel === 'both') {
+          await sendTransactionalEmail({
+            salonId: booking.salon_id,
+            to: client.email!,
+            subject: 'Oceń swoją wizytę',
+            html: buildSurveyEmailHtml(client.full_name, surveyUrl),
+          })
+        }
 
         // 3. Mark booking as sent — if this fails, UNIQUE on survey row prevents duplicate
         //    insert on retry, so SMS won't be sent twice.
@@ -157,12 +233,14 @@ export async function GET(request: NextRequest) {
           .eq('salon_id', booking.salon_id)
 
         sent += 1
-      } catch {
+        debugLog.push({ ...debugEntryBase, skipReason: 'sent' })
+      } catch (e) {
+        debugLog.push({ ...debugEntryBase, skipReason: 'insert_error', error: e instanceof Error ? e.message : String(e) })
         skipped += 1
       }
     }
 
-    return NextResponse.json({ ok: true, sent, skipped })
+    return NextResponse.json({ ok: true, sent, skipped, debug: debugLog })
   } catch (error) {
     return NextResponse.json(
       {

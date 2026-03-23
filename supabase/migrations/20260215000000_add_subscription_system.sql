@@ -346,6 +346,7 @@ ALTER TABLE public.feature_flags ENABLE ROW LEVEL SECURITY;
 
 -- SUBSCRIPTIONS - tylko owner może widzieć
 DROP POLICY IF EXISTS "Salon owners can view subscriptions" ON public.subscriptions;
+DROP POLICY IF EXISTS "Salon owners can view subscriptions" ON public.subscriptions;
 CREATE POLICY "Salon owners can view subscriptions"
   ON public.subscriptions
   FOR SELECT
@@ -355,6 +356,7 @@ CREATE POLICY "Salon owners can view subscriptions"
     AND public.has_salon_role('owner')
   );
 
+DROP POLICY IF EXISTS "Salon owners can manage subscriptions" ON public.subscriptions;
 DROP POLICY IF EXISTS "Salon owners can manage subscriptions" ON public.subscriptions;
 CREATE POLICY "Salon owners can manage subscriptions"
   ON public.subscriptions
@@ -371,6 +373,7 @@ CREATE POLICY "Salon owners can manage subscriptions"
 
 -- INVOICES - owner i manager mogą widzieć
 DROP POLICY IF EXISTS "Salon owners and managers can view invoices" ON public.invoices;
+DROP POLICY IF EXISTS "Salon owners and managers can view invoices" ON public.invoices;
 CREATE POLICY "Salon owners and managers can view invoices"
   ON public.invoices
   FOR SELECT
@@ -381,6 +384,7 @@ CREATE POLICY "Salon owners and managers can view invoices"
   );
 
 -- PAYMENT_METHODS - tylko owner
+DROP POLICY IF EXISTS "Salon owners can manage payment methods" ON public.payment_methods;
 DROP POLICY IF EXISTS "Salon owners can manage payment methods" ON public.payment_methods;
 CREATE POLICY "Salon owners can manage payment methods"
   ON public.payment_methods
@@ -397,6 +401,7 @@ CREATE POLICY "Salon owners can manage payment methods"
 
 -- USAGE_TRACKING - wszyscy mogą czytać (dla pokazywania limitów w UI)
 DROP POLICY IF EXISTS "Salon members can view usage tracking" ON public.usage_tracking;
+DROP POLICY IF EXISTS "Salon members can view usage tracking" ON public.usage_tracking;
 CREATE POLICY "Salon members can view usage tracking"
   ON public.usage_tracking
   FOR SELECT
@@ -406,6 +411,7 @@ CREATE POLICY "Salon members can view usage tracking"
   );
 
 -- FEATURE_FLAGS - wszyscy mogą czytać (dla feature gating)
+DROP POLICY IF EXISTS "Salon members can view feature flags" ON public.feature_flags;
 DROP POLICY IF EXISTS "Salon members can view feature flags" ON public.feature_flags;
 CREATE POLICY "Salon members can view feature flags"
   ON public.feature_flags
@@ -479,6 +485,7 @@ $$ LANGUAGE plpgsql;
 
 -- Zastosuj trigger do wszystkich tabel
 DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at
   BEFORE UPDATE ON public.subscriptions
   FOR EACH ROW
@@ -491,17 +498,20 @@ CREATE TRIGGER update_invoices_updated_at
   EXECUTE FUNCTION public.update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_payment_methods_updated_at ON public.payment_methods;
+DROP TRIGGER IF EXISTS update_payment_methods_updated_at ON public.payment_methods;
 CREATE TRIGGER update_payment_methods_updated_at
   BEFORE UPDATE ON public.payment_methods
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_usage_tracking_updated_at ON public.usage_tracking;
+DROP TRIGGER IF EXISTS update_usage_tracking_updated_at ON public.usage_tracking;
 CREATE TRIGGER update_usage_tracking_updated_at
   BEFORE UPDATE ON public.usage_tracking
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_feature_flags_updated_at ON public.feature_flags;
 DROP TRIGGER IF EXISTS update_feature_flags_updated_at ON public.feature_flags;
 CREATE TRIGGER update_feature_flags_updated_at
   BEFORE UPDATE ON public.feature_flags

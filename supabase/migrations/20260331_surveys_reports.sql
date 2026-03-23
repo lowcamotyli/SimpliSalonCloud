@@ -27,7 +27,8 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE tablename = 'satisfaction_surveys' AND policyname = 'salon_read_surveys'
   ) THEN
-    CREATE POLICY salon_read_surveys ON public.satisfaction_surveys FOR SELECT USING (
+    DROP POLICY IF EXISTS salon_read_surveys ON public.satisfaction_surveys;
+CREATE POLICY salon_read_surveys ON public.satisfaction_surveys FOR SELECT USING (
       salon_id = public.get_user_salon_id()
     );
   END IF;

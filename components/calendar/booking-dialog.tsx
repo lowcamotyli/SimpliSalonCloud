@@ -35,6 +35,7 @@ import { formatPhoneNumber, parsePhoneNumber, formatPrice, formatDateTime } from
 import { toast } from 'sonner'
 import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, UserX, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter, useParams } from "next/navigation"
 
 const bookingFormSchema = z.object({
   employeeId: z.string().min(1, 'Wybierz pracownika'),
@@ -56,6 +57,8 @@ interface BookingDialogProps {
 }
 
 export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: BookingDialogProps) {
+  const router = useRouter()
+  const params = useParams<{ slug: string }>()
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
   const { data: clients } = useClients()
@@ -63,12 +66,17 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const [surcharge, setSurcharge] = useState<number>(booking?.surcharge || 0)
   const [editableDuration, setEditableDuration] = useState<number>(booking?.duration || 60)
   const [savedDuration, setSavedDuration] = useState<number>(booking?.duration || 60)
-  const [processingPayment, setProcessingPayment] = useState<'cash' | 'card' | null>(null)
+  const [processingPayment, setProcessingPayment] = useState<'cash' | 'card' | 'voucher' | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('')
   const [pickerView, setPickerView] = useState<'category' | 'subcategory' | 'service'>('category')
   const [searchTerm, setSearchTerm] = useState('')
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showVoucherPanel, setShowVoucherPanel] = useState(false)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherData, setVoucherData] = useState<{ id: string; code: string; current_balance: number } | null>(null)
+  const [voucherLoading, setVoucherLoading] = useState(false)
+  const [clientVouchers, setClientVouchers] = useState<Array<{ id: string; code: string; current_balance: number }>>([])
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -78,6 +86,24 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     setEditableDuration(booking?.duration || 60)
     setSavedDuration(booking?.duration || 60)
   }, [booking?.id, booking?.surcharge, booking?.duration])
+
+  useEffect(() => {
+    if (!showVoucherPanel || !booking?.client_id) return
+
+    const fetchClientVouchers = async () => {
+      try {
+        const response = await fetch(`/api/vouchers?clientId=${booking.client_id}&status=active&salonId=${params.slug}`)
+        if (!response.ok) return
+
+        const result = await response.json()
+        setClientVouchers(Array.isArray(result) ? result : [])
+      } catch (error) {
+        setClientVouchers([])
+      }
+    }
+
+    fetchClientVouchers()
+  }, [showVoucherPanel, booking?.client_id, params.slug])
 
   // Oblicz defaultValues na podstawie props
   const getDefaultValues = (): BookingFormData => {
@@ -193,7 +219,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     }
   }
 
-  const handleCompleteBooking = async (paymentMethod: 'cash' | 'card') => {
+  const handleCompleteBooking = async (paymentMethod: 'cash' | 'card' | 'voucher') => {
     try {
       setProcessingPayment(paymentMethod)
       await updateMutation.mutateAsync({
@@ -254,6 +280,70 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       ? Math.round(Number(editableDuration))
       : booking.duration)
     : 60
+
+  const handleValidateVoucher = async () => {
+    const normalizedCode = voucherCode.trim().toUpperCase()
+    if (!normalizedCode) {
+      toast.error('Podaj kod vouchera')
+      return
+    }
+
+    setVoucherLoading(true)
+    try {
+      const response = await fetch(`/api/vouchers?code=${normalizedCode}&salonId=${params.slug}`)
+      if (!response.ok) {
+        toast.error('Nie udało się sprawdzić vouchera')
+        setVoucherData(null)
+        return
+      }
+
+      const result = await response.json()
+      const validated = Array.isArray(result) ? result[0] : null
+      if (!validated) {
+        toast.error('Voucher nie został znaleziony')
+        setVoucherData(null)
+        return
+      }
+
+      setVoucherCode(normalizedCode)
+      setVoucherData(validated)
+    } catch (error) {
+      toast.error('Nie udało się sprawdzić vouchera')
+      setVoucherData(null)
+    } finally {
+      setVoucherLoading(false)
+    }
+  }
+
+  const handleCompleteWithVoucher = async () => {
+    if (!voucherData || !booking?.id) {
+      toast.error('Najpierw zweryfikuj voucher')
+      return
+    }
+
+    try {
+      setVoucherLoading(true)
+      const response = await fetch(`/api/vouchers/${voucherData.id}/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          amount: booking.base_price + (surcharge || 0),
+        }),
+      })
+
+      if (!response.ok) {
+        toast.error('Nie udało się rozliczyć vouchera')
+        return
+      }
+
+      await handleCompleteBooking('voucher')
+    } catch (error) {
+      toast.error('Nie udało się rozliczyć vouchera')
+    } finally {
+      setVoucherLoading(false)
+    }
+  }
 
   return (
     <>
@@ -422,10 +512,95 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                       )}
                       Karta
                     </Button>
+                    <Button
+                      type="button"
+                      variant={showVoucherPanel ? 'default' : 'outline'}
+                      onClick={() => {
+                        setShowVoucherPanel((prev) => !prev)
+                        if (showVoucherPanel) {
+                          setVoucherData(null)
+                          setVoucherCode('')
+                        }
+                      }}
+                      disabled={updateMutation.isPending}
+                      className="h-10 rounded-full px-4 shrink-0"
+                    >
+                      Voucher
+                    </Button>
                   </div>
                 </>
               )}
+              {booking.status === "completed" && (
+                <div className="flex items-center justify-end w-full">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => router.push(`/${params.slug}/clients/${booking.client_id}/treatment-records/new?bookingId=${booking.id}`)}
+                    className="h-10 rounded-full px-4"
+                  >
+                    Utwórz kartę zabiegu
+                  </Button>
+                </div>
+              )}
             </DialogFooter>
+            {booking.status === 'scheduled' && showVoucherPanel && (
+              <div className="mt-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/60 space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                    placeholder="Kod vouchera"
+                    className="bg-white"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleValidateVoucher}
+                    disabled={voucherLoading || !voucherCode.trim()}
+                    className="shrink-0"
+                  >
+                    {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Sprawdź
+                  </Button>
+                </div>
+
+                {clientVouchers.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {clientVouchers.map((voucher) => (
+                      <Badge
+                        key={voucher.id}
+                        variant="outline"
+                        onClick={() => {
+                          setVoucherCode(voucher.code)
+                          setVoucherData(voucher)
+                        }}
+                        className="cursor-pointer hover:bg-white"
+                      >
+                        {voucher.code} ({formatPrice(voucher.current_balance)})
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {voucherData && (
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-100 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="text-sm text-emerald-900">
+                      Voucher {voucherData.code} • Saldo: {formatPrice(voucherData.current_balance)}
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleCompleteWithVoucher}
+                      disabled={voucherLoading || updateMutation.isPending}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      {(voucherLoading || processingPayment === 'voucher') ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
+                      Zatwierdź
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

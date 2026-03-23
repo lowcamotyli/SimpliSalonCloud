@@ -29,6 +29,7 @@ USING (
 
 -- Policy for INSERT on employees: can be created by Owner/Manager in their salon.
 DROP POLICY IF EXISTS "Employees can be created by salon owner/manager." ON employees;
+DROP POLICY IF EXISTS "Employees can be created by salon owner/manager." ON public.employees;
 CREATE POLICY "Employees can be created by salon owner/manager."
 ON employees FOR INSERT
 WITH CHECK (
@@ -43,6 +44,7 @@ WITH CHECK (
 
 -- Policy for UPDATE on employees: Owner/Manager can update, but only for employees in their salon.
 DROP POLICY IF EXISTS "Employees can be updated by owner/manager for their salon." ON employees;
+DROP POLICY IF EXISTS "Employees can be updated by owner/manager for their salon." ON public.employees;
 CREATE POLICY "Employees can be updated by owner/manager for their salon."
 ON employees FOR UPDATE
 USING (
@@ -60,6 +62,7 @@ WITH CHECK (
 
 -- Policy for DELETE on employees: Owner/Manager can delete, but only for employees in their salon.
 DROP POLICY IF EXISTS "Employees can be deleted by owner/manager for their salon." ON employees;
+DROP POLICY IF EXISTS "Employees can be deleted by owner/manager for their salon." ON public.employees;
 CREATE POLICY "Employees can be deleted by owner/manager for their salon."
 ON employees FOR DELETE
 USING (
@@ -80,6 +83,7 @@ USING (
 
 -- Policy for SELECT on profiles: viewable by salon members or the user themselves.
 DROP POLICY IF EXISTS "Profiles are viewable by salon members." ON public.profiles;
+DROP POLICY IF EXISTS "Profiles are viewable by salon members." ON public.profiles;
 CREATE POLICY "Profiles are viewable by salon members."
 ON public.profiles FOR SELECT
 USING (
@@ -89,6 +93,7 @@ USING (
 
 -- Policy for UPDATE on profiles: User can update own profile data (non-critical fields).
 DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
+DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
 CREATE POLICY "Users can update their own profile." ON public.profiles FOR
 UPDATE TO authenticated
 USING (
@@ -96,6 +101,8 @@ USING (
 );
 
 -- Policy for UPDATE on profiles: Owner/Manager can update employee roles/details (excluding critical user_id/salon_id changes for others).
+DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." ON public.profiles;
+DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." ON public.profiles;
 DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." ON public.profiles;
 CREATE POLICY "Owner/Manager can update employee profiles (role/data)." ON public.profiles FOR
 UPDATE TO authenticated

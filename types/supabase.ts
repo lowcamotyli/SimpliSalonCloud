@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
   }
   graphql_public: {
     Tables: {
@@ -219,6 +219,45 @@ export type Database = {
           },
         ]
       }
+      booking_addons: {
+        Row: {
+          addon_id: string
+          booking_id: string
+          duration_at_booking: number
+          id: string
+          price_at_booking: number
+        }
+        Insert: {
+          addon_id: string
+          booking_id: string
+          duration_at_booking: number
+          id?: string
+          price_at_booking: number
+        }
+        Update: {
+          addon_id?: string
+          booking_id?: string
+          duration_at_booking?: number
+          id?: string
+          price_at_booking?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "service_addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_addons_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           base_price: number
@@ -246,6 +285,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           version: number
+          visit_group_id: string | null
         }
         Insert: {
           base_price: number
@@ -273,6 +313,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           version?: number
+          visit_group_id?: string | null
         }
         Update: {
           base_price?: number
@@ -300,6 +341,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           version?: number
+          visit_group_id?: string | null
         }
         Relationships: [
           {
@@ -328,6 +370,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_visit_group_id_fkey"
+            columns: ["visit_group_id"]
+            isOneToOne: false
+            referencedRelation: "visit_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -446,6 +495,7 @@ export type Database = {
           fill_token: string | null
           fill_token_exp: string | null
           form_template_id: string
+          health_consent_at: string | null
           id: string
           signature_url: string | null
           signed_at: string | null
@@ -461,6 +511,7 @@ export type Database = {
           fill_token?: string | null
           fill_token_exp?: string | null
           form_template_id: string
+          health_consent_at?: string | null
           id?: string
           signature_url?: string | null
           signed_at?: string | null
@@ -476,6 +527,7 @@ export type Database = {
           fill_token?: string | null
           fill_token_exp?: string | null
           form_template_id?: string
+          health_consent_at?: string | null
           id?: string
           signature_url?: string | null
           signed_at?: string | null
@@ -1132,6 +1184,7 @@ export type Database = {
       form_templates: {
         Row: {
           created_at: string
+          data_category: Database["public"]["Enums"]["form_data_category"]
           description: string | null
           fields: Json
           gdpr_consent_text: string | null
@@ -1144,6 +1197,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_category?: Database["public"]["Enums"]["form_data_category"]
           description?: string | null
           fields?: Json
           gdpr_consent_text?: string | null
@@ -1156,6 +1210,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          data_category?: Database["public"]["Enums"]["form_data_category"]
           description?: string | null
           fields?: Json
           gdpr_consent_text?: string | null
@@ -1169,6 +1224,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "form_templates_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_data_access_logs: {
+        Row: {
+          accessed_at: string
+          accessed_by: string
+          accessed_by_role: string
+          action: string
+          client_id: string | null
+          data_category: string
+          id: string
+          ip_address: string | null
+          resource_id: string
+          resource_type: string
+          salon_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          accessed_by: string
+          accessed_by_role: string
+          action: string
+          client_id?: string | null
+          data_category: string
+          id?: string
+          ip_address?: string | null
+          resource_id: string
+          resource_type: string
+          salon_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          accessed_by?: string
+          accessed_by_role?: string
+          action?: string
+          client_id?: string | null
+          data_category?: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string
+          resource_type?: string
+          salon_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_data_access_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_data_access_logs_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -2125,6 +2240,54 @@ export type Database = {
           },
         ]
       }
+      service_addons: {
+        Row: {
+          created_at: string
+          duration_delta: number
+          id: string
+          is_active: boolean
+          name: string
+          price_delta: number
+          salon_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_delta?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_delta?: number
+          salon_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_delta?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_delta?: number
+          salon_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_addons_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_equipment: {
         Row: {
           equipment_id: string
@@ -2413,6 +2576,353 @@ export type Database = {
           },
         ]
       }
+      treatment_photos: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          photo_type: string
+          salon_id: string
+          storage_path: string
+          taken_at: string
+          treatment_record_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          photo_type: string
+          salon_id: string
+          storage_path: string
+          taken_at?: string
+          treatment_record_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          photo_type?: string
+          salon_id?: string
+          storage_path?: string
+          taken_at?: string
+          treatment_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_photos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_photos_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_photos_treatment_record_id_fkey"
+            columns: ["treatment_record_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          protocol_id: string | null
+          salon_id: string
+          service_id: string | null
+          started_at: string | null
+          status: string
+          total_sessions: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          protocol_id?: string | null
+          salon_id: string
+          service_id?: string | null
+          started_at?: string | null
+          status?: string
+          total_sessions: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          protocol_id?: string | null
+          salon_id?: string
+          service_id?: string | null
+          started_at?: string | null
+          status?: string
+          total_sessions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_protocols: {
+        Row: {
+          created_at: string
+          description: string | null
+          fields: Json
+          id: string
+          is_active: boolean
+          name: string
+          salon_id: string
+          service_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          salon_id: string
+          service_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_protocols_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_protocols_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_records: {
+        Row: {
+          booking_id: string | null
+          client_id: string
+          created_at: string
+          data_category: string
+          employee_id: string
+          id: string
+          notes_encrypted: string | null
+          parameters: Json
+          performed_at: string
+          salon_id: string
+          service_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_id: string
+          created_at?: string
+          data_category?: string
+          employee_id: string
+          id?: string
+          notes_encrypted?: string | null
+          parameters?: Json
+          performed_at?: string
+          salon_id: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_id?: string
+          created_at?: string
+          data_category?: string
+          employee_id?: string
+          id?: string
+          notes_encrypted?: string | null
+          parameters?: Json
+          performed_at?: string
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_records_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_sessions: {
+        Row: {
+          booking_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          plan_id: string
+          salon_id: string
+          scheduled_at: string | null
+          session_number: number
+          status: string
+          treatment_record_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id: string
+          salon_id: string
+          scheduled_at?: string | null
+          session_number: number
+          status?: string
+          treatment_record_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          salon_id?: string
+          scheduled_at?: string | null
+          session_number?: number
+          status?: string
+          treatment_record_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_treatment_record_id_fkey"
+            columns: ["treatment_record_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_tracking: {
         Row: {
           api_calls_count: number | null
@@ -2471,6 +2981,175 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "usage_tracking_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visit_groups: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          salon_id: string
+          status: string
+          total_duration: number | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          salon_id: string
+          status?: string
+          total_duration?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          salon_id?: string
+          status?: string
+          total_duration?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_groups_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_groups_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voucher_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          booking_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          voucher_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          voucher_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_transactions_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          beneficiary_client_id: string | null
+          buyer_client_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_balance: number
+          expires_at: string
+          id: string
+          initial_value: number
+          salon_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_client_id?: string | null
+          buyer_client_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_balance: number
+          expires_at: string
+          id?: string
+          initial_value: number
+          salon_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_client_id?: string | null
+          buyer_client_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_balance?: number
+          expires_at?: string
+          id?: string
+          initial_value?: number
+          salon_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_beneficiary_client_id_fkey"
+            columns: ["beneficiary_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_buyer_client_id_fkey"
+            columns: ["buyer_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -2553,6 +3232,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           version: number
+          visit_group_id: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -2560,6 +3240,16 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      create_group_booking_atomic: {
+        Args: {
+          p_client_id: string
+          p_items?: Json
+          p_notes?: string
+          p_payment_method?: string
+          p_salon_id: string
+        }
+        Returns: Json
       }
       crm_increment_campaign_counter: {
         Args: {
@@ -2604,13 +3294,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      replace_equipment_services: {
+        Args: { p_equipment_id: string; p_service_ids: string[] }
+        Returns: undefined
+      }
       seed_default_crm_templates: {
         Args: { p_salon_id: string }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      form_data_category: "general" | "health" | "sensitive_health"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2740,6 +3434,8 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      form_data_category: ["general", "health", "sensitive_health"],
+    },
   },
 } as const

@@ -25,6 +25,19 @@ import { cn } from '@/lib/utils/cn'
 import { toast } from 'sonner'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 import { BUILTIN_TEMPLATES } from '@/lib/forms/builtin-templates'
+import { TreatmentCardImportReview } from '@/components/settings/treatment-card-import-review'
+import type { DataCategory } from '@/types/forms'
+
+function SensitiveDataBadge({ dataCategory }: { dataCategory?: DataCategory }) {
+  if (dataCategory !== 'sensitive_health') return null
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+      <AlertTriangle className="h-3.5 w-3.5" />
+      Dane wrazliwe
+    </span>
+  )
+}
 
 
 // --- CSV parsing ---
@@ -574,6 +587,7 @@ export default function ImportPage() {
           <TabsTrigger value="bookings">Rezerwacje</TabsTrigger>
           <TabsTrigger value="services">Usługi</TabsTrigger>
           <TabsTrigger value="forms">Formularze</TabsTrigger>
+          <TabsTrigger value="treatment-cards">Karty zabiegowe</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings" className="space-y-8">
@@ -1150,7 +1164,10 @@ export default function ImportPage() {
                         />
                       </div>
                       <div className="space-y-2 pr-8">
-                        <CardTitle className="text-base">{template.name}</CardTitle>
+                        <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+                          <span>{template.name}</span>
+                          <SensitiveDataBadge dataCategory={template.data_category} />
+                        </CardTitle>
                         <CardDescription>{template.description}</CardDescription>
                         <Badge variant="secondary">{template.fields.length} pól</Badge>
                       </div>
@@ -1171,6 +1188,10 @@ export default function ImportPage() {
               </Card>
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="treatment-cards">
+          <TreatmentCardImportReview />
         </TabsContent>
       </Tabs>
     </div>

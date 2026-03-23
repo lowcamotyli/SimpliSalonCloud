@@ -1,0 +1,963 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "TATUAŻ_&_PIERCING_konsultacja_(karta_ogólna).md",
+    "language": "pl",
+    "category": "TATUAŻ",
+    "serviceName": "konsultacja (karta ogólna)"
+  },
+  "extraction": {
+    "title": "TATUAŻ & PIERCING: konsultacja (karta ogólna)",
+    "questionBlocks": [
+      "W jakim jest Pan/i przedziale wiekowym?\ndo 18 lat18-25 lat25-35 lat35-45 lat45-55 lat55-65 latpowyżej 70 lat\nCzy przyjmuje Pan/i leki na stałe?\nTak    Nie\nJeśli tak, proszę podać nazwę, dawkę i częstotliwość:\nCzy chorował/a Pan/i lub choruje na poniższe schorzenia?\nNie dotyczy\nChoroby nowotworowe\nChoroby serca\nChoroby układu krążenia\nChoroby naczyń krwionośnych\nChoroby płuc\nChoroby układu pokarmowego\nChoroby wątroby\nChoroby układu moczowego\nZaburzenia metaboliczne\nChoroby tarczycy\nZaburzenia hormonalne\nChoroby układu nerwowego\nChoroby krwi i zaburzenia krzepnięcia\nChoroby oczu\nCzy chorował/a Pan/i lub choruje na poniższe schorzenia?\nChoroby układu kostnego\nChoroby zakaźne\nChoroby skóry\nChoroby psychosomatyczne\nInne\nCzy jest Pan/i na coś uczulony/a?\nNie\nLidokaina\nŚrodki znieczulające\nLateks\nMaści / preparaty medyczne\nKosmetyki kolorowe\nFarby do włosów (PPD)\nMetale\nNikiel\nInne\nCzy ma Pan/i skłonność do nadmiernych krwawień?\nTak    Nie\nCzy ma Pan/i skłonność do nieprawidłowego gojenia lub tworzenia blizn przerostowych / keloidów?\nTak    Nie\nCzy obecnie występuje opryszczka lub inna aktywna infekcja skóry?\nTak    Nie\nCzy w ciągu ostatnich 2 tygodni przyjmował/a Pan/i antybiotyk?\nTak    Nie\nJeśli tak, jaki i kiedy?\nCzy w ciągu ostatnich 6 miesięcy przyjmował/a Pan/i izotretynoinę (np. Izotek) lub inne leki przeciwtrądzikowe?\nTak    Nie\nCzy lekarz prowadzący wyraził zgodę na zabieg?\nTak    Nie\nCzy przyjmuje Pan/i aspirynę lub leki przeciwzakrzepowe?\nTak    Nie\nCzy w ciągu ostatnich 48 godzin przyjmował/a Pan/i leki przeciwbólowe lub przeciwzapalne?\nTak    Nie\nJeśli tak, jakie i kiedy dokładnie?\nCzy pali Pan/i papierosy?\nNie<5 dziennie5–10 dziennie10–20 dziennie>20 dziennie\nCzy spożywał/a Pan/i alkohol w ciągu ostatnich 24 godzin?\nTak    Nie\nJeśli tak, jaki i w jakiej ilości?\nCzy w miejscu planowanego zabiegu stosowano ostatnio preparaty kosmetyczne lub lecznicze?\nNie\nRetinol\nKwasy\nMaści lecznicze\nSamoopalacz\nInne\nCzy w ostatnich 7 dniach wykonywano inne zabiegi w tym obszarze skóry?\nTak    Nie\nJeśli tak, jakie?\nCzy w obszarze planowanego zabiegu występują:\nNie\nZnamiona / pieprzyki\nBlizny\nStany zapalne skóry\nZmiany skórne niewiadomego pochodzenia\nJak ocenia Pan/i stan swojej skóry?\nBardzo dobry\nDobry\nDo poprawy\nInne\nCzy stosuje Pan/i ochronę przeciwsłoneczną (SPF)?\nTak, codziennie z reaplikacją\nTak, raz dziennie\nTylko latem\nSporadycznie\nNie\nCzy korzysta Pan/i z solarium?\nTak    Nie\nJeśli tak, jak często i kiedy ostatnio?\nCzy planuje Pan/i w najbliższym czasie (ok. 6 tygodni) wyjazd do miejsca o silnym nasłonecznieniu lub mrozie?\nTak    Nie\nCzy stosuje Pan/i suplementację?\nNie stosuję suplementów\nWit. AWit. BWit. CWit. DWit. EMultiwitamina\nŻelazo\nMagnez\nPotas\nCynk\nKolagen\nOmega-3Probiotyki\nInne\nIle wody wypija Pan/i dziennie?\n<1 l1–1,5 l1,5–2 l2–2,5 l>2,5 l\nCzy jest Pani w ciąży?\nNie dotyczy\nTak\nNie\nCzy karmi Pani piersią?\nNie dotyczy\nTak\nNie\nCzy wykonywano wcześniej tatuaż lub piercing ?\nTak    Nie\nJaki zabieg będzie wykonywany?\nTatuaż\nPiercing\nDopigmentowanie / poprawa tatuażu"
+    ],
+    "legalBlocks": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty\nPlanów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty\nPlanów\nPODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty\nPlanu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).\nDo czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.\nCEL: Odpowiedzi na zapytania\nPODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]W przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).\nCEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów\nPODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.\nCEL: Reklamacje\nPODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]\nCzy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.\nJak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.\nGdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.\nKomu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).\nJakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail [EMAIL SALONU] lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.\nJeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.\nZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO."
+    ],
+    "warnings": [
+      "Wykryto linie dluzsza niz 300 znakow."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Pytania",
+        "fields": [
+          {
+            "id": "w_jakim_jest_pan_i_przedziale_wiekowym",
+            "type": "text",
+            "label": "W jakim jest Pan/i przedziale wiekowym?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false
+          },
+          {
+            "id": "medications",
+            "type": "radio",
+            "label": "Czy przyjmuje Pan/i leki na stałe?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_prosze_podac_nazwe_dawke_i_cze",
+            "type": "text",
+            "label": "Jeśli tak, proszę podać nazwę, dawkę i częstotliwość:",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "medications",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "chronic_diseases",
+            "type": "radio",
+            "label": "Czy chorował/a Pan/i lub choruje na poniższe schorzenia?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Nie dotyczy",
+              "Choroby nowotworowe",
+              "Choroby serca",
+              "Choroby układu krążenia",
+              "Choroby naczyń krwionośnych",
+              "Choroby płuc",
+              "Choroby układu pokarmowego",
+              "Choroby wątroby",
+              "Choroby układu moczowego",
+              "Zaburzenia metaboliczne",
+              "Choroby tarczycy",
+              "Zaburzenia hormonalne",
+              "Choroby układu nerwowego",
+              "Choroby krwi i zaburzenia krzepnięcia",
+              "Choroby oczu"
+            ]
+          },
+          {
+            "id": "chronic_diseases_2",
+            "type": "radio",
+            "label": "Czy chorował/a Pan/i lub choruje na poniższe schorzenia?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Choroby układu kostnego",
+              "Choroby zakaźne",
+              "Choroby skóry",
+              "Choroby psychosomatyczne",
+              "Inne"
+            ]
+          },
+          {
+            "id": "allergies",
+            "type": "radio",
+            "label": "Czy jest Pan/i na coś uczulony/a?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Lidokaina",
+              "Środki znieczulające",
+              "Lateks",
+              "Maści / preparaty medyczne",
+              "Kosmetyki kolorowe",
+              "Farby do włosów (PPD)",
+              "Metale",
+              "Nikiel",
+              "Inne"
+            ]
+          },
+          {
+            "id": "czy_ma_pan_i_sklonnosc_do_nadmiernych_kr",
+            "type": "radio",
+            "label": "Czy ma Pan/i skłonność do nadmiernych krwawień?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_ma_pan_i_sklonnosc_do_nieprawidloweg",
+            "type": "radio",
+            "label": "Czy ma Pan/i skłonność do nieprawidłowego gojenia lub tworzenia blizn przerostowych / keloidów?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "herpes",
+            "type": "radio",
+            "label": "Czy obecnie występuje opryszczka lub inna aktywna infekcja skóry?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_w_ciagu_ostatnich_2_tygodni_przyjmow",
+            "type": "radio",
+            "label": "Czy w ciągu ostatnich 2 tygodni przyjmował/a Pan/i antybiotyk?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_jaki_i_kiedy",
+            "type": "text",
+            "label": "Jeśli tak, jaki i kiedy?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_w_ciagu_ostatnich_2_tygodni_przyjmow",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_w_ciagu_ostatnich_6_miesiecy_przyjmo",
+            "type": "radio",
+            "label": "Czy w ciągu ostatnich 6 miesięcy przyjmował/a Pan/i izotretynoinę (np. Izotek) lub inne leki przeciwtrądzikowe?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_lekarz_prowadzacy_wyrazil_zgode_na_z",
+            "type": "radio",
+            "label": "Czy lekarz prowadzący wyraził zgodę na zabieg?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "blood_coagulation",
+            "type": "radio",
+            "label": "Czy przyjmuje Pan/i aspirynę lub leki przeciwzakrzepowe?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_w_ciagu_ostatnich_48_godzin_przyjmow",
+            "type": "radio",
+            "label": "Czy w ciągu ostatnich 48 godzin przyjmował/a Pan/i leki przeciwbólowe lub przeciwzapalne?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_jakie_i_kiedy_dokladnie",
+            "type": "text",
+            "label": "Jeśli tak, jakie i kiedy dokładnie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_w_ciagu_ostatnich_48_godzin_przyjmow",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_pali_pan_i_papierosy",
+            "type": "radio",
+            "label": "Czy pali Pan/i papierosy?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie<5 dziennie",
+              "5–10 dziennie10–20 dziennie>20 dziennie"
+            ]
+          },
+          {
+            "id": "czy_spozywal_a_pan_i_alkohol_w_ciagu_ost",
+            "type": "radio",
+            "label": "Czy spożywał/a Pan/i alkohol w ciągu ostatnich 24 godzin?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_jaki_i_w_jakiej_ilosci",
+            "type": "text",
+            "label": "Jeśli tak, jaki i w jakiej ilości?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_spozywal_a_pan_i_alkohol_w_ciagu_ost",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_w_miejscu_planowanego_zabiegu_stosow",
+            "type": "select",
+            "label": "Czy w miejscu planowanego zabiegu stosowano ostatnio preparaty kosmetyczne lub lecznicze?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Retinol",
+              "Kwasy",
+              "Maści lecznicze",
+              "Samoopalacz",
+              "Inne"
+            ]
+          },
+          {
+            "id": "czy_w_ostatnich_7_dniach_wykonywano_inne",
+            "type": "radio",
+            "label": "Czy w ostatnich 7 dniach wykonywano inne zabiegi w tym obszarze skóry?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_jakie",
+            "type": "select",
+            "label": "Jeśli tak, jakie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Czy w obszarze planowanego zabiegu występują:",
+              "Nie",
+              "Znamiona / pieprzyki",
+              "Blizny",
+              "Stany zapalne skóry",
+              "Zmiany skórne niewiadomego pochodzenia"
+            ],
+            "conditionalShowIf": {
+              "fieldId": "czy_w_ostatnich_7_dniach_wykonywano_inne",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "hair_condition",
+            "type": "radio",
+            "label": "Jak ocenia Pan/i stan swojej skóry?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Bardzo dobry",
+              "Dobry",
+              "Do poprawy",
+              "Inne"
+            ]
+          },
+          {
+            "id": "sunscreen_use",
+            "type": "radio",
+            "label": "Czy stosuje Pan/i ochronę przeciwsłoneczną (SPF)?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tak, codziennie z reaplikacją",
+              "Tak, raz dziennie",
+              "Tylko latem",
+              "Sporadycznie",
+              "Nie"
+            ]
+          },
+          {
+            "id": "czy_korzysta_pan_i_z_solarium",
+            "type": "radio",
+            "label": "Czy korzysta Pan/i z solarium?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_jak_czesto_i_kiedy_ostatnio",
+            "type": "text",
+            "label": "Jeśli tak, jak często i kiedy ostatnio?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_korzysta_pan_i_z_solarium",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_planuje_pan_i_w_najblizszym_czasie_o",
+            "type": "radio",
+            "label": "Czy planuje Pan/i w najbliższym czasie (ok. 6 tygodni) wyjazd do miejsca o silnym nasłonecznieniu lub mrozie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "czy_stosuje_pan_i_suplementacje",
+            "type": "select",
+            "label": "Czy stosuje Pan/i suplementację?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie stosuję suplementów",
+              "Wit. A",
+              "Wit. B",
+              "Wit. C",
+              "Wit. D",
+              "Wit. E",
+              "Multiwitamina",
+              "Żelazo",
+              "Magnez",
+              "Potas",
+              "Cynk",
+              "Kolagen",
+              "Omega-3",
+              "Probiotyki",
+              "Inne"
+            ]
+          },
+          {
+            "id": "ile_wody_wypija_pan_i_dziennie",
+            "type": "radio",
+            "label": "Ile wody wypija Pan/i dziennie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "<1 l",
+              "1–1,5 l",
+              "1,5–2 l",
+              "2–2,5 l>2,5 l"
+            ]
+          },
+          {
+            "id": "pregnancy",
+            "type": "radio",
+            "label": "Czy jest Pani w ciąży?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie dotyczy",
+              "Tak",
+              "Nie"
+            ]
+          },
+          {
+            "id": "czy_karmi_pani_piersia",
+            "type": "radio",
+            "label": "Czy karmi Pani piersią?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie dotyczy",
+              "Tak",
+              "Nie"
+            ]
+          },
+          {
+            "id": "czy_wykonywano_wczesniej_tatuaz_lub_pier",
+            "type": "radio",
+            "label": "Czy wykonywano wcześniej tatuaż lub piercing ?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jaki_zabieg_bedzie_wykonywany",
+            "type": "radio",
+            "label": "Jaki zabieg będzie wykonywany?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Tatuaż",
+              "Piercing",
+              "Dopigmentowanie / poprawa tatuażu"
+            ]
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beau"
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "sensitive_health",
+    "healthFieldCount": 9,
+    "sensitiveFieldCount": 3,
+    "requiresHealthConsent": true,
+    "reviewRequired": true,
+    "reviewNotes": []
+  },
+  "templateDraft": {
+    "name": "konsultacja (karta ogólna)",
+    "description": "Zaimportowane z biblioteki kart zabiegowych",
+    "data_category": "sensitive_health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Administratorem Twoich danych osobowych jest [NAZWA SALONU] z siedziba pod adresem [ADRES] (\"Administrator\").\n\nW sprawach zwiazanych z przetwarzaniem danych osobowych mozesz skontaktowac sie z Administratorem pod adresem e-mail: [EMAIL SALONU].\n\nTwoje dane osobowe przetwarzane sa w celu realizacji uslug i wykonania zawartej umowy (art. 6 ust. 1 lit. b RODO). W zakresie, w jakim dane dotycza zdrowia, podstawa przetwarzania jest Twoja wyrazna zgoda (art. 9 ust. 2 lit. a RODO).\n\nDane beda przechowywane przez okres niezbedny do realizacji uslugi, a po jej wykonaniu przez okres wynikajacy z przepisow prawa oraz do czasu przedawnienia ewentualnych roszczen.\n\nPrzysluguje Ci prawo dostepu do danych, ich sprostowania, usuniecia, ograniczenia przetwarzania, przenoszenia danych, wycofania zgody oraz wniesienia sprzeciwu - w przypadkach przewidzianych prawem. Masz takze prawo wniesienia skargi do Prezesa Urzedu Ochrony Danych Osobowych.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "w_jakim_jest_pan_i_przedziale_wiekowym",
+        "type": "text",
+        "label": "W jakim jest Pan/i przedziale wiekowym?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false
+      },
+      {
+        "id": "medications",
+        "type": "radio",
+        "label": "Czy przyjmuje Pan/i leki na stałe?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_prosze_podac_nazwe_dawke_i_cze",
+        "type": "text",
+        "label": "Jeśli tak, proszę podać nazwę, dawkę i częstotliwość:",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "medications",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "chronic_diseases",
+        "type": "radio",
+        "label": "Czy chorował/a Pan/i lub choruje na poniższe schorzenia?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Nie dotyczy",
+          "Choroby nowotworowe",
+          "Choroby serca",
+          "Choroby układu krążenia",
+          "Choroby naczyń krwionośnych",
+          "Choroby płuc",
+          "Choroby układu pokarmowego",
+          "Choroby wątroby",
+          "Choroby układu moczowego",
+          "Zaburzenia metaboliczne",
+          "Choroby tarczycy",
+          "Zaburzenia hormonalne",
+          "Choroby układu nerwowego",
+          "Choroby krwi i zaburzenia krzepnięcia",
+          "Choroby oczu"
+        ]
+      },
+      {
+        "id": "chronic_diseases_2",
+        "type": "radio",
+        "label": "Czy chorował/a Pan/i lub choruje na poniższe schorzenia?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Choroby układu kostnego",
+          "Choroby zakaźne",
+          "Choroby skóry",
+          "Choroby psychosomatyczne",
+          "Inne"
+        ]
+      },
+      {
+        "id": "allergies",
+        "type": "radio",
+        "label": "Czy jest Pan/i na coś uczulony/a?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Lidokaina",
+          "Środki znieczulające",
+          "Lateks",
+          "Maści / preparaty medyczne",
+          "Kosmetyki kolorowe",
+          "Farby do włosów (PPD)",
+          "Metale",
+          "Nikiel",
+          "Inne"
+        ]
+      },
+      {
+        "id": "czy_ma_pan_i_sklonnosc_do_nadmiernych_kr",
+        "type": "radio",
+        "label": "Czy ma Pan/i skłonność do nadmiernych krwawień?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_ma_pan_i_sklonnosc_do_nieprawidloweg",
+        "type": "radio",
+        "label": "Czy ma Pan/i skłonność do nieprawidłowego gojenia lub tworzenia blizn przerostowych / keloidów?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "herpes",
+        "type": "radio",
+        "label": "Czy obecnie występuje opryszczka lub inna aktywna infekcja skóry?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_w_ciagu_ostatnich_2_tygodni_przyjmow",
+        "type": "radio",
+        "label": "Czy w ciągu ostatnich 2 tygodni przyjmował/a Pan/i antybiotyk?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_jaki_i_kiedy",
+        "type": "text",
+        "label": "Jeśli tak, jaki i kiedy?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_w_ciagu_ostatnich_2_tygodni_przyjmow",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_w_ciagu_ostatnich_6_miesiecy_przyjmo",
+        "type": "radio",
+        "label": "Czy w ciągu ostatnich 6 miesięcy przyjmował/a Pan/i izotretynoinę (np. Izotek) lub inne leki przeciwtrądzikowe?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_lekarz_prowadzacy_wyrazil_zgode_na_z",
+        "type": "radio",
+        "label": "Czy lekarz prowadzący wyraził zgodę na zabieg?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "blood_coagulation",
+        "type": "radio",
+        "label": "Czy przyjmuje Pan/i aspirynę lub leki przeciwzakrzepowe?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_w_ciagu_ostatnich_48_godzin_przyjmow",
+        "type": "radio",
+        "label": "Czy w ciągu ostatnich 48 godzin przyjmował/a Pan/i leki przeciwbólowe lub przeciwzapalne?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_jakie_i_kiedy_dokladnie",
+        "type": "text",
+        "label": "Jeśli tak, jakie i kiedy dokładnie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_w_ciagu_ostatnich_48_godzin_przyjmow",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_pali_pan_i_papierosy",
+        "type": "radio",
+        "label": "Czy pali Pan/i papierosy?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie<5 dziennie",
+          "5–10 dziennie10–20 dziennie>20 dziennie"
+        ]
+      },
+      {
+        "id": "czy_spozywal_a_pan_i_alkohol_w_ciagu_ost",
+        "type": "radio",
+        "label": "Czy spożywał/a Pan/i alkohol w ciągu ostatnich 24 godzin?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_jaki_i_w_jakiej_ilosci",
+        "type": "text",
+        "label": "Jeśli tak, jaki i w jakiej ilości?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_spozywal_a_pan_i_alkohol_w_ciagu_ost",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_w_miejscu_planowanego_zabiegu_stosow",
+        "type": "select",
+        "label": "Czy w miejscu planowanego zabiegu stosowano ostatnio preparaty kosmetyczne lub lecznicze?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Retinol",
+          "Kwasy",
+          "Maści lecznicze",
+          "Samoopalacz",
+          "Inne"
+        ]
+      },
+      {
+        "id": "czy_w_ostatnich_7_dniach_wykonywano_inne",
+        "type": "radio",
+        "label": "Czy w ostatnich 7 dniach wykonywano inne zabiegi w tym obszarze skóry?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_jakie",
+        "type": "select",
+        "label": "Jeśli tak, jakie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Czy w obszarze planowanego zabiegu występują:",
+          "Nie",
+          "Znamiona / pieprzyki",
+          "Blizny",
+          "Stany zapalne skóry",
+          "Zmiany skórne niewiadomego pochodzenia"
+        ],
+        "conditionalShowIf": {
+          "fieldId": "czy_w_ostatnich_7_dniach_wykonywano_inne",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "hair_condition",
+        "type": "radio",
+        "label": "Jak ocenia Pan/i stan swojej skóry?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Bardzo dobry",
+          "Dobry",
+          "Do poprawy",
+          "Inne"
+        ]
+      },
+      {
+        "id": "sunscreen_use",
+        "type": "radio",
+        "label": "Czy stosuje Pan/i ochronę przeciwsłoneczną (SPF)?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tak, codziennie z reaplikacją",
+          "Tak, raz dziennie",
+          "Tylko latem",
+          "Sporadycznie",
+          "Nie"
+        ]
+      },
+      {
+        "id": "czy_korzysta_pan_i_z_solarium",
+        "type": "radio",
+        "label": "Czy korzysta Pan/i z solarium?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_jak_czesto_i_kiedy_ostatnio",
+        "type": "text",
+        "label": "Jeśli tak, jak często i kiedy ostatnio?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_korzysta_pan_i_z_solarium",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_planuje_pan_i_w_najblizszym_czasie_o",
+        "type": "radio",
+        "label": "Czy planuje Pan/i w najbliższym czasie (ok. 6 tygodni) wyjazd do miejsca o silnym nasłonecznieniu lub mrozie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "czy_stosuje_pan_i_suplementacje",
+        "type": "select",
+        "label": "Czy stosuje Pan/i suplementację?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie stosuję suplementów",
+          "Wit. A",
+          "Wit. B",
+          "Wit. C",
+          "Wit. D",
+          "Wit. E",
+          "Multiwitamina",
+          "Żelazo",
+          "Magnez",
+          "Potas",
+          "Cynk",
+          "Kolagen",
+          "Omega-3",
+          "Probiotyki",
+          "Inne"
+        ]
+      },
+      {
+        "id": "ile_wody_wypija_pan_i_dziennie",
+        "type": "radio",
+        "label": "Ile wody wypija Pan/i dziennie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "<1 l",
+          "1–1,5 l",
+          "1,5–2 l",
+          "2–2,5 l>2,5 l"
+        ]
+      },
+      {
+        "id": "pregnancy",
+        "type": "radio",
+        "label": "Czy jest Pani w ciąży?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie dotyczy",
+          "Tak",
+          "Nie"
+        ]
+      },
+      {
+        "id": "czy_karmi_pani_piersia",
+        "type": "radio",
+        "label": "Czy karmi Pani piersią?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie dotyczy",
+          "Tak",
+          "Nie"
+        ]
+      },
+      {
+        "id": "czy_wykonywano_wczesniej_tatuaz_lub_pier",
+        "type": "radio",
+        "label": "Czy wykonywano wcześniej tatuaż lub piercing ?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jaki_zabieg_bedzie_wykonywany",
+        "type": "radio",
+        "label": "Jaki zabieg będzie wykonywany?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Tatuaż",
+          "Piercing",
+          "Dopigmentowanie / poprawa tatuażu"
+        ]
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "tatuaż",
+      "konsultacja (karta ogólna)"
+    ],
+    "confidence": 0.95,
+    "needsManualReview": true
+  },
+  "approved": true
+}

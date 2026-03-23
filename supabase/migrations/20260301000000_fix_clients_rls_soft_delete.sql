@@ -3,6 +3,7 @@
 --          which rejected soft-delete updates (where deleted_at is set to a timestamp).
 BEGIN;
 DROP POLICY IF EXISTS "clients_update_same_salon" ON public.clients;
+DROP POLICY IF EXISTS "clients_update_same_salon" ON public.clients;
 CREATE POLICY "clients_update_same_salon" ON public.clients FOR
 UPDATE TO authenticated USING (
         salon_id = public.get_user_salon_id()

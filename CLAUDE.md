@@ -1,3 +1,43 @@
+## Czytanie i interpretacja plików — ZAWSZE Gemini powyżej progu
+
+Claude NIE czyta plików > 50 linii przez Read tool — każda linia to token kontekstu.
+
+```bash
+gemini -p "Read [ścieżka]. [co konkretnie wyjaśnić/podsumować]. Max 30 lines." \
+  --output-format text 2>/dev/null | grep -v "^Loaded"
+```
+
+**Kiedy co:**
+| Sytuacja | Narzędzie |
+|---|---|
+| Plik < 50 linii | Read (cały) |
+| Plik > 50 linii — rozumienie, "jak działa X" | Gemini reader |
+| Edycja z konkretnym numerem linii (z błędu tsc) | Read z view_range |
+| Multi-section edit bez numeru linii | Gemini reader → potem Edit |
+
+---
+
+## Docs architektury — mapa referencyjna
+
+Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj Gemini:
+```bash
+gemini -p "Read docs/architecture/[plik].md. Summarize: constraints relevant to [zadanie]. Max 20 lines." \
+--output-format text 2>/dev/null | grep -v "^Loaded"
+```
+
+| Kiedy | Plik |
+|-------|------|
+| Multi-tenant query, cross-tenant bug, RLS design | `multi-tenant-architecture.md` |
+| Nowa tabela, schemat danych, relacje | `data-architecture.md` |
+| Nowa integracja zewnętrzna (API, webhook) | `integration-architecture.md` |
+| Nowy event/kolejka/async flow | `event-architecture.md` |
+| Nowy serwis/moduł, granice bounded context | `bounded-contexts.md` + `service-architecture.md` |
+| Decyzja odbiegająca od architektury | `adr/` — napisz nowy ADR przed implementacją |
+| Infrastruktura, deployment, skalowanie | `infra-architecture.md` + `scalability-strategy.md` |
+| Bezpieczeństwo, auth, RLS policy | `security-model.md` |
+
+---
+
 ## Zasady generowania kodu - OBOWIĄZKOWE
 
 Projekt-specyficzne zasady. Globalne zasady orkiestracji → `~/.claude/CLAUDE.md` (nadrzędne).
@@ -52,3 +92,7 @@ npx tsc --noEmit
 - Code review Codex/Gemini output
 - Nowe pliki < 20 linii
 - SQL bezpośrednio jeśli < 30 linii
+
+### Bezpieczeństwo — review generowanego kodu (project-specific):
+- **IDOR**: Codex/Gemini generują `WHERE id = $1` bez `AND salon_id = $2` — każde zapytanie do tabeli tenant-scoped MUSI filtrować po `salon_id`
+- Wyjątek: zapytania przez `getAuthContext()` + RLS (salon_id wymuszony przez DB) — ale tylko gdy service role NIE jest użyty

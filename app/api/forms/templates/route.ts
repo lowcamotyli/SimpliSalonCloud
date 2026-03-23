@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
+const MAX_FORM_TEMPLATE_FIELDS = 100
+
 const formFieldSchema = z.object({
   id: z.string(),
   type: z.enum([
@@ -33,7 +35,7 @@ const formFieldSchema = z.object({
 const formTemplateSchema = z.object({
   name: z.string().min(2).max(200),
   description: z.string().optional(),
-  fields: z.array(formFieldSchema).min(1).max(50),
+  fields: z.array(formFieldSchema).min(1).max(MAX_FORM_TEMPLATE_FIELDS),
   requires_signature: z.boolean().default(false),
   gdpr_consent_text: z.string().optional(),
 })
@@ -70,7 +72,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   if (error) throw error
 
-  return NextResponse.json({ templates: templates ?? [] })
+  const role = user.app_metadata?.role as string | undefined
+  const visibleTemplates = role === 'employee'
+    ? (templates ?? []).filter((t) => t.data_category !== 'sensitive_health')
+    : (templates ?? [])
+
+  return NextResponse.json({ templates: visibleTemplates })
 })
 
 // POST /api/forms/templates - create template (auth: owner/manager only)

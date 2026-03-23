@@ -24,6 +24,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const employeeId = searchParams.get('employeeId')
   const status = searchParams.get('status')
   const limit = searchParams.get('limit')
+  const visitGroupId = searchParams.get('visitGroupId')
 
   let query = supabase
     .from('bookings')
@@ -31,7 +32,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       *,
       employee:employees(id, employee_code, first_name, last_name),
       client:clients(id, client_code, full_name, phone),
-      service:services(id, name, price, duration, category)
+      service:services(id, name, price, duration, category),
+      visit_group:visit_groups(id, total_price, total_duration, status, payment_method)
     `)
     .eq('salon_id', salonId)
     .is('deleted_at', null)
@@ -49,6 +51,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
   if (status) {
     query = query.eq('status', status)
+  }
+  if (visitGroupId) {
+    query = query.eq('visit_group_id', visitGroupId)
   }
 
   const { data: bookings, error } = await query.limit(limit ? parseInt(limit) : 200)
@@ -238,7 +243,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (bookingError) {
     if (bookingError.code === '23P01') {
-      throw new ConflictError('Termin jest już zajęty')
+      throw new ConflictError('Wybrany termin jest juz zajety. Wybierz inna godzine lub pracownika.')
     }
     logger.error('Failed to create booking', bookingError, {
       code: bookingError.code,

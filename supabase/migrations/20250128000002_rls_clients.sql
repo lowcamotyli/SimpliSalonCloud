@@ -43,6 +43,7 @@ CREATE POLICY "Salon members can update clients"
 
 -- POLICY 4: Tylko owner i manager mogą USUWAĆ klientów
 DROP POLICY IF EXISTS "Owners and managers can delete clients" ON public.clients;
+DROP POLICY IF EXISTS "Owners and managers can delete clients" ON public.clients;
 CREATE POLICY "Owners and managers can delete clients"
   ON public.clients
   FOR DELETE

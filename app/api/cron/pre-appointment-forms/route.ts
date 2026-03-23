@@ -4,15 +4,18 @@ import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { hasFeature } from '@/lib/features'
 import { generateFormToken } from '@/lib/forms/token'
 import { sendSms } from '@/lib/messaging/sms-sender'
+import { sendTransactionalEmail } from '@/lib/messaging/email-sender'
+import { getAppUrl } from '@/lib/config/app-url'
 
 type BookingCandidate = {
   id: string
   salon_id: string
   client_id: string
+  service_id: string | null
   booking_date: string
   booking_time: string
   salons?: { features?: Record<string, boolean> } | null
-  clients?: { id: string; phone: string | null; full_name: string | null } | null
+  clients?: { id: string; phone: string | null; email: string | null; full_name: string | null } | null
 }
 
 function toIsoDateString(date: Date): string {
@@ -24,12 +27,25 @@ function toDateTime(bookingDate: string, bookingTime: string): Date {
   return new Date(bookingDate + 'T' + safeTime)
 }
 
+function buildPreFormEmailHtml(name: string | null, url: string): string {
+  return `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
+    <p>Cześć ${name || 'Kliencie'},</p>
+    <p>Masz wizytę jutro! Wypełnij krótki formularz przed przybyciem — zajmie to mniej niż minutę.</p>
+    <p style="margin-top:24px">
+      <a href="${url}" style="background:#18181b;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
+        Wypełnij formularz →
+      </a>
+    </p>
+    <p style="margin-top:24px;font-size:12px;color:#6b7280">Lub wejdź bezpośrednio: ${url}</p>
+  </div>`
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const authError = validateCronSecret(request)
   if (authError) return authError
 
   const admin = createAdminSupabaseClient()
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = getAppUrl()
   let sent = 0
   let skipped = 0
 
@@ -42,8 +58,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const { data, error } = await admin
       .from('bookings')
-      .select('id, salon_id, client_id, booking_date, booking_time, salons(features), clients(id, phone, full_name)')
-      .in('status', ['confirmed', 'pending'])
+      .select('id, salon_id, client_id, service_id, booking_date, booking_time, salons(features), clients(id, phone, email, full_name)')
+      .in('status', ['scheduled', 'confirmed', 'pending'])
       .eq('pre_form_sent', false)
       .gte('booking_date', windowStartDate)
       .lte('booking_date', windowEndDate)
@@ -69,6 +85,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       (salonSettingsRows || []).map((s: any) => [s.salon_id, s.notification_settings])
     )
 
+    const uniqueServiceIds = filtered.map((b) => b.service_id).filter(Boolean) as string[]
+    const { data: serviceFormRows } = await admin
+      .from('service_forms')
+      .select('service_id, form_template_id')
+      .in('service_id', uniqueServiceIds)
+
+    // Map: service_id → first assigned form_template_id
+    const serviceFormMap = new Map<string, string>()
+    for (const row of serviceFormRows || []) {
+      if (!serviceFormMap.has(row.service_id)) {
+        serviceFormMap.set(row.service_id, row.form_template_id)
+      }
+    }
+
     for (const booking of filtered) {
       try {
         if (!hasFeature(booking.salons?.features || null, 'forms')) {
@@ -81,15 +111,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           skipped++
           continue
         }
+        const channel: 'sms' | 'email' | 'both' = settings?.preAppointmentForms?.channel ?? 'sms'
 
-        if (!booking.clients?.phone) {
+        if (
+          ((channel === 'sms' || channel === 'both') && !booking.clients?.phone) ||
+          ((channel === 'email' || channel === 'both') && !booking.clients?.email)
+        ) {
+          skipped++
+          continue
+        }
+
+        // Skip if no form template is assigned to this service
+        const formTemplateId = booking.service_id ? serviceFormMap.get(booking.service_id) : undefined
+        if (!formTemplateId) {
           skipped++
           continue
         }
 
         const token = await generateFormToken(
           {
-            formTemplateId: 'pre_appointment',
+            formTemplateId,
             clientId: booking.client_id,
             bookingId: booking.id,
             salonId: booking.salon_id,
@@ -103,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           booking_id: booking.id,
           client_id: booking.client_id,
           salon_id: booking.salon_id,
-          form_template_id: 'pre_appointment',
+          form_template_id: formTemplateId,
           fill_token: token,
           fill_token_exp: fillTokenExp,
           sent_at: new Date().toISOString(),
@@ -114,12 +155,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           continue
         }
 
-        await sendSms({
-          salonId: booking.salon_id,
-          clientId: booking.clients.id,
-          to: booking.clients.phone,
-          body: `Przypomnienie o wizycie jutro. Wypełnij krótki formularz przed wizytą: ${appUrl}/forms/pre/${token}`,
-        })
+        const preFormUrl = `${appUrl}/forms/pre/${token}`
+        if (channel === 'sms' || channel === 'both') {
+          await sendSms({
+            salonId: booking.salon_id,
+            clientId: booking.clients!.id,
+            to: booking.clients!.phone!,
+            body: `Przypomnienie o wizycie jutro. Wypełnij krótki formularz przed wizytą: ${preFormUrl}`,
+          })
+        }
+        if (channel === 'email' || channel === 'both') {
+          await sendTransactionalEmail({
+            salonId: booking.salon_id,
+            to: booking.clients!.email!,
+            subject: 'Formularz przed wizytą',
+            html: buildPreFormEmailHtml(booking.clients?.full_name ?? null, preFormUrl),
+          })
+        }
 
         await admin
           .from('bookings')

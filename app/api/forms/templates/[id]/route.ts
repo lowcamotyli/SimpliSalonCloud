@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { withErrorHandling } from '@/lib/error-handler'
-import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import { ForbiddenError, NotFoundError, UnauthorizedError } from '@/lib/errors'
+
+const MAX_FORM_TEMPLATE_FIELDS = 100
 
 const formFieldSchema = z.object({
   id: z.string(),
@@ -33,7 +35,7 @@ const formFieldSchema = z.object({
 const formTemplateSchema = z.object({
   name: z.string().min(2).max(200),
   description: z.string().optional(),
-  fields: z.array(formFieldSchema).min(1).max(50),
+  fields: z.array(formFieldSchema).min(1).max(MAX_FORM_TEMPLATE_FIELDS),
   requires_signature: z.boolean().default(false),
   gdpr_consent_text: z.string().optional(),
 })
@@ -63,6 +65,11 @@ export const GET = withErrorHandling(async (
   if (error) {
     if (error.code === 'PGRST116') throw new NotFoundError('FormTemplate', id)
     throw error
+  }
+
+  const role = user.app_metadata?.role as string | undefined
+  if (role === 'employee' && template.data_category === 'sensitive_health') {
+    throw new ForbiddenError()
   }
 
   return NextResponse.json({ template })

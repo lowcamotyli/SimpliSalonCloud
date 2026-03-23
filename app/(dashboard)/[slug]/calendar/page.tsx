@@ -14,8 +14,9 @@ import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
 import { BUSINESS_HOURS } from '@/lib/constants'
 import { toast } from 'sonner'
+import MiniCalendar from './mini-calendar'
 
-const BookingDialog = dynamic(() => import('@/components/calendar/booking-dialog').then(mod => mod.BookingDialog), {
+const BookingDialog = dynamic(() => import('./booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
 })
 
@@ -45,12 +46,52 @@ const minutesToTime = (minutes: number) => {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
 }
 
+function buildCalendarEntries(dayBookings: any[], previewDurations: Record<string, number>) {
+  const rendered = new Set<string>()
+  const entries: Array<{
+    booking: any
+    groupBookings?: any[]
+    displayDuration: number
+  }> = []
+
+  for (const booking of dayBookings) {
+    const groupId = booking.visit_group_id
+    if (groupId && rendered.has(groupId)) continue
+
+    if (groupId) {
+      const groupBookings = dayBookings
+        .filter((b: any) => b.visit_group_id === groupId)
+        .sort((a: any, b: any) => timeToMinutes(a.booking_time) - timeToMinutes(b.booking_time))
+
+      const firstStart = timeToMinutes(groupBookings[0].booking_time)
+      const lastEnd = Math.max(...groupBookings.map((b: any) =>
+        timeToMinutes(b.booking_time) + (previewDurations[b.id] ?? b.duration)
+      ))
+
+      rendered.add(groupId)
+      entries.push({
+        booking: groupBookings[0],
+        groupBookings,
+        displayDuration: lastEnd - firstStart,
+      })
+    } else {
+      entries.push({
+        booking,
+        displayDuration: previewDurations[booking.id] ?? booking.duration,
+      })
+    }
+  }
+
+  return entries
+}
+
 const snapMinutes = (minutes: number) => Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewType, setViewType] = useState<ViewType>('week')
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
+  const [selectedGroupBookings, setSelectedGroupBookings] = useState<any[] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
@@ -205,6 +246,12 @@ export default function CalendarPage() {
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
     setSelectedSlot(null)
+    if (booking.visit_group_id) {
+      const siblings = bookings?.filter((b: any) => b.visit_group_id === booking.visit_group_id) || []
+      setSelectedGroupBookings(siblings)
+    } else {
+      setSelectedGroupBookings(null)
+    }
     setIsDialogOpen(true)
   }
 
@@ -260,13 +307,13 @@ export default function CalendarPage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Kalendarz</h1>
-          <p className="text-muted-foreground text-base font-medium">{getPeriodLabel()}</p>
+          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">{getPeriodLabel()}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant={viewType === 'day' ? 'default' : 'outline'} onClick={() => setViewType('day')} className="rounded-lg">Dzień</Button>
-          <Button variant={viewType === 'week' ? 'default' : 'outline'} onClick={() => setViewType('week')} className="rounded-lg">Tydzień</Button>
-          <Button variant={viewType === 'month' ? 'default' : 'outline'} onClick={() => setViewType('month')} className="rounded-lg">Miesiąc</Button>
+        <div className="flex items-center gap-2 p-1 glass rounded-xl w-max">
+          <Button variant={viewType === 'day' ? 'default' : 'ghost'} onClick={() => setViewType('day')} size="sm" className={`rounded-lg transition-all ${viewType === 'day' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Dzień</Button>
+          <Button variant={viewType === 'week' ? 'default' : 'ghost'} onClick={() => setViewType('week')} size="sm" className={`rounded-lg transition-all ${viewType === 'week' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Tydzień</Button>
+          <Button variant={viewType === 'month' ? 'default' : 'ghost'} onClick={() => setViewType('month')} size="sm" className={`rounded-lg transition-all ${viewType === 'month' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Miesiąc</Button>
         </div>
       </div>
 
@@ -275,34 +322,43 @@ export default function CalendarPage() {
         <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="rounded-lg"><ChevronLeft className="h-4 w-4" /></Button>
         <Button variant="outline" size="icon" onClick={handleNextPeriod} className="rounded-lg"><ChevronRight className="h-4 w-4" /></Button>
         <div className="flex-1" />
-        <Button onClick={handleAddBooking} className="gradient-button rounded-lg shadow-lg">
+        <Button onClick={handleAddBooking} className="rounded-lg shadow-lg">
           <Plus className="mr-2 h-4 w-4" />
           Nowa wizyta
         </Button>
       </div>
 
-      {viewType !== 'month' && (
-        <div className="glass p-3 rounded-xl flex items-center gap-2 overflow-x-auto">
-          <span className="text-sm font-semibold text-gray-700 flex-shrink-0">Pracownicy:</span>
-          {employees?.map((emp, idx) => {
-            const colors = getEmployeeColor(idx)
-            const isVisible = visibleEmployees.has(emp.id)
-            return (
-              <Button
-                key={emp.id}
-                variant="outline"
-                size="sm"
-                onClick={() => toggleEmployee(emp.id)}
-                className={`rounded-full text-xs flex-shrink-0 transition-all ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-md scale-105` : 'hover:bg-gray-100'}`}
-              >
-                {emp.first_name}
-              </Button>
-            )
-          })}
-        </div>
-      )}
+      <div className="flex gap-4 items-start">
+        {viewType !== 'month' && (
+          <div className="w-[240px] flex-shrink-0 space-y-3">
+            <MiniCalendar
+              currentDate={currentDate}
+              onDayClick={(date) => {
+                setCurrentDate(date)
+                setViewType('day')
+              }}
+            />
+            <div className="theme-employee-filter glass p-3 rounded-xl flex flex-col gap-1.5">
+              <span className="theme-employee-filter-label text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">Pracownicy</span>
+              {employees?.map((emp, idx) => {
+                const colors = getEmployeeColor(idx)
+                const isVisible = visibleEmployees.has(emp.id)
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => toggleEmployee(emp.id)}
+                    className={`theme-employee-chip rounded-lg text-xs font-medium px-3 py-2 border transition-all text-left ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-sm` : 'hover:bg-gray-100 bg-white border-gray-200 text-gray-700'}`}
+                  >
+                    {emp.first_name} {emp.last_name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
-      <Card className="flex-1 overflow-hidden glass rounded-2xl">
+        <Card className="theme-calendar-shell flex-1 overflow-hidden glass rounded-2xl min-w-0">
         {viewType === 'day' && (
           <DayView
             currentDate={currentDate}
@@ -337,6 +393,7 @@ export default function CalendarPage() {
         )}
         {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} onBookingClick={handleBookingClick} employees={employees} getEmployeeColor={getEmployeeColor} />}
       </Card>
+      </div>
 
       {isDialogOpen && (
         <BookingDialog
@@ -346,6 +403,7 @@ export default function CalendarPage() {
             setSelectedSlot(null)
           }}
           booking={selectedBooking}
+          preloadedGroupBookings={selectedGroupBookings}
           prefilledSlot={selectedSlot}
         />
       )}
@@ -405,33 +463,33 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
 
   return (
     <div className="flex h-full flex-col min-w-0 overflow-hidden">
-      <div className="grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
-        <div className="border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
+      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
+        <div className="theme-calendar-time-head border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
         {visibleEmployeesList.map((emp: any) => {
           const empIdx = employees.findIndex((e: any) => e.id === emp.id)
           const colors = getEmployeeColor(empIdx)
-          return <div key={emp.id} className={`p-3 border-r text-center overflow-hidden bg-gradient-to-b ${colors.gradient}`}><p className={`font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
+          return <div key={emp.id} className={`theme-calendar-employee-head p-3 border-r text-center overflow-hidden bg-gradient-to-b ${colors.gradient}`}><p className={`theme-calendar-employee-head-text font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
         })}
         {columnCount === 0 && <div className="p-3 text-center text-gray-500 text-sm">Brak wybranych pracowników</div>}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minHeight: '100%' }}>
-          <div className="border-r bg-gray-50/80 sticky left-0 z-20">
-            {timeSlots.map((hour: number) => <div key={hour} className="h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center">{String(hour).padStart(2, '0')}:00</div>)}
+          <div className="theme-calendar-time-column border-r bg-gray-50/80 sticky left-0 z-20">
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {visibleEmployeesList.map((employee: any) => {
             const empIdx = employees.findIndex((e: any) => e.id === employee.id)
             const colors = getEmployeeColor(empIdx)
             return (
-              <div key={employee.id} className={`relative border-r hover:${colors.bg}/30 transition-colors`}>
+              <div key={employee.id} className={`theme-calendar-day-column relative border-r hover:${colors.bg}/30 transition-colors`}>
                 {timeSlots.map((hour: number) => {
                   const dropTime = `${String(hour).padStart(2, '0')}:00`
                   return (
                     <div
                       key={hour}
-                      className="h-24 border-b cursor-pointer transition-colors group relative"
+                      className="theme-calendar-drop-slot h-24 border-b cursor-pointer transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][DayView] slot-click:suppressed', { dateStr, dropTime, employeeId: employee.id })
@@ -457,23 +515,25 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   )
                 })}
 
-                {(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []).map((booking: any, index: number, allBookings: any[]) => {
+                {buildCalendarEntries(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || [], previewDurations).map((entry, index, allEntries) => {
+                  const booking = entry.booking
                   const timeStr = booking.booking_time
                   if (!timeStr) return null
                   const startMinutes = timeToMinutes(timeStr) - BUSINESS_HOURS.START * 60
-                  const duration = previewDurations[booking.id] ?? booking.duration
+                  const duration = entry.displayDuration
 
-                  const overlappingBookings = allBookings.filter((other, idx) => {
-                    if (idx === index || other.id === booking.id) return false
-                    const otherDuration = previewDurations[other.id] ?? other.duration
-                    const oStart = timeToMinutes(other.booking_time) - BUSINESS_HOURS.START * 60
+                  const overlappingBookings = allEntries.filter((otherEntry, idx) => {
+                    const otherBooking = otherEntry.booking
+                    if (idx === index || otherBooking.id === booking.id) return false
+                    const otherDuration = otherEntry.displayDuration
+                    const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
                     const oEnd = oStart + otherDuration
                     return (startMinutes < oEnd && (startMinutes + duration) > oStart)
                   })
 
-                  const previousOverlaps = allBookings.slice(0, index).filter((prev: any) => {
-                    const prevDuration = previewDurations[prev.id] ?? prev.duration
-                    const pStart = timeToMinutes(prev.booking_time) - BUSINESS_HOURS.START * 60
+                  const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                    const prevDuration = prevEntry.displayDuration
+                    const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
                     const pEnd = pStart + prevDuration
                     return (startMinutes < pEnd && (startMinutes + duration) > pStart)
                   })
@@ -510,7 +570,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                         onBookingClick(booking)
                       }}
                     >
-                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} />
+                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} groupBookings={entry.groupBookings} />
                       <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                     </div>
                   )
@@ -578,14 +638,14 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
   return (
     <div className="flex h-full flex-col">
-      <div className="grid grid-cols-8 border-b bg-slate-50/50">
-        <div className="border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
+      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50">
+        <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
         {weekDays.map((day) => {
           const today = isSameDay(day, now)
           return (
-            <div key={day.toISOString()} className={`border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
-              <p className="text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
-              <p className={`font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+            <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
+              <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
+              <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
             </div>
           )
         })}
@@ -593,21 +653,21 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
       <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-8">
-          <div className="border-r bg-gray-50">
-            {timeSlots.map((hour: number) => <div key={hour} className="h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center">{String(hour).padStart(2, '0')}:00</div>)}
+          <div className="theme-calendar-time-column border-r bg-gray-50">
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {weekDays.map((day) => {
             const dateStr = formatDate(day)
             const today = isSameDay(day, now)
             return (
-              <div key={dateStr} className={`relative border-r ${today ? 'bg-primary/5' : ''}`}>
+              <div key={dateStr} className={`theme-calendar-week-column relative border-r ${today ? 'bg-primary/5' : ''}`}>
                 {timeSlots.map((hour: number) => {
                   const dropTime = `${String(hour).padStart(2, '0')}:00`
                   return (
                     <div
                       key={hour}
-                      className="h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
+                      className="theme-calendar-drop-slot h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][WeekView] slot-click:suppressed', { dateStr, dropTime })
@@ -637,21 +697,23 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                   if (!visibleEmployees.has(employee.id)) return null
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
 
-                  return dayBookings.map((booking: any, index: number, allBookings: any[]) => {
+                  return buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
+                    const booking = entry.booking
                     const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
-                    const duration = previewDurations[booking.id] ?? booking.duration
+                    const duration = entry.displayDuration
 
-                    const overlappingBookings = allBookings.filter((other: any, idx: number) => {
-                      if (idx === index || other.id === booking.id) return false
-                      const otherDuration = previewDurations[other.id] ?? other.duration
-                      const oStart = timeToMinutes(other.booking_time) - BUSINESS_HOURS.START * 60
+                    const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
+                      const otherBooking = otherEntry.booking
+                      if (idx === index || otherBooking.id === booking.id) return false
+                      const otherDuration = otherEntry.displayDuration
+                      const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
                       const oEnd = oStart + otherDuration
                       return (startMinutes < oEnd && (startMinutes + duration) > oStart)
                     })
 
-                    const previousOverlaps = allBookings.slice(0, index).filter((prev: any) => {
-                      const prevDuration = previewDurations[prev.id] ?? prev.duration
-                      const pStart = timeToMinutes(prev.booking_time) - BUSINESS_HOURS.START * 60
+                    const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                      const prevDuration = prevEntry.displayDuration
+                      const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
                       const pEnd = pStart + prevDuration
                       return (startMinutes < pEnd && (startMinutes + duration) > pStart)
                     })
@@ -688,7 +750,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                           onBookingClick(booking)
                         }}
                       >
-                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} />
+                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
                         <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                       </div>
                     )
@@ -719,19 +781,28 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
   return (
     <div className="p-6">
       <div className="grid grid-cols-7 gap-2">
-        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((day) => <div key={day} className="text-center font-bold text-gray-600 py-2">{day}</div>)}
+        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map((day) => <div key={day} className="theme-calendar-month-label text-center font-bold text-gray-600 py-2">{day}</div>)}
         {days.map((day) => {
           const dateStr = formatDate(day)
           const dayBookings = bookingsByDate[dateStr] || []
           const isToday = isSameDay(day, now)
+          const isSelected = isSameDay(day, currentDate)
           const isCurrentMonth = isSameMonth(day, currentDate)
           return (
             <div
               key={dateStr}
               onClick={() => onDayClick(day)}
-              className={`min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${isToday ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' : isCurrentMonth ? 'glass hover:shadow-lg' : 'bg-gray-50 text-gray-400'}`}
+              className={`theme-calendar-month-day min-h-24 p-2 rounded-lg cursor-pointer transition-all group ${
+                isSelected 
+                  ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] z-10' 
+                  : isToday 
+                    ? 'border-2 border-primary/30 glass' 
+                    : isCurrentMonth 
+                      ? 'glass hover:shadow-lg' 
+                      : 'bg-gray-50 text-gray-400'
+              }`}
             >
-              <p className={`font-bold text-sm mb-1 ${isToday ? 'text-white' : ''}`}>{format(day, 'd')}</p>
+              <p className={`font-bold text-sm mb-1 ${isSelected ? 'text-white' : isToday ? 'text-primary' : ''}`}>{format(day, 'd')}</p>
               <div className="relative mt-1">
                 {dayBookings.slice(0, 4).map((booking: any, idx: number) => {
                   const empIdx = employees.findIndex((e: any) => e.id === booking.employee?.id)
@@ -739,7 +810,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
                   return (
                     <div
                       key={booking.id}
-                      className={`text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isToday ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
+                      className={`theme-calendar-month-booking text-[10px] px-1.5 py-0.5 rounded shadow-sm border-l-2 truncate transition-transform hover:scale-105 hover:z-30 mb-0.5 ${isSelected ? 'bg-white/30 border-white text-white' : `${colors.bg} ${colors.border} ${colors.text}`}`}
                       style={{ marginLeft: `${idx * 4}px`, width: `calc(100% - ${idx * 4}px)` }}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -751,7 +822,7 @@ function MonthView({ currentDate, bookings, onDayClick, onBookingClick, employee
                     </div>
                   )
                 })}
-                {dayBookings.length > 4 && <p className={`text-[10px] font-bold mt-1 text-center ${isToday ? 'text-white/90' : 'text-primary'}`}>+ {dayBookings.length - 4} więcej</p>}
+                {dayBookings.length > 4 && <p className={`text-[10px] font-bold mt-1 text-center ${isSelected ? 'text-white/90' : 'text-primary'}`}>+ {dayBookings.length - 4} więcej</p>}
               </div>
             </div>
           )

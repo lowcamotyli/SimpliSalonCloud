@@ -422,7 +422,7 @@ export default function ClientsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Klienci
           </h1>
-          <p className="text-muted-foreground text-base font-medium">Buduj trwałe relacje ze swoimi klientami</p>
+          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${slug}/clients/templates`}>
@@ -521,9 +521,11 @@ export default function ClientsPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center">
-                            <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                              {client.full_name}
-                            </h3>
+                            <Link href={`/${slug}/clients/${client.id}`} onClick={(e) => e.stopPropagation()}>
+                              <h3 className="font-bold text-foreground hover:text-primary transition-colors truncate">
+                                {client.full_name}
+                              </h3>
+                            </Link>
                             {getBlacklistBadge((client.blacklist_status || 'clean') as BlacklistStatus)}
                           </div>
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

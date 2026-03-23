@@ -19,6 +19,7 @@ CREATE POLICY "Salon members can view services"
 
 -- POLICY 2: Tylko owner i manager mogą tworzyć usługi
 DROP POLICY IF EXISTS "Owners and managers can create services" ON public.services;
+DROP POLICY IF EXISTS "Owners and managers can create services" ON public.services;
 CREATE POLICY "Owners and managers can create services"
   ON public.services
   FOR INSERT
@@ -29,6 +30,7 @@ CREATE POLICY "Owners and managers can create services"
   );
 
 -- POLICY 3: Tylko owner i manager mogą edytować usługi
+DROP POLICY IF EXISTS "Owners and managers can update services" ON public.services;
 DROP POLICY IF EXISTS "Owners and managers can update services" ON public.services;
 CREATE POLICY "Owners and managers can update services"
   ON public.services
@@ -44,6 +46,7 @@ CREATE POLICY "Owners and managers can update services"
   );
 
 -- POLICY 4: Tylko owner i manager mogą usuwać usługi
+DROP POLICY IF EXISTS "Owners and managers can delete services" ON public.services;
 DROP POLICY IF EXISTS "Owners and managers can delete services" ON public.services;
 CREATE POLICY "Owners and managers can delete services"
   ON public.services

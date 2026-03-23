@@ -19,6 +19,7 @@ CREATE POLICY "Salon members can view employees"
 
 -- POLICY 2: Tylko owner i manager mogą dodawać pracowników
 DROP POLICY IF EXISTS "Owners and managers can create employees" ON public.employees;
+DROP POLICY IF EXISTS "Owners and managers can create employees" ON public.employees;
 CREATE POLICY "Owners and managers can create employees"
   ON public.employees
   FOR INSERT
@@ -29,6 +30,7 @@ CREATE POLICY "Owners and managers can create employees"
   );
 
 -- POLICY 3: Tylko owner i manager mogą edytować pracowników
+DROP POLICY IF EXISTS "Owners and managers can update employees" ON public.employees;
 DROP POLICY IF EXISTS "Owners and managers can update employees" ON public.employees;
 CREATE POLICY "Owners and managers can update employees"
   ON public.employees
@@ -44,6 +46,7 @@ CREATE POLICY "Owners and managers can update employees"
   );
 
 -- POLICY 4: Tylko owner i manager mogą usuwać pracowników
+DROP POLICY IF EXISTS "Owners and managers can delete employees" ON public.employees;
 DROP POLICY IF EXISTS "Owners and managers can delete employees" ON public.employees;
 CREATE POLICY "Owners and managers can delete employees"
   ON public.employees

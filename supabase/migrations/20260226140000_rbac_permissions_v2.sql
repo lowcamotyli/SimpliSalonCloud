@@ -10,12 +10,14 @@ DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." 
 -- 2. Recreate these policies using LOWERCASE roles and the helper functions
 
 -- employees SELECT
+DROP POLICY IF EXISTS "Employees are viewable by salon members." ON public.employees;
 CREATE POLICY "Employees are viewable by salon members."
   ON public.employees
   FOR SELECT
   USING (salon_id = public.get_user_salon_id() AND deleted_at IS NULL);
 
 -- employees INSERT
+DROP POLICY IF EXISTS "Employees can be created by salon owner/manager." ON public.employees;
 CREATE POLICY "Employees can be created by salon owner/manager."
   ON public.employees
   FOR INSERT
@@ -25,6 +27,7 @@ CREATE POLICY "Employees can be created by salon owner/manager."
   );
 
 -- employees UPDATE
+DROP POLICY IF EXISTS "Employees can be updated by owner/manager for their salon." ON public.employees;
 CREATE POLICY "Employees can be updated by owner/manager for their salon."
   ON public.employees
   FOR UPDATE
@@ -35,6 +38,7 @@ CREATE POLICY "Employees can be updated by owner/manager for their salon."
   );
 
 -- employees DELETE
+DROP POLICY IF EXISTS "Employees can be deleted by owner/manager for their salon." ON public.employees;
 CREATE POLICY "Employees can be deleted by owner/manager for their salon."
   ON public.employees
   FOR DELETE
@@ -44,6 +48,7 @@ CREATE POLICY "Employees can be deleted by owner/manager for their salon."
   );
 
 -- profiles UPDATE for owner/manager
+DROP POLICY IF EXISTS "Owner/Manager can update employee profiles (role/data)." ON public.profiles;
 CREATE POLICY "Owner/Manager can update employee profiles (role/data)."
   ON public.profiles
   FOR UPDATE

@@ -104,13 +104,22 @@ export async function sendSms(input: SendSmsWithWalletInput): Promise<{ messageI
     resolveSmsApiToken(settings.smsapi_token ?? null)
   }
 
-  // Decrement before sending so balance validation and reservation are atomic, preventing race conditions.
-  const { data: decremented, error: decrementError } = await (supabase as any).rpc('decrement_sms_balance', {
-    p_salon_id: input.salonId,
-  })
+  // If the salon configured their own provider token, skip the wallet —
+  // they are billed directly by the provider, not through our SMS wallet.
+  const hasOwnToken =
+    (settings.sms_provider || '').toLowerCase() === 'bulkgate'
+      ? !!settings.bulkgate_app_token?.trim()
+      : !!settings.smsapi_token?.trim()
 
-  if (decrementError || decremented !== true) {
-    throw new Error('INSUFFICIENT_SMS_BALANCE')
+  if (!hasOwnToken) {
+    // Decrement before sending so balance validation and reservation are atomic, preventing race conditions.
+    const { data: decremented, error: decrementError } = await (supabase as any).rpc('decrement_sms_balance', {
+      p_salon_id: input.salonId,
+    })
+
+    if (decrementError || decremented !== true) {
+      throw new Error('INSUFFICIENT_SMS_BALANCE')
+    }
   }
 
   const sender = resolveSender(input.sender, settings)

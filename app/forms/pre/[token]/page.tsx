@@ -2,15 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
+import type { FormField } from "@/types/forms"
+import { isFieldVisible, isValuePresent } from "@/lib/forms/field-visibility"
 
-interface FormField {
-  id: string
-  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'date' | 'section_header'
-  label: string
-  required?: boolean
-  options?: string[]
-  helpText?: string
-}
+type AnswerValue = string | string[] | boolean
 
 interface FormData {
   template: {
@@ -31,13 +26,20 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   const [status, setStatus] = useState<Status>('loading')
   const [formData, setFormData] = useState<FormData | null>(null)
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const bypassSuffix =
+    typeof window !== "undefined"
+      ? (() => {
+          const bypass = new URLSearchParams(window.location.search).get("x-vercel-protection-bypass")
+          return bypass ? `?x-vercel-protection-bypass=${encodeURIComponent(bypass)}` : ""
+        })()
+      : ""
 
   const fetchData = useCallback(async (): Promise<void> => {
     try {
-      const res = await fetch(`/api/forms/pre/${token}`)
+      const res = await fetch(`/api/forms/pre/${token}${bypassSuffix}`)
       
       if (res.status === 410) {
         setStatus('expired')
@@ -53,10 +55,9 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
       if (res.ok) {
         setFormData(data)
-        // Initialize answers for checkboxes as empty arrays
-        const initialAnswers: Record<string, string | string[]> = {}
+        const initialAnswers: Record<string, AnswerValue> = {}
         data.template.fields.forEach((field: FormField) => {
-          if (field.type === 'checkbox') {
+          if (field.type === 'checkbox' && field.options?.length) {
             initialAnswers[field.id] = []
           }
         })
@@ -70,7 +71,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
       setError("Nie udało się połączyć z serwerem.")
       setStatus('error')
     }
-  }, [token])
+  }, [token, bypassSuffix])
 
   useEffect(() => {
     fetchData()
@@ -79,20 +80,23 @@ export default function PreAppointmentFormPage(): JSX.Element {
   const validate = (): boolean => {
     if (!formData) return false
     const errors: Record<string, string> = {}
+    const visibleFields = formData.template.fields.filter((field) =>
+      isFieldVisible(field, answers)
+    )
     
-    formData.template.fields.forEach((field) => {
+    visibleFields.forEach((field) => {
       if (field.type === 'section_header') return
       
       const answer = answers[field.id]
       const isRequired = field.required
 
       if (isRequired) {
-        if (field.type === 'checkbox') {
+        if (field.type === 'checkbox' && field.options?.length) {
           if (!Array.isArray(answer) || answer.length === 0) {
             errors[field.id] = "To pole jest wymagane."
           }
         } else {
-          if (!answer || (typeof answer === 'string' && answer.trim() === '')) {
+          if (!isValuePresent(answer)) {
             errors[field.id] = "To pole jest wymagane."
           }
         }
@@ -113,7 +117,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
     setStatus('submitting')
     try {
-      const res = await fetch(`/api/forms/pre/${token}`, {
+      const res = await fetch(`/api/forms/pre/${token}${bypassSuffix}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers })
@@ -138,6 +142,18 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   const handleInputChange = (id: string, value: string): void => {
     setAnswers(prev => ({ ...prev, [id]: value }))
+    if (validationErrors[id]) {
+      setValidationErrors(prev => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+    }
+  }
+
+  const handleBooleanChange = (id: string, checked: boolean): void => {
+    setAnswers(prev => ({ ...prev, [id]: checked }))
+
     if (validationErrors[id]) {
       setValidationErrors(prev => {
         const next = { ...prev }
@@ -229,6 +245,10 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   if (!formData) return <div className="p-4 text-center">Brak danych formularza.</div>
 
+  const visibleFields = formData.template.fields.filter((field) =>
+    isFieldVisible(field, answers)
+  )
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -242,7 +262,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          {formData.template.fields.map((field) => (
+          {visibleFields.map((field) => (
             <div key={field.id} className="space-y-2">
               {field.type === 'section_header' ? (
                 <div className="pt-4">
@@ -263,6 +283,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
                   {field.type === 'text' && (
                     <input
                       type="text"
+                      placeholder={field.placeholder || 'Twoja odpowiedz...'}
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
                       className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${
@@ -274,12 +295,30 @@ export default function PreAppointmentFormPage(): JSX.Element {
                   {field.type === 'textarea' && (
                     <textarea
                       rows={3}
+                      placeholder={field.placeholder || 'Twoja odpowiedz...'}
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
                       className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${
                         validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
+                  )}
+
+                  {field.type === 'select' && (
+                    <select
+                      value={(answers[field.id] as string) || ''}
+                      onChange={(e) => handleInputChange(field.id, e.target.value)}
+                      className={`w-full p-2 border rounded-md bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all ${
+                        validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Wybierz opcje...</option>
+                      {field.options?.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   )}
 
                   {field.type === 'date' && (
@@ -313,17 +352,29 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
                   {field.type === 'checkbox' && (
                     <div className="space-y-2 mt-2">
-                      {field.options?.map((option) => (
-                        <label key={option} className="flex items-center space-x-3 cursor-pointer">
+                      {field.options?.length ? (
+                        field.options.map((option) => (
+                          <label key={option} className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={((answers[field.id] as string[]) || []).includes(option)}
+                              onChange={(e) => handleCheckboxChange(field.id, option, e.target.checked)}
+                              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                            />
+                            <span className="text-gray-700">{option}</span>
+                          </label>
+                        ))
+                      ) : (
+                        <label className="flex items-center space-x-3 cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={((answers[field.id] as string[]) || []).includes(option)}
-                            onChange={(e) => handleCheckboxChange(field.id, option, e.target.checked)}
+                            checked={Boolean(answers[field.id])}
+                            onChange={(e) => handleBooleanChange(field.id, e.target.checked)}
                             className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                           />
-                          <span className="text-gray-700">{option}</span>
+                          <span className="text-gray-700">Tak / Potwierdzam</span>
                         </label>
-                      ))}
+                      )}
                     </div>
                   )}
 

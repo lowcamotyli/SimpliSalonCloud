@@ -1,7 +1,7 @@
 -- ============================================================
 -- Employee Schedules: regularne godziny tygodniowe per pracownik
 -- ============================================================
-CREATE TABLE public.employee_schedules (
+CREATE TABLE IF NOT EXISTS public.employee_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
     salon_id UUID NOT NULL REFERENCES public.salons(id) ON DELETE CASCADE,
@@ -17,14 +17,18 @@ CREATE TABLE public.employee_schedules (
     CONSTRAINT employee_schedules_times_check CHECK (end_time > start_time),
     CONSTRAINT employee_schedules_unique UNIQUE (employee_id, day_of_week)
 );
-CREATE INDEX idx_employee_schedules_employee ON public.employee_schedules(employee_id);
-CREATE INDEX idx_employee_schedules_salon ON public.employee_schedules(salon_id);
-CREATE INDEX idx_employee_schedules_lookup ON public.employee_schedules(employee_id, day_of_week);
+CREATE INDEX IF NOT EXISTS idx_employee_schedules_employee ON public.employee_schedules(employee_id);
+CREATE INDEX IF NOT EXISTS idx_employee_schedules_salon ON public.employee_schedules(salon_id);
+CREATE INDEX IF NOT EXISTS idx_employee_schedules_lookup ON public.employee_schedules(employee_id, day_of_week);
 ALTER TABLE public.employee_schedules ENABLE ROW LEVEL SECURITY;
 -- Pracownicy salonu mogą czytać grafiki
+DROP POLICY IF EXISTS "salon_read_employee_schedules" ON public.employee_schedules;
+DROP POLICY IF EXISTS "salon_read_employee_schedules" ON public.employee_schedules;
 CREATE POLICY "salon_read_employee_schedules" ON public.employee_schedules FOR
 SELECT USING (salon_id = public.get_user_salon_id());
 -- Tylko owner/manager mogą edytować
+DROP POLICY IF EXISTS "manager_write_employee_schedules" ON public.employee_schedules;
+DROP POLICY IF EXISTS "manager_write_employee_schedules" ON public.employee_schedules;
 CREATE POLICY "manager_write_employee_schedules" ON public.employee_schedules FOR ALL USING (
     salon_id = public.get_user_salon_id()
     AND public.has_any_salon_role(ARRAY ['owner', 'manager'])
@@ -32,7 +36,7 @@ CREATE POLICY "manager_write_employee_schedules" ON public.employee_schedules FO
 -- ============================================================
 -- Employee Schedule Exceptions: wyjątki na konkretne daty
 -- ============================================================
-CREATE TABLE public.employee_schedule_exceptions (
+CREATE TABLE IF NOT EXISTS public.employee_schedule_exceptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
     salon_id UUID NOT NULL REFERENCES public.salons(id) ON DELETE CASCADE,
@@ -56,12 +60,16 @@ CREATE TABLE public.employee_schedule_exceptions (
     ),
     CONSTRAINT employee_exceptions_unique UNIQUE (employee_id, exception_date)
 );
-CREATE INDEX idx_employee_exceptions_employee ON public.employee_schedule_exceptions(employee_id);
-CREATE INDEX idx_employee_exceptions_salon ON public.employee_schedule_exceptions(salon_id);
-CREATE INDEX idx_employee_exceptions_date ON public.employee_schedule_exceptions(employee_id, exception_date);
+CREATE INDEX IF NOT EXISTS idx_employee_exceptions_employee ON public.employee_schedule_exceptions(employee_id);
+CREATE INDEX IF NOT EXISTS idx_employee_exceptions_salon ON public.employee_schedule_exceptions(salon_id);
+CREATE INDEX IF NOT EXISTS idx_employee_exceptions_date ON public.employee_schedule_exceptions(employee_id, exception_date);
 ALTER TABLE public.employee_schedule_exceptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "salon_read_employee_exceptions" ON public.employee_schedule_exceptions;
+DROP POLICY IF EXISTS "salon_read_employee_exceptions" ON public.employee_schedule_exceptions;
 CREATE POLICY "salon_read_employee_exceptions" ON public.employee_schedule_exceptions FOR
 SELECT USING (salon_id = public.get_user_salon_id());
+DROP POLICY IF EXISTS "manager_write_employee_exceptions" ON public.employee_schedule_exceptions;
+DROP POLICY IF EXISTS "manager_write_employee_exceptions" ON public.employee_schedule_exceptions;
 CREATE POLICY "manager_write_employee_exceptions" ON public.employee_schedule_exceptions FOR ALL USING (
     salon_id = public.get_user_salon_id()
     AND public.has_any_salon_role(ARRAY ['owner', 'manager'])
@@ -73,7 +81,9 @@ CREATE OR REPLACE FUNCTION public.set_updated_at() RETURNS TRIGGER LANGUAGE plpg
 RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS employee_schedules_updated_at ON public.employee_schedules;
 CREATE TRIGGER employee_schedules_updated_at BEFORE
 UPDATE ON public.employee_schedules FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+DROP TRIGGER IF EXISTS employee_exceptions_updated_at ON public.employee_schedule_exceptions;
 CREATE TRIGGER employee_exceptions_updated_at BEFORE
 UPDATE ON public.employee_schedule_exceptions FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

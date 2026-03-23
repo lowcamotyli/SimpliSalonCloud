@@ -67,7 +67,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      plan: salon.subscription_plan || 'starter',
+      plan: salon.subscription_plan || 'solo',
       status: salon.subscription_status || 'trialing',
       trialEndsAt: salon.trial_ends_at,
       currentPeriodEnd: subscription?.current_period_end,

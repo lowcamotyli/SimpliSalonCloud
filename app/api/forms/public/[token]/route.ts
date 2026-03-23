@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { verifyFormToken } from '@/lib/forms/token'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { resolveGdprConsentText } from '@/lib/forms/gdpr'
 
 export async function GET(
   _request: Request,
@@ -39,10 +40,11 @@ export async function GET(
       { data: template, error: templateError },
       { data: client, error: clientError },
       { data: salon, error: salonError },
+      { data: settings, error: settingsError },
     ] = await Promise.all([
       adminClient
         .from('form_templates')
-        .select('name, fields, gdpr_consent_text, requires_signature')
+        .select('name, fields, gdpr_consent_text, requires_signature, data_category')
         .eq('id', clientForm.form_template_id)
         .limit(1)
         .maybeSingle(),
@@ -54,8 +56,14 @@ export async function GET(
         .maybeSingle(),
       adminClient
         .from('salons')
-        .select('name')
+        .select('name, owner_email')
         .eq('id', payload.salonId)
+        .limit(1)
+        .maybeSingle(),
+      adminClient
+        .from('salon_settings')
+        .select('contact_email, address')
+        .eq('salon_id', payload.salonId)
         .limit(1)
         .maybeSingle(),
     ])
@@ -78,13 +86,23 @@ export async function GET(
     if (!salon) {
       return NextResponse.json({ error: 'Nie znaleziono salonu' }, { status: 404 })
     }
+    if (settingsError) {
+      return NextResponse.json({ error: settingsError.message }, { status: 500 })
+    }
+
+    const gdprConsentText = resolveGdprConsentText(template.gdpr_consent_text, {
+      salonName: salon.name,
+      salonEmail: settings?.contact_email || salon.owner_email,
+      address: (settings?.address as Record<string, string> | null | undefined) ?? null,
+    })
 
     return NextResponse.json({
       template: {
         name: template.name,
         fields: template.fields,
-        gdpr_consent_text: template.gdpr_consent_text,
+        gdpr_consent_text: gdprConsentText,
         requires_signature: template.requires_signature,
+        data_category: template.data_category,
       },
       clientName: client.full_name,
       salonName: salon.name,

@@ -8,6 +8,7 @@ ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
 -- POLICY 1: CZYTANIE - wszyscy z salonu widzą wszystkie bookings
 DROP POLICY IF EXISTS "Salon members can view all bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Salon members can view all bookings" ON public.bookings;
 CREATE POLICY "Salon members can view all bookings"
   ON public.bookings
   FOR SELECT
@@ -31,6 +32,7 @@ CREATE POLICY "Salon members can create bookings"
 -- - Owner/Manager mogą edytować wszystkie
 -- - Employee może edytować tylko swoje (gdzie jest employee_id)
 DROP POLICY IF EXISTS "Members can update relevant bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Members can update relevant bookings" ON public.bookings;
 CREATE POLICY "Members can update relevant bookings"
   ON public.bookings
   FOR UPDATE
@@ -51,6 +53,7 @@ CREATE POLICY "Members can update relevant bookings"
   );
 
 -- POLICY 4: USUWANIE - tylko owner i manager
+DROP POLICY IF EXISTS "Owners and managers can delete bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Owners and managers can delete bookings" ON public.bookings;
 CREATE POLICY "Owners and managers can delete bookings"
   ON public.bookings

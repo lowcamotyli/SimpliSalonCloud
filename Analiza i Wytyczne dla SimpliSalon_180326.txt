@@ -1,0 +1,135 @@
+﻿Raport Architektoniczny i Strategiczny: Analiza Wymagań, Ewaluacja Nowych Funkcjonalności oraz Wytyczne Wdrożeniowe dla Oprogramowania SimpliSalon
+Branża oprogramowania dla sektora usług kosmetycznych i medycyny estetycznej znajduje się w fazie intensywnej redefinicji technologicznej. Analiza rynkowa wykazuje wyraźne zmęczenie właścicieli salonów dominującymi modelami platformowymi, takimi jak Booksy, które, pomimo swojej popularności, generują znaczne tarcia operacyjne, nakładają agresywne modele prowizyjne i charakteryzują się nieelastyczną architekturą informacji.1 Niniejszy raport stanowi wyczerpującą dekonstrukcję systemową oprogramowania SimpliSalon, przygotowaną z perspektywy architekta aplikacji automatyzacyjnych. Celem dokumentu jest przeprowadzenie głębokiej analizy transkryptu z sesji badawczej z dnia 17 marca 2026 roku, zidentyfikowanie nowych potrzeb użytkowników, zaktualizowanie statusów historycznych założeń projektowych oraz dostarczenie rygorystycznych, niskopoziomowych wytycznych inżynieryjnych dla zespołów programistycznych w zakresie interfejsu użytkownika (UI), logiki biznesowej oraz architektury bazodanowej.
+Współczesne aplikacje SaaS (Software as a Service) w modelu B2B muszą równoważyć zaawansowaną logikę relacyjną z ekstremalnie zoptymalizowanym doświadczeniem użytkownika (UX). Jak wynika z analizowanych materiałów, nadmiar kliknięć, brak wizualnej przejrzystości oraz błędne raportowanie finansowe to główne powody frustracji użytkowników systemów konkurencyjnych.1 SimpliSalon staje przed unikalną szansą przejęcia kohorty użytkowników poszukujących systemu przewidywalnego, w pełni integrującego zarządzanie zasobami ludzkimi, sprzętowymi oraz finansowymi, bez ukrytych opłat za akwizycję klienta.1 Optymalizacja tego produktu wymaga bezlitosnego priorytetyzowania funkcji o najwyższym współczynniku retencji przy jednoczesnym kontrolowaniu długu technologicznego.
+Ewaluacja Nowych Funkcjonalności: Klasyfikacja, Trudność Wdrożenia i Użyteczność Sprzedażowa
+Zapis z sesji badawczej ujawnił szereg krytycznych potrzeb operacyjnych, które stanowią bezpośrednią odpowiedź na frustracje wynikające z codziennego użytkowania aplikacji konkurencyjnych. Proces dekonstrukcji tych żądań wymaga oddzielenia problemów wynikających z błędnego interfejsu od tych, które mają podłoże w strukturze bazy danych.1 Każda nowa funkcjonalność została poddana surowej ewaluacji komercyjnej i inżynieryjnej. Skala trudności wdrożenia (od 1 do 10) odzwierciedla nakład pracy programistycznej, modyfikacje w bazie danych oraz potencjalne ryzyko wystąpienia błędów regresyjnych. Użyteczność sprzedażowa (od 1 do 10) ocenia potencjał danej funkcji w procesie pozyskiwania nowych klientów B2B oraz jej wpływ na zwiększenie wskaźnika Life-Time Value (LTV).
+
+
+Identyfikator Funkcjonalności
+	Kategoria Biznesowa
+	Zidentyfikowany Problem i Cel Biznesowy
+	Trudność Wdrożenia (1-10)
+	Użyteczność Sprzedażowa (1-10)
+	Globalny Kalendarz Miesięczny
+	Interfejs Użytkownika (UI/UX)
+	Brak możliwości szybkiego skanowania wolnych terminów w perspektywie długoterminowej podczas rozmowy telefonicznej z klientem.1
+	3/10
+	8/10
+	Multi-rezerwacje w Jednej Sesji
+	Optymalizacja Procesów (Workflow)
+	Konieczność tworzenia odrębnych rezerwacji dla wielu usług lub osób towarzyszących wymusza zamykanie i otwieranie okna rezerwacji, generując zbędne kliknięcia.1
+	7/10
+	10/10
+	Zwijane Listy Usług (Akordeony)
+	Architektura Informacji
+	Wizualne przeładowanie przy setkach usług w ofercie. Konkurencja zmusza użytkownika do długiego przewijania płaskich list.1
+	2/10
+	7/10
+	Dynamiczne Dodatki do Usług
+	Kształtowanie Cennika i Marży
+	Potrzeba elastycznego doliczania czasu i ceny za specyficzne modyfikacje zabiegu (np. zdobienie paznokci) bez tworzenia oddzielnych duplikatów usług w bazie danych.1
+	5/10
+	9/10
+	Zarządzanie Voucherami
+	Finanse i Przepływy Pieniężne
+	Brak systemowego potrącania środków z kart podarunkowych o określonym terminie ważności (np. 3 miesiące) wymusza prowadzenie zewnętrznej ewidencji.1
+	6/10
+	9/10
+	Prawidłowe Raportowanie Skarbowe
+	Zgodność Prawno-Podatkowa
+	Systemy konkurencji wysyłają do urzędów skarbowych raporty o przedpłatach z niezrealizowanych wizyt, tworząc chaos księgowy dla właścicieli salonów.1
+	8/10
+	10/10
+	Grupowe Przypisywanie Sprzętu
+	Administracja i Konfiguracja
+	Ręczne przypisywanie dziesiątek usług do jednego urządzenia z osobna jest skrajnie nieefektywne przy rotacji oferty.1
+	4/10
+	6/10
+	Kategoryzacja Formularzy w Profilu
+	Dokumentacja i Bezpieczeństwo
+	Przechowywanie formularzy w jednym globalnym repozytorium utrudnia odnalezienie historii konkretnego pacjenta podczas wizyty.1
+	4/10
+	8/10
+	Zasada "Dowolny Wolny Zasób"
+	Logika Harmonogramowania
+	Sztywne przypisywanie konkretnego fizycznego stołu do usługi generuje sztuczne blokady w kalendarzu, gdy inne identyczne stoły są wolne.1
+	8/10
+	10/10
+	Analiza powyższego zestawienia wykazuje wyraźną tendencję: funkcjonalności o najwyższej użyteczności sprzedażowej charakteryzują się jednoczesnym zapobieganiem błędom ludzkim oraz ochroną integralności danych finansowych.1 Wdrożenie mechanizmów takich jak wieloosobowy koszyk rezerwacyjny wewnątrz jednej wizyty, elastyczne pule zasobów sprzętowych (zamiast twardego przypisywania jeden-do-jednego) oraz ustrukturyzowana gospodarka voucherami stanowią kluczowe różnice jakościowe, które zbudują potężną fosę obronną wokół oprogramowania SimpliSalon. W kontekście rynkowym, przewaga konkurencyjna nie będzie opierać się na agregacji leadów, lecz na dostarczeniu profesjonalnego środowiska ERP (Enterprise Resource Planning) dostosowanego do specyfiki mikroprzedsiębiorstw.
+Rewizja i Aktualizacja Statusów Historycznych Funkcjonalności
+Konfrontacja wcześniejszych dokumentów analitycznych z wnioskami płynącymi z najnowszego transkryptu z dnia 17 marca umożliwia precyzyjną weryfikację wektora rozwoju oprogramowania. Wiele mechanizmów początkowo traktowanych jako poboczne zyskało na znaczeniu ze względu na ujawnione punkty bólu użytkowników (pain points), podczas gdy inne koncepcje zostały zidentyfikowane jako stwarzające zbyt wysokie ryzyko operacyjne lub rozpraszające zasoby deweloperskie. Proces ten wymaga bezlitosnego priorytetyzowania tych funkcji, które charakteryzują się najwyższym współczynnikiem retencji.1
+
+
+Funkcjonalność Historyczna
+	Poprzedni Status z Dokumentacji
+	Zaktualizowany Status (Na Bazie Transkryptu 17.03)
+	Uzasadnienie Architektoniczne i Kontekst Zmiany
+	Relacyjna Rezerwacja Sprzętu i Maszyn
+	Projektowane / Koncepcja 1
+	W Trakcie Prac (Z modyfikacją logiki)
+	Potwierdzono konieczność wdrożenia, jednak logika twardego przypisania 1:1 musi zostać zmieniona na pule zasobów. Użytkowniczka wskazała przypadek 3 pracowników i 2 stanowisk współdzielonych, co wymaga algorytmu alokacji dynamicznej (sprawdzającego, czy jakikolwiek zasób z danej kategorii jest wolny).1
+	Medyczne Karty Zabiegowe i Formularze
+	Wymóg do Integracji 1
+	W Trakcie Prac (Z optymalizacją UI)
+	Funkcja jest aktywnie rozwijana. Najnowszy transkrypt wniósł wymóg zmiany architektury informacji: zamiast globalnego rejestru formularzy, wszystkie ankiety muszą być zagnieżdżone bezpośrednio pod profilem klienta, aby umożliwić błyskawiczny podgląd historii medycznej w trakcie wizyty.1
+	Zaawansowana Komunikacja SMS i API
+	Wymóg Architektoniczny 1
+	Wdrożone Częściowo / W Trakcie Prac
+	Potwierdzono założenie kont w zewnętrznych bramkach (np. SMSAPI). System musi umożliwiać swobodną konfigurację wyprzedzenia wysyłki (np. 24h vs 3h) z poziomu globalnych ustawień salonu, a nie narzucać sztywnych ram, jak czyni to konkurencja.1
+	Infrastruktura Finansowa B2B (Przelewy24)
+	Wymóg 1
+	W Trakcie Prac (Z rygorem księgowym)
+	Potwierdzono założenie kont rozliczeniowych. Zmiana polega na głębokiej restrukturyzacji raportów generowanych dla właściciela: system może raportować do urzędu skarbowego wyłącznie transakcje z wizyt oznaczonych jako ostatecznie zakończone, pomijając wiszące przedpłaty z anulowanych rezerwacji.1
+	Złote Terminy (Golden Slots) / Kampanie
+	Eksplorowane 1
+	Wstrzymane (On Hold)
+	Temat automatycznych ofert last-minute i masowych kampanii SMS nie był głównym przedmiotem zainteresowania w wywiadzie operacyjnym, schodząc na dalszy plan w obliczu pilniejszych poprawek UX interfejsu kalendarza. Przesunięto do kolejnych faz rozwoju.1
+	Moduł Behawioralny CRM (Czarna Lista)
+	Koncepcja 1
+	Wstrzymane (On Hold)
+	Chociaż ochrona przed no-show poprzez tagowanie klientów pozostaje ważnym postulatem z wcześniejszych analiz, nie podniesiono go jako blokera w codziennej pracy podczas sesji 17 marca. Zasoby deweloperskie przekierowano na wieloosobowy koszyk rezerwacyjny.
+	System Prowizyjny personelu
+	Dyskutowane 1
+	Wdrożone / Zaakceptowane
+	Użytkowniczka wyraźnie potwierdziła, że obecny mechanizm naliczania prowizji (na podstawie progów przekroczenia) jest optymalny, zrozumiały i nie wymaga nadmiernej komplikacji, w przeciwieństwie do systemów, które sprawiają trudności właścicielom salonów ze słabą znajomością matematyki biznesowej.1
+	Voicebot (Wirtualna Recepcjonistka)
+	Koncepcja Futurystyczna 1
+	Wstrzymane (On Hold - Odrzucone)
+	Wdrożenie pełnego asystenta AI do obsługi głosowej generuje ekstremalny dług technologiczny i ryzyko niepowodzenia. Biorąc pod uwagę potrzebę stabilizacji podstawowych procesów biznesowych i UI, projekt ten zostaje odrzucony w przewidywalnej przyszłości.1
+	Zaktualizowana mapa drogowa (roadmap) ukazuje wyraźną zmianę paradygmatu ze skalowania marketingowego na rygorystyczną optymalizację użyteczności. Zespół deweloperski musi w pierwszej kolejności zaspokoić potrzeby administracyjne recepcji, takie jak płynne zarządzanie wieloma usługami i formularzami medycznymi, co stanowi podstawę operacyjną każdego gabinetu.1 Brak stabilności w tych podstawowych warstwach sprawi, że nawet najbardziej zaawansowane narzędzia akwizycyjne nie zapobiegną odejściu klientów (churn).
+Wytyczne Inżynieryjne i Architektoniczne dla Zespołu Programistów
+Poniższa sekcja stanowi ścisłą specyfikację wdrożeniową. Przedstawione wymagania muszą zostać przełożone na odpowiednie struktury danych (modele backendowe), mechanizmy zarządzania stanem na frontendzie (np. Redux, Vuex lub Context API) oraz precyzyjne komponenty interfejsu użytkownika. Każdy podrozdział dokładnie opisuje mechanikę działania, detale wizualne oraz lokalizację elementów w nawigacji, stanowiąc bezpośredni instruktaż do tworzenia zadań w systemach typu Jira.
+1. Architektura Kalendarza i Globalny Podgląd Miesiąca
+Obecna nawigacja w kalendarzu, ograniczona do widoków dni i tygodni, wywołuje wysokie przeciążenie poznawcze u pracowników recepcji. Brak natychmiastowego dostępu do siatki całego miesiąca wymusza ciągłe przełączanie kontekstów podczas negocjowania odległych terminów z klientem przebywającym na linii telefonicznej.1
+Aby zoptymalizować ten przepływ pracy, system wymaga implementacji statycznego komponentu kalendarza miesięcznego typu "Date Picker", osadzonego na stałe w interfejsie. Zgodnie z wytycznymi wypracowanymi na podstawie obserwacji użytkowników, kalendarz ten musi znajdować się w strefie o wysokiej dostępności wizualnej.1 Optymalną lokalizacją jest lewy panel boczny w przestrzeni nad elementami nawigacyjnymi pracowników (bezpośrednio nad linią horyzontalną oddzielającą nagłówki od głównej osi czasu).1 Alternatywnie, komponent ten może zostać ulokowany w górnej sekcji interfejsu w pobliżu przycisku "Nowa Wizyta", który z kolei winien zostać przesunięty powyżej imion personelu, maksymalizując przestrzeń operacyjną.1
+Mechanika interakcji tego komponentu musi opierać się na asynchronicznym odświeżaniu stanu. Zmiana widoku na kolejny miesiąc (za pomocą wbudowanych w miniaturowy kalendarz strzałek) nie powinna obciążać zapytań sieciowych ani przeładowywać głównego obszaru roboczego kalendarza.1 Dopiero intencjonalne kliknięcie przez użytkownika w konkretną cyfrę dnia w widgecie miesięcznym powinno wyzwalać żądanie HTTP do serwera (np. GET /api/v1/bookings?date=YYYY-MM-DD), aktualizując globalny stan aplikacji i płynnie przerysowując główny widok dzienny dla wszystkich pracowników.1 Tego typu izolacja stanu komponentu od stanu globalnego uchroni interfejs przed lagami i zapewni responsywność wymaganą w środowisku szybkiej obsługi klienta.
+2. Mechanika Koszyka Usług i Multi-rezerwacji
+Kolejnym zidentyfikowanym wąskim gardłem systemów konkurencji jest model rezerwacji oparty o logikę "jedno do jednego" (jeden klient - jedna usługa). Konieczność dodania usługi dla innej osoby towarzyszącej lub skonfigurowania złożonego harmonogramu obejmującego różne procedury w następstwie czasu, zmusza do zamykania okien modalnych i inicjowania procesu od początku.1 Stanowi to drastyczne naruszenie zasad użyteczności.
+Rozwiązaniem jest przebudowa głównego formularza rezerwacyjnego do wzorca architektonicznego przypominającego koszyk e-commerce. W momencie inicjacji "Nowej Wizyty" i wprowadzeniu danych pacjenta, interfejs musi utrzymywać swoją widoczność po dodaniu pierwszej procedury.1 W dolnej strefie modalu należy zaimplementować wyraźny, jednoznaczny przycisk akcji (CTA) "Dodaj kolejną usługę".1 Kliknięcie w ten element interfejsu powinno wstrzykiwać do struktury DOM nowy, pusty blok formularza przypisany do tej samej, otwartej sesji rezerwacyjnej.
+Z perspektywy struktury danych, taki model wymaga utworzenia nadrzędnego obiektu transakcyjnego, na przykład Visit_Group. Obiekt ten dziedziczyłby wspólne atrybuty takie jak identyfikator klienta czy preferowana metoda płatności. Z kolei poszczególne procedury byłyby reprezentowane jako podrzędne rekordy typu Visit_Item, każdy z możliwością przypisania własnego specjalisty, niezależnego zasobu sprzętowego, znacznika czasu oraz modyfikatorów cenowych. Frontend musi dynamicznie agregować sumaryczny czas wszystkich procedur w koszyku oraz na bieżąco przeliczać szacowany koszt całkowity wyświetlany w stopce modalu.1 Ta zmiana zredukuje dziesiątki zbędnych kliknięć, stanowiąc kluczowy argument sprzedażowy dla gabinetów o wysokim wolumenie obsługi. Ponadto, system musi bezbłędnie umożliwiać przenoszenie całych bloków rezerwacyjnych lub ich fragmentów metodą "drag and drop" w kalendarzu w celu płynnego wydłużania bądź skracania zabiegu.1
+3. Zwijane Listy Usług i Logika Dodatków (Akordeony)
+Analiza zachowań użytkowników wykazała, że salony posiadające rozbudowaną strukturę cennikową – nierzadko liczącą kilkadziesiąt zróżnicowanych pozycji zabiegowych – mierzą się z problemem przeładowania poznawczego.1 Płaskie, ciągłe zestawienia usług generują frustrację, wymagając intensywnego przewijania interfejsu w poszukiwaniu odpowiedniego wpisu, co bezpośrednio wydłuża czas obsługi klienta.1
+Zespół inżynierski odpowiedzialny za warstwę prezentacji (frontend) jest zobligowany do wdrożenia komponentów typu "akordeon" (collapsible lists) we wszystkich widokach selekcji usług. Usługi w bazie danych muszą podlegać rygorystycznemu strukturyzowaniu na bazie encji nadrzędnych – Kategorii (np. "Podologia", "Kosmetologia Estetyczna").1 Domyślnym stanem widoku po wyrenderowaniu komponentu (zależnie od wybranej strategii optymalizacji wydajności DOM) powinno być rozwinięcie wyłącznie pierwszego segmentu kategorii lub ewentualnie zaprezentowanie pierwszych pięciu najpopularniejszych pozycji, przy zachowaniu pozostałych elementów w stanie zwiniętym (collapsed).1 Taka architektura informacji wymusza na użytkowniku świadome interakcje, redukując chaos wizualny i zapewniając natychmiastowy przegląd głównych struktur oferty.
+W ścisłym powiązaniu ze strukturą usług pozostaje zarządzanie modyfikatorami, czyli tak zwanymi "Dodatkami" (Add-ons). Skrajnym błędem architektonicznym spotykanym w rozwiązaniach konkurencyjnych jest przymus tworzenia osobnego wpisu w bazie dla każdej możliwej wariacji zabiegu (np. wprowadzanie oddzielnej usługi dla manicure hybrydowego połączonego ze zdejmowaniem masy, oraz kolejnej połączonej ze zdobieniem francuskim).1 Prowadzi to do niekontrolowanego i niepotrzebnego przyrostu danych. W SimpliSalon, każdy dodatek musi być odrębną relacyjną encją przypisywaną do grupy usług. Podczas procesu rezerwacji, po wyborze usługi bazowej, interfejs musi dynamicznie generować sekcję z listą dedykowanych dla niej dodatków, reprezentowanych przez interaktywne pola wyboru (checkboxy). Wybór modyfikatora musi w czasie rzeczywistym aktualizować stan aplikacji, zwiększając zmienną całkowitego czasu zabiegu (duration_delta) oraz modyfikując końcową cenę (price_delta) o predefiniowane wartości.1 Zastosowanie tego wzorca zapewni czystość danych w cenniku oraz znacząco podniesie elastyczność kalkulowania kosztów na recepcji.
+4. Dynamiczna Alokacja Sprzętu i Masowe Przypisywanie
+Systemy oprogramowania oparte o przestarzałą, jednoosiową architekturę harmonogramowania ponoszą klęskę w zetknięciu z wymogami nowoczesnych klinik, gdzie rotacja aparatury medycznej i foteli zabiegowych jest równie istotna co dyspozycyjność personelu.1 Wcześniejsze analizy wskazywały na potrzebę ścisłego, wręcz relacyjnego mapowania urządzeń, jednak zapisy z sesji z 17 marca ujawniły błędne założenia w tym modelu. Zmuszanie systemu do rezerwacji z uwzględnieniem sztywnego przypisania (np. powiązanie usługi z konkretnym urządzeniem o numerze seryjnym) skutkuje blokadami logiki – jeśli pracownik X jest uwiązany do stołu nr 1, a pracownik Y wykonuje zabieg przy stole nr 2, to w przypadku gdy w placówce istnieją trzy identyczne stanowiska pracy, algorytm mylnie zinterpretuje brak dostępności, ignorując wolny trzeci zasób.1
+Dlatego logika zarządzania zasobami nieludzkimi musi opierać się na pojęciu "Puli Zasobów" (Resource Pools).1 Urządzenia i stanowiska należy przypisywać do kategorii nadrzędnych. Podczas zapytania o wolne terminy, backend nie może sprawdzać dostępności urządzenia na poziomie fizycznego identyfikatora maszyny, lecz na poziomie sumarycznej dostępności zasobów z danej klasy w konkretnym bloku czasowym   . Algorytm dostępności winien ewaluować warunek logiczny bazujący na dostępności pracownika oraz całkowitej ilości wolnych stanowisk w puli.
+Z perspektywy konfiguracji oprogramowania przez administratorów salonu, niezwykle istotne jest stworzenie interfejsu obsługującego operacje masowe. Proces podłączania nowej maszyny do portfolio usług musi wykluczać konieczność otwierania edycji każdej pojedynczej procedury z osobna.1 W module "Ustawienia -> Sprzęt" (Lokalizacja: Panel konfiguracyjny menu głównego), kliknięcie w konkretny sprzęt powinno generować modal operacyjny z listą wszystkich usług świadczonych w placówce. Programiści powinni zaimplementować komponent "Dual Listbox" lub zaawansowany wielokrotny wybór, który umożliwi jednym kliknięciem przeniesienie czterdziestu zaznaczonych zabiegów do koszyka relacji powiązanego z urządzeniem.1 Taka automatyzacja konfiguracji zredukuje godziny bezproduktywnej pracy administracyjnej i zabezpieczy proces wdrożeniowy nowych salonów przed porzuceniem oprogramowania na etapie ustawień początkowych.
+5. Repozytorium Formularzy Medycznych w Profilu Klienta
+Odpowiedzią oprogramowania SimpliSalon na galopującą medykalizację branży kosmetycznej jest implementacja cyfrowych formularzy zgód RODO, kart wywiadu zdrowotnego i ankiet przeciwwskazań.1 Złożenie tych dokumentów ma na celu wykluczenie kosztownych usług abonamentowych stron trzecich.1 Mimo że budowa generatora formularzy to zagadnienie głównie oparte na manipulacji strukturami JSON w bazach nierelacyjnych (lub polach JSONB), transkrypt wyraźnie adresuje krytyczną niedoróbkę w obszarze architektury informacji i użyteczności (UX) interfejsu.1
+Przechowywanie wszystkich wypełnionych oświadczeń w jednym, scentralizowanym widoku tabelarycznym (np. "Wszystkie Formularze"), generuje chaos podczas szybkiej obsługi na recepcji. Kiedy salon obsługuje kilkudziesięciu pacjentów dziennie, znalezienie wywiadu pacjenta w gąszczu tysięcy rekordów jest niemożliwe bez stosowania złożonych filtrów.1 Z tego powodu, nadrzędna lokalizacja dostępu do formularzy musi zostać przeniesiona bezpośrednio do interfejsu Karty Klienta (Client Profile).1
+W profilu konkretnego pacjenta inżynierowie muszą wydzielić odrębną, dedykowaną zakładkę o nazwie "Formularze" lub "Historia Medyczna". Otwarcie tej sekcji winno wyzwalać żądanie do serwera, które odpyta bazę danych o wszelkie rekordy ankiet powiązane z unikalnym identyfikatorem danego klienta. Dokumenty w tej zakładce powinny być chronologicznie uporządkowane. Kliknięcie w element wygeneruje pełnoekranowy podgląd oświadczenia w trybie "read-only", ze szczególnym wyeksponowaniem zarejestrowanego podpisu cyfrowego oraz precyzyjnego znacznika czasowego (timestamp) zatwierdzenia.1 Integracja ta gwarantuje pracownikom natychmiastowy wgląd w historię obciążeń zdrowotnych bez konieczności wychodzenia z kontekstu obsługiwania konkretnego pacjenta.
+6. Infrastruktura Vouchera jako Instrumentu Finansowego
+Pojawienie się konieczności ustrukturyzowanej obsługi kart podarunkowych (Voucherów) ujawnia luki w operacyjnej płynności salonów opartych na rozwiązaniach manualnych i notatkach papierowych.1 Voucher w architekturze oprogramowania B2B nie może być postrzegany jako zwykły kod rabatowy generujący procentową bądź kwotową obniżkę podczas finalizacji płatności. Stanowi on odrębną wartość księgową, przypisaną do wirtualnego konta użytkownika.1
+Architektura Bazy Danych i Operacje Transakcyjne: Zespół backendowy musi zaprojektować tabelę Vouchers, przechowującą metadane o każdym wyemitowanym kuponie. Struktura musi zawierać absolutne minimum informacji takich jak: unikalny kryptograficzny hash vouchera, wartość początkowa (Initial Value), bieżące saldo (Current Balance), identyfikator klienta-nabywcy, identyfikator klienta-beneficjenta (jeśli jest przypisany) oraz sztywny znacznik daty wygaśnięcia (Expiration Date).1 Proces emisji z poziomu UI powinien automatycznie inicjować cykl życia karty z predefiniowanym, konfigurowalnym okresem ważności, wynoszącym na przykład 3 miesiące od momentu opłacenia.
+Logika Rozliczeniowa i Wygasanie: Z perspektywy recepcjonisty (UI), po przejściu do okna rozliczenia i finalizacji wizyty, system winien dynamicznie analizować stan konta beneficjenta.1 Jeśli relacyjna weryfikacja potwierdzi przypisany, aktywny voucher z saldem większym od zera, interfejs musi eksponować przycisk "Użyj środków z Vouchera". System operuje w modelu "Partial Redemption" – potrącenie środków z vouchera za wykonaną usługę odbywa się na poziomie bazy danych poprzez bezpieczną transakcję ACID, gwarantującą, że jeśli kwota wizyty jest niższa niż wartość bonu, pozostała reszta zabezpieczona jest na koncie beneficjenta do momentu jej wyczerpania lub wygaśnięcia.1
+Dla zagwarantowania czystości danych księgowych, architektura serwera musi zakładać istnienie procesów działających w tle (tzw. Cron Jobs). Procesy te będą w regularnych interwałach (np. codziennie o 00:01) skanować tabelę Vouchers w poszukiwaniu rekordów, których znacznik Expiration_Date jest wcześniejszy niż obecny czas serwera, i dokonywać automatycznej zmiany statusu tych wpisów na "Wygaśnięte", zerując jednocześnie dostępne tam saldo.1
+7. Rygorystyczna Maszyna Stanów dla Raportów Skarbowych i Przedpłat
+Podnoszona przez testerów kwestia niewłaściwego zachowania modułów sprawozdawczych w konkurencyjnych oprogramowaniach dotyka samej istoty finansowego przetrwania mikroprzedsiębiorstwa. Raportowanie kwot z przedpłat (często pobieranych przez zintegrowane bramki typu Przelewy24 z preferencją mechanizmu BLIK 1) z rezerwacji, które nie zostały sfinalizowane, wywołuje powstanie fałszywych przychodów generujących niepotrzebny koszt podatkowy dla salonów.1
+Błędem platform takich jak Booksy jest brak silnego rozgraniczenia pomiędzy wirtualnym napływem środków zabezpieczających wizytę, a rzeczywistym ujęciem ich w świetle przepisów o podatku VAT jako ostatecznego przychodu.1 System SimpliSalon musi operować w oparciu o hermetyczną maszynę stanów (State Machine). Z perspektywy projektowej, każde żądanie wniesienia przedpłaty skutkuje zablokowaniem środków, a w strukturze rekordu w bazie pojawia się flaga (np. status "Zaliczka / Oczekująca").
+Wszystkie skrypty analityczne, generatory raportów miesięcznych, dashboardy opłacalności oraz eksporty plików JPK przeznaczone do organów administracji skarbowej muszą obligatoryjnie ignorować rekordy posiadające taki wstępny status.1 Moduł finansowy ma prawo uwzględnić te wartości w sprawozdaniu dopiero i wyłącznie w momencie, gdy upoważniony personel salonu kliknie przycisk akcji "Zakończ i Rozlicz" podczas fizycznej obecności klienta, de facto ostatecznie potwierdzając wykonanie usługi. Zignorowanie tej warstwy walidacji i traktowanie samego pojawienia się rezerwacji jako zrealizowanej transakcji przekreśli całkowicie zaufanie do oprogramowania B2B ze strony właścicieli, dla których precyzyjna księgowość jest kwestią fundamentalną.1
+Podsumowanie i Strategiczne Aspekty Rynkowe
+Polska branża beauty wykazuje jednoznaczne oznaki odrzucenia agresywnych, platformowych modeli pozyskiwania ruchu, opierających się na ogromnych narzutach prowizyjnych.1 Obserwuje się masową migrację salonów w kierunku niezależnych architektur SaaS, w których naczelną wartością jest ochrona marży i transparentność procesów zarządzania rezerwacjami. Projektowanie systemu SimpliSalon musi nieustannie rezonować z tą specyfiką.
+Oparcie rozwoju o stabilizację fundamentalnych procesów – takich jak elastyczne koszyki zabiegowe w ramach jednej sesji, zorganizowane wokół zasady "puli zasobów" zarządzanie wyposażeniem, wysoce responsywny widget miesięczny z synchronizacją stanu czy też precyzyjna weryfikacja prawno-finansowa przedpłat i voucherów – to znacznie pewniejsza ścieżka do rynkowej dominacji, aniżeli implementacja pokazowych, lecz generujących wysoki dług operacyjny technologii opartych na sztucznej inteligencji (Voicebot AI).1 Inżynierowie powinni dążyć do wdrożenia powyższych wytycznych w rygorze iteracyjnym, każdorazowo testując wpływ zmian na szybkość przeprowadzania operacji przez końcowego użytkownika na froncie (Time-to-Interactive) oraz poprawność audytową rejestrów bazy danych. To właśnie ta bezwzględna orientacja na rozwiązanie uciążliwości interfejsu (UX) pozwoli SimpliSalon przejąć rolę lidera wśród oprogramowania medycyny estetycznej i profesjonalnej kosmetyki.
+Cytowane prace
+1. Analiza Funkcjonalności SimpliSalon - GPT.txt

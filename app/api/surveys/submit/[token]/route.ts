@@ -14,9 +14,10 @@ export async function POST(
 ) {
   try {
     const { token } = await params
+    let tokenPayload: { bookingId: string; salonId: string }
 
     try {
-      await verifySurveyToken(token)
+      tokenPayload = await verifySurveyToken(token)
     } catch {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
@@ -32,6 +33,24 @@ export async function POST(
 
     if (surveyError) {
       return NextResponse.json({ error: surveyError.message }, { status: 500 })
+    }
+
+    if (!survey) {
+      const { data: submittedSurvey, error: submittedSurveyError } = await adminClient
+        .from('satisfaction_surveys')
+        .select('id, submitted_at, fill_token_exp')
+        .eq('booking_id', tokenPayload.bookingId)
+        .eq('salon_id', tokenPayload.salonId)
+        .limit(1)
+        .maybeSingle()
+
+      if (submittedSurveyError) {
+        return NextResponse.json({ error: submittedSurveyError.message }, { status: 500 })
+      }
+
+      if (submittedSurvey?.submitted_at) {
+        return NextResponse.json({ error: 'Ankieta juz wypelniona' }, { status: 409 })
+      }
     }
 
     if (!survey) {

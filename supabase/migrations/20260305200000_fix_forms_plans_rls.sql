@@ -1,5 +1,6 @@
 -- Fix #6: client_forms_write policy -- restrict to owner/manager only
 DROP POLICY IF EXISTS "client_forms_write" ON public.client_forms;
+DROP POLICY IF EXISTS "client_forms_write" ON public.client_forms;
 CREATE POLICY "client_forms_write" ON public.client_forms FOR ALL USING (
     client_id IN (
         SELECT c.id
@@ -12,6 +13,7 @@ CREATE POLICY "client_forms_write" ON public.client_forms FOR ALL USING (
 DROP POLICY IF EXISTS "beauty_plans_all" ON public.beauty_plans;
 DROP POLICY IF EXISTS "beauty_plans_select" ON public.beauty_plans;
 DROP POLICY IF EXISTS "beauty_plans_write" ON public.beauty_plans;
+DROP POLICY IF EXISTS "beauty_plans_select" ON public.beauty_plans;
 CREATE POLICY "beauty_plans_select" ON public.beauty_plans FOR
 SELECT USING (
         client_id IN (
@@ -20,6 +22,7 @@ SELECT USING (
             WHERE c.salon_id = public.get_user_salon_id()
         )
     );
+DROP POLICY IF EXISTS "beauty_plans_write" ON public.beauty_plans;
 CREATE POLICY "beauty_plans_write" ON public.beauty_plans FOR ALL USING (
     client_id IN (
         SELECT c.id
@@ -32,6 +35,7 @@ CREATE POLICY "beauty_plans_write" ON public.beauty_plans FOR ALL USING (
 DROP POLICY IF EXISTS "beauty_plan_steps_all" ON public.beauty_plan_steps;
 DROP POLICY IF EXISTS "beauty_plan_steps_select" ON public.beauty_plan_steps;
 DROP POLICY IF EXISTS "beauty_plan_steps_write" ON public.beauty_plan_steps;
+DROP POLICY IF EXISTS "beauty_plan_steps_select" ON public.beauty_plan_steps;
 CREATE POLICY "beauty_plan_steps_select" ON public.beauty_plan_steps FOR
 SELECT USING (
         plan_id IN (
@@ -41,6 +45,7 @@ SELECT USING (
             WHERE c.salon_id = public.get_user_salon_id()
         )
     );
+DROP POLICY IF EXISTS "beauty_plan_steps_write" ON public.beauty_plan_steps;
 CREATE POLICY "beauty_plan_steps_write" ON public.beauty_plan_steps FOR ALL USING (
     plan_id IN (
         SELECT bp.id

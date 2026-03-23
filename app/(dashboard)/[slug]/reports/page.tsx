@@ -176,7 +176,7 @@ export default function ReportsPage(): JSX.Element {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Raporty i analityka</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Zarządzaj wynikami i zadowoleniem klientów w jednym miejscu.</p>
+          <p className="text-muted-foreground mt-1 text-sm theme-header-subtitle">Zarządzaj wynikami i zadowoleniem klientów w jednym miejscu.</p>
         </div>
         <div className="flex items-center gap-2 p-1 glass rounded-xl">
           {[7, 30, 90].map((d) => (
@@ -198,31 +198,31 @@ export default function ReportsPage(): JSX.Element {
           <TabsList className="bg-transparent h-auto p-0 gap-2 flex w-max sm:w-auto">
             <TabsTrigger
               value="overview"
-              className="glass data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary/20 data-[state=active]:shadow-lg"
             >
               Przegląd
             </TabsTrigger>
             <TabsTrigger
               value="revenue"
-              className="glass data-[state=active]:bg-emerald-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:border-emerald-600/20 data-[state=active]:shadow-lg"
             >
               Przychody
             </TabsTrigger>
             <TabsTrigger
               value="visits"
-              className="glass data-[state=active]:bg-blue-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600/20 data-[state=active]:shadow-lg"
             >
               Wizyty i Usługi
             </TabsTrigger>
             <TabsTrigger
               value="employees"
-              className="glass data-[state=active]:bg-purple-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:border-purple-600/20 data-[state=active]:shadow-lg"
             >
               Pracownicy
             </TabsTrigger>
             <TabsTrigger
               value="nps"
-              className="glass data-[state=active]:bg-orange-500 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-xl px-6 py-3 font-semibold transition-all border-none"
+              className="px-6 py-3 rounded-xl font-bold transition-all border border-border/50 bg-card/50 text-muted-foreground data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:border-orange-500/20 data-[state=active]:shadow-lg"
             >
               Opinie i NPS
             </TabsTrigger>
@@ -347,7 +347,7 @@ export default function ReportsPage(): JSX.Element {
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold truncate text-foreground">{service.service_name}</p>
+                          <p className="font-bold truncate text-foreground theme-service-name">{service.service_name}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{service.booking_count} wizyt</span>
                             {service.avg_rating && (

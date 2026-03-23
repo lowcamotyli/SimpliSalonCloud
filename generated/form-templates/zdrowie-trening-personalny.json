@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "source": {
+    "preferredFile": "ZDROWIE_trening_personalny.md",
+    "language": "pl",
+    "category": "ZDROWIE",
+    "serviceName": "trening personalny"
+  },
+  "extraction": {
+    "title": "ZDROWIE: trening personalny",
+    "questionBlocks": [
+      "Jaki jest Twój główny cel treningowy?\nredukcja masy ciałasiłakondycjazdrowieinne\nCzy wcześniej trenowałeś/aś z trenerem personalnym?\nTak    Nie\nJak często aktualnie ćwiczysz i jakie aktywności podejmujesz?\nCzy masz zdiagnozowane problemy zdrowotne, które mogą wpływać na trening?\nTak    Nie\nJeśli tak, to jakie?\nCzy przeszedłeś/-aś w ostatnim czasie kontuzje lub operacje?\nTak    Nie\nJeśli tak, to jakie?\nCzy przyjmujesz leki mogące wpływać na wydolność lub ryzyko wysiłku fizycznego?\nTak    Nie\nJeśli tak, to jakie?\nCzy wykonujesz pracę siedzącą lub obciążającą konkretną partię ciała?\nTak    Nie\nCzy jesteś obecnie w trakcie diety lub współpracy z dietetykiem?\nTak    Nie\nJak oceniasz swój poziom motywacji i dostępny czas na treningi?\nCzy jesteś zainteresowany/a pomiarem postępów (np. pomiary ciała, testy sprawności)?\nTak    Nie\nWyrażam zgodę na przetwarzanie moich danych dotyczących zdrowia na potrzeby przeprowadzenia zabiegu."
+    ],
+    "legalBlocks": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beauty\nPlanów W tym celu możemy przesyłać na podany przez Ciebie adres e-mail lub numer telefonu informacje związane z umową np. zalecenia pozabiegowe, informacje związane z rejestracją konta w aplikacji, szczegóły dotyczące np. Beauty\nPlanów\nPODSTAWA PRAWNA- w zakresie w jakim przetwarzanie danych jest niezbędne dla realizacji umowy – podstawą prawną będzie wykonanie umowy (podjęcie czynności niezbędnych przed nawiązaniem umowy) (art. 6 ust. 1 lit. b RODO); - w zakresie w jakim z wykonaniem umowy wiązać się będzie realizacja określonych obowiązków wynikających z przepisów prawa (np. podatkowych, księgowych etc.) podstawą prawną będzie stosowny przepis prawa (art. 6 ust. 1 lit. c RODO);- w zakresie w jakim przetwarzanie będzie wykraczać poza to co niezbędne dla zawarcia i wykonania umowy – będziemy przetwarzać dane związane z umową w oparciu o prawnie uzasadniony interes – np. w związku z wysyłaniem zaleceń pozabiegowych, rejestracją w systemie, wysyłaniem informacji dotyczących Beauty\nPlanu, etc. (art. 6 ust. 1 lit. f RODO); - dane możemy również przetwarzać w zakresie niezbędnym dla ustalenia, dochodzenia lub obroną przed roszczeniami, w tym zgłoszeniem szkód do ubezpieczyciela w oparciu o nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]- dane o stanie zdrowia (np. dane o przyjmowanych lekach, przebytych chorobach, alergiach, ciąży etc. podane przez Ciebie) - w zakresie w jakim jest to niezbędne dla bezpiecznego wykonania zabiegów - u nas są przetwarzane na podstawie wyraźnej zgody na ich przetwarzanie (art. 9 ust. 2 lit. a RODO). Zgoda jest dobrowolna, lecz niezbędna do korzystania z zabiegów kosmetycznych (wykonania umowy).\nDo czasu rozpoczęcia zabiegu możesz wycofać zgodę ustnie w Salonie, wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem.Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO.\nCEL: Odpowiedzi na zapytania\nPODSTAWA PRAWNAPodstawą prawną jest nasz prawnie uzasadniony interes polegający na konieczności ustosunkowania się do Twojego zapytania (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]W przypadku, gdy odpowiedzi na zapytania dotyczą umówienia usługi lub zakupu produktu podstawą prawną może być czynność bezpośrednio poprzedzająca zawarcie umowy (art. 6 ust. 1 lit. b RODO).\nCEL: Wnioski dotyczące realizacji praw wynikających z RODO lub innych właściwych przepisów\nPODSTAWA PRAWNAPodstawą prawną jest nasz obowiązek prawny (art. 6 ust. 1 lit. c RODO) związany z koniecznością realizacji praw osób, których dane dotyczą oraz wykazania prawidłowości wykonania naszych obowiązków.\nCEL: Reklamacje\nPODSTAWA PRAWNAPodstawą prawną jest nasz lub Twój prawnie uzasadniony interes polegający na komunikacji w związku z daną reklamacją, a następnie w celu obrony przed roszczeniami (art. 6 ust. 1 lit. f RODO).\nSPRZECIW: W przypadku przetwarzania przez nas danych w oparciu o prawnie uzasadniony interes masz prawo zgłoszenia sprzeciwu z przyczyn związanych ze swoją szczególną sytuacją. Sprzeciw możesz zgłosić pisząc do nas na adres e-mail [EMAIL SALONU]\nCzy podanie Twoich danych jest obowiązkowe?Podanie danych jest dobrowolne. Jednakże niepodanie danych, które są niezbędne dla realizacji określonych powyżej celów może odpowiednio uniemożliwić realizację tych celów, np. niepodanie wymaganych danych będzie skutkować niemożnością wykonania zabiegu, zamówienia produktu itp.\nJak długo przechowujemy Twoje dane?Twoje dane przechowujemy przez następujące okresy w zależności od podstaw prawnych (celów przetwarzania):Wykonanie umowy oraz czynności poprzedzające lub związane z wykonaniem umowy: Twoje dane będą przechowane tak długo jak to jest niezbędne dla realizacji celów dla których zostały zebrane, w tym wykonania umowy (np. przeprowadzenia zabiegu, dostarczenia produktu, odpowiedzi na zapytanie które można zakwalifikować jako czynność poprzedzającą zawarcie umowy) który to okres zostanie wydłużony o stosowny okres przedawnienia roszczeń.Nasze obowiązki prawne: W przypadkach, gdy przetwarzanie Twoich danych służy realizacji obowiązków wynikających z przepisów prawa, będziemy przechowywać Twoje dane przez okresy wskazane w takich przepisach obowiązującego prawa.Twoja zgoda: Twoje dane będą przetwarzane do czasu wycofania udzielonej przez Ciebie zgody na ich przetwarzanie. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną nawet po wycofaniu przez Ciebie zgody.Prawnie uzasadniony interes: Twoje dane będą przetwarzane do czasu zgłoszenia przez Ciebie skutecznego sprzeciwu względem ich przetwarzania lub do czasu gdy wykażemy istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń. Oznacza to, że po zgłoszeniu przez Ciebie sprzeciwu dokonamy wyważenia Twoich i naszych interesów. Wówczas nie będziemy już przetwarzać Twoich danych osobowych, chyba że wykażemy istnienie ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Twoich interesów, praw i wolności, lub istnienie podstaw do ustalenia, dochodzenia lub obrony roszczeń.\nGdzie są przetwarzane Twoje dane osobowe?Twoje dane osobowe są przetwarzane, w tym przechowywane na terenie Europejskiego Obszaru Gospodarczego.\nKomu są przekazywane Twoje dane osobowe?Odbiorcami Twoich danych osobowych są podmioty z nami współpracujące lub dostarczające usługi na naszą rzecz, np. podmioty zajmujące się obsługą systemów IT, archiwizacją dokumentacji, obsługą prawną, rachunkowo - księgową czy też jakiekolwiek inne podmioty, z którymi zawarliśmy umowę powierzenia przetwarzania danych i które są zobowiązane do przetwarzania Twoich danych zgodnie z naszymi wskazówkami. Odbiorcami Twoich danych mogą być także organy nadzorujące przestrzeganie prawa, organ regulacyjne i inne organy administracji publicznej, sądy i organy ścigania (wyłącznie w zakresie wynikającym z obowiązujących przepisów prawa).\nJakie są Twoje prawa?Możesz zwrócić się do nas z określonym żądaniem za pośrednictwem adres e-mail [EMAIL SALONU] lub na nasz adres korespondencyjny. Prosimy wówczas o wskazanie z jakiego prawa i w jakim zakresie chcesz skorzystać. Po wpłynięciu Twojego żądania i ewentualnej weryfikacji Twojej tożsamości podejmiemy w związku z Twoim żądaniem odpowiednie działania.Zgodnie z prawem otrzymasz od nas stosowną odpowiedź tak szybko, jak to możliwe, ale (co do zasady) nie później niż w ciągu miesiąca. W sytuacji, w której Twoje żądanie jest skomplikowane lub prosisz nas jednocześnie o realizację wielu żądań, termin ten może został przedłużony maksymalnie o kolejne dwa miesiące. W takim przypadku zostaniesz poinformowany/poinformowana o takim przedłużeniu terminu.Przysługują Tobie następujące prawa:- prawo dostępu do treści swoich danych, otrzymania ich kopii, żądania ich sprostowania, usunięcia lub ograniczenia ich przetwarzania;- wniesienia sprzeciwu wobec przetwarzania danych osobowych z przyczyn związanych z Twoją szczególną sytuacją w zakresie, w jakim podstawą przetwarzania danych osobowych jest prawnie uzasadniony interes;- przenoszenia danych osobowych w zakresie, w jakim Twoje dane są przetwarzane w celu zawarcia i wykonywania umowy lub na podstawie zgody;- wycofania wyrażonej zgody w dowolnym momencie bez wpływu na legalność przetwarzania dokonanego przed takim wycofaniem. W przypadkach w których te same dane są przetwarzane również w innych celach, w oparciu o inne podstawy prawne, będziemy mogli je przetwarzać w oparciu o inną niż zgoda właściwą podstawę prawną. Wówczas poinformujemy Cię o tym;- Ochrona Twoich danych osobowych jest dla nas priorytetem.\nJeśli jednak uznasz, że przetwarzając Twoje dane osobowe naruszamy RODO, masz prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych adres: Stawki 2, 00-193 Warszawa.\nZGODA NA ZABIEG I ZWIĄZANE Z NIM PRZETWARZANIE DANYCH O STANIE ZDROWIANiniejszym oświadczam, że wyrażam świadomą zgodę na wykonanie powyższego zabiegu. Oświadczam, że poinformowano mnie o:1. możliwych powikłaniach,2. powikłaniach nietypowych,3. ryzyku zabiegu i jego następstwach,4. przeciwskazaniach do wykonania zabiegu,5. szczegółowej technice wykonania zabiegu,6. sposobie wykonania zabiegu.Ponadto oświadczam, że miałem/miałam możliwość zadawania wszelkich pytań i uzyskania wyjaśnień jakich oczekiwałem/oczekiwałam. Rozumiem, że pozytywne efekty zabiegu nie są zagwarantowane. Wszystkie informacje przekazane przez kosmetologa są dla mnie w pełni jasne i zrozumiałe. Jednocześnie oświadczam, że udzieliłem/udzieliłam aktualnych i kompletnych informacji co do mojego stanu zdrowia.Mam świadomość, że dla bezpiecznego wykonania zabiegów muszę podać dane o stanie zdrowia (np. dane o alergiach, stosowanych lekach, chorobach, ciąży) wskazane w karcie zabiegowej. Niniejszym składając poniżej podpis wyrażam wyraźną zgodę na ich przetwarzanie w celu wykonania zabiegów.Wycofanie zgody jest możliwe do czasu rozpoczęcia zabiegu ustnie w Salonie. Wówczas pracownik Salonu poczyni odpowiednią notatkę w aplikacji. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na podstawie zgody przed jej wycofaniem. Po rozpoczęciu wykonywania zabiegu dane o stanie zdrowia będą przechowywane dla celów ustalenia, dochodzenia lub obrony przed roszczeniami na podstawie art. 9 ust. 2 lit. f. RODO."
+    ],
+    "warnings": [
+      "Wykryto linie dluzsza niz 300 znakow."
+    ]
+  },
+  "structure": {
+    "sections": [
+      {
+        "title": "Pytania",
+        "fields": [
+          {
+            "id": "jaki_jest_twoj_glowny_cel_treningowy",
+            "type": "text",
+            "label": "Jaki jest Twój główny cel treningowy?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "redukcja masy ciałasiłakondycjazdrowieinne"
+            ]
+          },
+          {
+            "id": "czy_wczesniej_trenowales_as_z_trenerem_p",
+            "type": "radio",
+            "label": "Czy wcześniej trenowałeś/aś z trenerem personalnym?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jak_czesto_aktualnie_cwiczysz_i_jakie_ak",
+            "type": "text",
+            "label": "Jak często aktualnie ćwiczysz i jakie aktywności podejmujesz?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false
+          },
+          {
+            "id": "czy_masz_zdiagnozowane_problemy_zdrowotn",
+            "type": "radio",
+            "label": "Czy masz zdiagnozowane problemy zdrowotne, które mogą wpływać na trening?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_to_jakie",
+            "type": "text",
+            "label": "Jeśli tak, to jakie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_masz_zdiagnozowane_problemy_zdrowotn",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_przeszedles_as_w_ostatnim_czasie_kon",
+            "type": "radio",
+            "label": "Czy przeszedłeś/-aś w ostatnim czasie kontuzje lub operacje?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_to_jakie_2",
+            "type": "text",
+            "label": "Jeśli tak, to jakie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_przeszedles_as_w_ostatnim_czasie_kon",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "czy_przyjmujesz_leki_mogace_wplywac_na_w",
+            "type": "radio",
+            "label": "Czy przyjmujesz leki mogące wpływać na wydolność lub ryzyko wysiłku fizycznego?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jesli_tak_to_jakie_3",
+            "type": "text",
+            "label": "Jeśli tak, to jakie?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "conditionalShowIf": {
+              "fieldId": "czy_przyjmujesz_leki_mogace_wplywac_na_w",
+              "value": "Tak"
+            }
+          },
+          {
+            "id": "pregnancy",
+            "type": "radio",
+            "label": "Czy wykonujesz pracę siedzącą lub obciążającą konkretną partię ciała?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "cancer_history",
+            "type": "radio",
+            "label": "Czy jesteś obecnie w trakcie diety lub współpracy z dietetykiem?",
+            "required": false,
+            "isHealthField": true,
+            "isSensitiveField": true,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          },
+          {
+            "id": "jak_oceniasz_swoj_poziom_motywacji_i_dos",
+            "type": "text",
+            "label": "Jak oceniasz swój poziom motywacji i dostępny czas na treningi?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false
+          },
+          {
+            "id": "czy_jestes_zainteresowany_a_pomiarem_pos",
+            "type": "radio",
+            "label": "Czy jesteś zainteresowany/a pomiarem postępów (np. pomiary ciała, testy sprawności)?",
+            "required": false,
+            "isHealthField": false,
+            "isSensitiveField": false,
+            "options": [
+              "Nie",
+              "Tak"
+            ]
+          }
+        ]
+      }
+    ],
+    "consents": [
+      "KLAUZULA INFORMACYJNA DOTYCZĄCA PRZETWARZANIA DANYCH OSOBOWYCHAdministratorem Twoich danych osobowych jest [NAZWA SALONU] SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ z siedzibą w POZNAŃ, przy ul. GŁOGOWSKA 216 (dalej jako „Administrator” lub „my”) Nasze dane kontaktowe:\nJeśli masz jakiekolwiek pytania odnośnie przetwarzania przez nas Twoich danych lub chcesz zrealizować swoje uprawnienia, skontaktuj się z nami na adres firmy lub adres e-mail: [EMAIL SALONU]W jakich celach i na jakich podstawach prawnych będziemy przetwarzać Twoje dane?\nCEL: Wykonanie umowy (usługi) lub podjęcie działań przed jej zawarciem i działania związane z wykonaniem umowy – tj. np. wykonanie określonego zabiegu kosmetycznego, realizacja zamówienia produktu, doradztwo w zakresie zasad pielęgnacji, w tym ułożenie Beau"
+    ],
+    "signatureRequired": true
+  },
+  "compliance": {
+    "dataCategory": "health",
+    "healthFieldCount": 3,
+    "sensitiveFieldCount": 1,
+    "requiresHealthConsent": true,
+    "reviewRequired": true,
+    "reviewNotes": []
+  },
+  "templateDraft": {
+    "name": "trening personalny",
+    "description": "Zaimportowane z biblioteki kart zabiegowych",
+    "data_category": "health",
+    "requires_signature": true,
+    "gdpr_consent_text": "Administratorem Twoich danych osobowych jest [NAZWA SALONU] z siedziba pod adresem [ADRES] (\"Administrator\").\n\nW sprawach zwiazanych z przetwarzaniem danych osobowych mozesz skontaktowac sie z Administratorem pod adresem e-mail: [EMAIL SALONU].\n\nTwoje dane osobowe przetwarzane sa w celu realizacji uslug i wykonania zawartej umowy (art. 6 ust. 1 lit. b RODO). W zakresie, w jakim dane dotycza zdrowia, podstawa przetwarzania jest Twoja wyrazna zgoda (art. 9 ust. 2 lit. a RODO).\n\nDane beda przechowywane przez okres niezbedny do realizacji uslugi, a po jej wykonaniu przez okres wynikajacy z przepisow prawa oraz do czasu przedawnienia ewentualnych roszczen.\n\nPrzysluguje Ci prawo dostepu do danych, ich sprostowania, usuniecia, ograniczenia przetwarzania, przenoszenia danych, wycofania zgody oraz wniesienia sprzeciwu - w przypadkach przewidzianych prawem. Masz takze prawo wniesienia skargi do Prezesa Urzedu Ochrony Danych Osobowych.",
+    "is_active": false,
+    "fields": [
+      {
+        "id": "jaki_jest_twoj_glowny_cel_treningowy",
+        "type": "text",
+        "label": "Jaki jest Twój główny cel treningowy?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "redukcja masy ciałasiłakondycjazdrowieinne"
+        ]
+      },
+      {
+        "id": "czy_wczesniej_trenowales_as_z_trenerem_p",
+        "type": "radio",
+        "label": "Czy wcześniej trenowałeś/aś z trenerem personalnym?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jak_czesto_aktualnie_cwiczysz_i_jakie_ak",
+        "type": "text",
+        "label": "Jak często aktualnie ćwiczysz i jakie aktywności podejmujesz?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false
+      },
+      {
+        "id": "czy_masz_zdiagnozowane_problemy_zdrowotn",
+        "type": "radio",
+        "label": "Czy masz zdiagnozowane problemy zdrowotne, które mogą wpływać na trening?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_to_jakie",
+        "type": "text",
+        "label": "Jeśli tak, to jakie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_masz_zdiagnozowane_problemy_zdrowotn",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_przeszedles_as_w_ostatnim_czasie_kon",
+        "type": "radio",
+        "label": "Czy przeszedłeś/-aś w ostatnim czasie kontuzje lub operacje?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_to_jakie_2",
+        "type": "text",
+        "label": "Jeśli tak, to jakie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_przeszedles_as_w_ostatnim_czasie_kon",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "czy_przyjmujesz_leki_mogace_wplywac_na_w",
+        "type": "radio",
+        "label": "Czy przyjmujesz leki mogące wpływać na wydolność lub ryzyko wysiłku fizycznego?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jesli_tak_to_jakie_3",
+        "type": "text",
+        "label": "Jeśli tak, to jakie?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "conditionalShowIf": {
+          "fieldId": "czy_przyjmujesz_leki_mogace_wplywac_na_w",
+          "value": "Tak"
+        }
+      },
+      {
+        "id": "pregnancy",
+        "type": "radio",
+        "label": "Czy wykonujesz pracę siedzącą lub obciążającą konkretną partię ciała?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "cancer_history",
+        "type": "radio",
+        "label": "Czy jesteś obecnie w trakcie diety lub współpracy z dietetykiem?",
+        "required": false,
+        "isHealthField": true,
+        "isSensitiveField": true,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      },
+      {
+        "id": "jak_oceniasz_swoj_poziom_motywacji_i_dos",
+        "type": "text",
+        "label": "Jak oceniasz swój poziom motywacji i dostępny czas na treningi?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false
+      },
+      {
+        "id": "czy_jestes_zainteresowany_a_pomiarem_pos",
+        "type": "radio",
+        "label": "Czy jesteś zainteresowany/a pomiarem postępów (np. pomiary ciała, testy sprawności)?",
+        "required": false,
+        "isHealthField": false,
+        "isSensitiveField": false,
+        "options": [
+          "Nie",
+          "Tak"
+        ]
+      }
+    ]
+  },
+  "mapping": {
+    "serviceMatchers": [
+      "zdrowie",
+      "trening personalny"
+    ],
+    "confidence": 0.8999999999999999,
+    "needsManualReview": true
+  },
+  "approved": true
+}

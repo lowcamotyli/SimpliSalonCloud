@@ -1,12 +1,17 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 
-interface SurveyData {
-  salon_name: string
-  is_completed: boolean
-  is_expired: boolean
+interface SurveyPayload {
+  survey?: {
+    id: string
+    booking_id: string
+  }
+  salon?: {
+    name: string
+  }
+  alreadyFilled?: boolean
 }
 
 export default function SurveyPage(): JSX.Element {
@@ -15,7 +20,7 @@ export default function SurveyPage(): JSX.Element {
 
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<SurveyData | null>(null)
+  const [salonName, setSalonName] = useState<string>("")
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [submitted, setSubmitted] = useState<boolean>(false)
 
@@ -23,22 +28,33 @@ export default function SurveyPage(): JSX.Element {
   const [npsScore, setNpsScore] = useState<number | null>(null)
   const [comment, setComment] = useState<string>("")
 
+  const bypassSuffix =
+    typeof window !== "undefined"
+      ? (() => {
+          const bypass = new URLSearchParams(window.location.search).get("x-vercel-protection-bypass")
+          return bypass ? `?x-vercel-protection-bypass=${encodeURIComponent(bypass)}` : ""
+        })()
+      : ""
+
   useEffect(() => {
     async function fetchSurvey() {
       try {
-        const res = await fetch(`/api/surveys/fill/${token}`)
+        const res = await fetch(`/api/surveys/fill/${token}${bypassSuffix}`)
+
         if (!res.ok) {
           if (res.status === 404) throw new Error("Ankieta nie istnieje.")
-          if (res.status === 410) throw new Error("Ankieta wygasła.")
-          throw new Error("Wystąpił błąd podczas ładowania ankiety.")
+          if (res.status === 410) throw new Error("Ankieta wygasla.")
+          throw new Error("Wystapil blad podczas ladowania ankiety.")
         }
-        const surveyData: SurveyData = await res.json()
-        
-        if (surveyData.is_completed) {
+
+        const surveyData = await res.json() as SurveyPayload
+
+        if (surveyData.alreadyFilled) {
           setSubmitted(true)
+          return
         }
-        
-        setData(surveyData)
+
+        setSalonName(surveyData.salon?.name ?? "")
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -47,25 +63,26 @@ export default function SurveyPage(): JSX.Element {
     }
 
     if (token) fetchSurvey()
-  }, [token])
+  }, [token, bypassSuffix])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (rating === 0) return
 
     setSubmitting(true)
+
     try {
-      const res = await fetch(`/api/surveys/submit/${token}`, {
+      const res = await fetch(`/api/surveys/submit/${token}${bypassSuffix}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           rating,
           nps_score: npsScore,
-          comment
+          comment,
         }),
       })
 
-      if (!res.ok) throw new Error("Nie udało się przesłać opinii.")
+      if (!res.ok) throw new Error("Nie udalo sie przeslac opinii.")
       setSubmitted(true)
     } catch (err: any) {
       alert(err.message)
@@ -77,7 +94,7 @@ export default function SurveyPage(): JSX.Element {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -85,13 +102,13 @@ export default function SurveyPage(): JSX.Element {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="max-w-md w-full rounded-xl bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-red-500">
+            <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Błąd</h1>
+          <h1 className="mb-2 text-xl font-bold text-gray-900">Blad</h1>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -101,14 +118,14 @@ export default function SurveyPage(): JSX.Element {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm text-center">
-          <div className="text-green-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="max-w-md w-full rounded-xl bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-green-500">
+            <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dziękujemy!</h1>
-          <p className="text-gray-600">Twoja opinia jest dla nas ważna.</p>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">Dziekujemy!</h1>
+          <p className="text-gray-600">Twoja opinia jest dla nas wazna.</p>
         </div>
       </div>
     )
@@ -122,24 +139,23 @@ export default function SurveyPage(): JSX.Element {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm">
-        <header className="text-center mb-8">
-          <p className="text-sm font-medium text-blue-600 tracking-wide uppercase mb-1">{data?.salon_name}</p>
-          <h1 className="text-2xl font-bold text-gray-900">Jak oceniasz dzisiejszą wizytę?</h1>
+      <div className="max-w-md w-full rounded-xl bg-white p-8 shadow-sm">
+        <header className="mb-8 text-center">
+          <p className="mb-1 text-sm font-medium uppercase tracking-wide text-blue-600">{salonName}</p>
+          <h1 className="text-2xl font-bold text-gray-900">Jak oceniasz dzisiejsza wizyte?</h1>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Star Rating */}
           <div className="flex justify-center space-x-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
                 onClick={() => setRating(star)}
-                className="focus:outline-none transition-transform active:scale-95"
+                className="transition-transform active:scale-95 focus:outline-none"
               >
                 <svg
-                  className={`w-12 h-12 ${rating >= star ? "text-yellow-400 fill-current" : "text-gray-300 fill-none"}`}
+                  className={`h-12 w-12 ${rating >= star ? "fill-current text-yellow-400" : "fill-none text-gray-300"}`}
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
@@ -150,53 +166,50 @@ export default function SurveyPage(): JSX.Element {
             ))}
           </div>
 
-          {/* NPS Question */}
           <div className="space-y-4">
-            <p className="text-center font-medium text-gray-700">Czy poleciłbyś nas znajomym?</p>
-            <div className="grid grid-cols-6 sm:grid-cols-11 gap-1">
+            <p className="text-center font-medium text-gray-700">Czy polecilbys nas znajomym?</p>
+            <div className="grid grid-cols-6 gap-1 sm:grid-cols-11">
               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
                 <button
                   key={score}
                   type="button"
                   onClick={() => setNpsScore(score)}
-                  className={`h-10 text-sm font-bold rounded transition-colors ${getNpsColor(score)}`}
+                  className={`h-10 rounded text-sm font-bold transition-colors ${getNpsColor(score)}`}
                 >
                   {score}
                 </button>
               ))}
             </div>
-            <div className="flex justify-between text-[10px] text-gray-400 uppercase tracking-tighter">
+            <div className="flex justify-between text-[10px] uppercase tracking-tighter text-gray-400">
               <span>Wcale nie</span>
               <span>Zdecydowanie tak</span>
             </div>
           </div>
 
-          {/* Comment */}
           <div className="space-y-2">
             <label htmlFor="comment" className="block text-sm font-medium text-gray-700">
-              Co moglibyśmy zrobić lepiej? (opcjonalnie)
+              Co moglibysmy zrobic lepiej? (opcjonalnie)
             </label>
             <textarea
               id="comment"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm outline-none transition-all"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-blue-500 focus:ring-blue-500"
               placeholder="Twoja opinia..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={rating === 0 || submitting}
-            className={`w-full py-3 px-4 rounded-md font-bold text-white transition-all ${
+            className={`w-full rounded-md px-4 py-3 font-bold text-white transition-all ${
               rating === 0 || submitting
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-md"
+                ? "cursor-not-allowed bg-gray-300"
+                : "bg-blue-600 shadow-md hover:bg-blue-700 active:bg-blue-800"
             }`}
           >
-            {submitting ? "Przesyłanie..." : "Prześlij ocenę"}
+            {submitting ? "Przesylanie..." : "Przeslij ocene"}
           </button>
         </form>
       </div>

@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from 'crypto'
+import { getAppUrl } from '@/lib/config/app-url'
 
 /**
  * Przelewy24 Client
@@ -136,7 +137,7 @@ export class Przelewy24Client {
         phone: params.phone,
         language: 'pl',
         urlReturn: params.returnUrl,
-        urlStatus: params.statusUrl || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/przelewy24`,
+        urlStatus: params.statusUrl || `${getAppUrl()}/api/webhooks/przelewy24`,
         timeLimit: 15, // 15 minut na dokonanie płatności
         waitForResult: false, // Asynchroniczne powiadomienie (webhook)
         regulationAccept: true, // Akceptacja regulaminu (wymagane)

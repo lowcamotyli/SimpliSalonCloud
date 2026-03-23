@@ -1,0 +1,52 @@
+{
+  "processed": 132,
+  "approved": 132,
+  "rejected": 0,
+  "dataCategory_changes": [
+    {
+      "slug": "dr-n-med-izabela-za-eska-mezoterapia-z-publikacji-mezoterapia-w-praktyce",
+      "from": "health",
+      "to": "sensitive_health"
+    },
+    {
+      "slug": "dr-n-med-izabela-za-eska-stymulatory-z-publikacji-stymulatory-tkankowe-w-medycynie-estetycznej",
+      "from": "health",
+      "to": "sensitive_health"
+    },
+    {
+      "slug": "kosmetologia-naqua-protoko-po-zabiegach-uszkadzajacych-naskorek",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-pca-skin-zabieg-na-twarz",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-pro-xn-autorski-zabieg-na-twarz-acne-rescue",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-pro-xn-autorski-zabieg-na-twarz-i-stopnia",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-pro-xn-autorski-zabieg-na-twarz-ii-stopnia",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-pro-xn-autorski-zabieg-na-twarz-iii-stopnia",
+      "from": "sensitive_health",
+      "to": "health"
+    },
+    {
+      "slug": "kosmetologia-scarink-mikropunktura",
+      "from": "sensitive_health",
+      "to": "health"
+    }
+  ]
+}

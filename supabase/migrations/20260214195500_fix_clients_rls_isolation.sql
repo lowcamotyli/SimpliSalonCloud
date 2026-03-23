@@ -21,6 +21,7 @@ END;
 $$;
 
 -- Recreate policies in strict tenant scope.
+DROP POLICY IF EXISTS "clients_select_same_salon" ON public.clients;
 CREATE POLICY "clients_select_same_salon"
   ON public.clients
   FOR SELECT
@@ -30,6 +31,7 @@ CREATE POLICY "clients_select_same_salon"
     AND deleted_at IS NULL
   );
 
+DROP POLICY IF EXISTS "clients_insert_same_salon" ON public.clients;
 CREATE POLICY "clients_insert_same_salon"
   ON public.clients
   FOR INSERT
@@ -38,6 +40,7 @@ CREATE POLICY "clients_insert_same_salon"
     salon_id = public.get_user_salon_id()
   );
 
+DROP POLICY IF EXISTS "clients_update_same_salon" ON public.clients;
 CREATE POLICY "clients_update_same_salon"
   ON public.clients
   FOR UPDATE
@@ -50,6 +53,7 @@ CREATE POLICY "clients_update_same_salon"
     salon_id = public.get_user_salon_id()
   );
 
+DROP POLICY IF EXISTS "clients_delete_owner_manager_only" ON public.clients;
 CREATE POLICY "clients_delete_owner_manager_only"
   ON public.clients
   FOR DELETE
