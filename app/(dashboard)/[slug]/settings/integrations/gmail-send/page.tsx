@@ -32,9 +32,12 @@ export default function GmailSendSettingsPage() {
   const slug = params.slug as string
 
   const [salonId, setSalonId] = useState('')
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [status, setStatus] = useState<GmailStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [testEmailResult, setTestEmailResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const fetchSalonId = async () => {
     try {
@@ -51,6 +54,20 @@ export default function GmailSendSettingsPage() {
     } catch (error) {
       console.error(error)
       console.log('Nie udało się pobrać salonu dla integracji Gmail Send')
+    }
+  }
+
+  const fetchUserEmail = async () => {
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setUserEmail(user?.email ?? null)
+    } catch (error) {
+      console.error(error)
+      setUserEmail(null)
     }
   }
 
@@ -81,6 +98,7 @@ export default function GmailSendSettingsPage() {
 
   useEffect(() => {
     void fetchSalonId()
+    void fetchUserEmail()
     void fetchStatus()
   }, [slug])
 
@@ -165,6 +183,36 @@ export default function GmailSendSettingsPage() {
     }
   }
 
+  const handleSendTestEmail = async () => {
+    setSendingTestEmail(true)
+    setTestEmailResult(null)
+
+    try {
+      const response = await fetch('/api/integrations/gmail-send/test', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.error || 'Nie udało się wysłać testowego e-maila')
+      }
+
+      const email = userEmail ?? status?.email ?? ''
+      setTestEmailResult({
+        type: 'success',
+        message: `Email wysłany na ${email}`,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nie udało się wysłać testowego e-maila'
+      setTestEmailResult({
+        type: 'error',
+        message,
+      })
+    } finally {
+      setSendingTestEmail(false)
+    }
+  }
+
   const currentProvider: EmailProvider = status?.email_provider === 'gmail' ? 'gmail' : 'resend'
 
   return (
@@ -192,6 +240,15 @@ export default function GmailSendSettingsPage() {
                     Połączono
                   </Badge>
                   <p className="text-sm font-medium text-foreground">{status.email}</p>
+                  <Button variant="outline" onClick={handleSendTestEmail} disabled={sendingTestEmail}>
+                    {sendingTestEmail ? 'Wysyłanie...' : 'Wyślij testowy email'}
+                  </Button>
+                  {testEmailResult?.type === 'success' && (
+                    <p className="text-sm text-green-600">{testEmailResult.message}</p>
+                  )}
+                  {testEmailResult?.type === 'error' && (
+                    <p className="text-sm text-red-600">{testEmailResult.message}</p>
+                  )}
                 </div>
                 <Button variant="outline" onClick={handleDisconnect} disabled={saving}>
                   {saving ? 'Odłączanie...' : 'Odłącz konto'}
