@@ -31,8 +31,8 @@ function getGoogleOAuthConfig(): {
   clientSecret: string
   redirectUri: string
 } {
-  const clientId = process.env.GMAIL_SEND_CLIENT_ID
-  const clientSecret = process.env.GMAIL_SEND_CLIENT_SECRET
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
   const redirectUri = process.env.GMAIL_SEND_REDIRECT_URI
 
   if (!clientId || !clientSecret || !redirectUri) {
