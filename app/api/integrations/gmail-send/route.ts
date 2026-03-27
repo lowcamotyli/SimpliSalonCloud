@@ -26,21 +26,15 @@ function handleRouteError(error: unknown): NextResponse<{ error: string }> {
   return NextResponse.json<{ error: string }>({ error: message }, { status: 500 })
 }
 
-function getGoogleOAuthConfig(): {
-  clientId: string
-  clientSecret: string
-  redirectUri: string
-} {
+function getGoogleCredentials(): { clientId: string; clientSecret: string } {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL
 
-  if (!clientId || !clientSecret || !appUrl) {
-    throw new Error('Gmail Send OAuth environment variables are missing')
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET')
   }
 
-  const redirectUri = `${appUrl}/api/integrations/gmail-send/callback`
-  return { clientId, clientSecret, redirectUri }
+  return { clientId, clientSecret }
 }
 
 async function getConnectionStatus(): Promise<NextResponse<GmailSendStatusResponse | { error: string }>> {
@@ -72,9 +66,10 @@ async function getConnectionStatus(): Promise<NextResponse<GmailSendStatusRespon
   })
 }
 
-async function initiateOAuth(): Promise<NextResponse<GmailSendAuthResponse>> {
+async function initiateOAuth(origin: string): Promise<NextResponse<GmailSendAuthResponse>> {
   const { salonId } = await getAuthContext()
-  const { clientId, redirectUri } = getGoogleOAuthConfig()
+  const { clientId } = getGoogleCredentials()
+  const redirectUri = `${origin}/api/integrations/gmail-send/callback`
 
   const state = JSON.stringify({ salonId })
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
@@ -100,7 +95,7 @@ export async function GET(
       return await getConnectionStatus()
     }
 
-    return await initiateOAuth()
+    return await initiateOAuth(request.nextUrl.origin)
   } catch (error) {
     return handleRouteError(error)
   }

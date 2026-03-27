@@ -31,8 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-    const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin
-    const redirectUri = `${appUrl}/api/integrations/gmail-send/callback`
+    const redirectUri = `${request.nextUrl.origin}/api/integrations/gmail-send/callback`
 
     if (!clientId || !clientSecret) {
       throw new Error('Missing Gmail Send OAuth environment variables')
