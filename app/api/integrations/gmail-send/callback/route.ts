@@ -111,7 +111,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     return NextResponse.redirect(new URL('/settings/integrations?gmail_send=connected', request.nextUrl.origin))
-  } catch {
-    return NextResponse.redirect(new URL('/settings/integrations?gmail_send=error', request.nextUrl.origin))
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'unknown'
+    return NextResponse.redirect(new URL(`/settings/integrations?gmail_send=error&reason=${encodeURIComponent(msg)}`, request.nextUrl.origin))
   }
 }
