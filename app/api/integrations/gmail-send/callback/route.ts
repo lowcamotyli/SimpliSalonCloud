@@ -101,16 +101,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       throw upsertError
     }
 
-    const { error: updateSalonError } = await supabase
+    const { data: salon, error: updateSalonError } = await supabase
       .from('salons')
       .update({ email_provider: 'gmail' })
       .eq('id', salonId)
+      .select('slug')
+      .single()
 
     if (updateSalonError) {
       throw updateSalonError
     }
 
-    return NextResponse.redirect(new URL('/settings/integrations?gmail_send=connected', request.nextUrl.origin))
+    return NextResponse.redirect(new URL(`/${salon.slug}/settings/integrations/gmail-send?connected=true`, request.nextUrl.origin))
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'unknown'
     return NextResponse.redirect(new URL(`/settings/integrations?gmail_send=error&reason=${encodeURIComponent(msg)}`, request.nextUrl.origin))
