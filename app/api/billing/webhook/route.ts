@@ -220,6 +220,74 @@ export async function POST(request: NextRequest) {
     const admin = createAdminSupabaseClient()
     const signatureValid = p24.verifyNotificationSignature(payload)
 
+    if (payload.sessionId.startsWith('p24_')) {
+      const { data: latestBookingPayment, error: bookingPaymentError } = await admin
+        .from('booking_payments')
+        .select('id, salon_id')
+        .eq('p24_session_id', payload.sessionId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (bookingPaymentError) {
+        throw new Error(`Failed to load booking payment: ${bookingPaymentError.message}`)
+      }
+
+      if (!latestBookingPayment) {
+        return NextResponse.json({ received: true }, { status: 200 })
+      }
+
+      if (!signatureValid) {
+        const { error: failedUpdateError } = await admin
+          .from('booking_payments')
+          .update({ status: 'failed' })
+          .eq('p24_session_id', payload.sessionId)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (failedUpdateError) {
+          throw new Error(`Failed to update booking payment status: ${failedUpdateError.message}`)
+        }
+
+        return NextResponse.json({ received: true }, { status: 200 })
+      }
+
+      const verificationOk = await p24.verifyTransaction({
+        sessionId: payload.sessionId,
+        orderId: payload.orderId,
+        amount: payload.amount,
+        currency: payload.currency,
+      })
+
+      if (verificationOk) {
+        const transactionId = payload.orderId.toString()
+        const { error: paidUpdateError } = await admin
+          .from('booking_payments')
+          .update({
+            status: 'paid',
+            p24_transaction_id: transactionId,
+            paid_at: new Date().toISOString(),
+          })
+          .eq('p24_session_id', payload.sessionId)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (paidUpdateError) {
+          throw new Error(`Failed to mark booking payment as paid: ${paidUpdateError.message}`)
+        }
+      } else {
+        const { error: failedUpdateError } = await admin
+          .from('booking_payments')
+          .update({ status: 'failed' })
+          .eq('p24_session_id', payload.sessionId)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (failedUpdateError) {
+          throw new Error(`Failed to mark booking payment as failed: ${failedUpdateError.message}`)
+        }
+      }
+
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
+
     const { data: invoice, error: invoiceError } = await admin
       .from('invoices')
       .select('id, salon_id, line_items, total_cents, currency, status')

@@ -7,7 +7,7 @@ UI do zarządzania przypisanymi usługami pracownika + filtrowanie pracowników 
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/bounded-contexts.md and docs/architecture/service-architecture.md. Summarize: (1) which bounded context owns employee-service assignment, (2) how UI components interact with API layer, (3) any constraints for booking flow changes. Max 15 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/bounded-contexts.md and docs/architecture/service-architecture.md. Summarize: (1) which bounded context owns employee-service assignment, (2) how UI components interact with API layer, (3) any constraints for booking flow changes." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

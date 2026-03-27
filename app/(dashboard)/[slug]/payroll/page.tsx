@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { usePayroll, useGeneratePayroll, useDownloadPayrollPDF, useSendPayrollEmail } from '@/hooks/use-payroll'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,19 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { DollarSign, Download, Send, CreditCard, Users, Calendar, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
+import {
+  DollarSign,
+  Download,
+  Send,
+  CreditCard,
+  Users,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,20 +31,62 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { format } from 'date-fns'
+import { addWeeks, format, startOfISOWeek } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { useCurrentRole } from '@/hooks/use-current-role'
 
+type PayrollPeriodType = 'daily' | 'weekly' | 'monthly'
+
+function formatDateInput(date: Date) {
+  return format(date, 'yyyy-MM-dd')
+}
+
+function getWeekValue(date: Date) {
+  return format(date, "RRRR-'W'II")
+}
+
+function getWeekDateFromValue(weekValue: string) {
+  const [yearPart, weekPart] = weekValue.split('-W')
+  const year = Number(yearPart)
+  const week = Number(weekPart)
+  const jan4 = new Date(year, 0, 4)
+  const firstIsoWeekStart = startOfISOWeek(jan4)
+  return addWeeks(firstIsoWeekStart, week - 1)
+}
+
 export default function PayrollPage() {
-  const currentMonth = format(new Date(), 'yyyy-MM')
+  const today = new Date()
+  const currentMonth = format(today, 'yyyy-MM')
+  const [selectedType, setSelectedType] = useState<PayrollPeriodType>('monthly')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
+  const [selectedDay, setSelectedDay] = useState(formatDateInput(today))
+  const [selectedWeek, setSelectedWeek] = useState(getWeekValue(today))
   const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set())
   const [showGenerateDialog, setShowGenerateDialog] = useState(false)
   const { hasPermission } = useCurrentRole()
 
   const fmt = (n: number) => n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-  const { data: payroll, isLoading } = usePayroll(selectedMonth)
+  const selectedPeriod = selectedType === 'monthly'
+    ? selectedMonth
+    : selectedType === 'daily'
+      ? selectedDay
+      : selectedWeek
+
+  const periodLabel = useMemo(() => {
+    if (selectedType === 'monthly') {
+      return format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: pl })
+    }
+
+    if (selectedType === 'daily') {
+      return format(new Date(selectedDay), 'd MMMM yyyy', { locale: pl })
+    }
+
+    const weekDate = getWeekDateFromValue(selectedWeek)
+    return `Tydzień ${format(weekDate, 'II')}, ${format(weekDate, 'RRRR')}`
+  }, [selectedDay, selectedMonth, selectedType, selectedWeek])
+
+  const { data: payroll, isLoading } = usePayroll(selectedPeriod, selectedType)
   const generateMutation = useGeneratePayroll()
   const { downloadPDF } = useDownloadPayrollPDF()
   const sendEmailMutation = useSendPayrollEmail()
@@ -67,6 +121,12 @@ export default function PayrollPage() {
     setShowGenerateDialog(false)
   }
 
+  const shiftWeek = (direction: -1 | 1) => {
+    const weekDate = getWeekDateFromValue(selectedWeek)
+    const newWeekDate = addWeeks(weekDate, direction)
+    setSelectedWeek(getWeekValue(newWeekDate))
+  }
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header */}
@@ -81,25 +141,104 @@ export default function PayrollPage() {
           </p>
         </div>
 
-        <div className="flex items-end gap-4 glass p-4 rounded-2xl border-white/40 shadow-sm">
-          <div className="space-y-2">
-            <Label htmlFor="month" className="text-xs font-bold uppercase tracking-wider text-gray-500">Miesiąc</Label>
-            <Input
-              id="month"
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="rounded-xl border-gray-200 focus:ring-primary/20"
-            />
+        <div className="flex flex-col items-stretch gap-4 glass p-4 rounded-2xl border-white/40 shadow-sm sm:items-end">
+          <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
+            <Button
+              type="button"
+              variant={selectedType === 'daily' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-lg px-4"
+              onClick={() => setSelectedType('daily')}
+            >
+              Dzień
+            </Button>
+            <Button
+              type="button"
+              variant={selectedType === 'weekly' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-lg px-4"
+              onClick={() => setSelectedType('weekly')}
+            >
+              Tydzień
+            </Button>
+            <Button
+              type="button"
+              variant={selectedType === 'monthly' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-lg px-4"
+              onClick={() => setSelectedType('monthly')}
+            >
+              Miesiąc
+            </Button>
           </div>
-          <Button
-            onClick={() => setShowGenerateDialog(true)}
-            disabled={generateMutation.isPending}
-            className="gradient-button rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
-          >
-            {generateMutation.isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Generuj
-          </Button>
+
+          <div className="flex items-end gap-4">
+            {selectedType === 'monthly' && (
+              <div className="space-y-2">
+                <Label htmlFor="month" className="text-xs font-bold uppercase tracking-wider text-gray-500">Miesiąc</Label>
+                <Input
+                  id="month"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="rounded-xl border-gray-200 focus:ring-primary/20"
+                />
+              </div>
+            )}
+
+            {selectedType === 'daily' && (
+              <div className="space-y-2">
+                <Label htmlFor="day" className="text-xs font-bold uppercase tracking-wider text-gray-500">Dzień</Label>
+                <Input
+                  id="day"
+                  type="date"
+                  value={selectedDay}
+                  onChange={(e) => setSelectedDay(e.target.value)}
+                  className="rounded-xl border-gray-200 focus:ring-primary/20"
+                />
+              </div>
+            )}
+
+            {selectedType === 'weekly' && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-gray-500">Tydzień</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-xl"
+                    onClick={() => shiftWeek(-1)}
+                    aria-label="Poprzedni tydzień"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-[170px] text-center px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700">
+                    {`Tydzień ${format(getWeekDateFromValue(selectedWeek), 'II')}, ${format(getWeekDateFromValue(selectedWeek), 'RRRR')}`}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-xl"
+                    onClick={() => shiftWeek(1)}
+                    aria-label="Następny tydzień"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={() => setShowGenerateDialog(true)}
+              disabled={generateMutation.isPending}
+              className="gradient-button rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+            >
+              {generateMutation.isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Generuj
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -248,7 +387,7 @@ export default function PayrollPage() {
                       variant="outline"
                       size="sm"
                       className="rounded-xl px-6 border-gray-200 hover:bg-white hover:shadow-md transition-all font-bold text-xs"
-                      onClick={() => downloadPDF(entry, selectedMonth)}
+                      onClick={() => downloadPDF(entry, selectedPeriod)}
                     >
                       <Download className="mr-2 h-4 w-4 text-primary" />
                       POBIERZ PDF
@@ -284,7 +423,7 @@ export default function PayrollPage() {
               Brak rozliczeń
             </h3>
             <p className="mt-2 text-gray-500 max-w-sm mx-auto font-medium">
-              W wybranym miesiącu {format(new Date(selectedMonth), 'MMMM yyyy', { locale: pl })} nie odnotowano jeszcze żadnych zakończonych wizyt.
+              W wybranym okresie ({periodLabel}) nie odnotowano jeszcze żadnych zakończonych wizyt.
             </p>
           </CardContent>
         </Card>

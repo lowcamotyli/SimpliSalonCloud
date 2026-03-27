@@ -7,7 +7,7 @@ Poprawienie UX panelu dodatkowych opcji usługi (add-ons). Aktualnie UI jest nie
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/service-architecture.md. Summarize: how service add-ons fit in the service domain, any constraints on service modification UI. Max 10 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/service-architecture.md. Summarize: how service add-ons fit in the service domain, any constraints on service modification UI. Max 60 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

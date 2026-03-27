@@ -7,7 +7,7 @@ Implementacja frontendu płatności online przez Przelewy24 — inicjowanie pła
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/integration-architecture.md and docs/architecture/data-architecture.md. Summarize: (1) Przelewy24 integration constraints (CRC verification, session ID routing), (2) how payment transactions should be modeled in DB (tenant isolation), (3) webhook handler security requirements. Max 25 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/integration-architecture.md and docs/architecture/data-architecture.md. Summarize: (1) Przelewy24 integration constraints (CRC verification, session ID routing), (2) how payment transactions should be modeled in DB (tenant isolation), (3) webhook handler security requirements. Max 100 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |
@@ -166,7 +166,7 @@ Done when: all three files created/updated." bash ~/.claude/scripts/dad-exec.sh
 ## Po wykonaniu
 
 ```bash
-supabase db push
+supabase db push --project-ref bxkxvrhspklpkkgmzcge  # STAGING only
 supabase gen types typescript --linked > types/supabase.ts
 npx tsc --noEmit
 ```

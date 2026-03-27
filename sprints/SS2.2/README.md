@@ -11,6 +11,7 @@
 | 4 | Payroll — daily & weekly reports | sprint-03 | ⏳ |
 | 5 | Service add-ons UI revamp | sprint-04 | ⏳ |
 | 6 | Treatment plans — dokończenie | sprint-09, sprint-10 | ⏳ |
+| 7 | Employee shift management | sprint-11, sprint-12 | ⏳ |
 
 ## Kolejność wdrożenia (zależności)
 
@@ -33,6 +34,9 @@ sprint-07 (Przelewy24 checkout flow)
 
 sprint-09 (treatment plans — core fix)
     └── sprint-10 (treatment plans — sessions)
+
+sprint-11 (employee shifts DB+API)          ← niezależny od pozostałych
+    └── sprint-12 (employee shifts UI)
 ```
 
 ## Rekomendowana kolejność startów
@@ -43,6 +47,7 @@ Tydzień 2:  sprint-01 → sprint-02               (po sobie)
             sprint-09 → sprint-10               (po sobie, równolegle z sprint-01/02)
 Tydzień 3:  sprint-07 → sprint-08               (Przelewy24 — największy)
             sprint-05 → sprint-06               (Gmail — można równolegle z P24)
+Tydzień 4:  sprint-11 → sprint-12              (Employee shifts — niezależny)
 ```
 
 ## Zasady dispatchowania

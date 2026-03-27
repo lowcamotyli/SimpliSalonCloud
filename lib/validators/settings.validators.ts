@@ -40,6 +40,8 @@ export const updateSettingsSchema = z.object({
     p24_api_key: z.string().optional().or(z.literal('')),
     p24_api_url: z.string().url().optional().or(z.literal('')),
     p24_sandbox_mode: z.boolean().optional(),
+    // Gmail Send integration
+    email_provider: z.enum(['resend', 'gmail']).optional(),
     // Booksy Gmail integration
     booksy_sync_interval_minutes: z.number().int().positive().optional(),
     booksy_sender_filter: z.string().optional(),

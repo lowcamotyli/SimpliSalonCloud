@@ -128,8 +128,8 @@ Done when: POST /api/bookings validates employee-service assignment." bash ~/.cl
 ## Po wykonaniu
 
 ```bash
-# 1. Push migration
-supabase db push
+# 1. Push migration — STAGING only
+supabase db push --project-ref bxkxvrhspklpkkgmzcge
 
 # 2. Regenerate types
 supabase gen types typescript --linked > types/supabase.ts

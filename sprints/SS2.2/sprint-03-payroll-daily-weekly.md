@@ -7,7 +7,7 @@ Dodanie raportów płacowych w ujęciu dziennym i tygodniowym. Aktualnie dostęp
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/bounded-contexts.md. Summarize: payroll domain ownership, what data sources payroll uses, any constraints on report generation. Max 15 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/bounded-contexts.md. Summarize: payroll domain ownership, what data sources payroll uses, any constraints on report generation. Max 60 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

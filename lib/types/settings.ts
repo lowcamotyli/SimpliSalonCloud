@@ -1,4 +1,5 @@
 // lib/types/settings.ts
+import { Calendar, CalendarDays, Landmark, MessageSquare, type LucideIcon } from 'lucide-react'
 export const THEMES = {
   beauty_salon: {
     name: 'Beauty & Wellness',
@@ -176,7 +177,7 @@ export interface Integration {
   id: string
   name: string
   description: string
-  icon: string
+  icon: LucideIcon
   type: string
   status: 'connected' | 'available'
   config?: string
@@ -187,7 +188,7 @@ export const INTEGRATIONS: Integration[] = [
     id: 'booksy',
     name: 'Booksy',
     description: 'Synchronizacja rezerwacji z Booksy',
-    icon: 'calendar',
+    icon: Calendar,
     type: 'booksy',
     status: 'available',
     config: '/settings/integrations/booksy'
@@ -196,7 +197,7 @@ export const INTEGRATIONS: Integration[] = [
     id: 'google_calendar',
     name: 'Kalendarz Google',
     description: 'Dwukierunkowa synchronizacja z Kalendarzem Google',
-    icon: 'calendar-sync',
+    icon: CalendarDays,
     type: 'google_calendar',
     status: 'available'
   },
@@ -204,7 +205,7 @@ export const INTEGRATIONS: Integration[] = [
     id: 'przelewy24',
     name: 'Przelewy24',
     description: 'Bramka platnosci online - karty, BLIK, przelew',
-    icon: 'bank',
+    icon: Landmark,
     type: 'przelewy24',
     status: 'available',
     config: '/settings/integrations/przelewy24'
@@ -213,7 +214,7 @@ export const INTEGRATIONS: Integration[] = [
     id: 'twilio',
     name: 'SMS Twilio',
     description: 'Wysylaj przypomnienia SMS',
-    icon: 'message',
+    icon: MessageSquare,
     type: 'twilio',
     status: 'available'
   }

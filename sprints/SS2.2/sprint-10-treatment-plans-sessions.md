@@ -7,7 +7,7 @@ Zarządzanie sesjami planu leczenia: oznaczanie jako ukończone, powiązanie z b
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/bounded-contexts.md and docs/architecture/event-architecture.md. Summarize: (1) Treatment Records context rules for session state transitions, (2) any events fired when treatment plan status changes, (3) how session-booking link should work. Max 20 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/bounded-contexts.md and docs/architecture/event-architecture.md. Summarize: (1) Treatment Records context rules for session state transitions, (2) any events fired when treatment plan status changes, (3) how session-booking link should work. Max 100 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

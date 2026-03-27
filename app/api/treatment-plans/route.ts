@@ -69,6 +69,11 @@ function parseRequiredString(value: unknown, fieldName: string) {
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { supabase, salonId } = await getAuthContext()
 
+  const role = await getAuthenticatedRole(supabase)
+  if (role !== 'owner' && role !== 'manager') {
+    throw new ForbiddenError('Only owner or manager can access treatment plans')
+  }
+
   const featureEnabled = await isTreatmentRecordsFeatureEnabled(supabase, salonId)
   if (!featureEnabled) {
     return NextResponse.json({ error: 'Feature not available' }, { status: 402 })
@@ -92,27 +97,39 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (error) throw error
 
   const planIds = (plans ?? []).map((plan) => plan.id)
-  let sessionCounts = new Map<string, number>()
+  let totalSessionCounts = new Map<string, number>()
+  let completedSessionCounts = new Map<string, number>()
 
   if (planIds.length > 0) {
     const { data: sessions, error: sessionsError } = await supabase
       .from('treatment_sessions')
-      .select('plan_id')
+      .select('plan_id, status')
       .eq('salon_id', salonId)
       .in('plan_id', planIds)
 
     if (sessionsError) throw sessionsError
 
-    sessionCounts = (sessions ?? []).reduce((counts, session) => {
-      counts.set(session.plan_id, (counts.get(session.plan_id) ?? 0) + 1)
-      return counts
-    }, new Map<string, number>())
+    for (const session of sessions ?? []) {
+      totalSessionCounts.set(
+        session.plan_id,
+        (totalSessionCounts.get(session.plan_id) ?? 0) + 1
+      )
+
+      if (session.status === 'completed') {
+        completedSessionCounts.set(
+          session.plan_id,
+          (completedSessionCounts.get(session.plan_id) ?? 0) + 1
+        )
+      }
+    }
   }
 
   return NextResponse.json({
     plans: (plans ?? []).map((plan) => ({
       ...plan,
-      session_count: sessionCounts.get(plan.id) ?? 0,
+      completed_sessions: completedSessionCounts.get(plan.id) ?? 0,
+      total_sessions: totalSessionCounts.get(plan.id) ?? 0,
+      session_count: completedSessionCounts.get(plan.id) ?? 0,
     })),
   })
 })
@@ -151,7 +168,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         : parseOptionalString(body.service_id, 'service_id'),
     status:
       body?.status === undefined
-        ? 'planned'
+        ? 'active'
         : parseRequiredString(body.status, 'status'),
     started_at:
       body?.started_at === undefined

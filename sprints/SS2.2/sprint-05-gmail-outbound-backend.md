@@ -7,7 +7,7 @@ Umożliwienie salonowi wysyłania e-maili transakcyjnych przez własne konto Gma
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/integration-architecture.md and docs/architecture/security-model.md. Summarize: (1) how external integrations store credentials (encryption requirements), (2) OAuth flow constraints, (3) webhook verification requirements, (4) how email sending fits in the integration layer. Max 25 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/integration-architecture.md and docs/architecture/security-model.md. Summarize: (1) how external integrations store credentials (encryption requirements), (2) OAuth flow constraints, (3) webhook verification requirements, (4) how email sending fits in the integration layer. Max 100 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |
@@ -144,7 +144,7 @@ Done when: both files created, email router handles both providers." bash ~/.cla
 ## Po wykonaniu
 
 ```bash
-supabase db push
+supabase db push --project-ref bxkxvrhspklpkkgmzcge  # STAGING only
 supabase gen types typescript --linked > types/supabase.ts
 npx tsc --noEmit
 ```

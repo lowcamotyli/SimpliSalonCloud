@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type Addon = {
   id: string
@@ -27,6 +27,26 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
   const [name, setName] = useState('')
   const [durationDelta, setDurationDelta] = useState('0')
   const [priceDelta, setPriceDelta] = useState('0')
+
+  const formatNumber = (value: number) => {
+    const fixed = value.toFixed(2)
+    return fixed.replace(/\.?0+$/, '')
+  }
+
+  const getAddonPreview = (addon: Addon) => {
+    const priceText =
+      addon.price_delta > 0
+        ? `+${formatNumber(addon.price_delta)} zł`
+        : addon.price_delta < 0
+          ? `-${formatNumber(Math.abs(addon.price_delta))} zł rabat`
+          : 'bez dopłaty'
+
+    if (addon.duration_delta > 0) {
+      return `${priceText} · +${addon.duration_delta} min`
+    }
+
+    return priceText
+  }
 
   const fetchAddons = useCallback(async () => {
     setLoading(true)
@@ -68,6 +88,11 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
 
     if (!Number.isInteger(parsedDuration)) {
       setError('Czas trwania musi być liczbą całkowitą')
+      return
+    }
+
+    if (parsedDuration < 0) {
+      setError('Dodatkowy czas nie może być ujemny')
       return
     }
 
@@ -149,10 +174,9 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
                 key={addon.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
               >
-                <div className="flex items-center gap-2">
+                <div className="space-y-1">
                   <span className="text-sm font-medium">{addon.name}</span>
-                  <Badge variant="secondary">+{addon.duration_delta}min</Badge>
-                  <Badge variant="outline">+PLN {addon.price_delta.toFixed(2)}</Badge>
+                  <p className="text-xs text-muted-foreground">{getAddonPreview(addon)}</p>
                 </div>
 
                 <Button
@@ -170,30 +194,53 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
         ) : null}
       </div>
 
-      <div className="grid gap-2 md:grid-cols-[1fr_140px_140px_auto]">
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Nazwa dodatku (np. Maska nawilżająca)"
-          disabled={saving}
-        />
-        <Input
-          type="number"
-          value={durationDelta}
-          onChange={(event) => setDurationDelta(event.target.value)}
-          placeholder="Czas dodatkowy (min)"
-          disabled={saving}
-        />
-        <Input
-          type="number"
-          step="0.01"
-          value={priceDelta}
-          onChange={(event) => setPriceDelta(event.target.value)}
-          placeholder="Dopłata (PLN)"
-          disabled={saving}
-        />
-        <Button type="button" disabled={saving} onClick={() => void handleCreateAddon()}>
-          {saving ? 'Dodawanie...' : 'Dodaj'}
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium">Opcje dodatkowe</h3>
+        <p className="text-sm text-muted-foreground">
+          Klient może wybrać jedną opcję podczas rezerwacji. Opcja może modyfikować czas i cenę usługi.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="addon-name">Nazwa opcji</Label>
+          <Input
+            id="addon-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="np. Maska nawilżająca, Keratyna, Folia"
+            disabled={saving}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="addon-duration-delta">Dodatkowy czas (min)</Label>
+            <Input
+              id="addon-duration-delta"
+              type="number"
+              value={durationDelta}
+              onChange={(event) => setDurationDelta(event.target.value)}
+              placeholder="0"
+              disabled={saving}
+            />
+            <p className="text-xs text-muted-foreground">0 = bez zmiany czasu.</p>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="addon-price-delta">Zmiana ceny (zł)</Label>
+            <Input
+              id="addon-price-delta"
+              type="number"
+              step="0.01"
+              value={priceDelta}
+              onChange={(event) => setPriceDelta(event.target.value)}
+              placeholder="0"
+              disabled={saving}
+            />
+            <p className="text-xs text-muted-foreground">0 = bez dopłaty. Ujemna = rabat.</p>
+          </div>
+        </div>
+        <Button type="button" disabled={saving} onClick={() => void handleCreateAddon()} className="w-full">
+          {saving ? 'Dodawanie...' : 'Dodaj opcję'}
         </Button>
       </div>
 

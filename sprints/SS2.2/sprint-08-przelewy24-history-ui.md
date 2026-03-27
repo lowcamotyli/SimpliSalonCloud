@@ -7,7 +7,7 @@ Wyświetlanie statusu płatności w widoku bookingu, historia płatności w pane
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/integration-architecture.md. Summarize: how payment history is exposed to UI, what data can be shown vs hidden from P24 internals, role-based access to financial data. Max 12 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/integration-architecture.md. Summarize: how payment history is exposed to UI, what data can be shown vs hidden from P24 internals, role-based access to financial data. Max 50 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

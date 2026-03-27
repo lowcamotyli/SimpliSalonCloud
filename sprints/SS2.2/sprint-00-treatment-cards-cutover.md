@@ -137,7 +137,7 @@ npx tsc --noEmit
 # - Wypełnij formularz przez publiczny link
 
 # 4. Staging PROD
-supabase db push  # (migracje już są, ale upewnij się)
+supabase db push --project-ref bxkxvrhspklpkkgmzcge  # STAGING only (migracje już są, ale upewnij się)
 ```
 
 ---

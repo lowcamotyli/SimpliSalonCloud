@@ -7,7 +7,7 @@ Strona ustawień integracji Gmail Send — podłączanie/odłączanie konta, prz
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/integration-architecture.md. Summarize: how integration settings pages are structured, owner-only access pattern, how provider selection is persisted. Max 12 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/integration-architecture.md. Summarize: how integration settings pages are structured, owner-only access pattern, how provider selection is persisted. Max 40 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |

@@ -22,6 +22,7 @@ import { useEmployees } from '@/hooks/use-employees'
 import { useServices } from '@/hooks/use-services'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 import { formatDateTime, formatPhoneNumber, formatPrice } from '@/lib/formatters'
+import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 type DialogStep = 'client' | 'cart'
@@ -53,11 +54,19 @@ type ServiceOption = {
   duration: number
 }
 
+type CartAddonOption = {
+  id: string
+  name: string
+  price_delta: number
+  duration_delta: number
+}
+
 type CartItemState = {
   serviceId: string | null
   employeeId: string | null
   bookingDate: string
   bookingTime: string
+  addons: CartAddonOption[]
   selectedAddonIds: string[]
 }
 
@@ -72,6 +81,7 @@ const getInitialCartItem = (
   employeeId: prefilledSlot?.employeeId ?? null,
   bookingDate: prefilledSlot?.date ?? new Date().toISOString().slice(0, 10),
   bookingTime: prefilledSlot?.time ?? '',
+  addons: [],
   selectedAddonIds: [],
 })
 
@@ -97,6 +107,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const params = useParams<{ slug: string | string[] }>()
   const salonId = Array.isArray(params?.slug) ? params.slug[0] : params?.slug
   const queryClient = useQueryClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const { data: employeesData } = useEmployees()
   const { data: servicesData } = useServices()
@@ -109,6 +120,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
   // Edit mode state
   const [surcharge, setSurcharge] = useState<number>(booking?.surcharge ?? 0)
+  const [addonsTotal, setAddonsTotal] = useState(0)
   const [showVoucherPanel, setShowVoucherPanel] = useState(false)
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherData, setVoucherData] = useState<{ id: string; code: string; current_balance: number; status: string } | null>(null)
@@ -128,6 +140,36 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [isCheckingDraftAvailability, setIsCheckingDraftAvailability] = useState(false)
 
   const employees = (employeesData ?? []) as EmployeeOption[]
+  const [filteredEmployeesMap, setFilteredEmployeesMap] = useState<Map<number, EmployeeOption[]>>(new Map())
+  useEffect(() => {
+    const controllers: AbortController[] = []
+    cartItems.forEach((item, index) => {
+      if (!item.serviceId) {
+        setFilteredEmployeesMap((prev) => {
+          const next = new Map(prev)
+          next.delete(index)
+          return next
+        })
+        return
+      }
+      const controller = new AbortController()
+      controllers.push(controller)
+      fetch(`/api/employees?serviceId=${encodeURIComponent(item.serviceId)}`, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((result) => {
+          const list: EmployeeOption[] = Array.isArray(result?.employees) ? result.employees : []
+          setFilteredEmployeesMap((prev) => {
+            const next = new Map(prev)
+            next.set(index, list)
+            return next
+          })
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') console.error(err)
+        })
+    })
+    return () => controllers.forEach((c) => c.abort())
+  }, [cartItems.map((i) => i.serviceId).join(',')])
   const categories = useMemo(
     () =>
       (servicesData ?? []).map((c: any) => ({
@@ -186,6 +228,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
             isTargetItem && updates.serviceId !== undefined ? updates.serviceId : item.serviceId,
           employeeId:
             isTargetItem && updates.employeeId !== undefined ? updates.employeeId : item.employeeId,
+          addons: item.addons,
           selectedAddonIds:
             isTargetItem && updates.selectedAddonIds !== undefined
               ? updates.selectedAddonIds
@@ -221,10 +264,107 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           employeeId: anchorItem.employeeId,
           bookingDate: anchorItem.bookingDate,
           bookingTime: '',
+          addons: [],
           selectedAddonIds: [],
         },
       ]
     })
+  }
+
+  const loadAddonsForCartItem = async (index: number, serviceId: string | null) => {
+    if (!serviceId) {
+      setCartItems((current) =>
+        current.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, addons: [], selectedAddonIds: [] } : item
+        )
+      )
+      return
+    }
+
+    setCartItems((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, addons: [], selectedAddonIds: [] } : item
+      )
+    )
+
+    try {
+      const response = await fetch(`/api/services/${serviceId}/addons`)
+
+      if (!response.ok) {
+        throw new Error('Nie udalo sie pobrac dodatkow')
+      }
+
+      const data = await response.json()
+      const addons = Array.isArray(data?.addons)
+        ? data.addons.map((addon: any) => ({
+            id: addon.id,
+            name: addon.name,
+            price_delta: Number(addon.price_delta) || 0,
+            duration_delta: Number(addon.duration_delta) || 0,
+          }))
+        : []
+
+      setCartItems((current) =>
+        current.map((item, itemIndex) => {
+          if (itemIndex !== index || item.serviceId !== serviceId) {
+            return item
+          }
+
+          return {
+            ...item,
+            addons,
+            selectedAddonIds: item.selectedAddonIds.filter((selectedAddonId) =>
+              addons.some((addon: CartAddonOption) => addon.id === selectedAddonId)
+            ),
+          }
+        })
+      )
+    } catch {
+      setCartItems((current) =>
+        current.map((item, itemIndex) => {
+          if (itemIndex !== index || item.serviceId !== serviceId) {
+            return item
+          }
+
+          return {
+            ...item,
+            addons: [],
+            selectedAddonIds: [],
+          }
+        })
+      )
+    }
+  }
+
+  const saveBookingAddons = async (
+    bookingsToProcess: Array<{ bookingId: string; item: CartItemState }>
+  ) => {
+    const bookingAddonRows = bookingsToProcess.flatMap(({ bookingId, item }) =>
+      item.selectedAddonIds.flatMap((selectedAddonId) => {
+        const addon = item.addons.find((entry) => entry.id === selectedAddonId)
+
+        return addon
+          ? [
+              {
+                booking_id: bookingId,
+                addon_id: selectedAddonId,
+                price_at_booking: addon.price_delta,
+                duration_at_booking: addon.duration_delta,
+              },
+            ]
+          : []
+      })
+    )
+
+    if (bookingAddonRows.length === 0) {
+      return
+    }
+
+    const { error } = await supabase.from('booking_addons').insert(bookingAddonRows)
+
+    if (error) {
+      throw error
+    }
   }
 
   const handleRemoveItem = (index: number) => {
@@ -254,7 +394,11 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
   const totalPrice = cartItems.reduce((sum, item) => {
     const service = services.find((entry) => entry.id === item.serviceId)
-    return sum + (service?.price ?? 0)
+    const addonSum = item.selectedAddonIds.reduce((aSum, addonId) => {
+      const addon = item.addons.find((a) => a.id === addonId)
+      return aSum + (addon?.price_delta ?? 0)
+    }, 0)
+    return sum + (service?.price ?? 0) + addonSum
   }, 0)
 
   const localValidationResults = useMemo<DraftValidationResult[]>(() => {
@@ -436,7 +580,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           throw new Error('Nie wybrano uslugi')
         }
 
-        await createBookingMutation.mutateAsync({
+        const bookingResult = await createBookingMutation.mutateAsync({
           employeeId: item.employeeId!,
           serviceId: item.serviceId!,
           clientId,
@@ -445,6 +589,13 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           duration: service.duration,
           source: 'manual',
         })
+
+        const bookingId =
+          bookingResult?.booking?.id ?? bookingResult?.bookingId ?? bookingResult?.id ?? null
+
+        if (bookingId) {
+          await saveBookingAddons([{ bookingId, item }])
+        }
       } else {
         const response = await fetch('/api/bookings/group', {
           method: 'POST',
@@ -473,6 +624,17 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           throw new Error(errorMessage)
         }
 
+        const data = await response.json()
+        const createdBookings = Array.isArray(data?.bookings) ? data.bookings : []
+
+        await saveBookingAddons(
+          createdBookings.flatMap((createdBooking: any, index: number) =>
+            createdBooking?.id && cartItems[index]
+              ? [{ bookingId: createdBooking.id as string, item: cartItems[index] }]
+              : []
+          )
+        )
+
         await queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
         toast.success('Wizyta grupowa utworzona')
       }
@@ -495,6 +657,21 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     setClientVouchers([])
     setClientVouchersLoaded(false)
   }, [booking?.id, isOpen])
+
+  useEffect(() => {
+    if (!booking?.id || !isOpen) {
+      setAddonsTotal(0)
+      return
+    }
+    supabase
+      .from('booking_addons')
+      .select('price_at_booking')
+      .eq('booking_id', booking.id)
+      .then(({ data }) => {
+        const sum = (data ?? []).reduce((acc: number, row: { price_at_booking: number | null }) => acc + (row.price_at_booking ?? 0), 0)
+        setAddonsTotal(sum)
+      })
+  }, [booking?.id, isOpen, supabase])
 
   useEffect(() => {
     if (!booking?.visit_group_id || !isOpen) {
@@ -857,13 +1034,14 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                     {formatPrice(
                       isGroupBooking
                         ? Number(booking.visit_group?.total_price) || 0
-                        : booking.base_price + surcharge
+                        : booking.base_price + addonsTotal + surcharge
                     )}
                   </p>
                   {isGroupBooking ? null : (
                     <div className="mt-1 flex items-center gap-2">
                       <span className="text-xs text-gray-600">
                         Baza: {formatPrice(booking.base_price)}
+                        {addonsTotal > 0 && <span className="ml-1 text-purple-500">+ Dodatki: {formatPrice(addonsTotal)}</span>}
                       </span>
                       {booking.status === 'scheduled' ? (
                         <div className="flex items-center gap-1">
@@ -1113,6 +1291,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               {cartItems.map((item, index) => {
                 const service = services.find((entry) => entry.id === item.serviceId) ?? null
                 const employee = employees.find((entry) => entry.id === item.employeeId) ?? null
+                const employeesForItem = filteredEmployeesMap.has(index) ? filteredEmployeesMap.get(index)! : employees
                 const selectedCategoryId = categoryFilters.get(index) ?? ''
                 const filteredServices = selectedCategoryId
                   ? categories
@@ -1139,8 +1318,16 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                           ? { id: employee.id, name: formatEmployeeName(employee) }
                           : null
                       }
-                      addons={[]}
+                      addons={item.addons}
                       selectedAddonIds={item.selectedAddonIds}
+                      onAddonSelect={(addonId) => {
+                        if (!addonId) return handleItemChange(index, { selectedAddonIds: [] })
+                        const current = item.selectedAddonIds
+                        const next = current.includes(addonId)
+                          ? current.filter((id) => id !== addonId)
+                          : [...current, addonId]
+                        handleItemChange(index, { selectedAddonIds: next })
+                      }}
                       startTime={formatCartStartTime(item)}
                       warnings={combinedValidationResults[index]?.warnings ?? []}
                       isCheckingAvailability={
@@ -1175,8 +1362,8 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
                               return next
                             })
-
-                            handleItemChange(index, { serviceId: null })
+                            handleItemChange(index, { serviceId: null, selectedAddonIds: [] })
+                            void loadAddonsForCartItem(index, null)
                           }}
                         >
                           <option value="">Wszystkie kategorie</option>
@@ -1194,11 +1381,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                           id={`service-${index}`}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                           value={item.serviceId ?? ''}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const nextServiceId = event.target.value || null
+
                             handleItemChange(index, {
-                              serviceId: event.target.value || null,
+                              serviceId: nextServiceId,
+                              selectedAddonIds: [],
                             })
-                          }
+                            void loadAddonsForCartItem(index, nextServiceId)
+                          }}
                         >
                           <option value="">Wybierz usluge</option>
                           {filteredServices.map((entry) => (
@@ -1222,7 +1413,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                           }
                         >
                           <option value="">Wybierz pracownika</option>
-                          {employees.map((entry) => (
+                          {employeesForItem.map((entry) => (
                             <option key={entry.id} value={entry.id}>
                               {formatEmployeeName(entry)}
                             </option>

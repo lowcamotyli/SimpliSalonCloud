@@ -7,7 +7,7 @@ Dokończenie modułu planów leczenia: naprawienie buga z `session_count`, widok
 
 Przed dispatchem przeczytaj:
 ```bash
-gemini -p "Read docs/architecture/data-architecture.md and docs/architecture/bounded-contexts.md. Summarize: (1) treatment_plans and treatment_sessions schema and relationships, (2) Treatment Records bounded context ownership and rules, (3) health data encryption requirements for form fields. Max 25 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read docs/architecture/data-architecture.md and docs/architecture/bounded-contexts.md. Summarize: (1) treatment_plans and treatment_sessions schema and relationships, (2) Treatment Records bounded context ownership and rules, (3) health data encryption requirements for form fields. Max 50 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 | Dokument | Dlaczego |
@@ -54,9 +54,9 @@ gemini -p "Read docs/architecture/data-architecture.md and docs/architecture/bou
 ## Krok 0 — Odczyt przed dispatchem
 
 ```bash
-gemini -p "Read app/api/treatment-plans/route.ts and app/api/treatment-plans/[id]/route.ts. Show all handlers, queries, and what's missing. Max 30 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read app/api/treatment-plans/route.ts and app/api/treatment-plans/[id]/route.ts. Show all handlers, queries, and what's missing. Max 50 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 
-gemini -p "Read app/(dashboard)/[slug]/clients/[id]/treatment-plans/[planId]/page.tsx. What's implemented? What's missing? Max 15 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
+gemini -p "Read app/(dashboard)/[slug]/clients/[id]/treatment-plans/[planId]/page.tsx. What's implemented? What's missing? Max 50 lines." --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
 
 ---

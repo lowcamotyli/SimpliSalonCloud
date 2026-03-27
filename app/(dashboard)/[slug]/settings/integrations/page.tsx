@@ -26,6 +26,9 @@ import { toast } from 'sonner'
 import type { Database } from '@/types/supabase'
 
 type SalonRow = Database['public']['Tables']['salons']['Row']
+type GmailSendStatus = {
+  connected: boolean
+}
 
 export default function IntegrationsPage() {
   const params = useParams()
@@ -49,6 +52,22 @@ export default function IntegrationsPage() {
   const { data: activeIntegrations = [] } = useIntegrations(salonId)
   const { data: settings } = useSettings(salonId)
   const updateSettings = useUpdateSettings(salonId)
+  const { data: gmailSendStatus } = useQuery<GmailSendStatus>({
+    queryKey: ['gmail-send-status', salonId],
+    enabled: Boolean(salonId),
+    queryFn: async () => {
+      const response = await fetch('/api/integrations/gmail-send?status=true', {
+        method: 'GET',
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch Gmail Send status')
+      }
+
+      return response.json() as Promise<GmailSendStatus>
+    },
+  })
 
   const [resendApiKey, setResendApiKey] = useState('')
   const [resendFromEmail, setResendFromEmail] = useState('')
@@ -134,6 +153,22 @@ export default function IntegrationsPage() {
               </div>
             </SettingsCard>
 
+            <SettingsCard
+              title="Gmail — wysyłanie e-maili"
+              description="Wysyłaj e-maile przez własne konto Gmail"
+              action={<Badge variant={gmailSendStatus?.connected ? "default" : "outline"}>{gmailSendStatus?.connected ? "Połączone" : "Dostępne"}</Badge>}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-4xl">📨</div>
+                <Link href={`/${slug}/settings/integrations/gmail-send`}>
+                  <Button variant={gmailSendStatus?.connected ? "outline" : "default"}>
+                    {gmailSendStatus?.connected ? "Zarządzaj" : "Połącz"}
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </SettingsCard>
+
             {/* Twilio */}
             {INTEGRATIONS.filter(i => i.type === 'twilio').map(integration => {
               const connected = isActive(integration.type)
@@ -145,7 +180,7 @@ export default function IntegrationsPage() {
                   action={connected ? <Badge variant="default">Połączone</Badge> : <Badge variant="outline">Dostępne</Badge>}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-4xl">{integration.icon}</div>
+                    <integration.icon className="h-8 w-8 text-muted-foreground" />
                     <Button variant="outline" disabled>Wkrótce</Button>
                   </div>
                 </SettingsCard>
@@ -302,7 +337,7 @@ export default function IntegrationsPage() {
                   }
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-4xl">{integration.icon}</div>
+                    <integration.icon className="h-8 w-8 text-muted-foreground" />
 
                     {integration.config ? (
                       <Link href={`/${slug}${integration.config}`}>

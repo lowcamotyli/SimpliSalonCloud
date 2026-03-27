@@ -3,9 +3,19 @@
 Claude NIE czyta plików > 50 linii przez Read tool — każda linia to token kontekstu.
 
 ```bash
-gemini -p "Read [ścieżka]. [co konkretnie wyjaśnić/podsumować]. Max 30 lines." \
+# 1 plik:
+cat d:/SimpliSalonCLoud/[ścieżka] \
+  | gemini -p "TASK: [co wyjaśnić/sprawdzić]. FORMAT: Bulleted list. LIMIT: Max 20 lines." \
+  --output-format text 2>/dev/null | grep -v "^Loaded"
+
+# 2–3 pliki:
+cat d:/SimpliSalonCLoud/[p1] d:/SimpliSalonCLoud/[p2] \
+  | gemini -p "Two files piped: [p1] ([opis]), [p2] ([opis]). TASK: [...]. FORMAT: Bullets. LIMIT: Max 20 lines/file." \
   --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
+
+> `@ścieżka` działa TYLKO w trybie interaktywnym (REPL) — w headless `-p` zawsze używaj `cat plik |`.
+> Windows bash: `{...}` compound commands nie działają — używaj `cat plik1 plik2 |`.
 
 **Kiedy co:**
 | Sytuacja | Narzędzie |
@@ -19,11 +29,14 @@ gemini -p "Read [ścieżka]. [co konkretnie wyjaśnić/podsumować]. Max 30 line
 
 ## Docs architektury — mapa referencyjna
 
-Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj Gemini:
+Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj Gemini (stdin pipe, bez limitu linii):
 ```bash
-gemini -p "Read docs/architecture/[plik].md. Summarize: constraints relevant to [zadanie]. Max 20 lines." \
---output-format text 2>/dev/null | grep -v "^Loaded"
+cat d:/SimpliSalonCLoud/docs/architecture/[plik].md \
+  | gemini -p "TASK: List ALL constraints, exceptions, and rules relevant to [zadanie]. FORMAT: Bulleted list. Do NOT summarize away exceptions or edge cases." \
+  --output-format text 2>/dev/null | grep -v "^Loaded"
 ```
+
+> **Ważne:** Brak limitu linii — każdy wyjątek w arch doc może być krytyczny. "Max 20 lines" stosuj tylko do zwykłych plików kodu.
 
 | Kiedy | Plik |
 |-------|------|

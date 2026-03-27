@@ -44,12 +44,10 @@ type TreatmentPlan = {
   session_count?: number
 }
 
-export default function TreatmentPlansPage({
-  params,
-}: {
-  params: { slug: string; id: string }
-}) {
-  const { slug, id: clientId } = params
+export default function TreatmentPlansPage() {
+  const params = useParams<{ slug: string; id: string }>()
+  const slug = params.slug
+  const clientId = params.id
   const router = useRouter()
   const { isLoading: isRoleLoading, isOwnerOrManager } = useCurrentRole()
   const [plans, setPlans] = useState<TreatmentPlan[]>([])
@@ -97,7 +95,8 @@ export default function TreatmentPlansPage({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create plan')
+        const err = await response.json().catch(() => ({}))
+        throw new Error(`Failed to create plan: ${response.status} ${JSON.stringify(err)}`)
       }
 
       const responseData = await response.json()
@@ -135,7 +134,7 @@ export default function TreatmentPlansPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Plany leczenia</h1>
+          <h1 className="text-2xl font-bold">Serie zabiegów</h1>
         </div>
         {!isRoleLoading && isOwnerOrManager() && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -147,7 +146,7 @@ export default function TreatmentPlansPage({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Utwórz nowy plan leczenia</DialogTitle>
+              <DialogTitle>Utwórz nową serię zabiegów</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreatePlan} className="space-y-4">
               <div>
@@ -189,7 +188,7 @@ export default function TreatmentPlansPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Istniejące plany</CardTitle>
+          <CardTitle>Istniejące serie</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -200,7 +199,7 @@ export default function TreatmentPlansPage({
             </div>
           ) : plans.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              Brak planów leczenia
+              Brak serii zabiegów
             </div>
           ) : (
             <Table>
@@ -222,7 +221,7 @@ export default function TreatmentPlansPage({
                     <TableCell className="font-medium">{plan.name}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(plan.status)}>
-                        {plan.status}
+                        {{ active: 'Aktywny', completed: 'Ukończony', cancelled: 'Anulowany' }[plan.status] ?? plan.status}
                       </Badge>
                     </TableCell>
                     <TableCell>

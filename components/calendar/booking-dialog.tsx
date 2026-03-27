@@ -5,6 +5,7 @@ import { format, addMinutes } from 'date-fns'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Link from 'next/link'
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useCreateBooking, useUpdateBooking } from '@/hooks/use-bookings'
+import { createClient } from '@/lib/supabase/client'
 import { useEmployees } from '@/hooks/use-employees'
 import { useServices } from '@/hooks/use-services'
 import { useClients } from '@/hooks/use-clients'
@@ -36,6 +38,7 @@ import { toast } from 'sonner'
 import { Clock, AlertCircle, Loader2, ChevronRight, ChevronLeft, Search, CheckCircle2, User, XCircle, UserX, CreditCard, Banknote } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter, useParams } from "next/navigation"
+import { PaymentStatusBadge } from '@/components/bookings/payment-status-badge'
 
 const bookingFormSchema = z.object({
   employeeId: z.string().min(1, 'Wybierz pracownika'),
@@ -48,6 +51,13 @@ const bookingFormSchema = z.object({
 })
 
 type BookingFormData = z.infer<typeof bookingFormSchema>
+type OnlinePaymentStatus = 'none' | 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled'
+
+type OnlinePaymentData = {
+  status: OnlinePaymentStatus
+  amount?: number
+  paymentUrl?: string
+}
 
 interface BookingDialogProps {
   isOpen: boolean
@@ -62,8 +72,11 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const { data: employees } = useEmployees()
   const { data: services } = useServices()
   const { data: clients } = useClients()
+  const [filteredEmployees, setFilteredEmployees] = useState<NonNullable<typeof employees>>([])
+  const [isFilteredEmployeesLoading, setIsFilteredEmployeesLoading] = useState(false)
   const [clientSuggestions, setClientSuggestions] = useState<any[]>([])
   const [surcharge, setSurcharge] = useState<number>(booking?.surcharge || 0)
+  const [addonsTotal, setAddonsTotal] = useState(0)
   const [editableDuration, setEditableDuration] = useState<number>(booking?.duration || 60)
   const [savedDuration, setSavedDuration] = useState<number>(booking?.duration || 60)
   const [processingPayment, setProcessingPayment] = useState<'cash' | 'card' | 'voucher' | null>(null)
@@ -77,6 +90,8 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const [voucherData, setVoucherData] = useState<{ id: string; code: string; current_balance: number } | null>(null)
   const [voucherLoading, setVoucherLoading] = useState(false)
   const [clientVouchers, setClientVouchers] = useState<Array<{ id: string; code: string; current_balance: number }>>([])
+  const [onlinePayment, setOnlinePayment] = useState<OnlinePaymentData>({ status: 'none' })
+  const [isOnlinePaymentLoading, setIsOnlinePaymentLoading] = useState(false)
 
   const createMutation = useCreateBooking()
   const updateMutation = useUpdateBooking(booking?.id || '')
@@ -86,6 +101,22 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
     setEditableDuration(booking?.duration || 60)
     setSavedDuration(booking?.duration || 60)
   }, [booking?.id, booking?.surcharge, booking?.duration])
+
+  useEffect(() => {
+    if (!booking?.id) {
+      setAddonsTotal(0)
+      return
+    }
+    const supabase = createClient()
+    supabase
+      .from('booking_addons')
+      .select('price_at_booking')
+      .eq('booking_id', booking.id)
+      .then(({ data }) => {
+        const sum = (data || []).reduce((acc: number, row: { price_at_booking: number | null }) => acc + (row.price_at_booking || 0), 0)
+        setAddonsTotal(sum)
+      })
+  }, [booking?.id])
 
   useEffect(() => {
     if (!showVoucherPanel || !booking?.client_id) return
@@ -104,6 +135,54 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
     fetchClientVouchers()
   }, [showVoucherPanel, booking?.client_id, params.slug])
+
+  useEffect(() => {
+    if (!isOpen || !booking?.id) {
+      setOnlinePayment({ status: 'none' })
+      setIsOnlinePaymentLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
+
+    const fetchOnlinePaymentStatus = async () => {
+      setIsOnlinePaymentLoading(true)
+      try {
+        const response = await fetch(`/api/payments/booking/${booking.id}/status`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch online payment status')
+        }
+
+        const result = (await response.json()) as {
+          status?: OnlinePaymentStatus
+          amount?: number
+          paymentUrl?: string
+        }
+        const allowed: OnlinePaymentStatus[] = ['none', 'pending', 'paid', 'failed', 'refunded', 'cancelled']
+        const resolvedStatus = allowed.includes(result.status ?? 'none') ? (result.status ?? 'none') : 'none'
+        setOnlinePayment({
+          status: resolvedStatus,
+          amount: typeof result.amount === 'number' ? result.amount : undefined,
+          paymentUrl: typeof result.paymentUrl === 'string' ? result.paymentUrl : undefined,
+        })
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setOnlinePayment({ status: 'none' })
+        }
+      } finally {
+        setIsOnlinePaymentLoading(false)
+      }
+    }
+
+    fetchOnlinePaymentStatus()
+
+    return () => {
+      controller.abort()
+    }
+  }, [booking?.id, isOpen])
 
   // Oblicz defaultValues na podstawie props
   const getDefaultValues = (): BookingFormData => {
@@ -171,6 +250,51 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
   // Pre-fill category/subcategory for existing booking or when service changes
   const serviceId = form.watch('serviceId')
+  const displayedEmployees = serviceId ? filteredEmployees : (employees || [])
+
+  useEffect(() => {
+    if (booking) return
+
+    if (!serviceId) {
+      setFilteredEmployees(employees || [])
+      setIsFilteredEmployeesLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
+
+    const fetchEmployeesByService = async () => {
+      setIsFilteredEmployeesLoading(true)
+      try {
+        const response = await fetch(`/api/employees?serviceId=${encodeURIComponent(serviceId)}`, {
+          signal: controller.signal,
+        })
+        if (!response.ok) throw new Error('Failed to fetch employees by service')
+
+        const result = await response.json()
+        const nextEmployees: NonNullable<typeof employees> = Array.isArray(result?.employees) ? result.employees : []
+        setFilteredEmployees(nextEmployees)
+
+        const selectedEmployeeId = form.getValues('employeeId')
+        if (selectedEmployeeId && !nextEmployees.some((emp) => emp.id === selectedEmployeeId)) {
+          form.setValue('employeeId', '', { shouldValidate: true })
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setFilteredEmployees([])
+        }
+      } finally {
+        setIsFilteredEmployeesLoading(false)
+      }
+    }
+
+    fetchEmployeesByService()
+
+    return () => {
+      controller.abort()
+    }
+  }, [booking, serviceId, employees, form])
+
   useEffect(() => {
     if (serviceId && services) {
       for (const cat of services) {
@@ -188,7 +312,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   const selectedService = services
     ?.flatMap((cat) => cat.subcategories)
     .flatMap((sub) => sub.services)
-    .find((svc) => svc.id === form.watch('serviceId'))
+    .find((svc) => svc.id === serviceId)
 
   const handleSelectClient = (client: any) => {
     form.setValue('clientName', client.full_name, { shouldValidate: true })
@@ -328,7 +452,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bookingId: booking.id,
-          amount: booking.base_price + (surcharge || 0),
+          amount: booking.base_price + addonsTotal + (surcharge || 0),
         }),
       })
 
@@ -342,6 +466,19 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
       toast.error('Nie udało się rozliczyć vouchera')
     } finally {
       setVoucherLoading(false)
+    }
+  }
+
+  const handleCopyPaymentUrl = async () => {
+    if (!onlinePayment.paymentUrl) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(onlinePayment.paymentUrl)
+      toast.success('Link do płatności skopiowany')
+    } catch (error) {
+      toast.error('Nie udało się skopiować linku')
     }
   }
 
@@ -427,10 +564,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
               <div className="glass p-3 rounded-lg flex flex-col justify-between">
                 <div>
                   <Label className="text-xs text-gray-600 uppercase font-semibold">Cena końcowa</Label>
-                  <p className="font-bold text-purple-600 text-xl">{formatPrice(booking.base_price + (surcharge || 0))}</p>
+                  <p className="font-bold text-purple-600 text-xl">{formatPrice(booking.base_price + addonsTotal + (surcharge || 0))}</p>
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100/50">
-                  <span className="text-xs text-gray-500 font-medium tracking-tight">Baza: {formatPrice(booking.base_price)}</span>
+                  <span className="text-xs text-gray-500 font-medium tracking-tight">
+                    Baza: {formatPrice(booking.base_price)}
+                    {addonsTotal > 0 && <span className="ml-1 text-purple-500">+ Dodatki: {formatPrice(addonsTotal)}</span>}
+                  </span>
                   {booking.status === 'scheduled' ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium">+ Dopłata:</span>
@@ -462,6 +602,35 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <p className="text-sm text-gray-700 mt-1">{booking.notes}</p>
               </div>
             )}
+
+            <div className="glass p-3 rounded-lg space-y-3">
+              <Label className="text-xs text-gray-600 uppercase font-semibold">Płatność online</Label>
+              {isOnlinePaymentLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Pobieranie statusu...
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <PaymentStatusBadge
+                    status={onlinePayment.status}
+                    amount={onlinePayment.status === 'paid' ? onlinePayment.amount : undefined}
+                  />
+
+                  {(onlinePayment.status === 'none' || onlinePayment.status === 'failed') && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/${params.slug}/bookings/${booking.id}/payment`}>Zainicjuj płatność</Link>
+                    </Button>
+                  )}
+
+                  {onlinePayment.status === 'pending' && onlinePayment.paymentUrl && (
+                    <Button type="button" size="sm" onClick={handleCopyPaymentUrl}>
+                      Skopiuj link do płatności
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
 
             <DialogFooter className="mt-6 pt-4 border-t border-purple-100/50 flex flex-col sm:flex-row gap-4 sm:justify-between items-center bg-gray-50/50 -mx-4 -mb-4 px-4 pb-4 rounded-b-2xl">
               {booking.status === 'scheduled' && (
@@ -609,10 +778,16 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <Label className="font-semibold">Pracownik *</Label>
                 <select
                   {...form.register('employeeId')}
+                  disabled={isFilteredEmployeesLoading}
                   className="w-full glass rounded-lg px-3 py-2"
                 >
                   <option value="">Wybierz pracownika</option>
-                  {employees?.map((emp) => (
+                  {isFilteredEmployeesLoading && (
+                    <option value="" disabled>
+                      Ładowanie pracowników...
+                    </option>
+                  )}
+                  {displayedEmployees.map((emp) => (
                     <option key={emp.id} value={emp.id}>
                       {emp.first_name} {emp.last_name}
                     </option>
