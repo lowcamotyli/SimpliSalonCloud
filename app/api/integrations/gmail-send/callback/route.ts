@@ -29,11 +29,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       throw new Error('Missing salonId in state')
     }
 
-    const clientId = process.env.GMAIL_SEND_CLIENT_ID
-    const clientSecret = process.env.GMAIL_SEND_CLIENT_SECRET
-    const redirectUri = process.env.GMAIL_SEND_REDIRECT_URI
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+    const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin
+    const redirectUri = `${appUrl}/api/integrations/gmail-send/callback`
 
-    if (!clientId || !clientSecret || !redirectUri) {
+    if (!clientId || !clientSecret) {
       throw new Error('Missing Gmail Send OAuth environment variables')
     }
 

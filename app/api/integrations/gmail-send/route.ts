@@ -33,12 +33,13 @@ function getGoogleOAuthConfig(): {
 } {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  const redirectUri = process.env.GMAIL_SEND_REDIRECT_URI
+  const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL
 
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret || !appUrl) {
     throw new Error('Gmail Send OAuth environment variables are missing')
   }
 
+  const redirectUri = `${appUrl}/api/integrations/gmail-send/callback`
   return { clientId, clientSecret, redirectUri }
 }
 
