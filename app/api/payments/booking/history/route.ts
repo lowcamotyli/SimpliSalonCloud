@@ -153,8 +153,6 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<NextR
     )
     .eq('salon_id', salonId)
     .eq('bookings.salon_id', salonId)
-    .eq('bookings.clients.salon_id', salonId)
-    .eq('bookings.services.salon_id', salonId)
     .order('created_at', { ascending: false })
     .range(from, to)
 
