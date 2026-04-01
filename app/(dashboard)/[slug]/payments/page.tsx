@@ -149,7 +149,8 @@ export default async function PaymentsPage({
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch payments history')
+    const body = await response.text().catch(() => '(unreadable)')
+    throw new Error(`Failed to fetch payments history: HTTP ${response.status} — ${body}`)
   }
 
   const data = (await response.json()) as PaymentsHistoryResponse
