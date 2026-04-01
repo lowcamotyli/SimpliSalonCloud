@@ -141,7 +141,9 @@ export default async function PaymentsPage({
     query.set('status', selectedStatus)
   }
 
-  const response = await fetch(`${appUrl}/api/payments/booking/history?${query.toString()}`, {
+  const fetchUrl = `${appUrl}/api/payments/booking/history?${query.toString()}`
+  console.log('[payments/page] fetching:', fetchUrl)
+  const response = await fetch(fetchUrl, {
     headers: {
       cookie: cookieHeader,
     },
@@ -150,7 +152,7 @@ export default async function PaymentsPage({
 
   if (!response.ok) {
     const body = await response.text().catch(() => '(unreadable)')
-    throw new Error(`Failed to fetch payments history: HTTP ${response.status} — ${body}`)
+    throw new Error(`Failed to fetch payments history: HTTP ${response.status} at ${fetchUrl} — ${body}`)
   }
 
   const data = (await response.json()) as PaymentsHistoryResponse
