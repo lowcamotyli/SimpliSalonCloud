@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { logger } from '@/lib/logger'
 
 type SubscriptionPlan = 'starter' | 'professional' | 'business' | 'enterprise'
 
@@ -248,10 +249,26 @@ export async function POST(request: NextRequest) {
     }
     payload = parsed
   } catch {
+    logger.warn('[BILLING_WEBHOOK] invalid json body', {
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+    })
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
   try {
+    logger.info('[BILLING_WEBHOOK] start', {
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+      referer: request.headers.get('referer') ?? undefined,
+      sessionId: payload.sessionId,
+      orderId: payload.orderId,
+    })
+
     const admin = createAdminSupabaseClient()
 
     if (payload.sessionId.startsWith('p24_')) {
@@ -268,8 +285,16 @@ export async function POST(request: NextRequest) {
       }
 
       if (!latestBookingPayment) {
+        logger.warn('[BILLING_WEBHOOK] booking payment not found', {
+          sessionId: payload.sessionId,
+        })
         return NextResponse.json({ received: true }, { status: 200 })
       }
+
+      logger.info('[BILLING_WEBHOOK] booking payment resolved', {
+        sessionId: payload.sessionId,
+        salonId: latestBookingPayment.salon_id,
+      })
 
       const p24 = await createP24ClientForSalon(admin, latestBookingPayment.salon_id)
       const signatureValid = p24.verifyNotificationSignature(payload)
@@ -285,6 +310,10 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to update booking payment status: ${failedUpdateError.message}`)
         }
 
+        logger.warn('[BILLING_WEBHOOK] invalid booking payment signature', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+        })
         return NextResponse.json({ received: true }, { status: 200 })
       }
 
@@ -310,6 +339,12 @@ export async function POST(request: NextRequest) {
         if (paidUpdateError) {
           throw new Error(`Failed to mark booking payment as paid: ${paidUpdateError.message}`)
         }
+
+        logger.info('[BILLING_WEBHOOK] booking payment marked paid', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+          orderId: payload.orderId,
+        })
       } else {
         const { error: failedUpdateError } = await admin
           .from('booking_payments')
@@ -320,6 +355,12 @@ export async function POST(request: NextRequest) {
         if (failedUpdateError) {
           throw new Error(`Failed to mark booking payment as failed: ${failedUpdateError.message}`)
         }
+
+        logger.warn('[BILLING_WEBHOOK] booking payment verification failed', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+          orderId: payload.orderId,
+        })
       }
 
       return NextResponse.json({ received: true }, { status: 200 })
@@ -389,7 +430,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: 'OK' }, { status: 200 })
   } catch (error) {
-    console.error('[BILLING WEBHOOK] Error:', error)
+    logger.error('[BILLING_WEBHOOK] unhandled error', error, {
+      sessionId: payload.sessionId,
+      orderId: payload.orderId,
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+    })
 
     return NextResponse.json(
       {
