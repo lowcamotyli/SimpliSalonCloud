@@ -204,13 +204,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     const p24 = await createP24ClientForSalon(supabase, salonId)
+    const statusUrl = `${requestOrigin}/api/billing/webhook`
+
+    logger.info('[PUBLIC_PAYMENT_INITIATE] registering p24 transaction', {
+      salonId,
+      bookingId: booking.id,
+      sessionId,
+      returnUrl: summarizeReturnUrl(returnUrl, appUrl) ?? '[invalid-url]',
+      requestOrigin,
+      statusUrl,
+    })
+
     const { paymentUrl } = await p24.createTransaction({
       sessionId,
       amount,
       description: `Wizyta #${bookingId.slice(0, 8)}`,
       email: client.email,
       returnUrl: appendSessionParam(returnUrl, sessionId, appUrl),
-      statusUrl: `${requestOrigin}/api/billing/webhook`,
+      statusUrl,
     })
 
     logger.info('[PUBLIC_PAYMENT_INITIATE] p24 transaction created', {
