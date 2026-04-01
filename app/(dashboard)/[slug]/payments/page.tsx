@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getAppUrl } from '@/lib/config/app-url'
+import { getInternalBaseUrl } from '@/lib/config/app-url'
 import { PaymentStatusBadge } from '@/components/bookings/payment-status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -130,7 +130,7 @@ export default async function PaymentsPage({
     redirect(`/${slug}/dashboard`)
   }
 
-  const appUrl = getAppUrl()
+  const appUrl = getInternalBaseUrl()
   const cookieHeader = (await cookies()).toString()
   const query = new URLSearchParams({
     page: currentPage.toString(),

@@ -30,6 +30,18 @@ function normalizeCandidateUrl(value: string | undefined): string | null {
   }
 }
 
+/**
+ * Returns the URL for internal server-to-server fetches (page → API route).
+ * Uses VERCEL_URL (deployment-specific, set by Vercel, cannot be misconfigured)
+ * so preview deployments never hit production API routes.
+ */
+export function getInternalBaseUrl(): string {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'http://localhost:3000'
+}
+
 export function getAppUrl(): string {
   const candidates = [
     process.env.APP_URL,
