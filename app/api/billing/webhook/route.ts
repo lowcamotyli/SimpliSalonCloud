@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
 
 type SubscriptionPlan = 'starter' | 'professional' | 'business' | 'enterprise'
 
@@ -15,6 +16,11 @@ interface P24NotificationPayload {
   methodId: number
   statement: string
   sign: string
+}
+
+function resolveMaybeEncryptedSecret(value: string | null): string | null {
+  if (!value) return null
+  return isEncryptedPayload(value) ? decryptSecret(value) : value
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -202,6 +208,36 @@ async function upsertSubscriptionFromInvoice(admin: any, invoice: any, payload: 
   }
 }
 
+async function createP24ClientForSalon(admin: any, salonId: string) {
+  const { data: settings, error: settingsError } = await admin
+    .from('salon_settings')
+    .select('p24_merchant_id, p24_pos_id, p24_crc, p24_api_key, p24_api_url')
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  if (settingsError) {
+    throw new Error(`Failed to load salon payment settings: ${settingsError.message}`)
+  }
+
+  const merchantId = settings?.p24_merchant_id?.trim()
+  const posId = settings?.p24_pos_id?.trim()
+  const crc = resolveMaybeEncryptedSecret(settings?.p24_crc ?? null)?.trim()
+  const apiKey = resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
+  const apiUrl = settings?.p24_api_url?.trim()
+
+  if (merchantId && posId && crc && apiUrl) {
+    return createPrzelewy24Client({
+      merchantId,
+      posId,
+      crc,
+      apiKey: apiKey || crc,
+      apiUrl,
+    })
+  }
+
+  return createPrzelewy24Client()
+}
+
 export async function POST(request: NextRequest) {
   let payload: P24NotificationPayload
 
@@ -216,9 +252,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const p24 = createPrzelewy24Client()
     const admin = createAdminSupabaseClient()
-    const signatureValid = p24.verifyNotificationSignature(payload)
 
     if (payload.sessionId.startsWith('p24_')) {
       const { data: latestBookingPayment, error: bookingPaymentError } = await admin
@@ -236,6 +270,9 @@ export async function POST(request: NextRequest) {
       if (!latestBookingPayment) {
         return NextResponse.json({ received: true }, { status: 200 })
       }
+
+      const p24 = await createP24ClientForSalon(admin, latestBookingPayment.salon_id)
+      const signatureValid = p24.verifyNotificationSignature(payload)
 
       if (!signatureValid) {
         const { error: failedUpdateError } = await admin
@@ -301,6 +338,9 @@ export async function POST(request: NextRequest) {
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
+
+    const p24 = await createP24ClientForSalon(admin, invoice.salon_id)
+    const signatureValid = p24.verifyNotificationSignature(payload)
 
     if (!signatureValid) {
       await markInvoiceVoid(admin, invoice.id)
