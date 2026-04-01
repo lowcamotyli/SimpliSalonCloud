@@ -31,6 +31,17 @@ function getRequestOrigin(request: NextRequest): string {
   return request.nextUrl.origin
 }
 
+function buildStatusUrl(requestOrigin: string): string {
+  const url = new URL('/api/billing/webhook', requestOrigin)
+  const protectionBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
+
+  if (protectionBypassSecret) {
+    url.searchParams.set('x-vercel-protection-bypass', protectionBypassSecret)
+  }
+
+  return url.toString()
+}
+
 function resolveMaybeEncryptedSecret(value: string | null): string | null {
   if (!value) return null
   return isEncryptedPayload(value) ? decryptSecret(value) : value
@@ -204,7 +215,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     const p24 = await createP24ClientForSalon(supabase, salonId)
-    const statusUrl = `${requestOrigin}/api/billing/webhook`
+    const statusUrl = buildStatusUrl(requestOrigin)
 
     logger.info('[PUBLIC_PAYMENT_INITIATE] registering p24 transaction', {
       salonId,
@@ -213,6 +224,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       returnUrl: summarizeReturnUrl(returnUrl, appUrl) ?? '[invalid-url]',
       requestOrigin,
       statusUrl,
+      hasProtectionBypass: statusUrl.includes('x-vercel-protection-bypass='),
     })
 
     const { paymentUrl } = await p24.createTransaction({
