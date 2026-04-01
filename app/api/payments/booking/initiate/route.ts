@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { getAuthContext } from '@/lib/supabase/get-auth-context'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
 
 interface InitiateBookingPaymentBody {
   bookingId: string
@@ -12,6 +14,42 @@ function appendSessionParam(returnUrl: string, sessionId: string, appUrl: string
   const url = new URL(returnUrl, appUrl)
   url.searchParams.set('session', sessionId)
   return url.toString()
+}
+
+function resolveMaybeEncryptedSecret(value: string | null): string | null {
+  if (!value) return null
+  return isEncryptedPayload(value) ? decryptSecret(value) : value
+}
+
+async function createP24ClientForSalon(salonId: string) {
+  const supabase = createAdminSupabaseClient()
+  const { data: settings, error: settingsError } = await supabase
+    .from('salon_settings')
+    .select('p24_merchant_id, p24_pos_id, p24_crc, p24_api_key, p24_api_url')
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  if (settingsError) {
+    throw new Error(`Failed to load salon payment settings: ${settingsError.message}`)
+  }
+
+  const merchantId = settings?.p24_merchant_id?.trim()
+  const posId = settings?.p24_pos_id?.trim()
+  const crc = resolveMaybeEncryptedSecret(settings?.p24_crc ?? null)?.trim()
+  const apiKey = resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
+  const apiUrl = settings?.p24_api_url?.trim()
+
+  if (merchantId && posId && crc && apiUrl) {
+    return createPrzelewy24Client({
+      merchantId,
+      posId,
+      crc,
+      apiKey: apiKey || crc,
+      apiUrl,
+    })
+  }
+
+  return createPrzelewy24Client()
 }
 
 export async function POST(request: NextRequest) {
@@ -60,7 +98,7 @@ export async function POST(request: NextRequest) {
       throw new Error('Booking amount is invalid')
     }
 
-    const p24 = createPrzelewy24Client()
+    const p24 = await createP24ClientForSalon(salonId)
     const { paymentUrl } = await p24.createTransaction({
       sessionId,
       amount,
