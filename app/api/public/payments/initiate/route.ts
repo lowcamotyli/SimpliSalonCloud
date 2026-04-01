@@ -27,6 +27,10 @@ function summarizeReturnUrl(returnUrl: string, appUrl: string): string | null {
   }
 }
 
+function getRequestOrigin(request: NextRequest): string {
+  return request.nextUrl.origin
+}
+
 function resolveMaybeEncryptedSecret(value: string | null): string | null {
   if (!value) return null
   return isEncryptedPayload(value) ? decryptSecret(value) : value
@@ -128,15 +132,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'bookingId and returnUrl are required' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!appUrl) {
-      throw new Error('NEXT_PUBLIC_APP_URL is required')
-    }
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || getRequestOrigin(request)
+    const requestOrigin = getRequestOrigin(request)
 
     logger.info('[PUBLIC_PAYMENT_INITIATE] payload parsed', {
       salonId,
       bookingId,
       returnUrl: summarizeReturnUrl(returnUrl, appUrl) ?? '[invalid-url]',
+      requestOrigin,
     })
 
     const supabase = createAdminSupabaseClient()
@@ -207,7 +210,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       description: `Wizyta #${bookingId.slice(0, 8)}`,
       email: client.email,
       returnUrl: appendSessionParam(returnUrl, sessionId, appUrl),
-      statusUrl: `${appUrl}/api/billing/webhook`,
+      statusUrl: `${requestOrigin}/api/billing/webhook`,
     })
 
     logger.info('[PUBLIC_PAYMENT_INITIATE] p24 transaction created', {

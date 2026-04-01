@@ -16,6 +16,10 @@ function appendSessionParam(returnUrl: string, sessionId: string, appUrl: string
   return url.toString()
 }
 
+function getRequestOrigin(request: NextRequest): string {
+  return request.nextUrl.origin
+}
+
 function resolveMaybeEncryptedSecret(value: string | null): string | null {
   if (!value) return null
   return isEncryptedPayload(value) ? decryptSecret(value) : value
@@ -62,10 +66,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to initiate payment' }, { status: 500 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!appUrl) {
-      throw new Error('NEXT_PUBLIC_APP_URL is required')
-    }
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || getRequestOrigin(request)
+    const requestOrigin = getRequestOrigin(request)
 
     const { supabase, salonId } = await getAuthContext()
 
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest) {
       description: `Wizyta #${booking.id.slice(0, 8)}`,
       email: client.email,
       returnUrl: appendSessionParam(returnUrl, sessionId, appUrl),
-      statusUrl: `${appUrl}/api/billing/webhook`,
+      statusUrl: `${requestOrigin}/api/billing/webhook`,
     })
 
     const { error: insertError } = await supabase.from('booking_payments').insert({
