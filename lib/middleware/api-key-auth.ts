@@ -13,11 +13,12 @@ export function validateApiKey(request: NextRequest): NextResponse | null {
     }
 
     if (expectedKey === DEFAULT_DEV_KEY) {
-        console.error('[API-KEY] SECURITY: PUBLIC_API_KEY is set to the default development value — change it in production!')
+        console.warn('[API-KEY] SECURITY: PUBLIC_API_KEY is set to the default development value')
     }
 
     if (!apiKey || apiKey.length !== expectedKey.length ||
         !timingSafeEqual(Buffer.from(apiKey), Buffer.from(expectedKey))) {
+        console.error('[API-KEY] MISMATCH')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

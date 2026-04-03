@@ -300,21 +300,11 @@ export async function POST(request: NextRequest) {
       const signatureValid = p24.verifyNotificationSignature(payload)
 
       if (!signatureValid) {
-        const { error: failedUpdateError } = await admin
-          .from('booking_payments')
-          .update({ status: 'failed' })
-          .eq('p24_session_id', payload.sessionId)
-          .eq('salon_id', latestBookingPayment.salon_id)
-
-        if (failedUpdateError) {
-          throw new Error(`Failed to update booking payment status: ${failedUpdateError.message}`)
-        }
-
         logger.warn('[BILLING_WEBHOOK] invalid booking payment signature', {
           sessionId: payload.sessionId,
           salonId: latestBookingPayment.salon_id,
         })
-        return NextResponse.json({ received: true }, { status: 200 })
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
       }
 
       const verificationOk = await p24.verifyTransaction({
