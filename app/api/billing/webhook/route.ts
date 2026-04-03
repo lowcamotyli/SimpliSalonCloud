@@ -342,7 +342,7 @@ export async function POST(request: NextRequest) {
 
         const { error: bookingUpdateError } = await admin
           .from('bookings')
-          .update({ status: 'confirmed' })
+          .update({ status: 'paid' })
           .eq('id', latestBookingPayment.booking_id)
           .eq('salon_id', latestBookingPayment.salon_id)
 
