@@ -253,10 +253,15 @@ export class Przelewy24Client {
    */
   verifyNotificationSignature(notification: P24NotificationData): boolean {
     const notificationSignInput = {
+      merchantId: parseInt(this.config.merchantId),
+      posId: parseInt(this.config.posId),
       sessionId: notification.sessionId,
-      orderId: notification.orderId,
       amount: notification.amount,
+      originAmount: notification.originAmount,
       currency: notification.currency,
+      orderId: notification.orderId,
+      methodId: notification.methodId,
+      statement: notification.statement,
       crc: this.config.crc,
     }
     const expectedSign = this.generateNotificationSign(notificationSignInput)
@@ -266,31 +271,10 @@ export class Przelewy24Client {
     const match = a.length === b.length && timingSafeEqual(a, b)
 
     if (!match) {
-      // Also try with reportKey (some P24 accounts use raport key for signing instead of CRC key)
-      const signWithReportKey = this.config.apiKey !== this.config.crc
-        ? this.generateNotificationSign({
-            sessionId: notification.sessionId,
-            orderId: notification.orderId,
-            amount: notification.amount,
-            currency: notification.currency,
-            crc: this.config.apiKey,
-          })
-        : null
-
       logger.warn('[P24_SIGN] signature mismatch', {
         sessionId: notification.sessionId,
-        crcPrefix: this.config.crc.substring(0, 4),
-        amount: notification.amount,
-        currency: notification.currency,
-        orderId: notification.orderId,
-        hashInput: JSON.stringify(notificationSignInput).replace(this.config.crc, '[CRC]'),
         expectedPrefix: expectedSign.substring(0, 8),
         receivedPrefix: notification.sign.substring(0, 8),
-        expectedLength: a.length,
-        receivedLength: b.length,
-        matchesWithApiKey: signWithReportKey
-          ? Buffer.from(signWithReportKey).toString() === notification.sign
-          : 'same-as-crc',
       })
     }
 
@@ -435,19 +419,30 @@ export class Przelewy24Client {
 
   /**
    * Generuje sygnaturę dla notyfikacji webhook
+   * Formuła P24: SHA384({merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crc})
    */
   private generateNotificationSign(params: {
+    merchantId: number
+    posId: number
     sessionId: string
-    orderId: number
     amount: number
+    originAmount: number
     currency: string
+    orderId: number
+    methodId: number
+    statement: string
     crc: string
   }): string {
     const str = JSON.stringify({
+      merchantId: params.merchantId,
+      posId: params.posId,
       sessionId: params.sessionId,
-      orderId: params.orderId,
       amount: params.amount,
+      originAmount: params.originAmount,
       currency: params.currency,
+      orderId: params.orderId,
+      methodId: params.methodId,
+      statement: params.statement,
       crc: params.crc,
     })
 
