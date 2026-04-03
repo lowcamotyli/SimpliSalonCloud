@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
-import { getSalonId } from '@/lib/utils/salon'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { logger } from '@/lib/logger'
 import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { setCorsHeaders } from '@/lib/middleware/cors'
 
 interface InitiateBookingPaymentBody {
   bookingId: string
@@ -106,21 +106,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       hasSalonHeader: Boolean(request.headers.get('X-Salon-Id')),
     })
 
-    const authError = validateApiKey(request)
-    if (authError) {
-      logger.warn('[PUBLIC_PAYMENT_INITIATE] api key invalid')
-      return authError
-    }
-
-    const salonId = getSalonId(request)
-    if (!salonId) {
-      logger.error('[PUBLIC_PAYMENT_INITIATE] missing salon id')
-      return NextResponse.json({ error: 'PUBLIC_SALON_ID is not configured' }, { status: 500 })
-    }
+    const authResult = await resolveApiKey(request)
+    if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
+    const { salonId } = authResult
 
     logger.info('[PUBLIC_PAYMENT_INITIATE] salon resolved', {
       salonId,
-      salonSource: request.headers.get('X-Salon-Id') ? 'header' : 'env',
+      salonSource: 'api-key',
     })
 
     let body: unknown

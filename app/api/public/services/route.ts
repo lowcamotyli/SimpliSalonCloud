@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import { getSalonId } from '@/lib/utils/salon'
 import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
 
 export async function OPTIONS(request: NextRequest) {
@@ -9,13 +8,13 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-    const authError = validateApiKey(request)
-    if (authError) {
-        return setCorsHeaders(request, authError)
+    const authResult = await resolveApiKey(request)
+    if (authResult instanceof NextResponse) {
+        return setCorsHeaders(request, authResult)
     }
+    const { salonId } = authResult
 
     const supabase = createAdminSupabaseClient()
-    const salonId = getSalonId(request)
 
     const { data, error } = await supabase
         .from('services')

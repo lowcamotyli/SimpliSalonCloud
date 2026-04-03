@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import { getSalonId } from '@/lib/utils/salon'
 
 interface ScheduleRow {
     employee_id: string
@@ -54,11 +53,11 @@ function isEmployeeAvailableSoon(
 }
 
 export async function GET(request: NextRequest) {
-    const authError = validateApiKey(request)
-    if (authError) return authError
+    const authResult = await resolveApiKey(request)
+    if (authResult instanceof NextResponse) return authResult
+    const { salonId } = authResult
 
     const supabase = createAdminSupabaseClient()
-    const salonId = getSalonId(request)
 
     const { data: employees, error } = await supabase
         .from('employees')

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import { getSalonId } from '@/lib/utils/salon'
 import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
+import { setCorsHeaders } from '@/lib/middleware/cors'
 
 interface PublicGroupBookingRequest {
     name: string
@@ -52,11 +52,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const authError = validateApiKey(request)
-        if (authError) {
-            logger.warn('[PUBLIC_GROUP_BOOKINGS] api key invalid')
-            return authError
-        }
+        const authResult = await resolveApiKey(request)
+        if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
+        const { salonId } = authResult
 
         let body: PublicGroupBookingRequest
         try {
@@ -87,12 +85,6 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = createAdminSupabaseClient()
-        const salonId = getSalonId(request)
-
-        if (!salonId) {
-            logger.error('[PUBLIC_GROUP_BOOKINGS] missing PUBLIC_SALON_ID')
-            return NextResponse.json({ error: 'PUBLIC_SALON_ID is not configured' }, { status: 500 })
-        }
 
         logger.info('[PUBLIC_GROUP_BOOKINGS] payload', { itemsCount: items.length })
 

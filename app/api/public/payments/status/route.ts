@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
-import { getSalonId } from '@/lib/utils/salon'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { logger } from '@/lib/logger'
 import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { setCorsHeaders } from '@/lib/middleware/cors'
 
 function resolveMaybeEncryptedSecret(value: string | null): string | null {
     if (!value) return null
@@ -63,17 +63,9 @@ export async function GET(request: NextRequest) {
         hasSalonHeader: Boolean(request.headers.get('X-Salon-Id')),
     })
 
-    const authError = validateApiKey(request)
-    if (authError) {
-        logger.warn('[PUBLIC_PAYMENT_STATUS] api key invalid')
-        return authError
-    }
-
-    const salonId = getSalonId(request)
-    if (!salonId) {
-        logger.error('[PUBLIC_PAYMENT_STATUS] missing salon id')
-        return NextResponse.json({ error: 'PUBLIC_SALON_ID is not configured' }, { status: 500 })
-    }
+    const authResult = await resolveApiKey(request)
+    if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
+    const { salonId } = authResult
 
     const sessionId = request.nextUrl.searchParams.get('sessionId')
     if (!sessionId) {
@@ -84,7 +76,7 @@ export async function GET(request: NextRequest) {
     logger.info('[PUBLIC_PAYMENT_STATUS] payload parsed', {
         salonId,
         sessionId,
-        salonSource: request.headers.get('X-Salon-Id') ? 'header' : 'env',
+        salonSource: 'api-key',
     })
 
     const supabase = createAdminSupabaseClient()
