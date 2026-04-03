@@ -265,12 +265,27 @@ export class Przelewy24Client {
     const match = a.length === b.length && timingSafeEqual(a, b)
 
     if (!match) {
+      // Also try with reportKey (some P24 accounts use raport key for signing instead of CRC key)
+      const signWithReportKey = this.config.apiKey !== this.config.crc
+        ? this.generateNotificationSign({
+            sessionId: notification.sessionId,
+            orderId: notification.orderId,
+            amount: notification.amount,
+            currency: notification.currency,
+            crc: this.config.apiKey,
+          })
+        : null
+
       logger.warn('[P24_SIGN] signature mismatch', {
         sessionId: notification.sessionId,
+        crcPrefix: this.config.crc.substring(0, 4),
         expectedPrefix: expectedSign.substring(0, 8),
         receivedPrefix: notification.sign.substring(0, 8),
         expectedLength: a.length,
         receivedLength: b.length,
+        matchesWithApiKey: signWithReportKey
+          ? Buffer.from(signWithReportKey).toString() === notification.sign
+          : 'same-as-crc',
       })
     }
 
