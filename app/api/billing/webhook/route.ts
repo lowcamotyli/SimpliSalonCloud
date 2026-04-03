@@ -226,7 +226,18 @@ async function createP24ClientForSalon(admin: any, salonId: string) {
   const apiKey = resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
   const apiUrl = settings?.p24_api_url?.trim()
 
-  if (merchantId && posId && crc && apiUrl) {
+  const usingDb = !!(merchantId && posId && crc && apiUrl)
+  logger.info('[BILLING_WEBHOOK] p24 client source', {
+    salonId,
+    source: usingDb ? 'db' : 'env',
+    posId: usingDb ? posId : 'from-env',
+    crcPresent: !!crc,
+    crcEncrypted: isEncryptedPayload(settings?.p24_crc ?? null),
+    apiUrlPresent: !!apiUrl,
+    merchantIdPresent: !!merchantId,
+  })
+
+  if (usingDb) {
     return createPrzelewy24Client({
       merchantId,
       posId,

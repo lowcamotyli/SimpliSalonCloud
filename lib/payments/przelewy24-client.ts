@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'crypto'
 import { getAppUrl } from '@/lib/config/app-url'
+import { logger } from '@/lib/logger'
 
 /**
  * Przelewy24 Client
@@ -261,7 +262,19 @@ export class Przelewy24Client {
 
     const a = Buffer.from(expectedSign)
     const b = Buffer.from(notification.sign)
-    return a.length === b.length && timingSafeEqual(a, b)
+    const match = a.length === b.length && timingSafeEqual(a, b)
+
+    if (!match) {
+      logger.warn('[P24_SIGN] signature mismatch', {
+        sessionId: notification.sessionId,
+        expectedPrefix: expectedSign.substring(0, 8),
+        receivedPrefix: notification.sign.substring(0, 8),
+        expectedLength: a.length,
+        receivedLength: b.length,
+      })
+    }
+
+    return match
   }
 
   /**
