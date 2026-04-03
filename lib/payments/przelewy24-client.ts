@@ -252,13 +252,14 @@ export class Przelewy24Client {
    * @returns true jeśli sygnatura jest poprawna
    */
   verifyNotificationSignature(notification: P24NotificationData): boolean {
-    const expectedSign = this.generateNotificationSign({
+    const notificationSignInput = {
       sessionId: notification.sessionId,
       orderId: notification.orderId,
       amount: notification.amount,
       currency: notification.currency,
       crc: this.config.crc,
-    })
+    }
+    const expectedSign = this.generateNotificationSign(notificationSignInput)
 
     const a = Buffer.from(expectedSign)
     const b = Buffer.from(notification.sign)
@@ -279,6 +280,10 @@ export class Przelewy24Client {
       logger.warn('[P24_SIGN] signature mismatch', {
         sessionId: notification.sessionId,
         crcPrefix: this.config.crc.substring(0, 4),
+        amount: notification.amount,
+        currency: notification.currency,
+        orderId: notification.orderId,
+        hashInput: JSON.stringify(notificationSignInput).replace(this.config.crc, '[CRC]'),
         expectedPrefix: expectedSign.substring(0, 8),
         receivedPrefix: notification.sign.substring(0, 8),
         expectedLength: a.length,
