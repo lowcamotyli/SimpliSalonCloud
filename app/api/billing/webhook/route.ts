@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
     if (payload.sessionId.startsWith('p24_')) {
       const { data: latestBookingPayment, error: bookingPaymentError } = await admin
         .from('booking_payments')
-        .select('id, salon_id')
+        .select('id, salon_id, booking_id')
         .eq('p24_session_id', payload.sessionId)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -338,6 +338,16 @@ export async function POST(request: NextRequest) {
 
         if (paidUpdateError) {
           throw new Error(`Failed to mark booking payment as paid: ${paidUpdateError.message}`)
+        }
+
+        const { error: bookingUpdateError } = await admin
+          .from('bookings')
+          .update({ status: 'confirmed' })
+          .eq('id', latestBookingPayment.booking_id)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (bookingUpdateError) {
+          throw new Error(`Failed to confirm booking after payment: ${bookingUpdateError.message}`)
         }
 
         logger.info('[BILLING_WEBHOOK] booking payment marked paid', {
