@@ -72,8 +72,6 @@ async function createP24ClientForSalon(supabase: ReturnType<typeof createAdminSu
       posIdSuffix: posId.slice(-3),
       apiUrl,
       hasApiKey: Boolean(apiKey || crc),
-      crcPrefix: crc.substring(0, 4),
-      apiKeyPrefix: (apiKey || crc).substring(0, 4),
     })
 
     return createPrzelewy24Client({

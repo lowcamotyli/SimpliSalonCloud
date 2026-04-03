@@ -226,18 +226,7 @@ async function createP24ClientForSalon(admin: any, salonId: string) {
   const apiKey = resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
   const apiUrl = settings?.p24_api_url?.trim()
 
-  const usingDb = !!(merchantId && posId && crc && apiUrl)
-  logger.info('[BILLING_WEBHOOK] p24 client source', {
-    salonId,
-    source: usingDb ? 'db' : 'env',
-    posId: usingDb ? posId : 'from-env',
-    crcPresent: !!crc,
-    crcEncrypted: isEncryptedPayload(settings?.p24_crc ?? null),
-    apiUrlPresent: !!apiUrl,
-    merchantIdPresent: !!merchantId,
-  })
-
-  if (usingDb) {
+  if (merchantId && posId && crc && apiUrl) {
     return createPrzelewy24Client({
       merchantId,
       posId,
@@ -270,19 +259,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    logger.info('[BILLING_WEBHOOK] full payload', {
-      merchantId: payload.merchantId,
-      posId: payload.posId,
-      sessionId: payload.sessionId,
-      amount: payload.amount,
-      originAmount: payload.originAmount,
-      currency: payload.currency,
-      orderId: payload.orderId,
-      methodId: payload.methodId,
-      statement: payload.statement,
-      signPrefix: payload.sign.substring(0, 8),
-    })
-
     logger.info('[BILLING_WEBHOOK] start', {
       pathname: request.nextUrl.pathname,
       host: request.headers.get('host') ?? undefined,
