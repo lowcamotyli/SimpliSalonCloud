@@ -279,6 +279,7 @@ export async function POST(request: NextRequest) {
       currency: payload.currency,
       orderId: payload.orderId,
       methodId: payload.methodId,
+      statement: payload.statement,
       signPrefix: payload.sign.substring(0, 8),
     })
 
