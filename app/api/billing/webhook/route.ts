@@ -270,6 +270,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    logger.info('[BILLING_WEBHOOK] full payload', {
+      merchantId: payload.merchantId,
+      posId: payload.posId,
+      sessionId: payload.sessionId,
+      amount: payload.amount,
+      originAmount: payload.originAmount,
+      currency: payload.currency,
+      orderId: payload.orderId,
+      methodId: payload.methodId,
+      signPrefix: payload.sign.substring(0, 8),
+    })
+
     logger.info('[BILLING_WEBHOOK] start', {
       pathname: request.nextUrl.pathname,
       host: request.headers.get('host') ?? undefined,
