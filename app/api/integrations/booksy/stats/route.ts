@@ -31,20 +31,27 @@ export async function GET(request: NextRequest) {
 
     const { data: settings } = await admin
       .from('salon_settings')
-      .select('booksy_last_sync_at, booksy_sync_stats')
+      .select('booksy_last_sync_at, booksy_sync_stats, updated_at')
       .eq('salon_id', profile.salon_id)
       .single()
 
     const { data: latestSyncLog } = await admin
       .from('booksy_sync_logs')
-      .select('sync_results, finished_at')
+      .select('sync_results, finished_at, started_at')
       .eq('salon_id', profile.salon_id)
       .order('started_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
     const latestSyncResults = Array.isArray(latestSyncLog?.sync_results) ? (latestSyncLog.sync_results as any[]) : []
-    const requiresReauth = latestSyncResults.some(entry => entry?.code === 'GMAIL_REAUTH_REQUIRED')
+    const hasReauthError = latestSyncResults.some(entry => entry?.code === 'GMAIL_REAUTH_REQUIRED')
+    // If tokens were updated after the last error log, the user already reconnected — do not show warning
+    const tokenRefreshedAfterError =
+      hasReauthError &&
+      settings?.updated_at != null &&
+      latestSyncLog?.started_at != null &&
+      new Date(settings.updated_at) > new Date(latestSyncLog.started_at)
+    const requiresReauth = hasReauthError && !tokenRefreshedAfterError
 
     const { count: totalBookings } = await admin
       .from('bookings')
