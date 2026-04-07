@@ -47,7 +47,8 @@ export function useCreateClient() {
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.error || 'Failed to create client')
+        const message = error.details?.[0]?.message || error.message || 'Nie udało się dodać klienta'
+        throw new Error(message)
       }
 
       return res.json()

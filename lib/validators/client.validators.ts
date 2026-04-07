@@ -4,9 +4,9 @@ export const createClientSchema = z.object({
     salon_id: z.string().uuid(),
     first_name: z.string().min(1, 'Imię jest wymagane').max(50),
     last_name: z.string().min(1, 'Nazwisko jest wymagane').max(50),
-    phone: z.string().regex(
-        /^\+?[0-9]{9,15}$/,
-        'Numer telefonu musi mieć 9-15 cyfr'
+    phone: z.preprocess(
+        (val) => typeof val === 'string' ? val.replace(/[\s\-\(\)]/g, '') : val,
+        z.string().regex(/^\+?[0-9]{9,15}$/, 'Numer telefonu musi mieć 9-15 cyfr')
     ),
     email: z.string().email('Nieprawidłowy adres email').optional().or(z.literal('')),
     notes: z.string().max(1000).optional(),
