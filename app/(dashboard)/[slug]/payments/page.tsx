@@ -146,6 +146,9 @@ export default async function PaymentsPage({
   const response = await fetch(fetchUrl, {
     headers: {
       cookie: cookieHeader,
+      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET && {
+        'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
+      }),
     },
     cache: 'no-store',
   })
