@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useSettings, useUpdateSettings } from '@/hooks/use-settings'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -24,9 +24,22 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import {
-  Mail, CheckCircle, XCircle, RefreshCw, AlertTriangle,
-  Calendar, User, Scissors, Bell, BarChart3, Clock,
-  LogOut, Settings2, Info, ChevronRight, Loader2
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Info,
+  Loader2,
+  LogOut,
+  Mail,
+  RefreshCw,
+  Scissors,
+  Settings2,
+  User,
+  XCircle,
 } from 'lucide-react'
 import type { Database } from '@/types/supabase'
 import { BooksyPendingEmails } from '@/components/settings/booksy-pending-emails'
@@ -36,6 +49,8 @@ type SalonRow = Database['public']['Tables']['salons']['Row']
 interface BooksyStats {
   lastSyncAt: string | null
   syncStats: { total: number; success: number; errors: number }
+  connectionStatus?: 'connected' | 'reauth_required'
+  connectionMessage?: string | null
   bookings: { total: number; scheduled: number; cancelled: number }
 }
 
@@ -60,14 +75,10 @@ export default function BooksySettingsPage() {
     queryKey: ['salon', slug],
     queryFn: async () => {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('salons')
-        .select('*')
-        .eq('slug', slug)
-        .single()
+      const { data, error } = await supabase.from('salons').select('*').eq('slug', slug).single()
       if (error) throw error
       return data
-    }
+    },
   })
 
   const salonId = salon?.id ?? ''
@@ -77,7 +88,6 @@ export default function BooksySettingsPage() {
   const isConnected = !!settings?.booksy_enabled && !!settings?.booksy_gmail_email
   const gmailEmail = settings?.booksy_gmail_email || ''
 
-  // Local state for editable settings
   const [syncInterval, setSyncInterval] = useState('15')
   const [senderFilter, setSenderFilter] = useState('noreply@booksy.com')
   const [autoCreateClients, setAutoCreateClients] = useState(true)
@@ -90,7 +100,6 @@ export default function BooksySettingsPage() {
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false)
   const [settingsDirty, setSettingsDirty] = useState(false)
 
-  // Sync local state from settings
   useEffect(() => {
     if (settings) {
       setSyncInterval(String(settings.booksy_sync_interval_minutes ?? 15))
@@ -104,7 +113,6 @@ export default function BooksySettingsPage() {
     }
   }, [settings])
 
-  // Stats query
   const { data: stats, refetch: refetchStats } = useQuery<BooksyStats>({
     queryKey: ['booksy-stats', salonId],
     queryFn: async () => {
@@ -116,7 +124,6 @@ export default function BooksySettingsPage() {
     refetchInterval: 60_000,
   })
 
-  // Logs query
   const { data: logsData, refetch: refetchLogs } = useQuery<{ bookings: BooksyLog[] }>({
     queryKey: ['booksy-logs', salonId],
     queryFn: async () => {
@@ -126,6 +133,8 @@ export default function BooksySettingsPage() {
     },
     enabled: isConnected && !!salonId,
   })
+
+  const needsReauth = stats?.connectionStatus === 'reauth_required'
 
   const handleConnectGmail = () => {
     window.location.href = '/api/integrations/booksy/auth'
@@ -140,10 +149,11 @@ export default function BooksySettingsPage() {
     try {
       const res = await fetch('/api/integrations/booksy/disconnect', { method: 'POST' })
       if (!res.ok) throw new Error((await res.json()).error)
-      toast.success('Integracja Booksy została odłączona')
+      toast.success('Integracja Booksy zostala odlaczona')
       queryClient.invalidateQueries({ queryKey: ['settings', salonId] })
+      queryClient.invalidateQueries({ queryKey: ['booksy-stats', salonId] })
     } catch (error: any) {
-      toast.error('Błąd odłączania: ' + error.message)
+      toast.error(`Blad odlaczania: ${error.message}`)
     } finally {
       setIsDisconnecting(false)
       setShowDisconnectDialog(false)
@@ -158,6 +168,7 @@ export default function BooksySettingsPage() {
 
       if (data?.code === 'GMAIL_REAUTH_REQUIRED') {
         toast.error('Sesja Gmail wygasla. Trwa ponowne laczenie konta...')
+        void refetchStats()
         setTimeout(() => {
           window.location.href = '/api/integrations/booksy/auth'
         }, 800)
@@ -165,15 +176,15 @@ export default function BooksySettingsPage() {
       }
 
       if (data.success) {
-        toast.success(`Synchronizacja zakończona: ${data.successful} nowych, ${data.errors} błędów`)
-        refetchStats()
-        refetchLogs()
+        toast.success(`Synchronizacja zakonczona: ${data.successful} nowych, ${data.errors} bledow`)
+        void refetchStats()
+        void refetchLogs()
         queryClient.invalidateQueries({ queryKey: ['settings', salonId] })
       } else {
-        toast.error('Błąd synchronizacji: ' + data.error)
+        toast.error(`Blad synchronizacji: ${data.error}`)
       }
     } catch (error: any) {
-      toast.error('Błąd: ' + error.message)
+      toast.error(`Blad: ${error.message}`)
     } finally {
       setIsSyncing(false)
     }
@@ -182,7 +193,7 @@ export default function BooksySettingsPage() {
   const handleSaveSettings = async () => {
     try {
       await updateSettings.mutateAsync({
-        booksy_sync_interval_minutes: parseInt(syncInterval),
+        booksy_sync_interval_minutes: parseInt(syncInterval, 10),
         booksy_sender_filter: senderFilter,
         booksy_auto_create_clients: autoCreateClients,
         booksy_auto_create_services: autoCreateServices,
@@ -192,7 +203,7 @@ export default function BooksySettingsPage() {
       })
       setSettingsDirty(false)
     } catch {
-      // error handled by hook
+      // handled in hook
     }
   }
 
@@ -201,15 +212,18 @@ export default function BooksySettingsPage() {
   const formatDate = (iso: string | null) => {
     if (!iso) return 'Nigdy'
     return new Date(iso).toLocaleString('pl-PL', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
   const statusBadge = (status: string) => {
     if (status === 'scheduled') return <Badge variant="default" className="text-xs">Zaplanowana</Badge>
     if (status === 'cancelled') return <Badge variant="destructive" className="text-xs">Anulowana</Badge>
-    if (status === 'completed') return <Badge variant="secondary" className="text-xs">Zakończona</Badge>
+    if (status === 'completed') return <Badge variant="secondary" className="text-xs">Zakonczona</Badge>
     return <Badge variant="outline" className="text-xs">{status}</Badge>
   }
 
@@ -222,8 +236,7 @@ export default function BooksySettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      {/* Header */}
+    <div className="max-w-3xl space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Integracja Booksy</h1>
@@ -232,17 +245,30 @@ export default function BooksySettingsPage() {
           </p>
         </div>
         <Badge
-          variant={isConnected ? 'success' : 'secondary'}
+          variant={isConnected && !needsReauth ? 'success' : 'secondary'}
           className="mt-1 flex items-center gap-1.5 px-3 py-1.5 text-sm"
         >
-          {isConnected
-            ? <><CheckCircle className="h-4 w-4" /> Połączono</>
-            : <><XCircle className="h-4 w-4" /> Nie połączono</>
-          }
+          {isConnected ? (
+            needsReauth ? (
+              <>
+                <AlertTriangle className="h-4 w-4" />
+                Wymaga ponownego polaczenia
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Polaczono
+              </>
+            )
+          ) : (
+            <>
+              <XCircle className="h-4 w-4" />
+              Nie polaczono
+            </>
+          )}
         </Badge>
       </div>
 
-      {/* ── 1. STATUS POŁĄCZENIA ── */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -254,16 +280,28 @@ export default function BooksySettingsPage() {
           {!isConnected ? (
             <div className="space-y-3">
               <p className="text-sm text-gray-600">
-                Połącz konto Gmail, z którego Booksy wysyła powiadomienia o rezerwacjach.
-                System będzie automatycznie odczytywał te emaile i tworzył wizyty w kalendarzu.
+                Polacz konto Gmail, z ktorego Booksy wysyla powiadomienia o rezerwacjach.
+                System bedzie automatycznie odczytywal te maile i tworzyl wizyty w kalendarzu.
               </p>
               <Button onClick={handleConnectGmail} className="gap-2">
                 <Mail className="h-4 w-4" />
-                Połącz z Gmail
+                Polacz z Gmail
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
+              {needsReauth && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-medium">Synchronizacja zatrzymana</p>
+                      <p>{stats?.connectionMessage ?? 'Sesja Gmail wygasla. Polacz konto ponownie, aby wznowic synchronizacje.'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
@@ -271,7 +309,9 @@ export default function BooksySettingsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{gmailEmail}</p>
-                    <p className="text-xs text-gray-500">Połączone konto Gmail</p>
+                    <p className="text-xs text-gray-500">
+                      {needsReauth ? 'Konto wymaga ponownego polaczenia' : 'Polaczone konto Gmail'}
+                    </p>
                   </div>
                 </div>
                 <Button
@@ -281,7 +321,7 @@ export default function BooksySettingsPage() {
                   className="gap-1.5 text-xs"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  Zmień konto
+                  {needsReauth ? 'Polacz ponownie' : 'Zmien konto'}
                 </Button>
               </div>
 
@@ -293,22 +333,23 @@ export default function BooksySettingsPage() {
                   disabled={isDisconnecting}
                   className="gap-1.5"
                 >
-                  {isDisconnecting
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <LogOut className="h-3.5 w-3.5" />
-                  }
-                  Odłącz integrację
+                  {isDisconnecting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <LogOut className="h-3.5 w-3.5" />
+                  )}
+                  Odlacz integracje
                 </Button>
-                <p className="text-xs text-gray-400">Istniejące rezerwacje nie zostaną usunięte</p>
+                <p className="text-xs text-gray-400">Istniejace rezerwacje nie zostana usuniete</p>
               </div>
 
               <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Odłączyć integrację Booksy?</AlertDialogTitle>
+                    <AlertDialogTitle>Odlaczyc integracje Booksy?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Spowoduje to usunięcie połączenia z Gmail. Synchronizacja zostanie zatrzymana.
-                      Istniejące rezerwacje w kalendarzu nie zostaną usunięte.
+                      Spowoduje to usuniecie polaczenia z Gmail. Synchronizacja zostanie zatrzymana.
+                      Istniejace rezerwacje w kalendarzu nie zostana usuniete.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -317,8 +358,8 @@ export default function BooksySettingsPage() {
                       onClick={handleDisconnect}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Odłącz
+                      {isDisconnecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Odlacz
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -328,7 +369,6 @@ export default function BooksySettingsPage() {
         </CardContent>
       </Card>
 
-      {/* ── 2. STATYSTYKI (tylko gdy połączono) ── */}
       {isConnected && (
         <Card>
           <CardHeader>
@@ -337,17 +377,13 @@ export default function BooksySettingsPage() {
                 <BarChart3 className="h-5 w-5 text-emerald-500" />
                 Statystyki synchronizacji
               </CardTitle>
-              <Button
-                size="sm"
-                onClick={handleSync}
-                disabled={isSyncing}
-                className="gap-2"
-              >
-                {isSyncing
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  : <RefreshCw className="h-3.5 w-3.5" />
-                }
-                {isSyncing ? 'Synchronizuję...' : 'Synchronizuj teraz'}
+              <Button size="sm" onClick={handleSync} disabled={isSyncing} className="gap-2">
+                {isSyncing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                {isSyncing ? 'Synchronizuje...' : 'Synchronizuj teraz'}
               </Button>
             </div>
             <CardDescription className="flex items-center gap-1.5 text-xs">
@@ -355,39 +391,23 @@ export default function BooksySettingsPage() {
               Ostatnia synchronizacja: <span className="font-medium">{formatDate(stats?.lastSyncAt ?? null)}</span>
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {needsReauth && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Automatyczny cron nie pobierze nowych maili, dopoki konto Gmail nie zostanie podlaczone ponownie.
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <StatCard
-                label="Emaili przetworzonych (lacznie)"
-                value={stats?.syncStats.total ?? 0}
-                color="blue"
-              />
-              <StatCard
-                label="Sukcesy (lacznie)"
-                value={stats?.syncStats.success ?? 0}
-                color="green"
-              />
-              <StatCard
-                label="Bledy (lacznie)"
-                value={stats?.syncStats.errors ?? 0}
-                color="red"
-              />
-              <StatCard
-                label="Rezerwacje z Booksy"
-                value={stats?.bookings.total ?? 0}
-                color="purple"
-              />
-              <StatCard
-                label="Aktywne"
-                value={stats?.bookings.scheduled ?? 0}
-                color="emerald"
-              />
+              <StatCard label="Emaili przetworzonych" value={stats?.syncStats.total ?? 0} color="blue" />
+              <StatCard label="Sukcesy" value={stats?.syncStats.success ?? 0} color="green" />
+              <StatCard label="Bledy" value={stats?.syncStats.errors ?? 0} color="red" />
+              <StatCard label="Rezerwacje z Booksy" value={stats?.bookings.total ?? 0} color="purple" />
+              <StatCard label="Aktywne" value={stats?.bookings.scheduled ?? 0} color="emerald" />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* ── 3. OPCJE SYNCHRONIZACJI (tylko gdy połączono) ── */}
       {isConnected && (
         <Card>
           <CardHeader>
@@ -397,18 +417,20 @@ export default function BooksySettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Sender filter */}
             <div className="space-y-1.5">
               <Label htmlFor="sender-filter" className="text-sm font-medium">
                 Adres e-mail nadawcy (Booksy)
               </Label>
               <p className="text-xs text-gray-500">
-                Emaile z tego adresu będą pobierane i przetwarzane jako rezerwacje Booksy.
+                Maile z tego adresu beda pobierane i przetwarzane jako rezerwacje Booksy.
               </p>
               <Input
                 id="sender-filter"
                 value={senderFilter}
-                onChange={e => { setSenderFilter(e.target.value); markDirty() }}
+                onChange={(e) => {
+                  setSenderFilter(e.target.value)
+                  markDirty()
+                }}
                 placeholder="noreply@booksy.com"
                 className="max-w-sm font-mono text-sm"
               />
@@ -416,15 +438,15 @@ export default function BooksySettingsPage() {
 
             <div className="border-t" />
 
-            {/* Sync interval */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Interwał automatycznej synchronizacji</Label>
-              <p className="text-xs text-gray-500">
-                Jak często system sprawdza nowe emaile z Booksy.
-              </p>
+              <Label className="text-sm font-medium">Interwal automatycznej synchronizacji</Label>
+              <p className="text-xs text-gray-500">Jak czesto system sprawdza nowe maile z Booksy.</p>
               <Select
                 value={syncInterval}
-                onValueChange={v => { setSyncInterval(v); markDirty() }}
+                onValueChange={(v) => {
+                  setSyncInterval(v)
+                  markDirty()
+                }}
               >
                 <SelectTrigger className="w-48">
                   <SelectValue />
@@ -433,49 +455,53 @@ export default function BooksySettingsPage() {
                   <SelectItem value="5">Co 5 minut</SelectItem>
                   <SelectItem value="15">Co 15 minut</SelectItem>
                   <SelectItem value="30">Co 30 minut</SelectItem>
-                  <SelectItem value="60">Co godzinę</SelectItem>
+                  <SelectItem value="60">Co godzine</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="border-t" />
 
-            {/* Auto-create clients */}
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  <Label className="text-sm font-medium">Auto-tworzenie klientów</Label>
+                  <Label className="text-sm font-medium">Auto-tworzenie klientow</Label>
                 </div>
-                <p className="text-xs text-gray-500 pl-6">
-                  Jeśli klient z Booksy nie istnieje w systemie, zostanie automatycznie dodany.
+                <p className="pl-6 text-xs text-gray-500">
+                  Jesli klient z Booksy nie istnieje w systemie, zostanie automatycznie dodany.
                 </p>
               </div>
               <Switch
                 checked={autoCreateClients}
-                onCheckedChange={v => { setAutoCreateClients(v); markDirty() }}
+                onCheckedChange={(v) => {
+                  setAutoCreateClients(v)
+                  markDirty()
+                }}
               />
             </div>
 
-            {/* Auto-create services */}
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <Scissors className="h-4 w-4 text-gray-400" />
-                  <Label className="text-sm font-medium">Auto-tworzenie usług</Label>
+                  <Label className="text-sm font-medium">Auto-tworzenie uslug</Label>
                 </div>
-                <p className="text-xs text-gray-500 pl-6">
-                  Jeśli usługa z Booksy nie istnieje, zostanie automatycznie dodana.
+                <p className="pl-6 text-xs text-gray-500">
+                  Jesli usluga z Booksy nie istnieje, zostanie automatycznie dodana.
                   {!autoCreateServices && (
-                    <span className="block mt-0.5 text-amber-600 font-medium">
-                      ⚠ Wyłączone — nieznane usługi spowodują błąd synchronizacji.
+                    <span className="mt-0.5 block font-medium text-amber-600">
+                      Wylaczone. Nieznane uslugi spowoduja blad synchronizacji.
                     </span>
                   )}
                 </p>
               </div>
               <Switch
                 checked={autoCreateServices}
-                onCheckedChange={v => { setAutoCreateServices(v); markDirty() }}
+                onCheckedChange={(v) => {
+                  setAutoCreateServices(v)
+                  markDirty()
+                }}
               />
             </div>
 
@@ -491,7 +517,6 @@ export default function BooksySettingsPage() {
         </Card>
       )}
 
-      {/* ── 4. POWIADOMIENIA (tylko gdy połączono) ── */}
       {isConnected && (
         <Card>
           <CardHeader>
@@ -511,31 +536,40 @@ export default function BooksySettingsPage() {
               </div>
               <Switch
                 checked={notifyOnNew}
-                onCheckedChange={v => { setNotifyOnNew(v); markDirty() }}
+                onCheckedChange={(v) => {
+                  setNotifyOnNew(v)
+                  markDirty()
+                }}
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-sm font-medium">Anulowanie rezerwacji</Label>
-                <p className="text-xs text-gray-500">Powiadom gdy klient anuluje wizytę przez Booksy</p>
+                <p className="text-xs text-gray-500">Powiadom gdy klient anuluje wizyte przez Booksy</p>
               </div>
               <Switch
                 checked={notifyOnCancel}
-                onCheckedChange={v => { setNotifyOnCancel(v); markDirty() }}
+                onCheckedChange={(v) => {
+                  setNotifyOnCancel(v)
+                  markDirty()
+                }}
               />
             </div>
 
             {(notifyOnNew || notifyOnCancel) && (
               <div className="space-y-1.5">
                 <Label htmlFor="notify-email" className="text-sm font-medium">
-                  Adres e-mail do powiadomień
+                  Adres e-mail do powiadomien
                 </Label>
                 <Input
                   id="notify-email"
                   type="email"
                   value={notifyEmail}
-                  onChange={e => { setNotifyEmail(e.target.value); markDirty() }}
+                  onChange={(e) => {
+                    setNotifyEmail(e.target.value)
+                    markDirty()
+                  }}
                   placeholder="salon@example.com"
                   className="max-w-sm"
                 />
@@ -556,7 +590,6 @@ export default function BooksySettingsPage() {
 
       {isConnected && <BooksyPendingEmails salonId={salonId} />}
 
-      {/* ── 5. OSTATNIE OPERACJE (tylko gdy połączono) ── */}
       {isConnected && (
         <Card>
           <CardHeader>
@@ -565,17 +598,15 @@ export default function BooksySettingsPage() {
                 <Calendar className="h-5 w-5 text-sky-500" />
                 Ostatnie rezerwacje z Booksy
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => refetchLogs()} className="gap-1.5 text-xs">
+              <Button variant="ghost" size="sm" onClick={() => void refetchLogs()} className="gap-1.5 text-xs">
                 <RefreshCw className="h-3 w-3" />
-                Odśwież
+                Odswiez
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {!logsData?.bookings?.length ? (
-              <p className="text-sm text-gray-500 text-center py-6">
-                Brak przetworzonych rezerwacji z Booksy
-              </p>
+              <p className="py-6 text-center text-sm text-gray-500">Brak przetworzonych rezerwacji z Booksy</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -583,32 +614,35 @@ export default function BooksySettingsPage() {
                     <tr className="border-b text-xs text-gray-500">
                       <th className="pb-2 text-left font-medium">Data wizyty</th>
                       <th className="pb-2 text-left font-medium">Klient</th>
-                      <th className="pb-2 text-left font-medium">Usługa</th>
+                      <th className="pb-2 text-left font-medium">Usluga</th>
                       <th className="pb-2 text-left font-medium">Pracownik</th>
                       <th className="pb-2 text-left font-medium">Status</th>
                       <th className="pb-2 text-right font-medium">Cena</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {logsData.bookings.map(b => (
+                    {logsData.bookings.map((b) => (
                       <tr key={b.id} className="hover:bg-gray-50">
-                        <td className="py-2.5 pr-4 text-xs text-gray-600 whitespace-nowrap">
+                        <td className="whitespace-nowrap py-2.5 pr-4 text-xs text-gray-600">
                           {new Date(`${b.booking_date}T${b.booking_time}`).toLocaleString('pl-PL', {
-                            day: '2-digit', month: '2-digit', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
                           })}
                         </td>
                         <td className="py-2.5 pr-4">
-                          <p className="font-medium text-gray-900">{b.clients?.full_name ?? '—'}</p>
+                          <p className="font-medium text-gray-900">{b.clients?.full_name ?? '-'}</p>
                           <p className="text-xs text-gray-400">{b.clients?.phone}</p>
                         </td>
-                        <td className="py-2.5 pr-4 text-gray-700">{b.services?.name ?? '—'}</td>
+                        <td className="py-2.5 pr-4 text-gray-700">{b.services?.name ?? '-'}</td>
                         <td className="py-2.5 pr-4 text-gray-700">
-                          {b.employees ? `${b.employees.first_name} ${b.employees.last_name}` : '—'}
+                          {b.employees ? `${b.employees.first_name} ${b.employees.last_name}` : '-'}
                         </td>
                         <td className="py-2.5 pr-4">{statusBadge(b.status)}</td>
-                        <td className="py-2.5 text-right text-gray-700 whitespace-nowrap">
-                          {b.base_price ? `${b.base_price.toFixed(2)} zł` : '—'}
+                        <td className="whitespace-nowrap py-2.5 text-right text-gray-700">
+                          {b.base_price ? `${b.base_price.toFixed(2)} zl` : '-'}
                         </td>
                       </tr>
                     ))}
@@ -620,35 +654,42 @@ export default function BooksySettingsPage() {
         </Card>
       )}
 
-      {/* ── 6. JAK TO DZIAŁA ── */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Info className="h-5 w-5 text-gray-400" />
-            Jak działa integracja?
+            Jak dziala integracja?
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           {[
             {
               step: '1',
-              title: 'Połącz Gmail',
-              desc: 'System uzyskuje dostęp do Twojej skrzynki Gmail, gdzie Booksy wysyła powiadomienia o rezerwacjach.'
+              title: 'Polacz Gmail',
+              desc: 'System uzyskuje dostep do skrzynki Gmail, gdzie Booksy wysyla powiadomienia o rezerwacjach.',
             },
             {
               step: '2',
               title: 'Automatyczna synchronizacja',
-              desc: 'System cyklicznie sprawdza nowe emaile z Booksy i automatycznie tworzy lub aktualizuje wizyty w kalendarzu.'
+              desc: 'System cyklicznie sprawdza nowe maile z Booksy i automatycznie tworzy lub aktualizuje wizyty w kalendarzu.',
             },
             {
               step: '3',
-              title: 'Obsługiwane akcje',
-              items: ['Nowa rezerwacja — tworzy wizytę w kalendarzu', 'Zmiana terminu — aktualizuje istniejącą wizytę', 'Anulowanie — oznacza wizytę jako anulowaną']
+              title: 'Obslugiwane akcje',
+              items: [
+                'Nowa rezerwacja tworzy wizyte w kalendarzu',
+                'Zmiana terminu aktualizuje istniejaca wizyte',
+                'Anulowanie oznacza wizyte jako anulowana',
+              ],
             },
             {
               step: '4',
               title: 'Dopasowanie danych',
-              items: ['Klientów po numerze telefonu (tworzy nowych jeśli włączone)', 'Pracowników po imieniu lub nazwisku', 'Usług po nazwie (tworzy nowe jeśli włączone)']
+              items: [
+                'Klienci sa laczeni po numerze telefonu',
+                'Pracownicy sa dopasowywani po imieniu lub nazwisku',
+                'Uslugi sa dopasowywane po nazwie',
+              ],
             },
           ].map(({ step, title, desc, items }) => (
             <div key={step} className="flex gap-3">
@@ -660,7 +701,7 @@ export default function BooksySettingsPage() {
                 {desc && <p className="mt-0.5 text-xs">{desc}</p>}
                 {items && (
                   <ul className="mt-1 space-y-0.5">
-                    {items.map(item => (
+                    {items.map((item) => (
                       <li key={item} className="flex items-start gap-1.5 text-xs">
                         <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-gray-400" />
                         {item}
@@ -685,6 +726,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
     purple: 'bg-purple-50 text-purple-700',
     emerald: 'bg-emerald-50 text-emerald-700',
   }
+
   return (
     <div className={`rounded-lg p-3 ${colorMap[color] ?? 'bg-gray-50 text-gray-700'}`}>
       <p className="text-2xl font-bold">{value}</p>
@@ -692,4 +734,3 @@ function StatCard({ label, value, color }: { label: string; value: number; color
     </div>
   )
 }
-

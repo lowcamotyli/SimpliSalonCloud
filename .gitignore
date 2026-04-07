@@ -49,3 +49,5 @@ Nowy\ Dokument\ tekstowy*.txt
 *.tmp
 test-output.txt
 test-results/
+.playwright/
+output/playwright/

@@ -2,34 +2,36 @@
 
 ## Primary Mode: Claude as Orchestrator
 
-Claude Code is the primary orchestrator. Codex and Gemini are delegated tools.
+Claude Code is the primary orchestrator. Codex CLI and codex-dad are the delegated tools.
 
 ### Claude Delegation Rules
 | Task | Tool | Why |
 |------|------|-----|
-| SQL / migrations | Gemini CLI | Deterministic output |
-| New TS/TSX > 150 lines | Gemini CLI | Token efficiency |
-| New TS/TSX 20–150 lines | Codex CLI | Reads local context automatically |
+| SQL / migrations | codex-dad | Better repo-aware worker for larger or sensitive tasks |
+| New TS/TSX > 150 lines | codex-dad | Better for large-file drafting and local-project reading |
+| New TS/TSX 20-150 lines | Codex CLI | Reads local context automatically |
 | Edits to existing files | Claude directly | Edit tool is cheapest |
 | Short fixes / snippets < 30 lines | Claude directly | Always |
 | Code review after generation | Codex CLI (`--ephemeral`) | Read-only, no changes |
 
-### Gemini Prompt Rules (when invoked by Claude or Codex)
-> Coding conventions and output format are in `~/.gemini/GEMINI.md` and `GEMINI.md` (project root).
-> Gemini loads them automatically — do NOT repeat them in prompts.
-> Prompts should contain ONLY: target file path + types/interfaces needed + task specification.
+### codex-dad Prompt Rules
+> codex-dad runs through Claude's wrapper via Git Bash on Windows:
+> `$env:DAD_PROMPT='...'; & 'D:\Git\bin\bash.exe' "$HOME/.claude/scripts/dad-exec.sh"`.
+> Keep prompts task-focused: target file path, needed context paths, and the exact specification.
+> Do not add stack boilerplate when repo context is already present in `AGENTS.md`.
 
-### Gemini-First Triggers
+### codex-dad First Triggers
 - File length >= 300 lines or size > 200 KB
 - Combined analysis context > 300 KB
 - Pure business logic handlers > 150 lines (no UI)
+- Reading or summarizing files > 50 lines when line-precise `view_range` is not needed
 
-### Gemini Usage Modes
-- `summary`: default for large-file reading and extraction.
-- `draft`: first-pass code only when the task explicitly needs generation.
-- `direct`: Codex can write directly for small/local edits or when Gemini output is inconsistent.
+### codex-dad Usage Modes
+- `summary`: default for large-file reading and extraction
+- `draft`: first-pass code only when the task explicitly needs generation
+- `direct`: Codex can write directly for small/local edits or when dad output is unnecessary
 
-### Gemini Draft-First (recommended)
+### codex-dad Draft-First
 - Use `draft` by default for:
 1. New or heavily refactored UI/API files >= 150 lines.
 2. Large existing files >= 300 lines when changes span multiple sections.
@@ -40,17 +42,17 @@ Claude Code is the primary orchestrator. Codex and Gemini are delegated tools.
 
 ### Responsibility Split
 1. Claude owns planning, architecture, and orchestration.
-2. Gemini owns large-file reading, summarization, and first-pass code drafts.
-3. Codex owns final review of Gemini-generated code before acceptance.
+2. codex-dad owns large-file reading, summarization, and first-pass drafts when delegation is useful.
+3. Codex owns final review of generated code before acceptance.
 4. Codex owns critical debugging for auth, payments, permissions, and DB migrations.
 5. Codex owns final typecheck interpretation and ship/no-ship decision.
 
 ### Review and Safety
-- Every Gemini-generated code change must receive Codex review before merge.
-- For auth, payments, permissions, webhooks, and DB migrations -- Gemini output is advisory only.
+- Every delegated code change must receive Codex review before merge.
+- For auth, payments, permissions, webhooks, and DB migrations, delegated output is advisory until validated against source.
 - Force direct source verification when:
   - line-level precision is required
-  - Gemini output is inconsistent with repository state
+  - delegated output is inconsistent with repository state
   - security-sensitive behavior is involved
 
 ### Supabase Migration History Playbook
@@ -65,14 +67,14 @@ Claude Code is the primary orchestrator. Codex and Gemini are delegated tools.
 
 ---
 
-## Fallback Mode: Codex + Gemini (when Claude is unavailable)
+## Fallback Mode: Codex + codex-dad (when Claude is unavailable)
 
 Use this mode when Claude context window is exhausted. Codex takes the orchestrator role.
 
 ### Codex as Orchestrator
 - Codex reads `AGENTS.md` (this file) and `CLAUDE.md` for project context.
 - Codex reads local project files -- always tell it which files to read for context.
-- Codex delegates large/complex generation to Gemini.
+- Codex delegates large-file reading or heavy first-pass drafting to codex-dad when useful.
 
 ### Codex Invocation (Windows, project directory)
 ```powershell
@@ -83,20 +85,25 @@ Create FILE: [path]
 Write directly.'
 ```
 
-### Codex -> Gemini Delegation (for large files)
+### Codex -> codex-dad Delegation (for large files)
 ```powershell
-gemini -p "Generate [path]. Types: [paste interfaces]. Requirements: [spec]" --output-format text 2>/dev/null | grep -v "^Loaded" > [path]
+$env:DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/[file]. TASK: [what to summarize or generate]. FORMAT: Bullet list. LIMIT: Max 20 lines unless architecture or security context requires full coverage."; & 'D:\Git\bin\bash.exe' "$HOME/.claude/scripts/dad-exec.sh"
 ```
-Then: `head -3 [path]` to verify no prose prefix, `npx tsc --noEmit` for type errors.
+For dad paths use `/mnt/d/SimpliSalonCLoud/...`, not `d:\...`.
 
-### Codex Review (after Gemini output)
+### codex-dad Reading Pattern
+```powershell
+$env:DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/[path1] and /mnt/d/SimpliSalonCLoud/[path2]. TASK: [question]. FORMAT: Bulleted list. LIMIT: Max 20 lines per file."; & 'D:\Git\bin\bash.exe' "$HOME/.claude/scripts/dad-exec.sh"
+```
+
+### Codex Review (after delegated output)
 ```powershell
 codex exec --ephemeral 'Review [path]. Focus: bugs, security, type correctness. No file modifications.'
 ```
 
-### TASK.md — universal task brief
+### TASK.md -- universal task brief
 
-`TASK.md` in project root is the standard way to define work for Codex+Gemini stack.
+`TASK.md` in project root is the standard way to define work for Codex plus codex-dad.
 Used in three scenarios:
 - **User starts a task directly** with Codex (no Claude involved)
 - **Claude hands off** mid-task when context window is ~70-80% full
@@ -104,18 +111,18 @@ Used in three scenarios:
 
 **Format:**
 ```markdown
-# TASK — [task name] — [date]
+# TASK -- [task name] -- [date]
 
 ## Objective
 [1-2 sentences: what we are building / fixing]
 
 ## Context files to read
-- [path] — [why relevant]
+- [path] -- [why relevant]
 
 ## Status
 [x] Done: [file/step]
-[ ] NEXT: [file/step] — [exact spec]
-[ ] TODO: [file/step] — [exact spec]
+[ ] NEXT: [file/step] -- [exact spec]
+[ ] TODO: [file/step] -- [exact spec]
 
 ## Key decisions / constraints
 - [decision or constraint Codex must respect]
@@ -134,7 +141,7 @@ codex exec --dangerously-bypass-approvals-and-sandbox 'Read TASK.md, [file1], [f
 
 **Claude handoff (context ~70-80% full):**
 - Claude writes TASK.md with current Done/NEXT/TODO status
-- Claude says: "Kontekst się kończy — zapisałem TASK.md. Uruchom komendę z sekcji Resume command."
+- Claude says: "Kontekst sie konczy -- zapisalem TASK.md. Uruchom komende z sekcji Resume command."
 - User copies the command and runs it in terminal
 
 ---
@@ -144,7 +151,7 @@ codex exec --dangerously-bypass-approvals-and-sandbox 'Read TASK.md, [file1], [f
 - Use non-ASCII only if the target file already uses it or there is explicit product/content need.
 
 ## Output Discipline
-- When Gemini is used, state it briefly and list analyzed files.
+- When codex-dad is used, state it briefly and list analyzed files.
 - Keep extracted snippets minimal and focused on decisions, patching, and validation.
 
 ## Context Handoff (Claude -> user)

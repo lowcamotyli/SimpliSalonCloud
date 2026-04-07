@@ -65,3 +65,74 @@ Tydzień 4:  sprint-11 → sprint-12              (Employee shifts — niezależ
 4. **Sprint-03** — Payroll reports (quick win)
 5. **Sprint-04** — Add-ons UI (quick win)
 6. **Sprint-05/06** — Gmail (nice-to-have)
+
+---
+
+## Fala 2 — SS2.2 (z transkrypcji 2026-04-03)
+
+Źródło wymagań: `plans/SS2.2-wymagania-z-transkrypcji-2026-04-03.md`
+
+### Paczki wdrożeniowe
+
+| Paczka | Sprinty | Temat | Priorytet |
+|--------|---------|-------|-----------|
+| A — Booking UX | 13, 14, 15 | Conflict override, equipment display, extended edit | P0 |
+| B — Payments & Deposits | 16, 17 | Client balance DB+API, UI + payment link | P0 |
+| C — Services UX | 18, 19 | Service descriptions, salon terms | P1 |
+| D — Service Media | 20, 21 | Photos DB+API, Photos UI | P1 |
+| E — CRM & Bulk | 22, 23 | Client tags, bulk service actions | P2 |
+| F — Marketing | 24 | Premium hours (wymaga ADR) | P2 |
+
+### Szczegóły sprintów Fali 2
+
+| # | Plik | Temat | Status |
+|---|------|-------|--------|
+| 13 | sprint-13-conflict-override-equipment-ui.md | Conflict override + widoczność sprzętu | ⏳ |
+| 14 | sprint-14-extended-booking-edit-api.md | Extended booking edit — API | ⏳ |
+| 15 | sprint-15-extended-booking-edit-ui.md | Extended booking edit — UI | ⏳ |
+| 16 | sprint-16-client-balance-db-api.md | Client balance — DB + API | ⏳ |
+| 17 | sprint-17-client-balance-ui.md | Client balance — UI + payment link | ⏳ |
+| 18 | sprint-18-service-descriptions.md | Service descriptions end-to-end | ⏳ |
+| 19 | sprint-19-salon-terms.md | Regulamin salonu + akceptacja | ⏳ |
+| 20 | sprint-20-service-photos-db-api.md | Service photos — DB + storage + API | ⏳ |
+| 21 | sprint-21-service-photos-ui.md | Service photos — UI admin + public | ⏳ |
+| 22 | sprint-22-client-tags-crm-segmentation.md | Client tags UI + CRM segmentation | ⏳ |
+| 23 | sprint-23-bulk-service-addon-actions.md | Bulk actions: usługi i dodatki | ⏳ |
+| 24 | sprint-24-premium-hours.md | Premium hours (ADR required first) | 🔴 BLOKADA |
+| 25 | sprint-25-public-api-key-per-salon.md | Security: per-salon API key (IDOR fix) | ⚠️ SECURITY |
+
+### Zależności Fali 2
+
+```
+sprint-13 (conflict override)
+    └── sprint-14 (booking edit API)
+            └── sprint-15 (booking edit UI)
+                    └── sprint-17 (opcjonalnie: rozliczenie salda przy wizycie)
+
+sprint-16 (client balance DB+API)
+    └── sprint-17 (client balance UI)
+
+sprint-18 (service descriptions)
+    └── sprint-20 (service photos DB+API)
+            └── sprint-21 (service photos UI)
+                    ↑ sprint-18 też wymagany
+
+sprint-19 (salon terms) — niezależny
+
+sprint-22 (client tags) — niezależny
+sprint-23 (bulk actions) — po sprint-04
+
+sprint-24 (premium hours) — BLOKOWANY przez decyzję ADR
+
+sprint-25 (security: per-salon API key) — niezależny, może iść równolegle z sprint-13
+```
+
+### Kolejność startów Fali 2 (rekomendacja)
+
+```
+Tydzień 1: sprint-13 + sprint-16 + sprint-18 + sprint-19 + sprint-25  (równolegle — niezależne)
+Tydzień 2: sprint-14 (po sprint-13) + sprint-17 (po sprint-16)
+Tydzień 3: sprint-15 (po sprint-14) + sprint-20 (po sprint-18)
+Tydzień 4: sprint-21 (po sprint-20) + sprint-22 + sprint-23  (równolegle)
+Tydzień 5: sprint-24 (po ADR)
+```

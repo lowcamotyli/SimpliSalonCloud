@@ -14,17 +14,23 @@ export async function GET(request: NextRequest) {
     try {
         const state = JSON.parse(stateStr)
         const { salonId } = state
+        const supabase = await createServerSupabaseClient()
+
+        const { data: existingSettings } = await (supabase
+            .from('salon_settings') as any)
+            .select('booksy_gmail_tokens')
+            .eq('salon_id', salonId)
+            .maybeSingle()
 
         // 1. Exchange code for tokens
-        const tokens = await GmailClient.getTokens(code) as any
+        const freshTokens = await GmailClient.getTokens(code) as any
+        const tokens = GmailClient.mergeTokens(existingSettings?.booksy_gmail_tokens ?? null, freshTokens)
 
         // 2. Get Gmail email address
         const client = new GmailClient(tokens)
         const email = await client.getUserEmail()
 
         // 3. Save to salon_settings
-        const supabase = await createServerSupabaseClient()
-
         const { error: upsertError } = await (supabase
             .from('salon_settings') as any)
             .upsert({

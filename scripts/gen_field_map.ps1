@@ -1,5 +1,4 @@
-
-\ = @"
+$prompt = @"
 Generate a TypeScript file. Output ONLY valid TypeScript. No markdown, no explanations, no code fences.
 Rewrite this content exactly as valid TypeScript (fix any syntax issues but keep all data):
 
@@ -26,6 +25,9 @@ export const FIELD_MAP: FieldMapEntry[] = [
 ]
 "@
 
-\ = gemini -p \ --output-format text 2>\ | Where-Object { \extglob -notmatch '^Loaded cached' }
-\ | Set-Content 'D:/SimpliSalonCLoud/lib/forms/import-field-map.ts' -Encoding UTF8
-Write-Host ('Lines written: ' + (Get-Content 'D:/SimpliSalonCLoud/lib/forms/import-field-map.ts').Count)
+$outputPath = 'D:/SimpliSalonCLoud/lib/forms/import-field-map.ts'
+$geminiOutput = $prompt | gemini.cmd -p $prompt --output-format text |
+  Where-Object { $_ -notmatch '^Loaded( cached)?' }
+
+$geminiOutput | Set-Content $outputPath -Encoding UTF8
+Write-Host ('Lines written: ' + (Get-Content $outputPath).Count)
