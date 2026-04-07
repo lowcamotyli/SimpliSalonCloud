@@ -60,8 +60,29 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   if (error) throw error
 
+  const bookingIds = (bookings ?? []).map((booking: any) => booking.id).filter(Boolean)
+  const equipmentNameMap = new Map<string, string>()
+
+  if (bookingIds.length > 0) {
+    const { data: equipmentBookings } = await supabase
+      .from('equipment_bookings')
+      .select('booking_id, equipment:equipment_id(name)')
+      .in('booking_id', bookingIds)
+
+    for (const equipmentBooking of equipmentBookings ?? []) {
+      const equipmentName = Array.isArray((equipmentBooking as any).equipment)
+        ? (equipmentBooking as any).equipment[0]?.name
+        : (equipmentBooking as any).equipment?.name
+
+      if (equipmentName && !equipmentNameMap.has((equipmentBooking as any).booking_id)) {
+        equipmentNameMap.set((equipmentBooking as any).booking_id, equipmentName)
+      }
+    }
+  }
+
   const safeBookings = (bookings || []).map((booking: any) => ({
     ...booking,
+    equipment_name: equipmentNameMap.get(booking.id) ?? null,
     employee: booking.employee ?? {
       id: booking.employee_id,
       first_name: 'Nieznany',
@@ -94,6 +115,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { supabase, user, salonId } = await getAuthContext()
 
   const body = await request.json()
+  const forceOverride = body.force_override === true || body.forceOverride === true
 
   logger.info('Creating booking', {
     salonId: salonId,
@@ -206,6 +228,37 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (serviceError) throw serviceError
 
+  const conflictTypes: string[] = []
+
+  if (forceOverride) {
+    const { data: sameDayBookings, error: sameDayBookingsError } = await supabase
+      .from('bookings')
+      .select('booking_time, duration')
+      .eq('salon_id', salonId)
+      .eq('employee_id', validatedData.employee_id as string)
+      .eq('booking_date', validatedData.date)
+      .neq('status', 'cancelled')
+      .is('deleted_at', null)
+
+    if (sameDayBookingsError) throw sameDayBookingsError
+
+    const [startHour, startMinute] = validatedData.start_time.split(':').map((value: string) => parseInt(value, 10))
+    const requestedStartMinutes = (startHour * 60) + startMinute
+    const requestedEndMinutes = requestedStartMinutes + (validatedData.duration || (service as any).duration || 30)
+
+    const hasEmployeeConflict = (sameDayBookings || []).some((existingBooking: any) => {
+      const [existingHour, existingMinute] = String(existingBooking.booking_time).split(':').map((value: string) => parseInt(value, 10))
+      const existingStartMinutes = (existingHour * 60) + existingMinute
+      const existingDuration = Number(existingBooking.duration || 0)
+      const existingEndMinutes = existingStartMinutes + existingDuration
+      return existingStartMinutes < requestedEndMinutes && requestedStartMinutes < existingEndMinutes
+    })
+
+    if (hasEmployeeConflict) {
+      conflictTypes.push('employee_time')
+    }
+  }
+
   const { count: serviceAssignmentCount, error: assignmentCountError } = await supabase
     .from('employee_services')
     .select('*', { count: 'exact', head: true })
@@ -242,58 +295,121 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const availability = await checkEquipmentAvailability(requiredEquipment, startsAt, endsAt)
     const conflicts = availability.filter(a => !a.is_available)
     if (conflicts.length > 0) {
+      if (forceOverride) {
+        conflictTypes.push('equipment')
+      } else {
       return NextResponse.json({
         error: 'EQUIPMENT_CONFLICT',
         message: 'Wybrany termin jest niedostepny – sprzet jest juz zajety.',
         conflictingEquipment: conflicts.map(c => c.equipment_id),
       }, { status: 409 })
+      }
     }
   }
 
   // 4. Atomically check slot + create booking (eliminates race condition)
+  let booking: any
+  if (forceOverride) {
+    const { data: bookingData, error: bookingError } = await supabase
+      .from('bookings')
+      .insert({
+        salon_id: salonId,
+        employee_id: validatedData.employee_id as string,
+        client_id: clientId,
+        service_id: validatedData.service_id as string,
+        booking_date: validatedData.date,
+        booking_time: validatedData.start_time,
+        duration: duration,
+        base_price: (service as any).price,
+        notes: validatedData.notes || null,
+        status: (validatedData.status as any) || 'scheduled',
+        created_by: user.id,
+        source: (body as any).source || 'manual',
+      } as any)
+      .select('*')
+      .single()
 
-  const { data: bookingRows, error: bookingError } = await (supabase as any)
-    .rpc('create_booking_atomic', {
-      p_salon_id: salonId,
-      p_employee_id: validatedData.employee_id as string,
-      p_client_id: clientId,
-      p_service_id: validatedData.service_id as string,
-      p_booking_date: validatedData.date,
-      p_booking_time: validatedData.start_time,
-      p_duration: duration,
-      p_base_price: (service as any).price,
-      p_notes: validatedData.notes || null,
-      p_status: (validatedData.status as any) || 'scheduled',
-      p_created_by: user.id,
-      p_source: (body as any).source || 'manual',
-    } as any)
-
-  if (bookingError) {
-    if (bookingError.code === '23P01') {
-      throw new ConflictError('Wybrany termin jest juz zajety. Wybierz inna godzine lub pracownika.')
+    if (bookingError) {
+      logger.error('Failed to create booking with force override', bookingError, {
+        code: bookingError.code,
+        message: bookingError.message,
+      })
+      throw bookingError
     }
-    logger.error('Failed to create booking', bookingError, {
-      code: bookingError.code,
-      message: bookingError.message,
-    })
-    throw bookingError
+
+    if (!bookingData) throw new Error('Failed to create booking')
+    booking = bookingData as any
+  } else {
+    const { data: bookingRows, error: bookingError } = await (supabase as any)
+      .rpc('create_booking_atomic', {
+        p_salon_id: salonId,
+        p_employee_id: validatedData.employee_id as string,
+        p_client_id: clientId,
+        p_service_id: validatedData.service_id as string,
+        p_booking_date: validatedData.date,
+        p_booking_time: validatedData.start_time,
+        p_duration: duration,
+        p_base_price: (service as any).price,
+        p_notes: validatedData.notes || null,
+        p_status: (validatedData.status as any) || 'scheduled',
+        p_created_by: user.id,
+        p_source: (body as any).source || 'manual',
+      } as any)
+
+    if (bookingError) {
+      if (bookingError.code === '23P01') {
+        throw new ConflictError('Wybrany termin jest juz zajety. Wybierz inna godzine lub pracownika.')
+      }
+      logger.error('Failed to create booking', bookingError, {
+        code: bookingError.code,
+        message: bookingError.message,
+      })
+      throw bookingError
+    }
+
+    const bookingData = Array.isArray(bookingRows) ? bookingRows[0] : bookingRows
+    if (!bookingData) throw new Error('Failed to create booking')
+    booking = bookingData as any
   }
-
-  const bookingData = Array.isArray(bookingRows) ? bookingRows[0] : bookingRows
-  if (!bookingData) throw new Error('Failed to create booking')
-
-  const booking = bookingData as any
 
   // 5. Create equipment bookings
   if (requiredEquipment.length > 0) {
-    await supabase.from('equipment_bookings').insert(
-      requiredEquipment.map(eqId => ({
+    if (forceOverride) {
+      try {
+        await supabase.from('equipment_bookings').insert(
+          requiredEquipment.map(eqId => ({
+            booking_id: booking.id,
+            equipment_id: eqId,
+            starts_at: startsAt.toISOString(),
+            ends_at: endsAt.toISOString(),
+          }))
+        )
+      } catch (equipmentBookingError) {
+        console.warn('Failed to create equipment bookings during force override', equipmentBookingError)
+      }
+    } else {
+      await supabase.from('equipment_bookings').insert(
+        requiredEquipment.map(eqId => ({
+          booking_id: booking.id,
+          equipment_id: eqId,
+          starts_at: startsAt.toISOString(),
+          ends_at: endsAt.toISOString(),
+        }))
+      )
+    }
+  }
+
+  if (forceOverride) {
+    try {
+      await (supabase as any).from('booking_audit_log').insert({
         booking_id: booking.id,
-        equipment_id: eqId,
-        starts_at: startsAt.toISOString(),
-        ends_at: endsAt.toISOString(),
-      }))
-    )
+        user_id: user.id,
+        action: 'conflict_override',
+        details: { conflict_types: conflictTypes },
+      } as any)
+    } catch (auditLogError) {
+      console.warn('Failed to insert booking_audit_log row', auditLogError)
+    }
   }
 
   // 6. Increment client visit count

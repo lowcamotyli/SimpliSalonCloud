@@ -11,8 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BookingCartItem } from '@/components/calendar/booking-cart-item'
@@ -138,6 +140,8 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [categoryFilters, setCategoryFilters] = useState<Map<number, string>>(new Map())
   const [remoteValidationResults, setRemoteValidationResults] = useState<DraftValidationResult[]>([])
   const [isCheckingDraftAvailability, setIsCheckingDraftAvailability] = useState(false)
+  const [conflictError, setConflictError] = useState<string | null>(null)
+  const [forceOverride, setForceOverride] = useState(false)
 
   const employees = (employeesData ?? []) as EmployeeOption[]
   const [filteredEmployeesMap, setFilteredEmployeesMap] = useState<Map<number, EmployeeOption[]>>(new Map())
@@ -197,7 +201,18 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     setCategoryFilters(new Map())
     setRemoteValidationResults([])
     setIsCheckingDraftAvailability(false)
+    setConflictError(null)
+    setForceOverride(false)
   }, [isOpen, prefilledSlot])
+
+  useEffect(() => {
+    if (!isOpen || booking) {
+      return
+    }
+
+    setConflictError(null)
+    setForceOverride(false)
+  }, [booking, cartItems, isOpen, newClientName, newClientPhone, selectedClient?.id, step])
 
   const handleItemChange = (
     index: number,
@@ -523,7 +538,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     return createdClient.client?.id ?? createdClient.id
   }
 
-  const handleSave = async () => {
+  const handleSave = async (saveWithOverride = false) => {
     if (isSaving) return
     if (!salonId) {
       toast.error('Nie znaleziono salonu')
@@ -560,13 +575,18 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
       }
     }
 
-    if (hasDraftWarnings) {
+    if (hasDraftWarnings && !saveWithOverride) {
       toast.error('Popraw terminy oznaczone ostrzezeniami przed zapisaniem wizyty')
       return
     }
 
     setIsSaving(true)
     try {
+      if (!saveWithOverride) {
+        setConflictError(null)
+        setForceOverride(false)
+      }
+
       const clientId = await resolveClientId()
       if (!clientId) {
         throw new Error('Nie udalo sie zapisac klienta')
@@ -583,6 +603,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
         const bookingResult = await createBookingMutation.mutateAsync({
           employeeId: item.employeeId!,
           serviceId: item.serviceId!,
+          forceOverride: saveWithOverride,
           clientId,
           bookingDate: item.bookingDate,
           bookingTime: item.bookingTime,
@@ -603,6 +624,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           body: JSON.stringify({
             clientId,
             salonId,
+            forceOverride: saveWithOverride,
             items: cartItems.map((item) => ({
               serviceId: item.serviceId!,
               employeeId: item.employeeId!,
@@ -1477,7 +1499,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleSave}
+                  onClick={() => handleSave()}
                   disabled={
                     isSaving ||
                     isCheckingDraftAvailability ||
