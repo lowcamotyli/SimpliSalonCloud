@@ -108,7 +108,13 @@
       "Bash(npx supabase db push --include-all)",
       "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100000_equipment_v1.sql\")",
       "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100001_equipment_v2.sql\")",
-      "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100002_equipment_v3.sql\")"
+      "Bash(\"d:/SimpliSalonCLoud/supabase/migrations/20260305100002_equipment_v3.sql\")",
+      "WebFetch(domain:www.simlisalon.pl)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "WebFetch(domain:developers.openai.com)"
     ]
   }
 }

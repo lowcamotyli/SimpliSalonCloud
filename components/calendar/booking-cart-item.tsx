@@ -28,6 +28,7 @@ export interface CartItemProps {
   employee: CartEmployee | null
   addons: CartAddon[]
   selectedAddonIds: string[]
+  onAddonSelect?: (addonId: string | null) => void
   startTime: string
   warnings?: string[]
   isCheckingAvailability?: boolean
@@ -53,6 +54,7 @@ export function BookingCartItem({
   employee,
   addons,
   selectedAddonIds,
+  onAddonSelect,
   startTime,
   warnings = [],
   isCheckingAvailability = false,
@@ -107,6 +109,34 @@ export function BookingCartItem({
                   </span>
                 </Badge>
               ))}
+            </div>
+          ) : null}
+          {addons.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {addons.map((addon) => {
+                const isSelected = selectedAddonIds.includes(addon.id)
+                const pricePreview =
+                  addon.price_delta === 0
+                    ? 'bez doplaty'
+                    : `${addon.price_delta > 0 ? '+' : ''}${addon.price_delta} zl`
+
+                return (
+                  <button
+                    key={addon.id}
+                    type="button"
+                    onClick={() => onAddonSelect?.(isSelected ? null : addon.id)}
+                    aria-pressed={isSelected}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      isSelected
+                        ? 'border-primary/40 bg-primary/10 text-primary'
+                        : 'border-border/70 bg-muted/40 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <span>{addon.name}</span>
+                    <span className="ml-1">{pricePreview}</span>
+                  </button>
+                )
+              })}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Brak wybranych dodatkow</p>

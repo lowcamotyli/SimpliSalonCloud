@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "scripts\\playwright.cmd test",
+    "playwright": "scripts\\playwright.cmd",
+    "playwright:install": "scripts\\playwright.cmd install chromium",
+    "playwright:headed": "scripts\\playwright.cmd test --headed",
     "test:all": "node ./scripts/run-all-checks.cjs",
     "types:generate": "npx supabase gen types typescript --project-id ubkueiwelarplnbhqmoa --schema public > types/database.ts"
   },

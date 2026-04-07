@@ -81,9 +81,17 @@ export const GET = withErrorHandling(async (
 
   if (sessionsError) throw sessionsError
 
+  const totalSessions = (sessions ?? []).length
+  const completedSessions = (sessions ?? []).filter(
+    (session) => session.status === 'completed'
+  ).length
+
   return NextResponse.json({
     plan: {
       ...plan,
+      completed_sessions: completedSessions,
+      total_sessions: totalSessions,
+      session_count: completedSessions,
       sessions: sessions ?? [],
     },
   })

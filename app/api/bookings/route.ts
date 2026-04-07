@@ -206,6 +206,33 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (serviceError) throw serviceError
 
+  const { count: serviceAssignmentCount, error: assignmentCountError } = await supabase
+    .from('employee_services')
+    .select('*', { count: 'exact', head: true })
+    .eq('salon_id', salonId)
+    .eq('service_id', validatedData.service_id as string)
+
+  if (assignmentCountError) throw assignmentCountError
+
+  if ((serviceAssignmentCount ?? 0) > 0) {
+    const { data: employeeService, error: employeeServiceError } = await supabase
+      .from('employee_services')
+      .select('id')
+      .eq('salon_id', salonId)
+      .eq('employee_id', validatedData.employee_id as string)
+      .eq('service_id', validatedData.service_id as string)
+      .maybeSingle()
+
+    if (employeeServiceError) throw employeeServiceError
+
+    if (!employeeService) {
+      return NextResponse.json(
+        { error: 'Employee is not authorized to perform this service' },
+        { status: 400 }
+      )
+    }
+  }
+
   // 3. Check equipment availability for the service
   const duration = validatedData.duration || (service as any).duration || 30
   const startsAt = new Date(`${validatedData.date}T${validatedData.start_time}:00Z`)

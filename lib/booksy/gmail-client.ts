@@ -14,7 +14,12 @@ export class GmailClient {
   private gmail: any
   private oauth2Client: any
 
-  constructor(credentials: { access_token?: string; refresh_token?: string }) {
+  constructor(
+    credentials: { access_token?: string; refresh_token?: string; expiry_date?: number },
+    options?: {
+      onTokens?: (tokens: { access_token?: string; refresh_token?: string; expiry_date?: number }) => Promise<void> | void
+    }
+  ) {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
@@ -22,6 +27,20 @@ export class GmailClient {
     )
 
     this.oauth2Client.setCredentials(credentials)
+    this.oauth2Client.on('tokens', async (tokens: any) => {
+      if (!options?.onTokens) return
+
+      const mergedTokens = GmailClient.mergeTokens(credentials, tokens)
+      credentials.access_token = mergedTokens.access_token
+      credentials.refresh_token = mergedTokens.refresh_token
+      credentials.expiry_date = mergedTokens.expiry_date
+
+      try {
+        await options.onTokens(mergedTokens)
+      } catch (error) {
+        logger.error('Gmail: failed to persist refreshed tokens', error)
+      }
+    })
     this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client })
   }
 
@@ -58,6 +77,20 @@ export class GmailClient {
 
     const { tokens } = await oauth2Client.getToken(code)
     return tokens
+  }
+
+  /**
+   * Preserve refresh_token if Google returns only a new access token.
+   */
+  static mergeTokens(
+    current: { access_token?: string; refresh_token?: string; expiry_date?: number } | null | undefined,
+    incoming: { access_token?: string; refresh_token?: string; expiry_date?: number } | null | undefined
+  ) {
+    return {
+      access_token: incoming?.access_token ?? current?.access_token,
+      refresh_token: incoming?.refresh_token ?? current?.refresh_token,
+      expiry_date: incoming?.expiry_date ?? current?.expiry_date,
+    }
   }
 
   /**

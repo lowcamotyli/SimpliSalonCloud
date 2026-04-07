@@ -4,6 +4,10 @@ import { useState, useMemo } from 'react'
 import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useUpdateEmployeeRole, useLinkEmployeeUser } from '@/hooks/use-employees'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScheduleTab } from '@/components/employees/schedule-tab'
+import { EmployeeServicesTab } from '@/components/employees/employee-services-tab'
+import { EmployeeShiftsTab } from '@/components/employees/employee-shifts-tab'
+import { ShiftTemplatesManager } from '@/components/employees/shift-templates-manager'
+import { ShiftRulesManager } from '@/components/employees/shift-rules-manager'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -502,163 +506,201 @@ export default function EmployeesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex flex-col items-center space-y-4">
-                <Label className="font-bold text-gray-700">Zdjęcie profilowe</Label>
-                <ImageUpload
-                  value={form.watch('avatarUrl')}
-                  onChange={(url) => form.setValue('avatarUrl', url, { shouldValidate: true })}
-                  onRemove={() => form.setValue('avatarUrl', '', { shouldValidate: true })}
-                  salonId={(salon as any)?.id || ''}
-                />
-              </div>
+          <Tabs defaultValue="profil" className="pt-4">
+            <TabsList className="mb-4">
+              <TabsTrigger value="profil">Profil</TabsTrigger>
+              <TabsTrigger value="uslugi">Usługi</TabsTrigger>
+              <TabsTrigger value="zmiana">Zmiana</TabsTrigger>
+            </TabsList>
 
-              <div className="flex-1 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName" className="font-bold text-gray-700">Imię *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="firstName"
-                        placeholder="Kasia"
-                        {...form.register('firstName')}
-                        className="pl-10 glass h-11 rounded-xl focus:bg-white"
-                      />
+            <TabsContent value="profil">
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                <div className="flex flex-col md:flex-row gap-8">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Label className="font-bold text-gray-700">Zdjęcie profilowe</Label>
+                    <ImageUpload
+                      value={form.watch('avatarUrl')}
+                      onChange={(url) => form.setValue('avatarUrl', url, { shouldValidate: true })}
+                      onRemove={() => form.setValue('avatarUrl', '', { shouldValidate: true })}
+                      salonId={(salon as any)?.id || ''}
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="font-bold text-gray-700">Imię *</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="firstName"
+                            placeholder="Kasia"
+                            {...form.register('firstName')}
+                            className="pl-10 glass h-11 rounded-xl focus:bg-white"
+                          />
+                        </div>
+                        {form.formState.errors.firstName && (
+                          <p className="text-xs text-rose-600 font-bold">{form.formState.errors.firstName.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName" className="font-bold text-gray-700">Nazwisko</Label>
+                        <Input
+                          id="lastName"
+                          placeholder="Nowak"
+                          {...form.register('lastName')}
+                          className="glass h-11 rounded-xl focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="font-bold text-gray-700">Email *</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="kasia@example.com"
+                            {...form.register('email')}
+                            className="pl-10 glass h-11 rounded-xl focus:bg-white"
+                          />
+                        </div>
+                        {form.formState.errors.email && (
+                          <p className="text-xs text-rose-600 font-bold">{form.formState.errors.email.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="font-bold text-gray-700">Telefon</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="phone"
+                            placeholder="123456789"
+                            {...form.register('phone')}
+                            className="pl-10 glass h-11 rounded-xl focus:bg-white"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    {form.formState.errors.firstName && (
-                      <p className="text-xs text-rose-600 font-bold">{form.formState.errors.firstName.message}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-2xl space-y-4 border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                    <h4 className="font-black text-gray-900 uppercase tracking-wider text-sm">Warunki wynagrodzenia</h4>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="baseThreshold" className="text-xs font-bold text-gray-500">Próg (zł)</Label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="baseThreshold"
+                          type="number"
+                          step="0.01"
+                          {...form.register('baseThreshold', { valueAsNumber: true })}
+                          className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="baseSalary" className="text-xs font-bold text-gray-500">Podstawa (zł)</Label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="baseSalary"
+                          type="number"
+                          step="0.01"
+                          {...form.register('baseSalary', { valueAsNumber: true })}
+                          className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="commissionRate" className="text-xs font-bold text-gray-500">Prowizja (%)</Label>
+                      <div className="relative">
+                        <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="commissionRate"
+                          type="number"
+                          step="0.1"
+                          {...form.register('commissionRate', { valueAsNumber: true })}
+                          className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="gap-2 sm:justify-between">
+                  <div className="flex items-center gap-2 mr-auto">
+                    {editingEmployee && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleOpenDeleteDialog}
+                        disabled={deleteMutation.isPending}
+                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl font-bold"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Usuń
+                      </Button>
                     )}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName" className="font-bold text-gray-700">Nazwisko</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Nowak"
-                      {...form.register('lastName')}
-                      className="glass h-11 rounded-xl focus:bg-white"
-                    />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsDialogOpen(false)}
+                      className="rounded-xl font-bold text-gray-500"
+                    >
+                      Anuluj
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createMutation.isPending || updateMutation.isPending}
+                      className="gradient-button rounded-xl font-black px-8"
+                    >
+                      {editingEmployee ? 'Zapisz zmiany' : 'Dodaj pracownika'}
+                    </Button>
                   </div>
+                </DialogFooter>
+              </form>
+            </TabsContent>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="font-bold text-gray-700">Email *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="kasia@example.com"
-                        {...form.register('email')}
-                        className="pl-10 glass h-11 rounded-xl focus:bg-white"
-                      />
-                    </div>
-                    {form.formState.errors.email && (
-                      <p className="text-xs text-rose-600 font-bold">{form.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="font-bold text-gray-700">Telefon</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="phone"
-                        placeholder="123456789"
-                        {...form.register('phone')}
-                        className="pl-10 glass h-11 rounded-xl focus:bg-white"
-                      />
-                    </div>
-                  </div>
+            <TabsContent value="uslugi">
+              {editingEmployee ? (
+                <EmployeeServicesTab employeeId={editingEmployee.id} salonSlug={slug} />
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+                  Najpierw dodaj pracownika, aby zarządzać usługami.
                 </div>
-              </div>
-            </div>
+              )}
+            </TabsContent>
 
-            <div className="p-4 bg-gray-50 rounded-2xl space-y-4 border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Briefcase className="h-4 w-4 text-primary" />
-                <h4 className="font-black text-gray-900 uppercase tracking-wider text-sm">Warunki wynagrodzenia</h4>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="baseThreshold" className="text-xs font-bold text-gray-500">Próg (zł)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="baseThreshold"
-                      type="number"
-                      step="0.01"
-                      {...form.register('baseThreshold', { valueAsNumber: true })}
-                      className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
-                    />
+            <TabsContent value="zmiana">
+              {editingEmployee ? (
+                <>
+                  <EmployeeShiftsTab employeeId={editingEmployee.id} />
+                  <div className="mt-6">
+                    <ShiftRulesManager employeeId={editingEmployee.id} />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="baseSalary" className="text-xs font-bold text-gray-500">Podstawa (zł)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="baseSalary"
-                      type="number"
-                      step="0.01"
-                      {...form.register('baseSalary', { valueAsNumber: true })}
-                      className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
-                    />
+                  <div className="mt-6">
+                    <ShiftTemplatesManager />
                   </div>
+                </>
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+                  Najpierw dodaj pracownika, aby zarządzać grafikiem.
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="commissionRate" className="text-xs font-bold text-gray-500">Prowizja (%)</Label>
-                  <div className="relative">
-                    <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="commissionRate"
-                      type="number"
-                      step="0.1"
-                      {...form.register('commissionRate', { valueAsNumber: true })}
-                      className="pl-9 glass h-11 rounded-xl bg-white border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 sm:justify-between">
-              <div className="flex items-center gap-2 mr-auto">
-                {editingEmployee && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleOpenDeleteDialog}
-                    disabled={deleteMutation.isPending}
-                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl font-bold"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Usuń
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsDialogOpen(false)}
-                  className="rounded-xl font-bold text-gray-500"
-                >
-                  Anuluj
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="gradient-button rounded-xl font-black px-8"
-                >
-                  {editingEmployee ? 'Zapisz zmiany' : 'Dodaj pracownika'}
-                </Button>
-              </div>
-            </DialogFooter>
-          </form>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

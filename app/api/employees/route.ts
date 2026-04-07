@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
+    const serviceId = request.nextUrl.searchParams.get('serviceId')
+
     // Fetch employees
     const { data: employees, error } = await (supabase as any)
       .from('employees')
@@ -42,7 +44,28 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
-    const employeeList = (employees || []) as Array<{ user_id: string | null }>
+    let employeeList = (employees || []) as Array<{ id: string; user_id: string | null }>
+
+    // Filter by serviceId if provided — include employees assigned to this service
+    // OR employees with no assignments at all (backward compat)
+    if (serviceId) {
+      const [{ data: withService }, { data: withAny }] = await Promise.all([
+        (supabase as any)
+          .from('employee_services')
+          .select('employee_id')
+          .eq('salon_id', profile.salon_id)
+          .eq('service_id', serviceId),
+        (supabase as any)
+          .from('employee_services')
+          .select('employee_id')
+          .eq('salon_id', profile.salon_id),
+      ])
+      const assignedToService = new Set<string>((withService || []).map((r: any) => r.employee_id))
+      const hasAnyAssignment = new Set<string>((withAny || []).map((r: any) => r.employee_id))
+      employeeList = employeeList.filter(
+        (emp) => assignedToService.has(emp.id) || !hasAnyAssignment.has(emp.id)
+      )
+    }
     const userIds = employeeList
       .map((employee) => employee.user_id)
       .filter((userId): userId is string => Boolean(userId))

@@ -32,6 +32,7 @@ const STATUS_TABS = [
   { id: 'scheduled', label: 'Zaplanowane' },
   { id: 'pending', label: 'Oczekujące' },
   { id: 'confirmed', label: 'Potwierdzone' },
+  { id: 'paid', label: 'Opłacone' },
   { id: 'completed', label: 'Zakończone' },
   { id: 'cancelled', label: 'Anulowane' },
 ]
@@ -105,6 +106,7 @@ export default function BookingsPage() {
   const statusColors = {
     scheduled: 'bg-blue-50 text-blue-700 border-blue-200',
     confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    paid: 'bg-green-50 text-green-700 border-green-200',
     completed: 'bg-slate-50 text-slate-700 border-slate-200',
     cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
     pending: 'bg-amber-50 text-amber-700 border-amber-200',

@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
   retries: 0,
+  outputDir: 'output/playwright/test-results',
   webServer: {
     command: 'npm run dev:e2e',
     url: 'http://127.0.0.1:3001',

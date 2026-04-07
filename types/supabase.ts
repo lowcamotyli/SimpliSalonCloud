@@ -258,6 +258,69 @@ export type Database = {
           },
         ]
       }
+      booking_payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string | null
+          currency: string
+          id: string
+          p24_order_id: string | null
+          p24_session_id: string | null
+          p24_transaction_id: string | null
+          paid_at: string | null
+          payment_url: string | null
+          salon_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string | null
+          currency?: string
+          id?: string
+          p24_order_id?: string | null
+          p24_session_id?: string | null
+          p24_transaction_id?: string | null
+          paid_at?: string | null
+          payment_url?: string | null
+          salon_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string | null
+          currency?: string
+          id?: string
+          p24_order_id?: string | null
+          p24_session_id?: string | null
+          p24_transaction_id?: string | null
+          paid_at?: string | null
+          payment_url?: string | null
+          salon_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_payments_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           base_price: number
@@ -989,6 +1052,110 @@ export type Database = {
           },
         ]
       }
+      employee_services: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          id: string
+          salon_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          salon_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          salon_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_services_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_services_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_shifts: {
+        Row: {
+          created_at: string
+          date: string
+          employee_id: string
+          end_time: string
+          id: string
+          notes: string | null
+          salon_id: string
+          shift_template_id: string | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          employee_id: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          salon_id: string
+          shift_template_id?: string | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          employee_id?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          salon_id?: string
+          shift_template_id?: string | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_shifts_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_shifts_shift_template_id_fkey"
+            columns: ["shift_template_id"]
+            isOneToOne: false
+            referencedRelation: "shift_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           active: boolean
@@ -1226,6 +1393,47 @@ export type Database = {
             foreignKeyName: "form_templates_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmail_send_credentials: {
+        Row: {
+          access_token_enc: string
+          created_at: string
+          email: string
+          id: string
+          refresh_token_enc: string
+          salon_id: string
+          token_expiry: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_enc: string
+          created_at?: string
+          email: string
+          id?: string
+          refresh_token_enc: string
+          salon_id: string
+          token_expiry?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_enc?: string
+          created_at?: string
+          email?: string
+          id?: string
+          refresh_token_enc?: string
+          salon_id?: string
+          token_expiry?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmail_send_credentials_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: true
             referencedRelation: "salons"
             referencedColumns: ["id"]
           },
@@ -1933,6 +2141,44 @@ export type Database = {
           },
         ]
       }
+      salon_api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key_hash: string
+          label: string | null
+          last_used_at: string | null
+          salon_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          label?: string | null
+          last_used_at?: string | null
+          salon_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          label?: string | null
+          last_used_at?: string | null
+          salon_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salon_api_keys_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salon_settings: {
         Row: {
           accounting_email: string | null
@@ -2115,6 +2361,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          email_provider: string
           features: Json
           id: string
           name: string
@@ -2133,6 +2380,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          email_provider?: string
           features?: Json
           id?: string
           name: string
@@ -2151,6 +2399,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          email_provider?: string
           features?: Json
           id?: string
           name?: string
@@ -2406,6 +2655,118 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "services_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_rules: {
+        Row: {
+          created_at: string
+          days_of_week: number[]
+          employee_id: string
+          id: string
+          is_active: boolean
+          name: string
+          reference_week: string | null
+          rule_type: string
+          salon_id: string
+          template_a_id: string
+          template_b_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          days_of_week?: number[]
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          reference_week?: string | null
+          rule_type: string
+          salon_id: string
+          template_a_id: string
+          template_b_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          days_of_week?: number[]
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          reference_week?: string | null
+          rule_type?: string
+          salon_id?: string
+          template_a_id?: string
+          template_b_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_rules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_rules_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_rules_template_a_id_fkey"
+            columns: ["template_a_id"]
+            isOneToOne: false
+            referencedRelation: "shift_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_rules_template_b_id_fkey"
+            columns: ["template_b_id"]
+            isOneToOne: false
+            referencedRelation: "shift_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_templates: {
+        Row: {
+          color: string
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          name: string
+          salon_id: string
+          start_time: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          name: string
+          salon_id: string
+          start_time: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          salon_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_templates_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"

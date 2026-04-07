@@ -283,10 +283,11 @@ export default function ClientDetailPage() {
       </div>
 
       <Tabs defaultValue="ogolne" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 lg:w-[720px]">
+        <TabsList className="grid w-full grid-cols-6 lg:w-[860px]">
           <TabsTrigger value="ogolne">Ogólne</TabsTrigger>
           <TabsTrigger value="karty">Karty medyczne</TabsTrigger>
           <TabsTrigger value="beauty">Beauty Plan</TabsTrigger>
+          <TabsTrigger value="plany">Serie zabiegów</TabsTrigger>
           <TabsTrigger value="sms">SMS</TabsTrigger>
           <TabsTrigger value="vouchery">Vouchery</TabsTrigger>
         </TabsList>
@@ -533,6 +534,21 @@ export default function ClientDetailPage() {
               </div>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+        <TabsContent value="plany" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Serie zabiegów</CardTitle>
+              <Link href={`/${slug}/clients/${id}/treatment-plans`}>
+                <Button className="gradient-button rounded-lg" size="sm">
+                  <Plus className="h-4 w-4 mr-1" /> Zarządzaj planami
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Pełne zarządzanie seriami zabiegów dostępne na dedykowanej stronie.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="sms" className="mt-6">
           <SmsChat clientId={id} />

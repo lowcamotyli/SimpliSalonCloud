@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPrzelewy24Client } from '@/lib/payments/przelewy24-client'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { decryptSecret, isEncryptedPayload } from '@/lib/messaging/crypto'
+import { logger } from '@/lib/logger'
 
 type SubscriptionPlan = 'starter' | 'professional' | 'business' | 'enterprise'
 
@@ -15,6 +17,11 @@ interface P24NotificationPayload {
   methodId: number
   statement: string
   sign: string
+}
+
+function resolveMaybeEncryptedSecret(value: string | null): string | null {
+  if (!value) return null
+  return isEncryptedPayload(value) ? decryptSecret(value) : value
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -202,6 +209,36 @@ async function upsertSubscriptionFromInvoice(admin: any, invoice: any, payload: 
   }
 }
 
+async function createP24ClientForSalon(admin: any, salonId: string) {
+  const { data: settings, error: settingsError } = await admin
+    .from('salon_settings')
+    .select('p24_merchant_id, p24_pos_id, p24_crc, p24_api_key, p24_api_url')
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  if (settingsError) {
+    throw new Error(`Failed to load salon payment settings: ${settingsError.message}`)
+  }
+
+  const merchantId = settings?.p24_merchant_id?.trim()
+  const posId = settings?.p24_pos_id?.trim()
+  const crc = resolveMaybeEncryptedSecret(settings?.p24_crc ?? null)?.trim()
+  const apiKey = resolveMaybeEncryptedSecret(settings?.p24_api_key ?? null)?.trim()
+  const apiUrl = settings?.p24_api_url?.trim()
+
+  if (merchantId && posId && crc && apiUrl) {
+    return createPrzelewy24Client({
+      merchantId,
+      posId,
+      crc,
+      apiKey: apiKey || crc,
+      apiUrl,
+    })
+  }
+
+  return createPrzelewy24Client()
+}
+
 export async function POST(request: NextRequest) {
   let payload: P24NotificationPayload
 
@@ -212,13 +249,122 @@ export async function POST(request: NextRequest) {
     }
     payload = parsed
   } catch {
+    logger.warn('[BILLING_WEBHOOK] invalid json body', {
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+    })
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
   try {
-    const p24 = createPrzelewy24Client()
+    logger.info('[BILLING_WEBHOOK] start', {
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+      referer: request.headers.get('referer') ?? undefined,
+      sessionId: payload.sessionId,
+      orderId: payload.orderId,
+    })
+
     const admin = createAdminSupabaseClient()
-    const signatureValid = p24.verifyNotificationSignature(payload)
+
+    if (payload.sessionId.startsWith('p24_')) {
+      const { data: latestBookingPayment, error: bookingPaymentError } = await admin
+        .from('booking_payments')
+        .select('id, salon_id, booking_id')
+        .eq('p24_session_id', payload.sessionId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (bookingPaymentError) {
+        throw new Error(`Failed to load booking payment: ${bookingPaymentError.message}`)
+      }
+
+      if (!latestBookingPayment) {
+        logger.warn('[BILLING_WEBHOOK] booking payment not found', {
+          sessionId: payload.sessionId,
+        })
+        return NextResponse.json({ received: true }, { status: 200 })
+      }
+
+      logger.info('[BILLING_WEBHOOK] booking payment resolved', {
+        sessionId: payload.sessionId,
+        salonId: latestBookingPayment.salon_id,
+      })
+
+      const p24 = await createP24ClientForSalon(admin, latestBookingPayment.salon_id)
+      const signatureValid = p24.verifyNotificationSignature(payload)
+
+      if (!signatureValid) {
+        logger.warn('[BILLING_WEBHOOK] invalid booking payment signature', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+        })
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+      }
+
+      const verificationOk = await p24.verifyTransaction({
+        sessionId: payload.sessionId,
+        orderId: payload.orderId,
+        amount: payload.amount,
+        currency: payload.currency,
+      })
+
+      if (verificationOk) {
+        const transactionId = payload.orderId.toString()
+        const { error: paidUpdateError } = await admin
+          .from('booking_payments')
+          .update({
+            status: 'paid',
+            p24_transaction_id: transactionId,
+            paid_at: new Date().toISOString(),
+          })
+          .eq('p24_session_id', payload.sessionId)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (paidUpdateError) {
+          throw new Error(`Failed to mark booking payment as paid: ${paidUpdateError.message}`)
+        }
+
+        const { error: bookingUpdateError } = await admin
+          .from('bookings')
+          .update({ status: 'paid' })
+          .eq('id', latestBookingPayment.booking_id)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (bookingUpdateError) {
+          throw new Error(`Failed to confirm booking after payment: ${bookingUpdateError.message}`)
+        }
+
+        logger.info('[BILLING_WEBHOOK] booking payment marked paid', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+          orderId: payload.orderId,
+        })
+      } else {
+        const { error: failedUpdateError } = await admin
+          .from('booking_payments')
+          .update({ status: 'failed' })
+          .eq('p24_session_id', payload.sessionId)
+          .eq('salon_id', latestBookingPayment.salon_id)
+
+        if (failedUpdateError) {
+          throw new Error(`Failed to mark booking payment as failed: ${failedUpdateError.message}`)
+        }
+
+        logger.warn('[BILLING_WEBHOOK] booking payment verification failed', {
+          sessionId: payload.sessionId,
+          salonId: latestBookingPayment.salon_id,
+          orderId: payload.orderId,
+        })
+      }
+
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
 
     const { data: invoice, error: invoiceError } = await admin
       .from('invoices')
@@ -233,6 +379,9 @@ export async function POST(request: NextRequest) {
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
+
+    const p24 = await createP24ClientForSalon(admin, invoice.salon_id)
+    const signatureValid = p24.verifyNotificationSignature(payload)
 
     if (!signatureValid) {
       await markInvoiceVoid(admin, invoice.id)
@@ -281,7 +430,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: 'OK' }, { status: 200 })
   } catch (error) {
-    console.error('[BILLING WEBHOOK] Error:', error)
+    logger.error('[BILLING_WEBHOOK] unhandled error', error, {
+      sessionId: payload.sessionId,
+      orderId: payload.orderId,
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get('host') ?? undefined,
+      forwardedHost: request.headers.get('x-forwarded-host') ?? undefined,
+      origin: request.nextUrl.origin,
+    })
 
     return NextResponse.json(
       {

@@ -10,7 +10,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const { data: services, error } = await supabase
     .from('services')
-    .select('*')
+    .select('*, employee_services(count)')
     .eq('salon_id', salonId)
     .eq('active', true)
     .is('deleted_at', null)
@@ -19,6 +19,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     .order('name')
 
   if (error) throw error
+
+  services?.forEach((service: any) => {
+    service.assigned_employee_count = service.employee_services?.[0]?.count ?? 0
+    delete service.employee_services
+  })
 
   // Group services by category and subcategory
   const grouped: any = {}
@@ -44,6 +49,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       price: service.price,
       duration: service.duration,
       surchargeAllowed: service.surcharge_allowed,
+      assignedEmployeeCount: service.assigned_employee_count,
     })
   })
 

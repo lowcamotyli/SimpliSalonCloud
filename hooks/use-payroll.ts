@@ -3,15 +3,20 @@ import { toast } from 'sonner'
 import { ROBOTO_REGULAR, ROBOTO_BOLD } from '@/lib/fonts/roboto-base64'
 // jspdf and jspdf-autotable will be dynamic imported on demand
 
-export function usePayroll(month: string) {
+type PayrollPeriodType = 'daily' | 'weekly' | 'monthly'
+
+export function usePayroll(period: string, type: PayrollPeriodType = 'monthly') {
   return useQuery({
-    queryKey: ['payroll', month],
+    queryKey: ['payroll', type, period],
     queryFn: async () => {
-      const res = await fetch(`/api/payroll?month=${month}`)
+      const url = type === 'monthly'
+        ? `/api/payroll?month=${period}`
+        : `/api/payroll?period=${period}&type=${type}`
+      const res = await fetch(url)
       if (!res.ok) throw new Error('Failed to fetch payroll')
       return res.json()
     },
-    enabled: !!month,
+    enabled: !!period,
   })
 }
 
@@ -241,7 +246,8 @@ export function useGeneratePayroll() {
       return res.json()
     },
     onSuccess: (data, month) => {
-      queryClient.invalidateQueries({ queryKey: ['payroll', month] })
+      queryClient.invalidateQueries({ queryKey: ['payroll'] })
+      queryClient.invalidateQueries({ queryKey: ['payroll', 'monthly', month] })
       toast.success('Wynagrodzenia wygenerowane pomyślnie')
     },
     onError: (error: Error) => {

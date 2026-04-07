@@ -3,18 +3,26 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { payrollMonthSchema } from '@/lib/validators/payroll.validators'
 import { canGeneratePayroll, canViewPayroll } from '@/lib/payroll/access'
-import { parsePayrollMonth } from '@/lib/payroll/period'
+import {
+  getPeriodRange,
+  parsePayrollMonth,
+  type PayrollPeriodType,
+} from '@/lib/payroll/period'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
 import { logger } from '@/lib/logger'
 
 async function buildPayrollData(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   salonId: string,
-  monthInput: string
+  options: {
+    period: string
+    periodStart: Date
+    periodEnd: Date
+  }
 ) {
-  const { month, periodStart, periodEnd } = parsePayrollMonth(monthInput)
+  const { period, periodStart, periodEnd } = options
 
-  // Fetch completed bookings for the month with details
+  // Fetch completed bookings for the requested period with details
   const { data: bookings, error: bookingsError } = await supabase
     .from('bookings')
     .select(`
@@ -103,12 +111,60 @@ async function buildPayrollData(
   })
 
   return {
-    period: month,
+    period,
     periodStart: format(periodStart, 'yyyy-MM-dd'),
     periodEnd: format(periodEnd, 'yyyy-MM-dd'),
     entries: payrollEntries,
     totalRevenue: payrollEntries.reduce((sum, e) => sum + e.totalRevenue, 0),
     totalPayroll: payrollEntries.reduce((sum, e) => sum + e.totalPayout, 0),
+  }
+}
+
+function resolvePayrollPeriod(searchParams: URLSearchParams): {
+  period: string
+  periodStart: Date
+  periodEnd: Date
+} {
+  const typeParam = searchParams.get('type')
+  const periodParam = searchParams.get('period')
+  const monthParam = searchParams.get('month')
+
+  if (typeParam) {
+    if (!['daily', 'weekly', 'monthly'].includes(typeParam)) {
+      throw new Error('Invalid type value (expected daily, weekly, or monthly)')
+    }
+
+    const type = typeParam as PayrollPeriodType
+
+    if (!periodParam) {
+      throw new Error('period is required when type is provided')
+    }
+
+    const { periodStart, periodEnd } = getPeriodRange(periodParam, type)
+
+    return {
+      period: periodParam,
+      periodStart,
+      periodEnd,
+    }
+  }
+
+  if (monthParam) {
+    const { month, periodStart, periodEnd } = parsePayrollMonth(monthParam)
+
+    return {
+      period: month,
+      periodStart,
+      periodEnd,
+    }
+  }
+
+  const { month, periodStart, periodEnd } = parsePayrollMonth(format(new Date(), 'yyyy-MM'))
+
+  return {
+    period: month,
+    periodStart,
+    periodEnd,
   }
 }
 
@@ -136,8 +192,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const monthParam = searchParams.get('month') || format(new Date(), 'yyyy-MM')
-    const payrollData = await buildPayrollData(supabase, profile.salon_id, monthParam)
+    const payrollPeriod = resolvePayrollPeriod(searchParams)
+    const payrollData = await buildPayrollData(supabase, profile.salon_id, payrollPeriod)
     return NextResponse.json(payrollData)
   } catch (error: any) {
     logger.error('GET /api/payroll failed', error, { endpoint: 'GET /api/payroll' })
@@ -170,7 +226,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const month = payrollMonthSchema.parse(body?.month)
-    const payrollData = await buildPayrollData(supabase, profile.salon_id, month)
+    const { periodStart, periodEnd } = parsePayrollMonth(month)
+    const payrollData = await buildPayrollData(supabase, profile.salon_id, {
+      period: month,
+      periodStart,
+      periodEnd,
+    })
 
     if (!payrollData.entries || payrollData.entries.length === 0) {
       return NextResponse.json(

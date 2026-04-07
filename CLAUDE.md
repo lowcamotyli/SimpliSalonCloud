@@ -1,29 +1,33 @@
-## Czytanie i interpretacja plików — ZAWSZE Gemini powyżej progu
+## Czytanie i interpretacja plików — codex-dad powyżej progu
 
 Claude NIE czyta plików > 50 linii przez Read tool — każda linia to token kontekstu.
 
 ```bash
-gemini -p "Read [ścieżka]. [co konkretnie wyjaśnić/podsumować]. Max 30 lines." \
-  --output-format text 2>/dev/null | grep -v "^Loaded"
+# 1 plik:
+DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/[ścieżka]. TASK: [co wyjaśnić/sprawdzić]. FORMAT: Bulleted list. LIMIT: Max 20 lines." bash ~/.claude/scripts/dad-exec.sh
+
+# 2–3 pliki:
+DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/[p1] and /mnt/d/SimpliSalonCLoud/[p2]. TASK: [zadanie]. FORMAT: Bullets. LIMIT: Max 20 lines/file." bash ~/.claude/scripts/dad-exec.sh
 ```
 
 **Kiedy co:**
 | Sytuacja | Narzędzie |
 |---|---|
 | Plik < 50 linii | Read (cały) |
-| Plik > 50 linii — rozumienie, "jak działa X" | Gemini reader |
+| Plik > 50 linii — rozumienie, "jak działa X" | codex-dad reader |
 | Edycja z konkretnym numerem linii (z błędu tsc) | Read z view_range |
-| Multi-section edit bez numeru linii | Gemini reader → potem Edit |
+| Multi-section edit bez numeru linii | codex-dad reader → potem Edit |
 
 ---
 
 ## Docs architektury — mapa referencyjna
 
-Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj Gemini:
+Nigdy nie czytaj tych plików przez Read — hook zablokuje. Zawsze używaj codex-dad (bez limitu linii):
 ```bash
-gemini -p "Read docs/architecture/[plik].md. Summarize: constraints relevant to [zadanie]. Max 20 lines." \
---output-format text 2>/dev/null | grep -v "^Loaded"
+DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/docs/architecture/[plik].md. List ALL constraints, exceptions, and rules relevant to [zadanie]. FORMAT: Bulleted list. Do NOT summarize away exceptions or edge cases." bash ~/.claude/scripts/dad-exec.sh
 ```
+
+> **Ważne:** Brak limitu linii — każdy wyjątek w arch doc może być krytyczny. "Max 20 lines" stosuj tylko do zwykłych plików kodu.
 
 | Kiedy | Plik |
 |-------|------|
@@ -46,10 +50,10 @@ Projekt-specyficzne zasady. Globalne zasady orkiestracji → `~/.claude/CLAUDE.m
 
 | Zadanie | Kto | Dlaczego |
 |---------|-----|----------|
-| SQL / migracje | Gemini CLI | Deterministyczny output, brak TS errors |
-| `'use client'` pages/komponenty > 200 linii z shadcn/ui | Gemini CLI | Poprawna składnia UI, zero śmieci |
-| Duże handlery > 150 linii bez UI (webhooks, CRON, business logic) | Gemini CLI | Oszczędność tokenów |
-| Nowe pliki TS/TSX 20–150 linii (route handlers, komponenty, hooki) | Codex CLI | Czyta projekt lokalnie, zna App Router |
+| SQL / migracje | **codex-dad** | Zna schemat DB przez AGENTS.md |
+| `'use client'` pages/komponenty > 200 linii z shadcn/ui | **codex-dad** | Zna stack i komponenty przez AGENTS.md |
+| Duże handlery > 150 linii bez UI (webhooks, CRON, business logic) | **codex-dad** | Zna projekt lokalnie |
+| Nowe pliki TS/TSX 20–150 linii (route handlers, komponenty, hooki) | codex-main | Czyta projekt lokalnie, zna App Router |
 | Edycje istniejących plików (< 50 linii zmian) | Claude bezpośrednio | Edit tool tańszy niż delegacja |
 | Nowe pliki < 20 linii | Claude bezpośrednio | Codex overhead > zysk |
 | Fixy / snippety < 10 linii | Claude bezpośrednio | Zawsze |
@@ -60,24 +64,10 @@ codex exec --dangerously-bypass-approvals-and-sandbox "..."
 # NIE używaj: --full-auto, -s workspace-write (nie działają na Windows)
 # Do review/analizy (read-only): --ephemeral
 ```
-**Ważne:** zawsze dodaj `Do NOT use Gemini — write directly.` w prompcie.
-
-### Gemini CLI — jedyna dopuszczalna składnia:
-```bash
-gemini -p "..." --output-format text 2>/dev/null | grep -v "^Loaded cached" > plik.ts
-```
-**NIGDY:** `gemini -p "..." > plik.ts` bez filtrów — wchodzi w tryb agentyczny i korumpuje pliki.
-
-**Ważne dla UI:** wklej w prompt sygnatury lokalnych hooks/utils — Gemini nie czyta projektu lokalnie.
-
 ### Weryfikacja po każdej generacji:
 ```bash
-# Po Codex:
+# Po Codex/dad:
 ls [ścieżka]            # czy plik powstał
-npx tsc --noEmit        # błędy TypeScript
-
-# Po Gemini (nowe pliki):
-head -5 plik            # usuń prefix opisu jeśli jest
 npx tsc --noEmit        # błędy TypeScript
 
 # Po migracji SQL:
@@ -89,10 +79,10 @@ npx tsc --noEmit
 ### Twoja rola (Claude):
 - Architektura i planowanie
 - Wszystkie edycje istniejących plików
-- Code review Codex/Gemini output
+- Code review codex output
 - Nowe pliki < 20 linii
 - SQL bezpośrednio jeśli < 30 linii
 
 ### Bezpieczeństwo — review generowanego kodu (project-specific):
-- **IDOR**: Codex/Gemini generują `WHERE id = $1` bez `AND salon_id = $2` — każde zapytanie do tabeli tenant-scoped MUSI filtrować po `salon_id`
+- **IDOR**: Codex generuje `WHERE id = $1` bez `AND salon_id = $2` — każde zapytanie do tabeli tenant-scoped MUSI filtrować po `salon_id`
 - Wyjątek: zapytania przez `getAuthContext()` + RLS (salon_id wymuszony przez DB) — ale tylko gdy service role NIE jest użyty

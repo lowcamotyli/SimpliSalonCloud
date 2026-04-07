@@ -5,8 +5,9 @@
  * 1. APP_URL (server-side, set explicitly)
  * 2. NEXT_PUBLIC_APP_URL (client+server, set explicitly)
  * 3. NEXT_PUBLIC_SITE_URL (legacy/public site env)
- * 4. VERCEL_PROJECT_PRODUCTION_URL / VERCEL_BRANCH_URL / VERCEL_URL
- * 5. http://localhost:3000 (local dev)
+ * 4. VERCEL_BRANCH_URL / VERCEL_URL (current deployment — preview or prod)
+ * 5. VERCEL_PROJECT_PRODUCTION_URL (fallback to prod domain)
+ * 6. http://localhost:3000 (local dev)
  */
 function normalizeCandidateUrl(value: string | undefined): string | null {
   if (!value) return null
@@ -29,14 +30,26 @@ function normalizeCandidateUrl(value: string | undefined): string | null {
   }
 }
 
+/**
+ * Returns the URL for internal server-to-server fetches (page → API route).
+ * Uses VERCEL_URL (deployment-specific, set by Vercel, cannot be misconfigured)
+ * so preview deployments never hit production API routes.
+ */
+export function getInternalBaseUrl(): string {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'http://localhost:3000'
+}
+
 export function getAppUrl(): string {
   const candidates = [
     process.env.APP_URL,
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.NEXT_PUBLIC_SITE_URL,
-    process.env.VERCEL_PROJECT_PRODUCTION_URL,
     process.env.VERCEL_BRANCH_URL,
     process.env.VERCEL_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
   ]
 
   for (const candidate of candidates) {

@@ -108,6 +108,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         )
       }
 
+      const { data: shift } = await supabase
+        .from('employee_shifts')
+        .select('start_time, end_time')
+        .eq('salon_id', salonId)
+        .eq('employee_id', item.employeeId)
+        .eq('date', item.bookingDate)
+        .maybeSingle()
+
+      if (shift) {
+        const shiftStart = timeToMinutes((shift as any).start_time)
+        const shiftEnd = timeToMinutes((shift as any).end_time)
+        if (startMinutes < shiftStart || endMinutes > shiftEnd) {
+          const fmt = (t: string) => t.slice(0, 5)
+          warnings.push(`Rezerwacja poza godzinami pracy pracownika (${fmt((shift as any).start_time)}–${fmt((shift as any).end_time)}).`)
+        }
+      }
+
       const requiredEquipment = await getRequiredEquipmentForService(item.serviceId)
       if (requiredEquipment.length > 0) {
         const startsAt = new Date(`${item.bookingDate}T${item.bookingTime}:00Z`)

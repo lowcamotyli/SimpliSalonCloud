@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'crypto'
 import { getAppUrl } from '@/lib/config/app-url'
+import { logger } from '@/lib/logger'
 
 /**
  * Przelewy24 Client
@@ -251,17 +252,33 @@ export class Przelewy24Client {
    * @returns true jeśli sygnatura jest poprawna
    */
   verifyNotificationSignature(notification: P24NotificationData): boolean {
-    const expectedSign = this.generateNotificationSign({
+    const notificationSignInput = {
+      merchantId: parseInt(this.config.merchantId),
+      posId: parseInt(this.config.posId),
       sessionId: notification.sessionId,
-      orderId: notification.orderId,
       amount: notification.amount,
+      originAmount: notification.originAmount,
       currency: notification.currency,
+      orderId: notification.orderId,
+      methodId: notification.methodId,
+      statement: notification.statement,
       crc: this.config.crc,
-    })
+    }
+    const expectedSign = this.generateNotificationSign(notificationSignInput)
 
     const a = Buffer.from(expectedSign)
     const b = Buffer.from(notification.sign)
-    return a.length === b.length && timingSafeEqual(a, b)
+    const match = a.length === b.length && timingSafeEqual(a, b)
+
+    if (!match) {
+      logger.warn('[P24_SIGN] signature mismatch', {
+        sessionId: notification.sessionId,
+        expectedPrefix: expectedSign.substring(0, 8),
+        receivedPrefix: notification.sign.substring(0, 8),
+      })
+    }
+
+    return match
   }
 
   /**
@@ -402,19 +419,30 @@ export class Przelewy24Client {
 
   /**
    * Generuje sygnaturę dla notyfikacji webhook
+   * Formuła P24: SHA384({merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crc})
    */
   private generateNotificationSign(params: {
+    merchantId: number
+    posId: number
     sessionId: string
-    orderId: number
     amount: number
+    originAmount: number
     currency: string
+    orderId: number
+    methodId: number
+    statement: string
     crc: string
   }): string {
     const str = JSON.stringify({
+      merchantId: params.merchantId,
+      posId: params.posId,
       sessionId: params.sessionId,
-      orderId: params.orderId,
       amount: params.amount,
+      originAmount: params.originAmount,
       currency: params.currency,
+      orderId: params.orderId,
+      methodId: params.methodId,
+      statement: params.statement,
       crc: params.crc,
     })
 

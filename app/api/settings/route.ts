@@ -178,7 +178,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const validatedUpdates = updateSettingsSchema.parse(updates)
-    const securedUpdates = prepareEncryptedCredentialUpdates(validatedUpdates as Record<string, any>)
+    const { email_provider, ...settingsUpdates } = validatedUpdates
+    const securedUpdates = prepareEncryptedCredentialUpdates(settingsUpdates as Record<string, any>)
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -204,6 +205,18 @@ export async function PATCH(request: NextRequest) {
 
     if (membership.role !== 'owner') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Update email_provider on salons table if provided
+    if (email_provider) {
+      const { error: salonError } = await supabase
+        .from('salons')
+        .update({ email_provider })
+        .eq('id', salonId)
+      if (salonError) {
+        logger.error('settings.PATCH salon update error', salonError, { endpoint: 'PATCH /api/settings' })
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      }
     }
 
     const { data, error } = await (supabase

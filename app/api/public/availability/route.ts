@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/middleware/api-key-auth'
+import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { availabilityQuerySchema } from '@/lib/validators/public-booking.validators'
-import { getSalonId } from '@/lib/utils/salon'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 
@@ -101,8 +100,9 @@ function generateSlots(
 }
 
 export async function GET(request: NextRequest) {
-    const authError = validateApiKey(request)
-    if (authError) return authError
+    const authResult = await resolveApiKey(request)
+    if (authResult instanceof NextResponse) return authResult
+    const { salonId } = authResult
 
     const params = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = availabilityQuerySchema.safeParse(params)
@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
 
     const { date, serviceId, employeeId } = parsed.data
     const supabase = createAdminSupabaseClient()
-    const salonId = getSalonId(request)
 
     // Pobierz duration usługi
     const { data: service } = await supabase

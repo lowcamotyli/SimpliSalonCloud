@@ -14,13 +14,15 @@ Zakres releasu obejmuje zmiany rozwijane w obszarach `SS2.0` i `SS2.1`, z nacisk
 ## Status
 - [x] Done: przygotowany plan podejscia do merge `feature/multi-booking -> main`
 - [x] Done: przygotowana checklista release/cutover
-- [ ] NEXT: potwierdzic release commit SHA na `feature/multi-booking`
-- [ ] NEXT: przejsc checklisty techniczne i produktowe na branchu release
-- [ ] TODO: utworzyc branch posredni `release/ss2-main-cutover`
-- [ ] TODO: wykonac walidacje build/migrations/env
-- [ ] TODO: wykonac smoke test krytycznych flow
-- [ ] TODO: otworzyc PR do `main`
-- [ ] TODO: wykonac merge i deploy w oknie wdrozeniowym
+- [x] Done: release commit SHA = `e73a99c44cf0ec955b7d70521e946068416d5232`
+- [x] Done: `npx tsc --noEmit` clean na release branch
+- [x] Done: utworzony branch `release/ss2-main-cutover` od release SHA
+- [x] Done: PR otwarty — https://github.com/lowcamotyli/SimpliSalonCloud/pull/1
+- [ ] NEXT: sprawdzic drift migracji — `supabase migration list --linked` vs lista 54 migracji w PR
+- [ ] NEXT: wykonac backup bazy PROD przed mergiem
+- [ ] NEXT: smoke test krytycznych flow (booking, multi-booking, forms, surveys, payments)
+- [ ] TODO: wykonac merge PR #1 do `main` w oknie wdrozeniowym
+- [ ] TODO: weryfikacja post-deploy (logi Vercel + Supabase, smoke test na PROD)
 
 ## Key decisions / constraints
 - `feature/multi-booking` jest obecnie stabilnym zrodlem prawdy; `main` jest historycznie opozniony.

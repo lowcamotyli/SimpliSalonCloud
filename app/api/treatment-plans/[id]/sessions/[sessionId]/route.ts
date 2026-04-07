@@ -109,6 +109,8 @@ export const PATCH = withErrorHandling(async (
 
   const body = await request.json()
   const updatePayload: TreatmentSessionUpdate = {}
+  let planStatusChanged = false
+  let newPlanStatus: string | null = null
 
   if (body?.status !== undefined) {
     if (typeof body.status !== 'string' || !['completed', 'cancelled'].includes(body.status)) {
@@ -124,6 +126,20 @@ export const PATCH = withErrorHandling(async (
 
   if (body?.booking_id !== undefined) {
     updatePayload.booking_id = parseOptionalString(body.booking_id, 'booking_id')
+
+    if (updatePayload.booking_id !== null) {
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('id', updatePayload.booking_id)
+        .eq('salon_id', salonId)
+        .maybeSingle()
+
+      if (bookingError) throw bookingError
+      if (!booking) {
+        throw new ValidationError('booking_id must reference a booking in the same salon')
+      }
+    }
   }
 
   if (body?.treatment_record_id !== undefined) {
@@ -163,31 +179,64 @@ export const PATCH = withErrorHandling(async (
     throw error
   }
 
-  // Automation hook: check if all sessions completed → mark plan as completed
-  if (session.status === 'completed') {
-    const { data: plan } = await supabase
+  const { data: plan, error: planError } = await supabase
+    .from('treatment_plans')
+    .select('id, status')
+    .eq('id', id)
+    .eq('salon_id', salonId)
+    .single()
+
+  if (planError) {
+    if (planError.code === 'PGRST116') throw new NotFoundError('TreatmentPlan', id)
+    throw planError
+  }
+
+  if (session.status === 'completed' && plan.status === 'planned') {
+    const { error: activatePlanError } = await supabase
       .from('treatment_plans')
-      .select('id, client_id, total_sessions, status')
+      .update({ status: 'active' })
       .eq('id', id)
       .eq('salon_id', salonId)
-      .single()
 
-    if (plan && plan.status === 'active' && session.session_number === plan.total_sessions) {
-      await supabase
-        .from('treatment_plans')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('salon_id', salonId)
+    if (activatePlanError) throw activatePlanError
 
-      // TODO(INFRA-A-event-bus): emit('treatment_plan.completed', {
-      //   id: crypto.randomUUID(), type: 'treatment_plan.completed', version: 1,
-      //   occurredAt: new Date().toISOString(), tenantId: salonId,
-      //   aggregateId: plan.id, payload: { clientId: plan.client_id, totalSessions: plan.total_sessions }
-      // })
-      console.log('[TREATMENT-PLAN] Plan completed — automation pending event bus (INFRA-A)')
-      // Search tag: INFRA-A-event-bus — replace when lib/events/bus.ts is implemented
+    planStatusChanged = true
+    newPlanStatus = 'active'
+  }
+
+  const { data: allSessions, error: allSessionsError } = await supabase
+    .from('treatment_sessions')
+    .select('status')
+    .eq('plan_id', id)
+    .eq('salon_id', salonId)
+
+  if (allSessionsError) throw allSessionsError
+
+  const allSessionsClosed = (allSessions ?? []).every((item) =>
+    ['completed', 'cancelled'].includes(item.status)
+  )
+
+  if (allSessionsClosed) {
+    const { data: completedPlan, error: completePlanError } = await supabase
+      .from('treatment_plans')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('salon_id', salonId)
+      .neq('status', 'completed')
+      .select('status')
+      .maybeSingle()
+
+    if (completePlanError) throw completePlanError
+
+    if (completedPlan) {
+      planStatusChanged = true
+      newPlanStatus = 'completed'
     }
   }
 
-  return NextResponse.json({ session })
+  return NextResponse.json({
+    session,
+    planStatusChanged,
+    newPlanStatus: newPlanStatus ?? plan.status,
+  })
 })
