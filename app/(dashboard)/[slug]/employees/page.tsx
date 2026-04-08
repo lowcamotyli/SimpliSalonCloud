@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useUpdateEmployeeRole, useLinkEmployeeUser } from '@/hooks/use-employees'
+import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useUpdateEmployeeRole, useLinkEmployeeUser, useResetEmployeePassword } from '@/hooks/use-employees'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScheduleTab } from '@/components/employees/schedule-tab'
 import { EmployeeServicesTab } from '@/components/employees/employee-services-tab'
@@ -47,7 +47,10 @@ import {
   XCircle,
   Sparkles,
   ShieldCheck,
-  Briefcase
+  Briefcase,
+  KeyRound,
+  Copy,
+  CheckCheck,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,6 +94,10 @@ export default function EmployeesPage() {
   const [linkMode, setLinkMode] = useState<'existing' | 'new'>('existing')
   const [tempPassword, setTempPassword] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [resetPasswordEmployee, setResetPasswordEmployee] = useState<any | null>(null)
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false)
+  const [generatedPassword, setGeneratedPassword] = useState('')
+  const [passwordCopied, setPasswordCopied] = useState(false)
 
   const params = useParams()
   const slug = params.slug as string
@@ -114,6 +121,7 @@ export default function EmployeesPage() {
   const deleteMutation = useDeleteEmployee(editingEmployee?.id || '')
   const roleMutation = useUpdateEmployeeRole(roleDialogEmployee?.id || '')
   const linkMutation = useLinkEmployeeUser(linkDialogEmployee?.id || '')
+  const resetPasswordMutation = useResetEmployeePassword(resetPasswordEmployee?.id || '')
   const { isOwnerOrManager } = useCurrentRole()
 
   const form = useForm<EmployeeFormData>({
@@ -233,6 +241,30 @@ export default function EmployeesPage() {
     setLinkMode('existing')
     setTempPassword('')
     setIsLinkDialogOpen(true)
+  }
+
+  const handleOpenResetPasswordDialog = (employee: any) => {
+    if (!isOwnerOrManager()) return
+    setResetPasswordEmployee(employee)
+    setGeneratedPassword('')
+    setPasswordCopied(false)
+    setIsResetPasswordDialogOpen(true)
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordEmployee) return
+    try {
+      const { tempPassword: pwd } = await resetPasswordMutation.mutateAsync()
+      setGeneratedPassword(pwd)
+    } catch {
+      // onError in mutation handles toast
+    }
+  }
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(generatedPassword)
+    setPasswordCopied(true)
+    setTimeout(() => setPasswordCopied(false), 2000)
   }
 
   const handleLinkAccount = async () => {
@@ -460,6 +492,16 @@ export default function EmployeesPage() {
                             >
                               <User className="mr-2 h-4 w-4" />
                               Powiąż konto
+                            </Button>
+                          )}
+                          {isOwnerOrManager() && employee.user_id && (
+                            <Button
+                              variant="outline"
+                              className="w-full rounded-xl font-bold text-sky-700 border-sky-200 hover:bg-sky-50"
+                              onClick={() => handleOpenResetPasswordDialog(employee)}
+                            >
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              Resetuj hasło
                             </Button>
                           )}
                         </div>
@@ -891,6 +933,68 @@ export default function EmployeesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={(open) => {
+        if (!open) { setGeneratedPassword(''); setPasswordCopied(false) }
+        setIsResetPasswordDialogOpen(open)
+      }}>
+        <DialogContent className='sm:max-w-md rounded-2xl'>
+          <DialogHeader>
+            <DialogTitle className='font-black text-xl flex items-center gap-2'>
+              <KeyRound className='h-5 w-5 text-sky-600' />
+              Resetuj haslo
+            </DialogTitle>
+            <DialogDescription className='text-gray-500'>
+              {resetPasswordEmployee?.first_name} {resetPasswordEmployee?.last_name}
+              {resetPasswordEmployee?.email && <> &middot; {resetPasswordEmployee.email}</>}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!generatedPassword ? (
+            <div className='py-2 space-y-4'>
+              <p className='text-sm text-gray-600'>
+                Zostanie wygenerowane nowe tymczasowe haslo. Pracownik powinien je zmienic po pierwszym logowaniu.
+              </p>
+              <DialogFooter>
+                <Button variant='outline' onClick={() => setIsResetPasswordDialogOpen(false)} className='rounded-xl'>
+                  Anuluj
+                </Button>
+                <Button
+                  onClick={handleResetPassword}
+                  disabled={resetPasswordMutation.isPending}
+                  className='rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold'
+                >
+                  <KeyRound className='mr-2 h-4 w-4' />
+                  {resetPasswordMutation.isPending ? 'Generowanie...' : 'Wygeneruj haslo'}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className='py-2 space-y-4'>
+              <p className='text-sm text-gray-600'>
+                Haslo zostalo zmienione. Przekaz je pracownikowi bezpiecznie.
+              </p>
+              <div className='flex items-center gap-2'>
+                <code className='flex-1 bg-gray-100 rounded-xl px-4 py-3 text-base font-mono font-bold tracking-widest text-gray-900 select-all'>
+                  {generatedPassword}
+                </code>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  onClick={handleCopyPassword}
+                  className='rounded-xl shrink-0'
+                >
+                  {passwordCopied ? <CheckCheck className='h-4 w-4 text-emerald-600' /> : <Copy className='h-4 w-4' />}
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setIsResetPasswordDialogOpen(false)} className='rounded-xl font-bold'>
+                  Gotowe
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

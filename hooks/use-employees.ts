@@ -152,6 +152,28 @@ export function useLinkEmployeeUser(id: string) {
   })
 }
 
+export function useResetEmployeePassword(id: string) {
+  return useMutation({
+    mutationFn: async (): Promise<{ tempPassword: string }> => {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resetPassword: true }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to reset password')
+      }
+
+      return res.json()
+    },
+    onError: (error: Error) => {
+      toast.error(error.message)
+    },
+  })
+}
+
 export function useDeleteEmployee(id: string) {
   const queryClient = useQueryClient()
 

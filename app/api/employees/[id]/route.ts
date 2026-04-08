@@ -149,6 +149,41 @@ export async function handlePatchEmployee(
     const employeeId = id
     const body = await request.json()
 
+    if (body?.resetPassword) {
+      // Only owner/manager can reset passwords
+      const currentRole = currentUser.app_metadata.role as Role | undefined
+      if (currentRole !== RBAC_ROLES.OWNER && currentRole !== RBAC_ROLES.MANAGER) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+
+      const { data: emp } = await (adminSupabase as any)
+        .from('employees')
+        .select('user_id, salon_id')
+        .eq('id', employeeId)
+        .single()
+
+      if (!emp?.user_id) {
+        return NextResponse.json({ error: 'Employee has no linked account' }, { status: 400 })
+      }
+
+      if (emp.salon_id !== currentUser.app_metadata.salon_id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#'
+      const tempPassword = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+
+      const { error: updateError } = await adminSupabase.auth.admin.updateUserById(emp.user_id, {
+        password: tempPassword,
+      })
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ tempPassword })
+    }
+
     if (body?.email) {
       const { email } = linkUserSchema.parse(body)
 
