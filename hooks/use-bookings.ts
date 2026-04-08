@@ -12,6 +12,7 @@ type Booking = {
   surcharge: number
   total_price: number
   notes: string | null
+  equipment_name?: string | null
   employee: {
     id: string
     first_name: string
@@ -42,6 +43,7 @@ type CreateBookingData = {
   employeeId: string
   serviceId: string
   addon_ids?: string[]
+  forceOverride?: boolean
   clientId?: string
   clientName?: string
   clientPhone?: string
@@ -84,6 +86,11 @@ function getCreateBookingErrorMessage(error: any) {
   return error?.message || error?.error || 'Nie udalo sie zapisac wizyty'
 }
 
+type BookingApiError = Error & {
+  status?: number
+  data?: any
+}
+
 export function useBookings(filters?: BookingFilters) {
   const params = new URLSearchParams()
   if (filters?.startDate) params.set('startDate', filters.startDate)
@@ -117,7 +124,10 @@ export function useCreateBooking() {
       if (!res.ok) {
         const error = await res.json()
         const message = getCreateBookingErrorMessage(error)
-        throw new Error(message)
+        const apiError = new Error(message) as BookingApiError
+        apiError.status = res.status
+        apiError.data = error
+        throw apiError
       }
 
       return res.json()
@@ -126,8 +136,10 @@ export function useCreateBooking() {
       queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
       toast.success('Rezerwacja utworzona pomyślnie')
     },
-    onError: (error: Error) => {
-      toast.error(error.message)
+    onError: (error: BookingApiError) => {
+      if (error.status !== 409) {
+        toast.error(error.message)
+      }
     },
   })
 }
