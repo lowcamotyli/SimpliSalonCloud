@@ -13,10 +13,10 @@ const VALID_STATUSES: GroupStatus[] = ['completed', 'cancelled', 'no_show']
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ groupId: string }> }
 ) {
   try {
-    const { id } = await params
+    const { groupId } = await params
     const { supabase, salonId: authSalonId } = await getAuthContext()
     const body = (await request.json()) as Partial<PatchBody>
 
@@ -27,7 +27,7 @@ export async function PATCH(
     const { data: existingVisitGroup, error: visitGroupError } = await supabase
       .from('visit_groups')
       .select('*')
-      .eq('id', id)
+      .eq('id', groupId)
       .eq('salon_id', authSalonId)
       .single()
 
@@ -55,7 +55,7 @@ export async function PATCH(
     const { data: visitGroup, error: updateVisitGroupError } = await supabase
       .from('visit_groups')
       .update(visitGroupUpdate)
-      .eq('id', id)
+      .eq('id', groupId)
       .eq('salon_id', authSalonId)
       .select('*')
       .single()
@@ -67,7 +67,7 @@ export async function PATCH(
     const { data: bookings, error: updateBookingsError } = await supabase
       .from('bookings')
       .update({ status: body.status })
-      .eq('visit_group_id', id)
+      .eq('visit_group_id', groupId)
       .eq('salon_id', authSalonId)
       .select('*')
 
