@@ -58,7 +58,7 @@ interface PendingEmail {
     bookingDate?: string;
     bookingTime?: string;
   } | null;
-  failure_reason: 'parse_failed' | 'service_not_found' | 'employee_not_found' | 'other';
+  failure_reason: 'parse_failed' | 'service_not_found' | 'employee_not_found' | 'cancel_not_found' | 'reschedule_not_found' | 'other';
   failure_detail: string | null;
   status: 'pending' | 'resolved' | 'ignored';
   created_at: string;
@@ -216,6 +216,18 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
             Błąd parsowania
           </Badge>
         );
+      case 'cancel_not_found':
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+            Anulowanie — brak wizyty
+          </Badge>
+        );
+      case 'reschedule_not_found':
+        return (
+          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
+            Zmiana — brak wizyty
+          </Badge>
+        );
       default:
         return <Badge variant="secondary" className="text-xs">Inny</Badge>;
     }
@@ -311,7 +323,7 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                                   size="sm"
                                   variant="default"
                                   className="h-7 gap-1 text-xs px-2.5"
-                                  disabled={email.failure_reason === 'parse_failed'}
+                                  disabled={['parse_failed', 'cancel_not_found', 'reschedule_not_found'].includes(email.failure_reason)}
                                   onClick={() => handleOpenAssign(email)}
                                 >
                                   <UserPlus className="h-3.5 w-3.5" />
@@ -322,6 +334,11 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                             {email.failure_reason === 'parse_failed' && (
                               <TooltipContent>
                                 <p>Email nie mógł być sparsowany</p>
+                              </TooltipContent>
+                            )}
+                            {(email.failure_reason === 'cancel_not_found' || email.failure_reason === 'reschedule_not_found') && (
+                              <TooltipContent>
+                                <p>Wizyta nie istnieje w systemie — zignoruj ten wpis</p>
                               </TooltipContent>
                             )}
                           </Tooltip>
