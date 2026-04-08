@@ -165,7 +165,7 @@ export const POST = withErrorHandling(async (
       client = existingClient
     } else {
       const { data: codeData } = await (admin as any).rpc('generate_client_code', { salon_uuid: salonId })
-      const clientCode = codeData || `B${Date.now().toString().slice(-6)}`
+      const clientCode = codeData || `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
 
       const { data: newClient, error: clientError } = await (admin.from('clients') as any)
         .insert({
@@ -179,8 +179,32 @@ export const POST = withErrorHandling(async (
         .select()
         .single()
 
-      if (clientError) throw clientError
-      client = newClient
+      if (clientError) {
+        const isClientCodeConflict =
+          clientError.code === '23505' &&
+          (clientError.constraint === 'clients_salon_id_client_code_key' ||
+            String(clientError.message || '').includes('clients_salon_id_client_code_key'))
+
+        if (!isClientCodeConflict) throw clientError
+
+        const fallbackClientCode = `BK${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`
+        const { data: retriedClient, error: retryClientError } = await (admin.from('clients') as any)
+          .insert({
+            salon_id: salonId,
+            client_code: fallbackClientCode,
+            full_name: clientName,
+            phone: parsed.clientPhone || null,
+            email: parsed.clientEmail || null,
+            visit_count: 0,
+          })
+          .select()
+          .single()
+
+        if (retryClientError) throw retryClientError
+        client = retriedClient
+      } else {
+        client = newClient
+      }
     }
 
     if (!client) {
