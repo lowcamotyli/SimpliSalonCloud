@@ -6,6 +6,7 @@ type GroupStatus = 'completed' | 'cancelled' | 'no_show'
 interface PatchBody {
   status: GroupStatus
   paymentMethod?: string
+  surcharge?: number
 }
 
 const VALID_STATUSES: GroupStatus[] = ['completed', 'cancelled', 'no_show']
@@ -39,12 +40,16 @@ export async function PATCH(
       existingVisitGroup.status !== 'no_show' &&
       !!existingVisitGroup.client_id
 
-    const visitGroupUpdate: { status: GroupStatus; payment_method?: string } = {
+    const visitGroupUpdate: { status: GroupStatus; payment_method?: string; surcharge?: number } = {
       status: body.status,
     }
 
     if (body.paymentMethod !== undefined) {
       visitGroupUpdate.payment_method = body.paymentMethod
+    }
+
+    if (body.surcharge !== undefined) {
+      visitGroupUpdate.surcharge = body.surcharge
     }
 
     const { data: visitGroup, error: updateVisitGroupError } = await supabase

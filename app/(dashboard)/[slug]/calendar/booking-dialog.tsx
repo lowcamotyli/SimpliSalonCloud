@@ -123,7 +123,9 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const updateMutation = useUpdateBooking(booking?.id ?? '')
 
   // Edit mode state
-  const [surcharge, setSurcharge] = useState<number>(booking?.surcharge ?? 0)
+  const [surcharge, setSurcharge] = useState<number>(
+    booking?.visit_group_id ? Number((booking as any).visit_group?.surcharge) || 0 : (booking?.surcharge ?? 0)
+  )
   const [addonsTotal, setAddonsTotal] = useState(0)
   const [showVoucherPanel, setShowVoucherPanel] = useState(false)
   const [voucherCode, setVoucherCode] = useState('')
@@ -713,7 +715,11 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   }
 
   useEffect(() => {
-    setSurcharge(booking?.surcharge ?? 0)
+    setSurcharge(
+      booking?.visit_group_id
+        ? Number((booking as any).visit_group?.surcharge) || 0
+        : (booking?.surcharge ?? 0)
+    )
     setShowVoucherPanel(false)
     setVoucherCode('')
     setVoucherData(null)
@@ -834,6 +840,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           body: JSON.stringify({
             status: 'completed',
             paymentMethod,
+            surcharge: surcharge || 0,
           }),
         })
 
@@ -1107,37 +1114,35 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   <p className="text-lg font-bold text-purple-600">
                     {formatPrice(
                       isGroupBooking
-                        ? Number(booking.visit_group?.total_price) || 0
+                        ? (Number(booking.visit_group?.total_price) || 0) + surcharge
                         : booking.base_price + addonsTotal + surcharge
                     )}
                   </p>
-                  {isGroupBooking ? null : (
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="text-xs text-gray-600">
-                        Baza: {formatPrice(booking.base_price)}
-                        {addonsTotal > 0 && <span className="ml-1 text-purple-500">+ Dodatki: {formatPrice(addonsTotal)}</span>}
-                      </span>
-                      {booking.status === 'scheduled' ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-600">+ Doplata:</span>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={surcharge}
-                            onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
-                            className="h-6 w-20 px-1 text-xs"
-                          />
-                        </div>
-                      ) : (
-                        booking.surcharge > 0 && (
-                          <span className="text-xs text-gray-600">
-                            + Doplata: {formatPrice(booking.surcharge)}
-                          </span>
-                        )
-                      )}
-                    </div>
-                  )}
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-xs text-gray-600">
+                      Baza: {formatPrice(isGroupBooking ? Number(booking.visit_group?.total_price) || 0 : booking.base_price)}
+                      {!isGroupBooking && addonsTotal > 0 && <span className="ml-1 text-purple-500">+ Dodatki: {formatPrice(addonsTotal)}</span>}
+                    </span>
+                    {booking.status === 'scheduled' ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-600">+ Doplata:</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={surcharge}
+                          onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                          className="h-6 w-20 px-1 text-xs"
+                        />
+                      </div>
+                    ) : (
+                      surcharge > 0 && (
+                        <span className="text-xs text-gray-600">
+                          + Doplata: {formatPrice(surcharge)}
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
 
