@@ -1308,6 +1308,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                         last_name: employee.last_name ?? '',
                       }))}
                       onSaved={() => {
+                        void queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
                         onClose()
                       }}
                     />
