@@ -294,7 +294,7 @@ export const PATCH = withErrorHandling(async (
   }
   if (validatedData.date) updateData.booking_date = validatedData.date
   if (validatedData.start_time) updateData.booking_time = validatedData.start_time
-  if (serviceChanged || addonsChanged) updateData.total_price = targetBasePrice + addonsTotal
+  if (serviceChanged || addonsChanged) updateData.surcharge = addonsTotal
 
   const shouldRegisterNoShow =
     validatedData.status === 'no_show' &&
