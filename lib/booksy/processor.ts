@@ -540,7 +540,7 @@ export class BooksyProcessor {
       salon_uuid: this.salonId,
     })
     const generatedCode = typeof codeData === 'string' ? codeData.trim() : ''
-    const fallbackCode = `B${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`
+    const fallbackCode = `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
     const clientCode = generatedCode || fallbackCode
 
     // Create new client
@@ -556,7 +556,30 @@ export class BooksyProcessor {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      const isClientCodeConflict =
+        error.code === '23505' &&
+        String(error.message || '').includes('clients_salon_id_client_code_key')
+
+      if (!isClientCodeConflict) throw error
+
+      const fallbackClientCode = `BK${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`
+      const { data: retriedClient, error: retryError } = await this.supabase
+        .from('clients')
+        .insert({
+          salon_id: this.salonId,
+          client_code: fallbackClientCode,
+          full_name: parsed.clientName,
+          phone: parsed.clientPhone,
+          email: parsed.clientEmail || null,
+        })
+        .select()
+        .single()
+
+      if (retryError) throw retryError
+      return retriedClient
+    }
+
     return newClient
   }
 
