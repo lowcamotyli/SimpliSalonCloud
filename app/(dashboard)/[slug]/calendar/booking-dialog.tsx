@@ -515,9 +515,19 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
       return selectedClient.id
     }
 
+    const rawPhone = newClientPhone.trim()
+    const normalizedPhone = rawPhone.replace(/[\s\-\(\)]/g, '')
+    const isValidPhone = /^\+?[0-9]{9,15}$/.test(normalizedPhone)
+    let phoneToSave = rawPhone
+    if (!isValidPhone) {
+      toast.warning('Numer telefonu jest niepoprawny — wizyta zostanie zapisana')
+      const digitsOnly = rawPhone.replace(/\D/g, '')
+      phoneToSave = digitsOnly.length >= 9 ? digitsOnly : '000000000'
+    }
+
     const createdClient = await createClientMutation.mutateAsync({
       fullName: newClientName.trim(),
-      phone: newClientPhone.trim(),
+      phone: phoneToSave,
     })
 
     return createdClient.client?.id ?? createdClient.id
