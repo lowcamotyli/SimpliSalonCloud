@@ -522,7 +522,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     if (!isValidPhone) {
       toast.warning('Numer telefonu jest niepoprawny — wizyta zostanie zapisana')
       const digitsOnly = rawPhone.replace(/\D/g, '')
-      phoneToSave = digitsOnly.length >= 9 ? digitsOnly : '000000000'
+      phoneToSave = digitsOnly.length >= 9 ? digitsOnly : `000${Date.now().toString().slice(-9)}`
     }
 
     const createdClient = await createClientMutation.mutateAsync({
