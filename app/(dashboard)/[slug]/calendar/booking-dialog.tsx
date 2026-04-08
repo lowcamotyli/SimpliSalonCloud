@@ -950,13 +950,13 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{booking ? 'Edycja wizyty' : 'Nowa wizyta'}</DialogTitle>
         </DialogHeader>
 
         {booking ? (
-          <div className="space-y-6">
+          <div className="flex-1 space-y-6 overflow-y-auto pr-1">
             <div className="space-y-4">
               {booking.visit_group_id && (
                 <div className="glass rounded-lg p-3">
@@ -1287,7 +1287,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
             </DialogFooter>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="flex-1 space-y-6 overflow-y-auto pr-1">
             <div className="rounded-md border bg-muted/20 p-4 text-sm">
               <div className="font-medium">
                 {selectedClient?.full_name || newClientName || 'Nowy klient'}
