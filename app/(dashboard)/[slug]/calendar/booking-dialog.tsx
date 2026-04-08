@@ -994,6 +994,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
           throw new Error('Failed to delete booking')
         }
 
+        await queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
         toast.success('Wizyta usunieta')
         onClose()
       } catch {
