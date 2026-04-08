@@ -3359,6 +3359,7 @@ export type Database = {
           payment_method: string | null
           salon_id: string
           status: string
+          surcharge: number | null
           total_duration: number | null
           total_price: number | null
           updated_at: string
@@ -3372,6 +3373,7 @@ export type Database = {
           payment_method?: string | null
           salon_id: string
           status?: string
+          surcharge?: number | null
           total_duration?: number | null
           total_price?: number | null
           updated_at?: string
@@ -3385,6 +3387,7 @@ export type Database = {
           payment_method?: string | null
           salon_id?: string
           status?: string
+          surcharge?: number | null
           total_duration?: number | null
           total_price?: number | null
           updated_at?: string
