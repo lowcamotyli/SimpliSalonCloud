@@ -18,6 +18,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BookingCartItem } from '@/components/calendar/booking-cart-item'
+import BookingServicesEditor from '@/components/calendar/booking-services-editor'
+import { Separator } from '@/components/ui/separator'
 import { useCreateBooking, useUpdateBooking } from '@/hooks/use-bookings'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
 import { useEmployees } from '@/hooks/use-employees'
@@ -646,7 +648,26 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
         if (!response.ok) {
           const error = await response.json().catch(() => null)
           if (response.status === 409 && error?.conflictingItemIndex !== undefined) {
-            throw new Error(`Termin niedostępny dla usługi ${error.conflictingItemIndex + 1}. Wybierz inny termin.`)
+            setConflictError(
+              `Termin niedostepny dla uslugi ${error.conflictingItemIndex + 1}. Wybierz inny termin albo zapisz mimo konfliktu.`
+            )
+            setForceOverride(false)
+            return
+          }
+          if (response.status === 409 && error?.message) {
+            setConflictError(error.message)
+            setForceOverride(false)
+            return
+          }
+          if (response.status === 409 && error?.error) {
+            setConflictError(error.error)
+            setForceOverride(false)
+            return
+          }
+          if (response.status === 409) {
+            setConflictError('Wykryto konflikt terminu. Wybierz inny termin albo zapisz mimo konfliktu.')
+            setForceOverride(false)
+            return
           }
           const errorCode = error?.error
           const errorMessage =
@@ -671,9 +692,20 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
         toast.success('Wizyta grupowa utworzona')
       }
 
+      setConflictError(null)
+      setForceOverride(false)
       onClose()
     } catch (error) {
+      const status =
+        typeof error === 'object' && error !== null && 'status' in error
+          ? (error as { status?: number }).status
+          : undefined
       const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac wizyty'
+      if (status === 409) {
+        setConflictError(message)
+        setForceOverride(false)
+        return
+      }
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -1042,6 +1074,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   </div>
                 )}
 
+                {booking.equipment_name && (
+                  <div className="glass rounded-lg p-3">
+                    <Label className="text-xs font-semibold uppercase text-gray-600">
+                      Sprzęt / Stanowisko
+                    </Label>
+                    <p className="font-bold text-gray-900">{booking.equipment_name}</p>
+                  </div>
+                )}
+
                 <div className="glass rounded-lg p-3">
                   <Label className="text-xs font-semibold uppercase text-gray-600">Status</Label>
                   <Badge
@@ -1225,6 +1266,48 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   </>
                 )}
               </DialogFooter>
+
+              {booking?.id && (
+                <div className="space-y-4">
+                  <Separator />
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                      Usługi w wizycie
+                    </h3>
+                    <BookingServicesEditor
+                      bookingId={booking.id}
+                      groupId={booking.visit_group_id ?? undefined}
+                      initialServices={
+                        groupBookings && groupBookings.length > 0
+                          ? groupBookings.map((b) => ({
+                              id: b.id,
+                              service_id: b.service_id ?? null,
+                              employee_id: b.employee_id ?? null,
+                              start_time: b.start_time ?? b.booking_time ?? '',
+                              addon_ids: [],
+                            }))
+                          : [
+                              {
+                                id: booking.id,
+                                service_id: booking.service_id ?? null,
+                                employee_id: booking.employee_id ?? null,
+                                start_time: booking.start_time ?? booking.booking_time ?? '',
+                                addon_ids: [],
+                              },
+                            ]
+                      }
+                      availableServices={services}
+                      availableEmployees={employees.map((employee) => ({
+                        ...employee,
+                        last_name: employee.last_name ?? '',
+                      }))}
+                      onSaved={() => {
+                        onClose()
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : step === 'client' ? (
@@ -1491,6 +1574,24 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               Dodaj kolejna usluge
             </Button>
 
+            {conflictError && (
+              <Alert variant="destructive">
+                <AlertDescription className="space-y-3">
+                  <p>{conflictError}</p>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="force-override"
+                      checked={forceOverride}
+                      onCheckedChange={(checked) => setForceOverride(checked === true)}
+                    />
+                    <Label htmlFor="force-override" className="cursor-pointer leading-5">
+                      Akceptuję kolizję — zapisz wizytę mimo to
+                    </Label>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <DialogFooter className="flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1 text-sm">
                 <div>Laczny czas: {totalDuration} min</div>
@@ -1520,6 +1621,21 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 >
                   {isCheckingDraftAvailability ? 'Sprawdzam...' : 'Zapisz wizyte'}
                 </Button>
+                {conflictError && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleSave(true)}
+                    disabled={
+                      !forceOverride ||
+                      isSaving ||
+                      createBookingMutation.isPending ||
+                      createClientMutation.isPending
+                    }
+                  >
+                    Zapisz mimo konfliktu
+                  </Button>
+                )}
               </div>
             </DialogFooter>
           </div>
