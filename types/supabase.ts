@@ -592,6 +592,123 @@ export type Database = {
           },
         ]
       }
+      booksy_gmail_notifications: {
+        Row: {
+          booksy_gmail_account_id: string
+          created_at: string
+          email_address: string
+          error_message: string | null
+          history_id: number
+          id: string
+          processed_at: string | null
+          processing_status: string
+          pubsub_message_id: string
+          received_at: string
+          salon_id: string
+        }
+        Insert: {
+          booksy_gmail_account_id: string
+          created_at?: string
+          email_address: string
+          error_message?: string | null
+          history_id: number
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+          pubsub_message_id: string
+          received_at?: string
+          salon_id: string
+        }
+        Update: {
+          booksy_gmail_account_id?: string
+          created_at?: string
+          email_address?: string
+          error_message?: string | null
+          history_id?: number
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+          pubsub_message_id?: string
+          received_at?: string
+          salon_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booksy_gmail_notifications_booksy_gmail_account_id_fkey"
+            columns: ["booksy_gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "booksy_gmail_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booksy_gmail_notifications_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booksy_gmail_watches: {
+        Row: {
+          booksy_gmail_account_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          last_history_id: number | null
+          last_notification_at: string | null
+          last_sync_at: string | null
+          renewal_count: number
+          salon_id: string
+          updated_at: string
+          watch_expiration: string | null
+          watch_status: string
+        }
+        Insert: {
+          booksy_gmail_account_id: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_history_id?: number | null
+          last_notification_at?: string | null
+          last_sync_at?: string | null
+          renewal_count?: number
+          salon_id: string
+          updated_at?: string
+          watch_expiration?: string | null
+          watch_status?: string
+        }
+        Update: {
+          booksy_gmail_account_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_history_id?: number | null
+          last_notification_at?: string | null
+          last_sync_at?: string | null
+          renewal_count?: number
+          salon_id?: string
+          updated_at?: string
+          watch_expiration?: string | null
+          watch_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booksy_gmail_watches_booksy_gmail_account_id_fkey"
+            columns: ["booksy_gmail_account_id"]
+            isOneToOne: true
+            referencedRelation: "booksy_gmail_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booksy_gmail_watches_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booksy_parsed_events: {
         Row: {
           booksy_raw_email_id: string
@@ -761,6 +878,66 @@ export type Database = {
           },
           {
             foreignKeyName: "booksy_raw_emails_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booksy_reconciliation_runs: {
+        Row: {
+          booksy_gmail_account_id: string | null
+          completed_at: string | null
+          emails_backfilled: number | null
+          emails_checked: number | null
+          emails_missing: number | null
+          error_message: string | null
+          id: string
+          salon_id: string
+          started_at: string
+          status: string
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          booksy_gmail_account_id?: string | null
+          completed_at?: string | null
+          emails_backfilled?: number | null
+          emails_checked?: number | null
+          emails_missing?: number | null
+          error_message?: string | null
+          id?: string
+          salon_id: string
+          started_at?: string
+          status?: string
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          booksy_gmail_account_id?: string | null
+          completed_at?: string | null
+          emails_backfilled?: number | null
+          emails_checked?: number | null
+          emails_missing?: number | null
+          error_message?: string | null
+          id?: string
+          salon_id?: string
+          started_at?: string
+          status?: string
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booksy_reconciliation_runs_booksy_gmail_account_id_fkey"
+            columns: ["booksy_gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "booksy_gmail_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booksy_reconciliation_runs_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"

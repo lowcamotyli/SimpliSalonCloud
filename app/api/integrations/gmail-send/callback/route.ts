@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getGmailSendRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { encryptSecret } from '@/lib/messaging/crypto'
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-    const redirectUri = `${request.nextUrl.origin}/api/integrations/gmail-send/callback`
+    const redirectUri = getGmailSendRedirectUri()
 
     if (!clientId || !clientSecret) {
       throw new Error('Missing Gmail Send OAuth environment variables')

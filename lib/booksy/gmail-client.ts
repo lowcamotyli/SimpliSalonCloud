@@ -207,10 +207,13 @@ export class GmailClient {
       const subject = headers.find((h: any) => h.name.toLowerCase() === 'subject')?.value || ''
       const from = headers.find((h: any) => h.name.toLowerCase() === 'from')?.value || ''
       const date = headers.find((h: any) => h.name.toLowerCase() === 'date')?.value || ''
-      const internalDate =
+      const parsedInternalDateMs =
         typeof message.internalDate === 'string' && message.internalDate.length > 0
-          ? new Date(Number(message.internalDate)).toISOString()
-          : null
+          ? Number(message.internalDate)
+          : Number.NaN
+      const internalDate = Number.isFinite(parsedInternalDateMs)
+        ? new Date(parsedInternalDateMs).toISOString()
+        : null
 
       let body = ''
 

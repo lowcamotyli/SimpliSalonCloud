@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
           })
           .eq('salon_id', profile.salon_id)
       },
+      ledger: {
+        supabase: admin,
+        salonId: profile.salon_id,
+      },
     })
 
     let messages

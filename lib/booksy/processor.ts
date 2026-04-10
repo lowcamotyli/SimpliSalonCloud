@@ -1,4 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
+import { createHash } from 'crypto'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 
 interface ParsedBooking {
@@ -21,6 +23,8 @@ interface ProcessEmailOptions {
   eventId?: string
   messageId?: string  // Gmail message ID — used to save failed emails for manual review
 }
+
+type ParsedEventType = 'created' | 'cancelled' | 'rescheduled' | 'unknown'
 
 export class BooksyProcessor {
   constructor(
@@ -53,63 +57,26 @@ export class BooksyProcessor {
       }
       logger.info('[Booksy] Step 1: Email parsed', { type: parsed.type })
 
-      // Route cancellations and reschedules without further steps
-      if (parsed.type === 'cancel') {
-        logger.info('[Booksy] Handling cancellation for:', { clientName: parsed.clientName })
-        return await this.handleCancellation(parsed)
-      }
+      if (this.isLedgerEnabled()) {
+        const parsedEventId = await this.insertParsedEvent(subject, body, parsed, options, eventMarker)
+        const applyResult = await this.applyParsedEvent(parsedEventId)
 
-      if (parsed.type === 'reschedule') {
-        logger.info('[Booksy] Handling reschedule for:', { clientName: parsed.clientName })
-        if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
-          throw new Error('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
+        if (options?.messageId) {
+          await this.resolvePendingEmail(options.messageId)
         }
-        return await this.handleReschedule(parsed)
+
+        logger.info('[Booksy] Processing email success')
+        return applyResult
       }
 
+      const applyResult = await this.applyParsedPayload(parsed, eventMarker)
 
-      // 2. Find or create client
-      logger.info('[Booksy] Step 2: Finding/creating client')
-      const client = await this.findOrCreateClient(parsed)
-      logger.info('[Booksy] Step 2: Client found/created', { clientId: client.id })
-
-      // 3. Find employee
-      logger.info('[Booksy] Step 3: Finding employee')
-      const employee = await this.resolveEmployee(parsed.employeeName)
-      if (!employee) {
-        throw new Error(`Employee not found${parsed.employeeName ? `: ${parsed.employeeName}` : ''}`)
-      }
-      logger.info('[Booksy] Step 3: Employee found', { employeeId: employee.id })
-
-      // 4. Find service
-      logger.info('[Booksy] Step 4: Finding service', { serviceName: parsed.serviceName })
-      const service = await this.findServiceByName(parsed.serviceName)
-      if (!service) {
-        throw new Error(`Service not found: ${parsed.serviceName}`)
-      }
-      logger.info('[Booksy] Step 4: Service found', { serviceId: service.id })
-
-      // 5. Create booking
-      logger.info('[Booksy] Step 5: Creating booking')
-      const booking = await this.createBooking({
-        clientId: client.id,
-        employeeId: employee.id,
-        serviceId: service.id,
-        bookingDate: parsed.bookingDate,
-        bookingTime: parsed.bookingTime,
-        duration: parsed.duration || service.duration,
-        price: parsed.price || service.price,
-        notes: eventMarker,
-      })
-      logger.info('[Booksy] Step 5: Booking created', { bookingId: booking.id })
-      logger.info('[Booksy] Processing email success')
-
-      // If this was previously pending, resolve it
       if (options?.messageId) {
         await this.resolvePendingEmail(options.messageId)
       }
 
-      return { success: true, booking, parsed }
+      logger.info('[Booksy] Processing email success')
+      return applyResult
     } catch (error: any) {
       logger.error('[Booksy] Processing email failed', error)
 
@@ -139,6 +106,276 @@ export class BooksyProcessor {
 
       return { success: false, error: error.message, pending: !!options?.messageId }
     }
+  }
+
+  async applyParsedEvent(parsedEventId: string): Promise<any> {
+    const { data: parsedEvent, error: parsedEventError } = await this.supabase
+      .from('booksy_parsed_events')
+      .select('*')
+      .eq('id', parsedEventId)
+      .eq('salon_id', this.salonId)
+      .maybeSingle()
+
+    if (parsedEventError) throw parsedEventError
+    if (!parsedEvent) {
+      throw new Error(`Parsed event not found: ${parsedEventId}`)
+    }
+
+    const idempotencyKey = this.computeApplyIdempotencyKey(parsedEvent.salon_id, parsedEvent.event_fingerprint)
+    const { data: existingLedger } = await this.supabase
+      .from('booksy_apply_ledger')
+      .select('*')
+      .eq('salon_id', this.salonId)
+      .eq('idempotency_key', idempotencyKey)
+      .maybeSingle()
+
+    if (existingLedger) {
+      return { success: true, deduplicated: true, ledger: existingLedger }
+    }
+
+    const { data: createdLedger, error: createdLedgerError } = await this.supabase
+      .from('booksy_apply_ledger')
+      .insert({
+        salon_id: this.salonId,
+        booksy_parsed_event_id: parsedEvent.id,
+        idempotency_key: idempotencyKey,
+        operation: 'skipped',
+      } as any)
+      .select()
+      .single()
+
+    if (createdLedgerError) {
+      const duplicateLedger =
+        createdLedgerError.code === '23505' ||
+        String(createdLedgerError.message || '').toLowerCase().includes('duplicate')
+      if (duplicateLedger) {
+        const { data: duplicate } = await this.supabase
+          .from('booksy_apply_ledger')
+          .select('*')
+          .eq('salon_id', this.salonId)
+          .eq('idempotency_key', idempotencyKey)
+          .maybeSingle()
+        return { success: true, deduplicated: true, ledger: duplicate }
+      }
+      throw createdLedgerError
+    }
+
+    try {
+      const payload = parsedEvent.payload as {
+        parsed?: ParsedBooking
+        eventMarker?: string | null
+      } | null
+      const parsed = payload?.parsed
+      if (!parsed) {
+        throw new Error('Parsed event payload is missing parsed booking data')
+      }
+
+      const applyResult = await this.applyParsedPayload(parsed, payload?.eventMarker ?? null)
+      const operation = this.resolveLedgerOperation(parsed, applyResult)
+      const targetBookingId = applyResult?.booking?.id ?? null
+
+      const { error: updateLedgerError } = await this.supabase
+        .from('booksy_apply_ledger')
+        .update({
+          operation,
+          target_table: 'bookings',
+          target_id: targetBookingId,
+          error_message: null,
+          applied_at: new Date().toISOString(),
+        } as any)
+        .eq('id', createdLedger.id)
+        .eq('salon_id', this.salonId)
+
+      if (updateLedgerError) {
+        logger.error('[Booksy] Failed to update apply ledger record', updateLedgerError)
+      }
+
+      const { error: updateEventError } = await this.supabase
+        .from('booksy_parsed_events')
+        .update({ status: 'applied' } as any)
+        .eq('id', parsedEvent.id)
+        .eq('salon_id', this.salonId)
+
+      if (updateEventError) {
+        logger.error('[Booksy] Failed to update parsed event status', updateEventError)
+      }
+
+      return applyResult
+    } catch (error: any) {
+      await this.supabase
+        .from('booksy_apply_ledger')
+        .update({
+          operation: 'failed',
+          error_message: error.message ?? 'Unknown apply error',
+          applied_at: new Date().toISOString(),
+        } as any)
+        .eq('id', createdLedger.id)
+        .eq('salon_id', this.salonId)
+
+      throw error
+    }
+  }
+
+  private async insertParsedEvent(
+    subject: string,
+    body: string,
+    parsed: ParsedBooking,
+    options: ProcessEmailOptions | undefined,
+    eventMarker: string | null
+  ): Promise<string> {
+    const payload = {
+      subject,
+      body,
+      parsed,
+      eventMarker,
+      options: {
+        eventId: options?.eventId ?? null,
+        messageId: options?.messageId ?? null,
+      },
+    }
+    const eventType = this.toParsedEventType(parsed.type)
+    const eventFingerprint = this.computeParsedEventFingerprint(payload)
+    const rawEmailIdFromOptions = (options as ProcessEmailOptions & { rawEmailId?: string } | undefined)?.rawEmailId
+    const rawEmailId = rawEmailIdFromOptions ?? await this.resolveRawEmailId(options?.messageId)
+
+    const insertPayload: Record<string, unknown> = {
+      salon_id: this.salonId,
+      parser_version: 'v1',
+      event_type: eventType,
+      confidence_score: 1,
+      trust_score: 1,
+      event_fingerprint: eventFingerprint,
+      payload,
+      status: 'pending',
+    }
+
+    if (rawEmailId) {
+      insertPayload.booksy_raw_email_id = rawEmailId
+    }
+
+    const { data: createdEvent, error: createdEventError } = await this.supabase
+      .from('booksy_parsed_events')
+      .insert(insertPayload as any)
+      .select('id')
+      .single()
+
+    if (!createdEventError && createdEvent?.id) {
+      return createdEvent.id
+    }
+
+    const duplicateEvent =
+      createdEventError?.code === '23505' ||
+      String(createdEventError?.message || '').toLowerCase().includes('duplicate')
+
+    if (duplicateEvent) {
+      const { data: existingEvent, error: existingEventError } = await this.supabase
+        .from('booksy_parsed_events')
+        .select('id')
+        .eq('salon_id', this.salonId)
+        .eq('event_fingerprint', eventFingerprint)
+        .maybeSingle()
+
+      if (existingEventError) throw existingEventError
+      if (!existingEvent?.id) {
+        throw new Error('Parsed event already exists but could not be fetched')
+      }
+
+      return existingEvent.id
+    }
+
+    throw createdEventError
+  }
+
+  private async applyParsedPayload(parsed: ParsedBooking, eventMarker: string | null): Promise<any> {
+    if (parsed.type === 'cancel') {
+      logger.info('[Booksy] Handling cancellation for:', { clientName: parsed.clientName })
+      return this.handleCancellation(parsed)
+    }
+
+    if (parsed.type === 'reschedule') {
+      logger.info('[Booksy] Handling reschedule for:', { clientName: parsed.clientName })
+      if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
+        throw new Error('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
+      }
+      return this.handleReschedule(parsed)
+    }
+
+    logger.info('[Booksy] Step 2: Finding/creating client')
+    const client = await this.findOrCreateClient(parsed)
+    logger.info('[Booksy] Step 2: Client found/created', { clientId: client.id })
+
+    logger.info('[Booksy] Step 3: Finding employee')
+    const employee = await this.resolveEmployee(parsed.employeeName)
+    if (!employee) {
+      throw new Error(`Employee not found${parsed.employeeName ? `: ${parsed.employeeName}` : ''}`)
+    }
+    logger.info('[Booksy] Step 3: Employee found', { employeeId: employee.id })
+
+    logger.info('[Booksy] Step 4: Finding service', { serviceName: parsed.serviceName })
+    const service = await this.findServiceByName(parsed.serviceName)
+    if (!service) {
+      throw new Error(`Service not found: ${parsed.serviceName}`)
+    }
+    logger.info('[Booksy] Step 4: Service found', { serviceId: service.id })
+
+    logger.info('[Booksy] Step 5: Creating booking')
+    const booking = await this.createBooking({
+      clientId: client.id,
+      employeeId: employee.id,
+      serviceId: service.id,
+      bookingDate: parsed.bookingDate,
+      bookingTime: parsed.bookingTime,
+      duration: parsed.duration || service.duration,
+      price: parsed.price || service.price,
+      notes: eventMarker,
+    })
+    logger.info('[Booksy] Step 5: Booking created', { bookingId: booking.id })
+
+    return { success: true, booking, parsed }
+  }
+
+  private async resolveRawEmailId(messageId?: string): Promise<string | null> {
+    if (!messageId) {
+      return null
+    }
+
+    const { data: rawEmail } = await this.supabase
+      .from('booksy_raw_emails')
+      .select('id')
+      .eq('salon_id', this.salonId)
+      .eq('gmail_message_id', messageId)
+      .maybeSingle()
+
+    return rawEmail?.id ?? null
+  }
+
+  private toParsedEventType(type: ParsedBooking['type']): ParsedEventType {
+    if (type === 'new') return 'created'
+    if (type === 'cancel') return 'cancelled'
+    if (type === 'reschedule') return 'rescheduled'
+    return 'unknown'
+  }
+
+  private computeParsedEventFingerprint(payload: unknown): string {
+    return createHash('sha256').update(JSON.stringify(payload)).digest('hex')
+  }
+
+  private computeApplyIdempotencyKey(salonId: string, eventFingerprint: string): string {
+    return createHash('sha256').update(`${salonId}:${eventFingerprint}`).digest('hex')
+  }
+
+  private resolveLedgerOperation(parsed: ParsedBooking, applyResult: any): 'created' | 'updated' | 'skipped' {
+    if (applyResult?.deduplicated) {
+      return 'skipped'
+    }
+    if (parsed.type === 'new') {
+      return 'created'
+    }
+    return 'updated'
+  }
+
+  private isLedgerEnabled(): boolean {
+    return String(process.env.BOOKSY_LEDGER_ENABLED || '').toLowerCase() === 'true'
   }
 
   /**
@@ -868,4 +1105,20 @@ export class BooksyProcessor {
     const month = monthMap[normalize(monthName)] || '01'
     return `${year}-${month}-${day.padStart(2, '0')}`
   }
+}
+
+export async function applyParsedEvent(parsedEventId: string): Promise<any> {
+  const supabase = createAdminSupabaseClient()
+  const { data: parsedEvent, error: parsedEventError } = await supabase
+    .from('booksy_parsed_events')
+    .select('salon_id')
+    .eq('id', parsedEventId)
+    .single()
+
+  if (parsedEventError) {
+    throw parsedEventError
+  }
+
+  const processor = new BooksyProcessor(supabase as unknown as SupabaseClient, parsedEvent.salon_id)
+  return processor.applyParsedEvent(parsedEventId)
 }

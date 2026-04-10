@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AppError } from '@/lib/errors'
+import { getGmailSendRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { getAuthContext } from '@/lib/supabase/get-auth-context'
 
@@ -66,10 +67,10 @@ async function getConnectionStatus(): Promise<NextResponse<GmailSendStatusRespon
   })
 }
 
-async function initiateOAuth(origin: string): Promise<NextResponse<GmailSendAuthResponse>> {
+async function initiateOAuth(): Promise<NextResponse<GmailSendAuthResponse>> {
   const { salonId } = await getAuthContext()
   const { clientId } = getGoogleCredentials()
-  const redirectUri = `${origin}/api/integrations/gmail-send/callback`
+  const redirectUri = getGmailSendRedirectUri()
 
   const state = JSON.stringify({ salonId })
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
@@ -95,7 +96,7 @@ export async function GET(
       return await getConnectionStatus()
     }
 
-    return await initiateOAuth(request.nextUrl.origin)
+    return await initiateOAuth()
   } catch (error) {
     return handleRouteError(error)
   }

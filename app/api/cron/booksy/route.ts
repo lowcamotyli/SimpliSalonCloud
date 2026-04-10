@@ -5,6 +5,121 @@ import { GmailClient } from '@/lib/booksy/gmail-client'
 import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { logger } from '@/lib/logger'
 
+function isWatchFeatureEnabled(): boolean {
+  const raw = process.env.BOOKSY_USE_WATCH
+
+  if (!raw) {
+    return false
+  }
+
+  const normalized = raw.trim().toLowerCase()
+  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on'
+}
+
+function getCronHeaders(): HeadersInit {
+  const secret = process.env.CRON_SECRET
+
+  if (!secret) {
+    throw new Error('CRON_SECRET not configured')
+  }
+
+  return {
+    authorization: `Bearer ${secret}`,
+    'x-cron-secret': secret,
+  }
+}
+
+async function postCronEndpoint(
+  request: NextRequest,
+  path: string,
+  body?: Record<string, unknown>
+): Promise<unknown> {
+  const response = await fetch(new URL(path, request.url), {
+    method: 'POST',
+    headers: {
+      ...getCronHeaders(),
+      ...(body ? { 'content-type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with ${response.status}${payload ? `: ${JSON.stringify(payload)}` : ''}`)
+  }
+
+  return payload
+}
+
+async function shouldRunDailyReconciliation(
+  supabase: ReturnType<typeof createAdminClient>
+): Promise<boolean> {
+  const dayStart = new Date()
+  dayStart.setUTCHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from('booksy_reconciliation_runs')
+    .select('id')
+    .gte('started_at', dayStart.toISOString())
+    .in('status', ['running', 'completed'])
+    .limit(1)
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).length === 0
+}
+
+async function runWatchPipeline(request: NextRequest) {
+  const supabase = createAdminClient()
+  const threshold = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+
+  const processNotifications = await postCronEndpoint(request, '/api/internal/booksy/process-notifications')
+  const parse = await postCronEndpoint(request, '/api/internal/booksy/parse')
+  const apply = await postCronEndpoint(request, '/api/internal/booksy/apply')
+  const reconcile = await shouldRunDailyReconciliation(supabase)
+    ? await postCronEndpoint(request, '/api/internal/booksy/reconcile')
+    : { skipped: true, reason: 'already-ran-today' }
+
+  const { data: expiringWatches, error: watchesError } = await (supabase
+    .from('booksy_gmail_watches') as any)
+    .select('booksy_gmail_account_id, watch_expiration, watch_status')
+    .eq('watch_status', 'active')
+    .not('watch_expiration', 'is', null)
+    .lte('watch_expiration', threshold)
+
+  if (watchesError) {
+    throw watchesError
+  }
+
+  const renewedWatches = []
+
+  for (const watch of expiringWatches ?? []) {
+    const renewal = await postCronEndpoint(request, '/api/integrations/booksy/watch', {
+      accountId: watch.booksy_gmail_account_id,
+    })
+
+    renewedWatches.push({
+      accountId: watch.booksy_gmail_account_id,
+      previousExpiration: watch.watch_expiration,
+      result: renewal,
+    })
+  }
+
+  return {
+    mode: 'watch',
+    pipeline: {
+      processNotifications,
+      parse,
+      apply,
+      reconcile,
+    },
+    renewedWatches,
+  }
+}
+
 async function saveReauthLog(supabase: ReturnType<typeof createAdminClient>, salonId: string) {
   await supabase.from('booksy_sync_logs').insert({
     salon_id: salonId,
@@ -35,6 +150,18 @@ export async function GET(request: NextRequest) {
   try {
     const authError = validateCronSecret(request)
     if (authError) return authError
+
+    if (isWatchFeatureEnabled()) {
+      const result = await runWatchPipeline(request)
+      logger.info('Booksy cron completed in watch mode', {
+        action: 'booksy_cron_watch_end',
+        renewedWatches: result.renewedWatches.length,
+      })
+      return NextResponse.json({
+        success: true,
+        ...result,
+      })
+    }
 
     const supabase = createAdminClient()
 
@@ -81,6 +208,10 @@ export async function GET(request: NextRequest) {
                 updated_at: new Date().toISOString(),
               })
               .eq('salon_id', salon.id)
+          },
+          ledger: {
+            supabase,
+            salonId: salon.id,
           },
         })
 
