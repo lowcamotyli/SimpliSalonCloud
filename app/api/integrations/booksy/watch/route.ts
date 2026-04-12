@@ -151,14 +151,25 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     throw existingWatchError
   }
 
-  const watchResult = existingWatch?.id
-    ? await renewWatch(salonId, adminSupabase, account.id)
-    : await startWatch(salonId, adminSupabase, account.id)
+  try {
+    const watchResult = existingWatch?.id
+      ? await renewWatch(salonId, adminSupabase, account.id)
+      : await startWatch(salonId, adminSupabase, account.id)
 
-  return NextResponse.json({
-    watch_status: watchResult.watchStatus,
-    watch_expiration: watchResult.watchExpiration,
-  })
+    return NextResponse.json({
+      watch_status: watchResult.watchStatus,
+      watch_expiration: watchResult.watchExpiration,
+    })
+  } catch (error) {
+    console.error('[watch/POST] renewWatch/startWatch failed', {
+      accountId: account.id,
+      salonId,
+      existingWatchId: existingWatch?.id ?? null,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : undefined,
+    })
+    throw error
+  }
 })
 
 export const GET = withErrorHandling(async () => {
