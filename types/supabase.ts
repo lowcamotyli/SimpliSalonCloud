@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.1"
   }
   graphql_public: {
     Tables: {
@@ -546,6 +546,7 @@ export type Database = {
           is_primary: boolean
           last_auth_at: string | null
           last_error: string | null
+          mailbox_label: string | null
           salon_id: string
           token_expires_at: string | null
           updated_at: string
@@ -562,6 +563,7 @@ export type Database = {
           is_primary?: boolean
           last_auth_at?: string | null
           last_error?: string | null
+          mailbox_label?: string | null
           salon_id: string
           token_expires_at?: string | null
           updated_at?: string
@@ -578,6 +580,7 @@ export type Database = {
           is_primary?: boolean
           last_auth_at?: string | null
           last_error?: string | null
+          mailbox_label?: string | null
           salon_id?: string
           token_expires_at?: string | null
           updated_at?: string
@@ -658,6 +661,9 @@ export type Database = {
           last_history_id: number | null
           last_notification_at: string | null
           last_sync_at: string | null
+          needs_full_sync: boolean
+          processing_claim_token: string | null
+          processing_claimed_at: string | null
           renewal_count: number
           salon_id: string
           updated_at: string
@@ -672,6 +678,9 @@ export type Database = {
           last_history_id?: number | null
           last_notification_at?: string | null
           last_sync_at?: string | null
+          needs_full_sync?: boolean
+          processing_claim_token?: string | null
+          processing_claimed_at?: string | null
           renewal_count?: number
           salon_id: string
           updated_at?: string
@@ -686,6 +695,9 @@ export type Database = {
           last_history_id?: number | null
           last_notification_at?: string | null
           last_sync_at?: string | null
+          needs_full_sync?: boolean
+          processing_claim_token?: string | null
+          processing_claimed_at?: string | null
           renewal_count?: number
           salon_id?: string
           updated_at?: string
@@ -2771,6 +2783,7 @@ export type Database = {
           booksy_notify_on_cancel: boolean | null
           booksy_notify_on_new: boolean | null
           booksy_sender_filter: string | null
+          booksy_sync_from_date: string | null
           booksy_sync_interval_minutes: number | null
           booksy_sync_stats: Json | null
           bulkgate_app_id: string | null
@@ -2828,6 +2841,7 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
+          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null
@@ -2885,6 +2899,7 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
+          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null

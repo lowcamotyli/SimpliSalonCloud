@@ -1,1 +1,1 @@
-ALTER TABLE public.visit_groups ADD COLUMN surcharge NUMERIC(10, 2) DEFAULT 0;
+ALTER TABLE public.visit_groups ADD COLUMN IF NOT EXISTS surcharge NUMERIC(10, 2) DEFAULT 0;
