@@ -470,14 +470,25 @@ export default function ServicesPage() {
           </h1>
           <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Zarządzaj ofertą swojego salonu</p>
         </div>
-        <Button
-          size="lg"
-          className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold hidden sm:inline-flex"
-          onClick={() => handleOpenDialog()}
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Dodaj usługę
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 px-5 rounded-xl font-semibold hidden sm:inline-flex"
+            onClick={() => router.push(`/${slug}/services/addon-templates`)}
+          >
+            <Wrench className="h-4 w-4 mr-2" />
+            Szablony dodatków
+          </Button>
+          <Button
+            size="lg"
+            className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold hidden sm:inline-flex"
+            onClick={() => handleOpenDialog()}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Dodaj usługę
+          </Button>
+        </div>
       </div>
 
       {/* Stats Bar */}

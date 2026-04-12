@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   Palette, Building2, Bell, Link as LinkIcon, MessageSquare,
-  ShieldAlert, Star, Database, FlaskConical, ScrollText
+  ShieldAlert, Star, Database, FlaskConical, ScrollText, Clock
 } from 'lucide-react'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: '/protocols', label: 'Protokoły', icon: FlaskConical, ownerOnly: true },
   { href: '/import', label: 'Import danych', icon: Database, ownerOnly: true },
   { href: '/notifications', label: 'Powiadomienia', icon: Bell, ownerOnly: false },
+  { href: '/premium-hours', label: 'Godziny premium', icon: Clock, ownerOnly: true },
   { href: '/audit-log', label: 'Audit Trail', icon: ScrollText, ownerOnly: true },
 ]
 
