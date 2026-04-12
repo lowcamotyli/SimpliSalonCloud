@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BooksyProcessor } from '../lib/booksy/booksy-processor'
+import { BooksyProcessor } from '../lib/booksy/processor'
 import * as dotenv from 'dotenv'
 
 // Load environment variables from .env.local

@@ -37,6 +37,8 @@ const businessSettingsSchema = z.object({
     postalCode: z.string().regex(/^\d{2}-\d{3}$/, 'Format: 00-000').optional().or(z.literal('')),
     country: z.string().default('Polska')
   }),
+  terms_text: z.string().max(5000).optional().or(z.literal('')).nullable(),
+  terms_url: z.string().url('Nieprawidłowy URL').optional().or(z.literal('')).nullable(),
   operating_hours: z.any()
 })
 
@@ -80,6 +82,8 @@ export default function BusinessSettingsPage() {
         postalCode: '',
         country: 'Polska'
       },
+      terms_text: '',
+      terms_url: '',
       operating_hours: {}
     },
     mode: 'onChange'
@@ -100,12 +104,14 @@ export default function BusinessSettingsPage() {
           postalCode: settings.address?.postalCode || '',
           country: settings.address?.country || 'Polska'
         },
+        terms_text: settings.terms_text || '',
+        terms_url: settings.terms_url || '',
         operating_hours: settings.operating_hours || {}
       })
     }
   }, [settings, form])
 
-  if (!salon || !settings) return <div className="p-6">Ładowanie...</div>
+  if (!salon || !settings) return <div className="p-4 sm:p-6">Ładowanie...</div>
 
   const onSubmit = (data: BusinessSettingsFormData) => {
     updateSettings.mutate({
@@ -119,15 +125,25 @@ export default function BusinessSettingsPage() {
     })
   }
 
+  const onTermsSubmit = async () => {
+    const isValid = await form.trigger(['terms_text', 'terms_url'])
+    if (!isValid) return
+
+    updateSettings.mutate({
+      terms_text: form.getValues('terms_text') ?? '',
+      terms_url: form.getValues('terms_url') ?? '',
+    })
+  }
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Informacje o biznesie</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">Informacje o biznesie</h1>
             <p className="text-muted-foreground">Dane kontaktowe i godziny otwarcia Twojego salonu</p>
           </div>
-          <Button type="submit" disabled={updateSettings.isPending || !form.formState.isValid}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={updateSettings.isPending || !form.formState.isValid}>
             {updateSettings.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -254,7 +270,7 @@ export default function BusinessSettingsPage() {
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Kod pocztowy</Label>
                     <Input
@@ -292,8 +308,62 @@ export default function BusinessSettingsPage() {
               />
             </SettingsCard>
           </div>
+
+          <SettingsCard title="Regulamin salonu" description="Treść lub link do regulaminu widocznego dla klientów">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="terms_text">Treść regulaminu</Label>
+                <Textarea
+                  id="terms_text"
+                  {...form.register('terms_text')}
+                  maxLength={5000}
+                  rows={6}
+                  placeholder="Wpisz treść regulaminu salonu"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{form.watch('terms_text')?.length ?? 0}/5000</span>
+                </div>
+                {form.formState.errors.terms_text && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {form.formState.errors.terms_text.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="terms_url">URL regulaminu</Label>
+                <Input
+                  id="terms_url"
+                  {...form.register('terms_url')}
+                  placeholder="https://www.twojsalon.pl/regulamin"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Jeśli podasz URL, klient zobaczy link zamiast treści regulaminu
+                </p>
+                {form.formState.errors.terms_url && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {form.formState.errors.terms_url.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="button" onClick={onTermsSubmit} className="w-full sm:w-auto" disabled={updateSettings.isPending}>
+                  {updateSettings.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Zapisywanie...
+                    </>
+                  ) : 'Zapisz regulamin'}
+                </Button>
+              </div>
+            </div>
+          </SettingsCard>
         </div>
       </form>
     </div>
   )
 }
+

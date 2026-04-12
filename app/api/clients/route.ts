@@ -36,6 +36,35 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Get query params
   const { searchParams } = new URL(request.url)
   const search = searchParams.get('search')
+  const tagsParam = searchParams.get('tags')
+  const distinctTags = searchParams.get('distinct_tags') === 'true'
+  const tags = (tagsParam || '')
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+
+  if (distinctTags) {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('tags')
+      .eq('salon_id', typedProfile.salon_id)
+      .is('deleted_at', null)
+      .not('tags', 'is', null)
+      .limit(200)
+
+    if (error) throw error
+
+    const distinct = Array.from(
+      new Set(
+        (data ?? [])
+          .flatMap((row) => Array.isArray(row.tags) ? row.tags : [])
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0)
+      )
+    ).sort((a, b) => a.localeCompare(b)).slice(0, 50)
+
+    return NextResponse.json({ tags: distinct })
+  }
 
   let query = supabase
     .from('clients')
@@ -49,6 +78,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     query = query.or(
       `full_name.ilike.%${sanitizedSearch}%,phone.ilike.%${sanitizedSearch}%,email.ilike.%${sanitizedSearch}%`
     )
+  }
+
+  if (tags.length > 0) {
+    query = query.contains('tags', tags)
   }
 
   const { data: clients, error } = await query.limit(200)

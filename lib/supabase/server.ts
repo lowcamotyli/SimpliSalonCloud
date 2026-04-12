@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/supabase'
 
+function isSupabaseAuthCookieName(name: string): boolean {
+  return /^sb-.+-auth-token(?:\.\d+)?$/i.test(name) || name === 'supabase-auth-token'
+}
+
+export async function hasSupabaseSessionCookie(): Promise<boolean> {
+  const cookieStore = await cookies()
+  return cookieStore.getAll().some(({ name }) => isSupabaseAuthCookieName(name))
+}
+
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

@@ -42,7 +42,7 @@ export function StatCard({
                 </div>
             </CardHeader>
             <CardContent className="relative pt-4">
-                <div className={`theme-stat-card-value text-3xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+                <div className={`theme-stat-card-value text-2xl sm:text-3xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
                     {value}
                 </div>
                 <div className="flex items-center gap-2 mt-2">

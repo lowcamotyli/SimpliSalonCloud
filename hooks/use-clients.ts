@@ -9,6 +9,7 @@ type Client = {
   email: string | null
   notes: string | null
   visit_count: number
+  tags?: string[] | null
 }
 
 type CreateClientData = {
@@ -18,19 +19,20 @@ type CreateClientData = {
   notes?: string
 }
 
-export function useClients(search?: string) {
+export function useClients(search?: string, tags: string[] = []) {
   return useQuery({
-    queryKey: ['clients', search],
+    queryKey: ['clients', search, tags],
     queryFn: async () => {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
+      if (tags.length > 0) params.set('tags', tags.join(','))
 
       const res = await fetch(`/api/clients?${params}`)
       if (!res.ok) throw new Error('Failed to fetch clients')
       const data = await res.json()
       return data.clients as Client[]
     },
-    enabled: !search || search.length >= 2,
+    enabled: tags.length > 0 || !search || search.length >= 2,
   })
 }
 

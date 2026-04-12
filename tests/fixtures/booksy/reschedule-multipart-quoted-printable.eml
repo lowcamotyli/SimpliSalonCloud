@@ -1,0 +1,10 @@
+Content-Type: multipart/alternative; boundary="abc123"
+
+--abc123
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Ewa Lis zmieni=C5=82a rezerwacj=C4=99 na inny termin
+z dnia 23 pa=C5=BAdziernika 2026 10:45
+
+--abc123--

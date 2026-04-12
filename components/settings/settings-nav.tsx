@@ -5,14 +5,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   Palette, Building2, Bell, Link as LinkIcon, MessageSquare,
-  LayoutDashboard, ShieldAlert, Star, Database, FlaskConical, ScrollText
+  ShieldAlert, Star, Database, FlaskConical, ScrollText
 } from 'lucide-react'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
 import { buttonVariants } from '@/components/ui/button'
 
 const NAV_ITEMS = [
-  { href: '', label: 'Przegląd', icon: LayoutDashboard, ownerOnly: false },
   { href: '/appearance', label: 'Wygląd', icon: Palette, ownerOnly: false },
   { href: '/business', label: 'Biznes', icon: Building2, ownerOnly: true },
   { href: '/integrations', label: 'Integracje', icon: LinkIcon, ownerOnly: true },
@@ -35,7 +34,7 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
   )
 
   return (
-    <nav className="flex flex-wrap gap-2 pb-2">
+    <nav className="flex overflow-x-auto gap-1 pb-2 border-b border-border">
       {visibleItems.map(item => {
         const href = `${baseUrl}${item.href}`
         // Match exact or startsWith depending on routing, but exact is safer here for settings.
@@ -48,7 +47,7 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
             href={href}
             className={cn(
               buttonVariants({ variant: isActive ? 'secondary' : 'ghost' }),
-              'justify-start whitespace-nowrap gap-2 text-sm h-10 px-4 transition-colors'
+              'justify-start whitespace-nowrap shrink-0 gap-2 text-sm h-10 px-4 transition-colors'
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />

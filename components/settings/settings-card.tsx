@@ -12,7 +12,7 @@ interface SettingsCardProps {
 export function SettingsCard({ title, description, children, action }: SettingsCardProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
@@ -21,7 +21,7 @@ export function SettingsCard({ title, description, children, action }: SettingsC
           {action}
         </div>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">{children}</CardContent>
     </Card>
   )
 }

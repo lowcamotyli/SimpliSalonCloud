@@ -11,9 +11,12 @@ export const createServiceSchema = z.object({
     surcharge_allowed: z.boolean().default(true),
     survey_enabled: z.boolean().default(true),
     survey_custom_message: z.string().max(320).nullable().optional(),
+    description: z.string().max(1000).optional(),
 })
 
-export const updateServiceSchema = createServiceSchema.partial()
+export const updateServiceSchema = createServiceSchema.partial().extend({
+    description: z.string().max(1000).optional(),
+})
 
 export type CreateServiceDTO = z.infer<typeof createServiceSchema>
 export type UpdateServiceDTO = z.infer<typeof updateServiceSchema>

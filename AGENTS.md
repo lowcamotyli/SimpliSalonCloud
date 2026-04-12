@@ -1,8 +1,32 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## Primary Mode: Claude as Orchestrator
 
 Claude Code is the primary orchestrator. Codex CLI and codex-dad are the delegated tools.
+
+### Skills layer
+Skills are the specialization layer — they define how repeatable work types are executed.
+Skill files live in `.workflow/skills/`. Workers select the appropriate skill per task.
+
+**Skill → Worker mapping:**
+| Skill | Primary worker | Notes |
+|-------|---------------|-------|
+| `scoped-implementation` | codex-main | Default for all concrete coding tasks |
+| `typescript-repair` | codex-dad (fixer) | After tsc errors post-generation |
+| `test-impact-check` | codex-main | After every implementation |
+| `review-ready-diff` | codex-main | Before returning to Claude for review |
+| `large-context-analysis` | codex-dad | Before planning complex tasks |
+| `sql-migration-safe` | codex-dad | All schema/data changes |
+| `safe-sensitive-change` | codex-main + Claude approval | Auth, billing, permissions, secrets |
+| `runtime-debug-triage` | codex-main | Reproduce, isolate, and confirm runtime failures before fixing |
+| `parallel-work-split` | Claude | Sprint planning, multi-worker dispatch |
+
+**Common skill sequences:**
+- Normal task: `scoped-implementation` → `test-impact-check` → `review-ready-diff`
+- Complex area: `large-context-analysis` → `scoped-implementation` → `review-ready-diff`
+- Broken behavior: `runtime-debug-triage` → `scoped-implementation` → `review-ready-diff`
+- DB change: `sql-migration-safe` → `scoped-implementation` → `review-ready-diff`
+- Sensitive: `safe-sensitive-change` (overlays on top of scoped-implementation)
 
 ### Claude Delegation Rules
 | Task | Tool | Why |
@@ -40,12 +64,20 @@ Claude Code is the primary orchestrator. Codex CLI and codex-dad are the delegat
 1. Auth, payments, permissions, webhooks, cron, DB migrations.
 2. Final validation: `typecheck`, lint, migration state, and ship/no-ship decision.
 
+### Workflow states (explicit state machine)
+`Intake → Plan → Dispatch → Execute → Integrate → Review → Close`
+
+### Evidence requirement (every work package must return)
+- Files changed (list of paths)
+- Commands run + results (e.g. `npx tsc --noEmit` → clean)
+- Open issues if anything is unverifiable
+
 ### Responsibility Split
-1. Claude owns planning, architecture, and orchestration.
-2. codex-dad owns large-file reading, summarization, and first-pass drafts when delegation is useful.
-3. Codex owns final review of generated code before acceptance.
-4. Codex owns critical debugging for auth, payments, permissions, and DB migrations.
-5. Codex owns final typecheck interpretation and ship/no-ship decision.
+1. **Claude** — sole orchestrator and ship gate: intake → plan → dispatch → integrate → final review → ship/no-ship. Only Claude declares "done".
+2. **codex-main** — bounded implementation worker: executes work packages, runs verification, returns diff + evidence.
+3. **codex-dad** — Context Steward (primary) + second parallel worker: reads large contexts as Context Packs (file anchors, hotspots, risk notes). Also handles SQL/migrations and TS error fixes in this project.
+4. Claude is the final reviewer — codex-main pre-review is allowed but non-authoritative.
+5. **Sensitive domains** (auth, payments, permissions, schema drops): codex-main proposes + evidence; Claude explicitly approves before any irreversible step.
 
 ### Review and Safety
 - Every delegated code change must receive Codex review before merge.
@@ -75,6 +107,7 @@ Use this mode when Claude context window is exhausted. Codex takes the orchestra
 - Codex reads `AGENTS.md` (this file) and `CLAUDE.md` for project context.
 - Codex reads local project files -- always tell it which files to read for context.
 - Codex delegates large-file reading or heavy first-pass drafting to codex-dad when useful.
+- Codex should do this proactively without requiring repeated user reminders; for large-file reads and large-context summaries, prefer `codex-dad` via the documented Git Bash / WSL-style `/mnt/d/SimpliSalonCLoud/...` paths.
 
 ### Codex Invocation (Windows, project directory)
 ```powershell
@@ -101,60 +134,77 @@ $env:DAD_PROMPT="Read /mnt/d/SimpliSalonCLoud/[path1] and /mnt/d/SimpliSalonCLou
 codex exec --ephemeral 'Review [path]. Focus: bugs, security, type correctness. No file modifications.'
 ```
 
-### TASK.md -- universal task brief
+### WORK.md -- universal handoff artifact
 
-`TASK.md` in project root is the standard way to define work for Codex plus codex-dad.
+`WORK.md` in project root (or `work/WORK-<slug>.md` for concurrent tasks) is the durable ledger for all work.
 Used in three scenarios:
 - **User starts a task directly** with Codex (no Claude involved)
 - **Claude hands off** mid-task when context window is ~70-80% full
 - **User resumes** an interrupted task
 
-**Format:**
-```markdown
-# TASK -- [task name] -- [date]
+**Fixed schema (no deviations):**
+```
+# Work Item: <slug>
+## Owner
+- Orchestrator: Claude | Workers: [list] | Status: intake | plan | dispatch | execute | integrate | review | closed
 
-## Objective
-[1-2 sentences: what we are building / fixing]
+## Intent
+One paragraph: goal + why.
 
-## Context files to read
-- [path] -- [why relevant]
+## Constraints
+- bullets
 
-## Status
-[x] Done: [file/step]
-[ ] NEXT: [file/step] -- [exact spec]
-[ ] TODO: [file/step] -- [exact spec]
+## Acceptance criteria
+- [ ] verifiable statement
 
-## Key decisions / constraints
-- [decision or constraint Codex must respect]
+## Verification
+    npx tsc --noEmit   # or other verification commands
 
-## Open risks / assumptions
-- [risk or assumption to verify]
+## Work packages
+- ID: pkg-1 | Type: implementation | Inputs: [...] | Outputs: [...]
+- Type enum: context-pack | implementation | migration | refactor | docs | review
 
-## Resume command
-codex exec --dangerously-bypass-approvals-and-sandbox 'Read TASK.md, [file1], [file2] for context. Do NOT use Gemini -- write directly. [task spec]. Write directly.'
+## Evidence log   <!-- append-only, one entry per package -->
+[YYYY-MM-DD HH:MM] pkg-1 -- files: [...] -- npx tsc --noEmit -> clean
+
+## Decision
+Ship: yes/no -- reason -- accepted risks
 ```
 
-**Starting fresh (user writes TASK.md):**
-- Fill Objective + Context files + TODO items
-- Leave Status empty (no Done items yet)
-- Run the resume command from the bottom
+**Starting fresh (user writes WORK.md):**
+- Fill Intent + Constraints + Acceptance criteria + Work packages
+- Leave Evidence log empty
+- Set Status: plan
 
 **Claude handoff (context ~70-80% full):**
-- Claude writes TASK.md with current Done/NEXT/TODO status
-- Claude says: "Kontekst sie konczy -- zapisalem TASK.md. Uruchom komende z sekcji Resume command."
-- User copies the command and runs it in terminal
+- Claude updates WORK.md with current Status + Evidence log entries
+- Claude says: "Kontekst sie konczy -- zapisalem WORK.md."
+- Codex resumes by reading WORK.md first, then referenced files
+
+**Codex resume command:**
+```powershell
+codex exec --dangerously-bypass-approvals-and-sandbox 'Read WORK.md, [file1], [file2] for context. Do NOT use Gemini -- write directly. Continue from Status in WORK.md. Write directly.'
+```
 
 ---
 
 ## Encoding Discipline
 - Prefer ASCII-only edits by default.
 - Use non-ASCII only if the target file already uses it or there is explicit product/content need.
-
+- Never use lossy re-encoding passes on source files (no ad-hoc charset conversions).
+- CRITICAL: never use `Set-Content` (or any full-file rewrite command) for source edits; use `apply_patch` or line-scoped edits only.
+- Always write edited files as UTF-8 (without BOM when tooling allows).
+- After editing UI text, run a mojibake check before finishing:
+  - `pwsh ./scripts/check-encoding.ps1` -- exits 1 on Polish mojibake sequences
+  - if found, fix strings in the same work package before returning results.
+- Avoid broad text replacement scripts for multilingual content unless line-scoped and reviewed.
+- lib/booksy/processor.ts intentionally contains mojibake pattern strings (email normalization) -- excluded from encoding checks.
 ## Output Discipline
 - When codex-dad is used, state it briefly and list analyzed files.
 - Keep extracted snippets minimal and focused on decisions, patching, and validation.
 
 ## Context Handoff (Claude -> user)
 - When conversation context becomes long, Claude proactively warns before quality degrades.
-- Provides a ready-to-paste handoff summary for a new chat window.
-- Handoff summary includes: objective, completed work, pending work, key files changed, key commands run, open risks/assumptions.
+- Claude writes/updates `WORK.md` (or `work/WORK-<slug>.md`) with current Status + Evidence log.
+- Says: "Kontekst sie konczy -- zapisalem WORK.md."
+- User resumes via the Codex resume command in WORK.md.

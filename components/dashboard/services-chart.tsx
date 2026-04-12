@@ -18,7 +18,7 @@ export default function ServicesChart({ data }: ServicesChartProps) {
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-bold text-gray-900">Popularność usług</CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px] w-full pt-4">
+            <CardContent className="h-[220px] sm:h-[300px] w-full pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie

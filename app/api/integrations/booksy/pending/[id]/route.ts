@@ -4,6 +4,178 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { withErrorHandling } from '@/lib/error-handler'
 import { UnauthorizedError, NotFoundError, ValidationError } from '@/lib/errors'
 
+type PendingEmailLike = {
+  id: string
+  source: 'pending_email' | 'manual_review'
+  status: string
+  message_id: string
+  subject: string | null
+  parsed_data: Record<string, any> | null
+}
+
+async function loadPendingEmailOrManualReview(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  salonId: string,
+  id: string
+): Promise<PendingEmailLike | null> {
+  const { data: pendingRow, error: pendingError } = await (supabase as any).from('booksy_pending_emails')
+    .select('*')
+    .eq('id', id)
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  if (pendingError) throw pendingError
+  if (pendingRow) {
+    return {
+      ...pendingRow,
+      source: 'pending_email',
+      parsed_data: pendingRow.parsed_data ?? null,
+    }
+  }
+
+  const { data: parsedEvent, error: parsedEventError } = await (supabase as any).from('booksy_parsed_events')
+    .select('id, status, payload')
+    .eq('id', id)
+    .eq('salon_id', salonId)
+    .eq('status', 'manual_review')
+    .maybeSingle()
+
+  if (parsedEventError) throw parsedEventError
+  if (!parsedEvent) {
+    return null
+  }
+
+  return {
+    id: parsedEvent.id,
+    source: 'manual_review',
+    status: parsedEvent.status,
+    message_id: parsedEvent.id,
+    subject: parsedEvent.payload?.raw?.subject ?? null,
+    parsed_data: parsedEvent.payload?.parsed ?? null,
+  }
+}
+
+async function createBookingFromParsedData(
+  admin: ReturnType<typeof createAdminClient>,
+  salonId: string,
+  parsed: Record<string, any>,
+  messageId: string,
+  serviceId?: string,
+  employeeId?: string
+) {
+  let service: Record<string, any> | null = null
+  if (serviceId) {
+    const { data, error: svcError } = await (admin.from('services') as any)
+      .select('*')
+      .eq('id', serviceId)
+      .eq('salon_id', salonId)
+      .single()
+    if (svcError || !data) {
+      throw new Error(`Service with id "${serviceId}" not found in this salon`)
+    }
+    service = data
+  }
+
+  let employee: Record<string, any> | null = null
+  if (employeeId) {
+    const { data, error: empError } = await (admin.from('employees') as any)
+      .select('*')
+      .eq('id', employeeId)
+      .eq('salon_id', salonId)
+      .single()
+    if (empError || !data) {
+      throw new Error(`Employee with id "${employeeId}" not found in this salon`)
+    }
+    employee = data
+  }
+
+  const clientName = (parsed.clientName || '').trim()
+  if (clientName.length < 2) {
+    throw new Error('Cannot create client: invalid or missing client name in parsed data')
+  }
+
+  let client: Record<string, any> | null = null
+
+  const { data: existingClient } = await (admin.from('clients') as any)
+    .select('*')
+    .eq('salon_id', salonId)
+    .eq('phone', parsed.clientPhone)
+    .maybeSingle()
+
+  if (existingClient) {
+    client = existingClient
+  } else {
+    const { data: codeData } = await (admin as any).rpc('generate_client_code', { salon_uuid: salonId })
+    const clientCode = codeData || `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
+
+    const { data: newClient, error: clientError } = await (admin.from('clients') as any)
+      .insert({
+        salon_id: salonId,
+        client_code: clientCode,
+        full_name: clientName,
+        phone: parsed.clientPhone || null,
+        email: parsed.clientEmail || null,
+        visit_count: 0,
+      })
+      .select()
+      .single()
+
+    if (clientError) {
+      const isClientCodeConflict =
+        clientError.code === '23505' &&
+        (clientError.constraint === 'clients_salon_id_client_code_key' ||
+          String(clientError.message || '').includes('clients_salon_id_client_code_key'))
+
+      if (!isClientCodeConflict) throw clientError
+
+      const fallbackClientCode = `BK${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`
+      const { data: retriedClient, error: retryClientError } = await (admin.from('clients') as any)
+        .insert({
+          salon_id: salonId,
+          client_code: fallbackClientCode,
+          full_name: clientName,
+          phone: parsed.clientPhone || null,
+          email: parsed.clientEmail || null,
+          visit_count: 0,
+        })
+        .select()
+        .single()
+
+      if (retryClientError) throw retryClientError
+      client = retriedClient
+    } else {
+      client = newClient
+    }
+  }
+
+  if (!client) {
+    throw new Error('Failed to resolve or create client')
+  }
+
+  const duration = parsed.duration || service?.duration || 30
+  const basePrice = parsed.price || service?.price || 0
+
+  const { data: booking, error: bookingError } = await (admin.from('bookings') as any)
+    .insert({
+      salon_id: salonId,
+      client_id: client.id,
+      employee_id: employee?.id || null,
+      service_id: service?.id || null,
+      booking_date: parsed.bookingDate,
+      booking_time: parsed.bookingTime,
+      duration,
+      base_price: basePrice,
+      notes: `[booksy_retry] message_id:${messageId}`,
+      status: 'scheduled',
+      source: 'booksy',
+    })
+    .select()
+    .single()
+
+  if (bookingError) throw bookingError
+  return booking
+}
+
 // PATCH /api/integrations/booksy/pending/[id]
 // Body: { status: 'resolved' | 'ignored' }
 export const PATCH = withErrorHandling(async (
@@ -34,22 +206,37 @@ export const PATCH = withErrorHandling(async (
     throw new ValidationError('Invalid status. Must be "resolved" or "ignored".')
   }
 
-  const updateData: Record<string, unknown> = { status }
-  if (status === 'resolved') {
-    updateData.resolved_at = new Date().toISOString()
+  const row = await loadPendingEmailOrManualReview(supabase, profile.salon_id, id)
+  if (!row) throw new NotFoundError('Pending email')
+
+  if (row.source === 'pending_email') {
+    const updateData: Record<string, unknown> = { status }
+    if (status === 'resolved') {
+      updateData.resolved_at = new Date().toISOString()
+    }
+
+    const { data: updatedRow, error } = await (supabase as any).from('booksy_pending_emails')
+      .update(updateData)
+      .eq('id', id)
+      .eq('salon_id', profile.salon_id)
+      .select()
+      .single()
+
+    if (error) throw error
+    if (!updatedRow) throw new NotFoundError('Pending email')
+
+    return NextResponse.json({ success: true, pending: updatedRow })
   }
 
-  const { data: updatedRow, error } = await (supabase as any).from('booksy_pending_emails')
-    .update(updateData)
+  const targetStatus = status === 'ignored' ? 'discarded' : 'applied'
+  const { error } = await (supabase as any).from('booksy_parsed_events')
+    .update({ status: targetStatus })
     .eq('id', id)
     .eq('salon_id', profile.salon_id)
-    .select()
-    .single()
 
   if (error) throw error
-  if (!updatedRow) throw new NotFoundError('Pending email')
 
-  return NextResponse.json({ success: true, pending: updatedRow })
+  return NextResponse.json({ success: true, pending: { id, status: targetStatus, source: 'manual_review' } })
 })
 
 // POST /api/integrations/booksy/pending/[id]
@@ -82,25 +269,19 @@ export const POST = withErrorHandling(async (
   const body = await request.json()
   const { serviceId, employeeId } = body as { serviceId?: string; employeeId?: string }
 
-  // Fetch the pending email, enforcing salon ownership
-  const { data: pendingRow, error: fetchError } = await (supabase as any).from('booksy_pending_emails')
-    .select('*')
-    .eq('id', id)
-    .eq('salon_id', salonId)
-    .single()
-
-  if (fetchError || !pendingRow) {
+  const row = await loadPendingEmailOrManualReview(supabase, salonId, id)
+  if (!row) {
     throw new NotFoundError('Pending email')
   }
 
-  if (pendingRow.status !== 'pending') {
+  if (row.status !== 'pending' && row.status !== 'manual_review') {
     return NextResponse.json(
       { success: false, error: 'Email is already processed (not in pending status)' },
       { status: 400 }
     )
   }
 
-  const parsed = pendingRow.parsed_data as Record<string, any>
+  const parsed = row.parsed_data as Record<string, any>
 
   if (!parsed) {
     return NextResponse.json(
@@ -110,140 +291,28 @@ export const POST = withErrorHandling(async (
   }
 
   try {
-    // 1. Resolve service — use override if provided, otherwise fail (no automatic fuzzy lookup)
-    let service: Record<string, any> | null = null
-    if (serviceId) {
-      const { data, error: svcError } = await (admin.from('services') as any)
-        .select('*')
-        .eq('id', serviceId)
-        .eq('salon_id', salonId)
-        .single()
-      if (svcError || !data) {
-        return NextResponse.json(
-          { success: false, error: `Service with id "${serviceId}" not found in this salon` },
-          { status: 400 }
-        )
-      }
-      service = data
-    }
+    const booking = await createBookingFromParsedData(
+      admin,
+      salonId,
+      parsed,
+      row.message_id,
+      serviceId,
+      employeeId
+    )
 
-    // 2. Resolve employee — use override if provided
-    let employee: Record<string, any> | null = null
-    if (employeeId) {
-      const { data, error: empError } = await (admin.from('employees') as any)
-        .select('*')
-        .eq('id', employeeId)
-        .eq('salon_id', salonId)
-        .single()
-      if (empError || !data) {
-        return NextResponse.json(
-          { success: false, error: `Employee with id "${employeeId}" not found in this salon` },
-          { status: 400 }
-        )
-      }
-      employee = data
-    }
-
-    // 3. Find or create client by phone number
-    const clientName = (parsed.clientName || '').trim()
-    if (clientName.length < 2) {
-      return NextResponse.json(
-        { success: false, error: 'Cannot create client: invalid or missing client name in parsed data' },
-        { status: 400 }
-      )
-    }
-
-    let client: Record<string, any> | null = null
-
-    const { data: existingClient } = await (admin.from('clients') as any)
-      .select('*')
-      .eq('salon_id', salonId)
-      .eq('phone', parsed.clientPhone)
-      .maybeSingle()
-
-    if (existingClient) {
-      client = existingClient
-    } else {
-      const { data: codeData } = await (admin as any).rpc('generate_client_code', { salon_uuid: salonId })
-      const clientCode = codeData || `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
-
-      const { data: newClient, error: clientError } = await (admin.from('clients') as any)
-        .insert({
-          salon_id: salonId,
-          client_code: clientCode,
-          full_name: clientName,
-          phone: parsed.clientPhone || null,
-          email: parsed.clientEmail || null,
-          visit_count: 0,
+    if (row.source === 'pending_email') {
+      await (admin as any).from('booksy_pending_emails')
+        .update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
         })
-        .select()
-        .single()
-
-      if (clientError) {
-        const isClientCodeConflict =
-          clientError.code === '23505' &&
-          (clientError.constraint === 'clients_salon_id_client_code_key' ||
-            String(clientError.message || '').includes('clients_salon_id_client_code_key'))
-
-        if (!isClientCodeConflict) throw clientError
-
-        const fallbackClientCode = `BK${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`
-        const { data: retriedClient, error: retryClientError } = await (admin.from('clients') as any)
-          .insert({
-            salon_id: salonId,
-            client_code: fallbackClientCode,
-            full_name: clientName,
-            phone: parsed.clientPhone || null,
-            email: parsed.clientEmail || null,
-            visit_count: 0,
-          })
-          .select()
-          .single()
-
-        if (retryClientError) throw retryClientError
-        client = retriedClient
-      } else {
-        client = newClient
-      }
+        .eq('id', id)
+    } else {
+      await (admin as any).from('booksy_parsed_events')
+        .update({ status: 'applied' })
+        .eq('id', id)
+        .eq('salon_id', salonId)
     }
-
-    if (!client) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to resolve or create client' },
-        { status: 500 }
-      )
-    }
-
-    // 4. Create the booking
-    const duration = parsed.duration || service?.duration || 30
-    const basePrice = parsed.price || service?.price || 0
-
-    const { data: booking, error: bookingError } = await (admin.from('bookings') as any)
-      .insert({
-        salon_id: salonId,
-        client_id: client.id,
-        employee_id: employee?.id || null,
-        service_id: service?.id || null,
-        booking_date: parsed.bookingDate,
-        booking_time: parsed.bookingTime,
-        duration,
-        base_price: basePrice,
-        notes: `[booksy_retry] message_id:${pendingRow.message_id}`,
-        status: 'scheduled',
-        source: 'booksy',
-      })
-      .select()
-      .single()
-
-    if (bookingError) throw bookingError
-
-    // 5. Mark the pending email as resolved
-    await (admin as any).from('booksy_pending_emails')
-      .update({
-        status: 'resolved',
-        resolved_at: new Date().toISOString(),
-      })
-      .eq('id', id)
 
     return NextResponse.json({ success: true, booking })
 

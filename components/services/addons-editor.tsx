@@ -158,8 +158,11 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
 
   return (
     <div className="space-y-4" data-salon-id={salonId}>
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Dodatki do usługi</h3>
+      <section className="space-y-3 rounded-xl border border-border/60 bg-background/50 p-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold">Dodatki do usługi</h3>
+          <p className="text-xs text-muted-foreground">Lista dodatków aktualnie przypisanych do tej usługi.</p>
+        </div>
 
         {loading ? <p className="text-sm text-muted-foreground">Ładowanie...</p> : null}
 
@@ -192,57 +195,59 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
             ))}
           </div>
         ) : null}
-      </div>
+      </section>
 
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium">Opcje dodatkowe</h3>
-        <p className="text-sm text-muted-foreground">
-          Klient może wybrać jedną opcję podczas rezerwacji. Opcja może modyfikować czas i cenę usługi.
-        </p>
-      </div>
-
-      <div className="space-y-3">
+      <section className="space-y-3 rounded-xl border border-border/60 bg-background/50 p-4">
         <div className="space-y-1">
-          <Label htmlFor="addon-name">Nazwa opcji</Label>
-          <Input
-            id="addon-name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="np. Maska nawilżająca, Keratyna, Folia"
-            disabled={saving}
-          />
+          <h3 className="text-sm font-semibold">Opcje dodatkowe</h3>
+          <p className="text-sm text-muted-foreground">
+            Klient może wybrać jedną opcję podczas rezerwacji. Opcja może modyfikować czas i cenę usługi.
+          </p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+
+        <div className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="addon-duration-delta">Dodatkowy czas (min)</Label>
+            <Label htmlFor="addon-name">Nazwa opcji</Label>
             <Input
-              id="addon-duration-delta"
-              type="number"
-              value={durationDelta}
-              onChange={(event) => setDurationDelta(event.target.value)}
-              placeholder="0"
+              id="addon-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="np. Maska nawilżająca, Keratyna, Folia"
               disabled={saving}
             />
-            <p className="text-xs text-muted-foreground">0 = bez zmiany czasu.</p>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="addon-price-delta">Zmiana ceny (zł)</Label>
-            <Input
-              id="addon-price-delta"
-              type="number"
-              step="0.01"
-              value={priceDelta}
-              onChange={(event) => setPriceDelta(event.target.value)}
-              placeholder="0"
-              disabled={saving}
-            />
-            <p className="text-xs text-muted-foreground">0 = bez dopłaty. Ujemna = rabat.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="addon-duration-delta">Dodatkowy czas (min)</Label>
+              <Input
+                id="addon-duration-delta"
+                type="number"
+                value={durationDelta}
+                onChange={(event) => setDurationDelta(event.target.value)}
+                placeholder="0"
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">0 = bez zmiany czasu.</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="addon-price-delta">Zmiana ceny (zł)</Label>
+              <Input
+                id="addon-price-delta"
+                type="number"
+                step="0.01"
+                value={priceDelta}
+                onChange={(event) => setPriceDelta(event.target.value)}
+                placeholder="0"
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">0 = bez dopłaty. Ujemna = rabat.</p>
+            </div>
           </div>
+          <Button type="button" disabled={saving} onClick={() => void handleCreateAddon()} className="w-full">
+            {saving ? 'Dodawanie...' : 'Dodaj opcję'}
+          </Button>
         </div>
-        <Button type="button" disabled={saving} onClick={() => void handleCreateAddon()} className="w-full">
-          {saving ? 'Dodawanie...' : 'Dodaj opcję'}
-        </Button>
-      </div>
+      </section>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

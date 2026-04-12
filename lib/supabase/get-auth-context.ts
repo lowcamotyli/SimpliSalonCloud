@@ -1,5 +1,5 @@
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, hasSupabaseSessionCookie } from '@/lib/supabase/server'
 
 export interface AuthContext {
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
@@ -13,6 +13,10 @@ export interface AuthContext {
  * Throws NotFoundError (404) if profile missing.
  */
 export async function getAuthContext(): Promise<AuthContext> {
+  if (!(await hasSupabaseSessionCookie())) {
+    throw new UnauthorizedError()
+  }
+
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },

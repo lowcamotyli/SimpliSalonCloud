@@ -52,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Tekst' },
@@ -498,7 +499,7 @@ export default function FormTemplatesPage() {
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden p-0">
           <DialogHeader className="shrink-0 border-b px-6 py-5">
             <DialogTitle>
               {editingTemplate?.id ? 'Edytuj szablon' : 'Nowy szablon formularza'}
@@ -508,8 +509,13 @@ export default function FormTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6">
-            <div className="space-y-6 py-5">
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <Tabs defaultValue="podstawowe" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="podstawowe">Podstawowe</TabsTrigger>
+                <TabsTrigger value="pola">Pola formularza</TabsTrigger>
+              </TabsList>
+              <TabsContent value="podstawowe" className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nazwa formularza</Label>
@@ -551,8 +557,9 @@ export default function FormTemplatesPage() {
                 />
               </div>
 
-              <hr className="border-t" />
+              </TabsContent>
 
+              <TabsContent value="pola" className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium">Pola formularza</h3>
@@ -634,10 +641,11 @@ export default function FormTemplatesPage() {
                   )}
                 </div>
               </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <DialogFooter className="shrink-0 border-t bg-background px-6 py-4">
+          <DialogFooter className="shrink-0 border-t bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               Anuluj
             </Button>

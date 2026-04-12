@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useUpdateEmployeeRole, useLinkEmployeeUser, useResetEmployeePassword } from '@/hooks/use-employees'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScheduleTab } from '@/components/employees/schedule-tab'
@@ -10,6 +10,7 @@ import { ShiftTemplatesManager } from '@/components/employees/shift-templates-ma
 import { ShiftRulesManager } from '@/components/employees/shift-rules-manager'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ListLoadingState } from '@/components/ui/list-loading-state'
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,7 @@ import {
   KeyRound,
   Copy,
   CheckCheck,
+  Loader2,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -58,7 +60,7 @@ import { z } from 'zod'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
@@ -81,6 +83,8 @@ const employeeFormSchema = z.object({
 type EmployeeFormData = z.infer<typeof employeeFormSchema>
 
 export default function EmployeesPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const { data: employees, isLoading } = useEmployees()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -173,6 +177,19 @@ export default function EmployeesPage() {
     })
     setIsDialogOpen(true)
   }
+
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action !== 'new-employee') {
+      return
+    }
+
+    handleAdd()
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('action')
+    const nextUrl = nextParams.toString() ? `/${slug}/employees?${nextParams.toString()}` : `/${slug}/employees`
+    router.replace(nextUrl, { scroll: false })
+  }, [router, searchParams, slug])
 
   const handleEdit = (employee: any) => {
     setEditingEmployee(employee)
@@ -296,7 +313,7 @@ export default function EmployeesPage() {
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header & Main Actions */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Pracownicy
@@ -377,13 +394,10 @@ export default function EmployeesPage() {
           </Card>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 space-y-4">
-              <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-              <p className="text-gray-500 font-medium animate-pulse">Ładowanie zespołu...</p>
-            </div>
+            <ListLoadingState rows={6} />
           ) : filteredEmployees.length > 0 ? (
             <motion.div
-              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -392,8 +406,9 @@ export default function EmployeesPage() {
                 {filteredEmployees.map((employee) => (
                   <motion.div key={employee.id} layout variants={itemVariants}>
                     <Card className="group relative overflow-hidden p-6 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10">
-                      <div className="flex flex-col items-center text-center space-y-4">
-                        <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border-2 border-white shadow-inner">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-14 w-14 shrink-0 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border-2 border-white shadow-inner">
                           {employee.avatar_url ? (
                             <Image
                               src={employee.avatar_url}
@@ -402,7 +417,7 @@ export default function EmployeesPage() {
                               className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary text-3xl font-black">
+                            <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary text-lg font-black">
                               {employee.first_name[0]}{employee.last_name?.[0] || ''}
                             </div>
                           )}
@@ -412,30 +427,32 @@ export default function EmployeesPage() {
                           ) : (
                             <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white" />
                           )}
-                        </div>
-
-                        <div className="space-y-1">
-                          <h3 className="text-xl font-black text-foreground">
-                            {employee.first_name} {employee.last_name}
-                          </h3>
-                          <div className="flex flex-wrap items-center justify-center gap-2">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
-                              Kod: {employee.employee_code}
-                            </p>
-                            {employee.role && (
-                              <Badge variant="secondary" className="uppercase tracking-wider text-[10px]">
-                                {employee.role}
-                              </Badge>
-                            )}
-                            {!employee.user_id && (
-                              <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
-                                Brak konta
-                              </Badge>
-                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="truncate text-lg font-black text-foreground">
+                                {employee.first_name} {employee.last_name}
+                              </h3>
+                              {employee.role && (
+                                <Badge variant="secondary" className="uppercase tracking-wider text-[10px]">
+                                  {employee.role}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
+                                Kod: {employee.employee_code}
+                              </p>
+                              {!employee.user_id && (
+                                <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
+                                  Brak konta
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
 
-                        <div className="w-full space-y-2 py-4">
+                        <div className="w-full space-y-2 py-2">
                           {employee.email && (
                             <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
                               <Mail className="h-4 w-4 text-gray-400" />
@@ -538,7 +555,7 @@ export default function EmployeesPage() {
 
       {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">
               {editingEmployee ? 'Edytuj pracownika' : 'Dodaj pracownika'}
@@ -708,7 +725,8 @@ export default function EmployeesPage() {
                       disabled={createMutation.isPending || updateMutation.isPending}
                       className="gradient-button rounded-xl font-black px-8"
                     >
-                      {editingEmployee ? 'Zapisz zmiany' : 'Dodaj pracownika'}
+                      {createMutation.isPending || updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {createMutation.isPending || updateMutation.isPending ? 'Zapisywanie...' : editingEmployee ? 'Zapisz zmiany' : 'Dodaj pracownika'}
                     </Button>
                   </div>
                 </DialogFooter>
@@ -748,7 +766,7 @@ export default function EmployeesPage() {
 
       {/* Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent className="max-w-lg glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">Zmień rolę</DialogTitle>
             <DialogDescription>
@@ -795,7 +813,8 @@ export default function EmployeesPage() {
                 onClick={handleUpdateRole}
                 className="gradient-button rounded-xl font-black px-8"
               >
-                Zapisz rolę
+                {roleMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {roleMutation.isPending ? 'Zapisywanie...' : 'Zapisz rolę'}
               </Button>
             </div>
           </DialogFooter>
@@ -804,7 +823,7 @@ export default function EmployeesPage() {
 
       {/* Link Account Dialog */}
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent className="max-w-lg glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">Powiąż konto</DialogTitle>
             <DialogDescription>
@@ -896,7 +915,8 @@ export default function EmployeesPage() {
                 onClick={handleLinkAccount}
                 className="gradient-button rounded-xl font-black px-8"
               >
-                Powiąż konto
+                {linkMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {linkMutation.isPending ? 'Łączenie...' : 'Powiąż konto'}
               </Button>
             </div>
           </DialogFooter>
@@ -937,7 +957,7 @@ export default function EmployeesPage() {
         if (!open) { setGeneratedPassword(''); setPasswordCopied(false) }
         setIsResetPasswordDialogOpen(open)
       }}>
-        <DialogContent className='sm:max-w-md rounded-2xl'>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg rounded-2xl">
           <DialogHeader>
             <DialogTitle className='font-black text-xl flex items-center gap-2'>
               <KeyRound className='h-5 w-5 text-sky-600' />

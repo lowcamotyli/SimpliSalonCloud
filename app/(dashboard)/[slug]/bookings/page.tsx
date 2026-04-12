@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ListLoadingState } from '@/components/ui/list-loading-state'
 import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/constants'
 import {
   Search,
@@ -154,7 +155,7 @@ export default function BookingsPage() {
       </div>
 
       <Card className="p-6 glass border-none shadow-xl shadow-slate-200/50 space-y-6">
-        <div className="flex flex-col xl:flex-row xl:items-center gap-6">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <Input
@@ -195,7 +196,7 @@ export default function BookingsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+        <div className="flex flex-wrap gap-1 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -219,14 +220,12 @@ export default function BookingsPage() {
       </Card>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium animate-pulse">Pobieranie rezerwacji...</p>
-        </div>
+        <ListLoadingState rows={6} className="lg:grid-cols-1" />
       ) : filteredBookings.length > 0 ? (
+        <>
         <motion.div
           key={`${dateFilter}-${statusFilter}-${employeeFilter}-${search}`}
-          className="grid gap-4"
+          className="hidden gap-4 md:grid"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -331,6 +330,45 @@ export default function BookingsPage() {
             ))}
           </AnimatePresence>
         </motion.div>
+        <div className="grid gap-3 md:hidden">
+          {filteredBookings.map((booking) => (
+            <Card
+              key={booking.id}
+              className="cursor-pointer border-none bg-white p-4 transition-all hover:shadow-lg"
+              onClick={() => {
+                setSelectedBooking(booking)
+                setIsDialogOpen(true)
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="truncate text-sm font-bold text-gray-900">
+                    {booking.client?.full_name || 'Nieznany klient'}
+                  </p>
+                  <p className="truncate text-sm font-medium text-gray-500">
+                    {booking.service?.name || 'Usunieta usluga'}
+                  </p>
+                  <p className="text-xs font-semibold text-gray-500">
+                    {new Date(booking.booking_date).toLocaleDateString('pl-PL')} - {booking.booking_time.slice(0, 5)}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+              </div>
+              <div className="mt-3">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-bold border",
+                    statusColors[booking.status as keyof typeof statusColors]
+                  )}
+                >
+                  {BOOKING_STATUS_LABELS[booking.status]}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+        </>
       ) : (
         <Card className="flex flex-col items-center justify-center py-20 px-6 text-center glass border-dashed border-2 border-gray-200">
           <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6">

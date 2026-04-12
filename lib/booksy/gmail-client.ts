@@ -1,4 +1,6 @@
 import { google } from 'googleapis'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getBooksyGmailRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import { logger } from '@/lib/logger'
 
 interface GmailMessage {
@@ -8,25 +10,40 @@ interface GmailMessage {
   from: string
   body: string
   date: string
+  internalDate?: string | null
+  rawEmailId?: string | null
+}
+
+type GmailClientOptions = {
+  onTokens?: (tokens: { access_token?: string; refresh_token?: string; expiry_date?: number }) => Promise<void> | void
+  ledger?: {
+    supabase: SupabaseClient<any>
+    salonId: string
+    booksyGmailAccountId?: string | null
+  }
+}
+
+type SearchBooksyEmailsOptions = {
+  syncFromDate?: string | null
 }
 
 export class GmailClient {
   private gmail: any
   private oauth2Client: any
+  private ledger?: GmailClientOptions['ledger']
 
   constructor(
     credentials: { access_token?: string; refresh_token?: string; expiry_date?: number },
-    options?: {
-      onTokens?: (tokens: { access_token?: string; refresh_token?: string; expiry_date?: number }) => Promise<void> | void
-    }
+    options?: GmailClientOptions
   ) {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      getBooksyGmailRedirectUri()
     )
 
     this.oauth2Client.setCredentials(credentials)
+    this.ledger = options?.ledger
     this.oauth2Client.on('tokens', async (tokens: any) => {
       if (!options?.onTokens) return
 
@@ -51,7 +68,7 @@ export class GmailClient {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      getBooksyGmailRedirectUri()
     )
 
     return oauth2Client.generateAuthUrl({
@@ -72,7 +89,7 @@ export class GmailClient {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      getBooksyGmailRedirectUri()
     )
 
     const { tokens } = await oauth2Client.getToken(code)
@@ -124,10 +141,17 @@ export class GmailClient {
   /**
    * Search for Booksy emails (new bookings, cancellations, reschedules)
    */
-  async searchBooksyEmails(maxResults = 20, senderFilter = '@booksy.com'): Promise<GmailMessage[]> {
+  async searchBooksyEmails(
+    maxResults = 20,
+    senderFilter = '@booksy.com',
+    options?: SearchBooksyEmailsOptions
+  ): Promise<GmailMessage[]> {
     try {
       const sender = senderFilter.trim() || '@booksy.com'
-      const commonFilters = '-label:booksy/processed -label:booksy/error'
+      const syncFromFilter = GmailClient.toGmailAfterFilter(options?.syncFromDate)
+      const commonFilters = ['-label:booksy/processed', '-label:booksy/error', syncFromFilter]
+        .filter(Boolean)
+        .join(' ')
 
       // Run separate queries for each email type Booksy sends
       const queries = [
@@ -156,6 +180,7 @@ export class GmailClient {
 
           const fullMessage = await this.getFullMessage(message.id)
           if (fullMessage) {
+            fullMessage.rawEmailId = await this.insertRawEmailLedgerEntry(fullMessage)
             fullMessages.push(fullMessage)
           }
         }
@@ -176,6 +201,19 @@ export class GmailClient {
     }
   }
 
+  private static toGmailAfterFilter(syncFromDate?: string | null): string {
+    if (!syncFromDate) {
+      return ''
+    }
+
+    const match = syncFromDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) {
+      return ''
+    }
+
+    return `after:${match[1]}/${match[2]}/${match[3]}`
+  }
+
   /**
    * Get full message details
    */
@@ -193,6 +231,13 @@ export class GmailClient {
       const subject = headers.find((h: any) => h.name.toLowerCase() === 'subject')?.value || ''
       const from = headers.find((h: any) => h.name.toLowerCase() === 'from')?.value || ''
       const date = headers.find((h: any) => h.name.toLowerCase() === 'date')?.value || ''
+      const parsedInternalDateMs =
+        typeof message.internalDate === 'string' && message.internalDate.length > 0
+          ? Number(message.internalDate)
+          : Number.NaN
+      const internalDate = Number.isFinite(parsedInternalDateMs)
+        ? new Date(parsedInternalDateMs).toISOString()
+        : null
 
       let body = ''
 
@@ -218,11 +263,101 @@ export class GmailClient {
         from,
         body,
         date,
+        internalDate,
+        rawEmailId: null,
       }
     } catch (error) {
       logger.error('Gmail: getFullMessage failed', error, { messageId })
       return null
     }
+  }
+
+  private isLedgerEnabled(): boolean {
+    return process.env.BOOKSY_LEDGER_ENABLED !== 'false'
+  }
+
+  private async resolveBooksyGmailAccountId(): Promise<string | null> {
+    if (!this.ledger) return null
+    if (this.ledger.booksyGmailAccountId) return this.ledger.booksyGmailAccountId
+
+    const email = await this.getUserEmail()
+    if (!email) {
+      logger.warn('Gmail: skipping raw email ledger insert because mailbox email could not be resolved', {
+        action: 'booksy_raw_email_skip_no_mailbox_email',
+        salonId: this.ledger.salonId,
+      })
+      return null
+    }
+
+    const { data, error } = await (this.ledger.supabase
+      .from('booksy_gmail_accounts') as any)
+      .select('id')
+      .eq('salon_id', this.ledger.salonId)
+      .eq('gmail_email', email)
+      .maybeSingle()
+
+    if (error) {
+      logger.warn('Gmail: failed to resolve Booksy Gmail account for raw email ledger insert', {
+        action: 'booksy_raw_email_lookup_failed',
+        salonId: this.ledger.salonId,
+        email,
+        error: error.message,
+      })
+      return null
+    }
+
+    const accountId = data?.id ?? null
+
+    if (!accountId) {
+      logger.warn('Gmail: skipping raw email ledger insert because mailbox account was not found', {
+        action: 'booksy_raw_email_skip_missing_mailbox',
+        salonId: this.ledger.salonId,
+        email,
+      })
+      return null
+    }
+
+    this.ledger.booksyGmailAccountId = accountId
+    return accountId
+  }
+
+  private async insertRawEmailLedgerEntry(message: GmailMessage): Promise<string | null> {
+    if (!this.isLedgerEnabled() || !this.ledger) {
+      return null
+    }
+
+    const booksyGmailAccountId = await this.resolveBooksyGmailAccountId()
+    if (!booksyGmailAccountId) {
+      return null
+    }
+
+    const { data, error } = await (this.ledger.supabase
+      .from('booksy_raw_emails') as any)
+      .insert({
+        salon_id: this.ledger.salonId,
+        booksy_gmail_account_id: booksyGmailAccountId,
+        gmail_message_id: message.id,
+        gmail_thread_id: message.threadId || null,
+        subject: message.subject || null,
+        from_address: message.from || null,
+        internal_date: message.internalDate ?? null,
+        ingest_source: 'polling_fallback',
+      })
+      .select('id')
+      .maybeSingle()
+
+    if (error) {
+      logger.warn('Gmail: raw email ledger insert failed during polling fetch', {
+        action: 'booksy_raw_email_insert_failed',
+        salonId: this.ledger.salonId,
+        booksyGmailAccountId,
+        gmailMessageId: message.id,
+        error: error.message,
+      })
+      return null
+    }
+
+    return data?.id ?? null
   }
 
   /**

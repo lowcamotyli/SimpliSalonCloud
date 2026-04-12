@@ -130,7 +130,7 @@ export default function PayrollPage() {
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
             Wynagrodzenia
@@ -143,31 +143,31 @@ export default function PayrollPage() {
 
         <div className="flex flex-col items-stretch gap-4 glass p-4 rounded-2xl border-white/40 shadow-sm sm:items-end">
           <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
-            <Button
-              type="button"
-              variant={selectedType === 'daily' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-lg px-4"
-              onClick={() => setSelectedType('daily')}
-            >
+              <Button
+                type="button"
+                variant={selectedType === 'daily' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-lg px-4 w-full sm:w-auto"
+                onClick={() => setSelectedType('daily')}
+              >
               Dzień
             </Button>
-            <Button
-              type="button"
-              variant={selectedType === 'weekly' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-lg px-4"
-              onClick={() => setSelectedType('weekly')}
-            >
+              <Button
+                type="button"
+                variant={selectedType === 'weekly' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-lg px-4 w-full sm:w-auto"
+                onClick={() => setSelectedType('weekly')}
+              >
               Tydzień
             </Button>
-            <Button
-              type="button"
-              variant={selectedType === 'monthly' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-lg px-4"
-              onClick={() => setSelectedType('monthly')}
-            >
+              <Button
+                type="button"
+                variant={selectedType === 'monthly' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-lg px-4 w-full sm:w-auto"
+                onClick={() => setSelectedType('monthly')}
+              >
               Miesiąc
             </Button>
           </div>
@@ -181,7 +181,7 @@ export default function PayrollPage() {
                   type="month"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="rounded-xl border-gray-200 focus:ring-primary/20"
+                  className="rounded-xl border-gray-200 focus:ring-primary/20 w-full sm:w-auto"
                 />
               </div>
             )}
@@ -194,7 +194,7 @@ export default function PayrollPage() {
                   type="date"
                   value={selectedDay}
                   onChange={(e) => setSelectedDay(e.target.value)}
-                  className="rounded-xl border-gray-200 focus:ring-primary/20"
+                  className="rounded-xl border-gray-200 focus:ring-primary/20 w-full sm:w-auto"
                 />
               </div>
             )}
@@ -207,7 +207,7 @@ export default function PayrollPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="rounded-xl"
+                    className="rounded-xl w-full sm:w-auto"
                     onClick={() => shiftWeek(-1)}
                     aria-label="Poprzedni tydzień"
                   >
@@ -220,7 +220,7 @@ export default function PayrollPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="rounded-xl"
+                    className="rounded-xl w-full sm:w-auto"
                     onClick={() => shiftWeek(1)}
                     aria-label="Następny tydzień"
                   >
@@ -233,7 +233,7 @@ export default function PayrollPage() {
             <Button
               onClick={() => setShowGenerateDialog(true)}
               disabled={generateMutation.isPending}
-              className="gradient-button rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+              className="gradient-button rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] w-full sm:w-auto"
             >
               {generateMutation.isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               Generuj
@@ -357,7 +357,7 @@ export default function PayrollPage() {
                   {expandedEmployees.has(entry.employeeId) && (
                     <div className="mt-8 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
                       <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Lista wizyt w okresie</h4>
-                      <div className="overflow-x-auto rounded-xl border border-gray-100">
+                      <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm text-left">
                           <thead className="bg-slate-50 text-gray-500 font-bold">
                             <tr>
@@ -379,6 +379,35 @@ export default function PayrollPage() {
                           </tbody>
                         </table>
                       </div>
+                      <div className="md:hidden space-y-3">
+                        {entry.visits?.map((visit: any) => (
+                          <div key={visit.id} className="rounded-lg border bg-card p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold text-gray-900">{entry.employeeName}</p>
+                                <p className="text-xs text-gray-500">{periodLabel}</p>
+                              </div>
+                              {visit.status ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  {visit.status}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-gray-500">Kwota</p>
+                                <p className="font-semibold text-gray-900">{fmt(visit.price)} zł</p>
+                              </div>
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-gray-500">Godziny</p>
+                                <p className="font-semibold text-gray-900">
+                                  {visit.durationHours ?? visit.duration ?? '—'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -386,7 +415,7 @@ export default function PayrollPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl px-6 border-gray-200 hover:bg-white hover:shadow-md transition-all font-bold text-xs"
+                      className="rounded-xl px-6 border-gray-200 hover:bg-white hover:shadow-md transition-all font-bold text-xs w-full sm:w-auto"
                       onClick={() => downloadPDF(entry, selectedPeriod)}
                     >
                       <Download className="mr-2 h-4 w-4 text-primary" />
@@ -395,7 +424,7 @@ export default function PayrollPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl px-6 border-gray-200 hover:bg-white hover:shadow-md transition-all font-bold text-xs"
+                      className="rounded-xl px-6 border-gray-200 hover:bg-white hover:shadow-md transition-all font-bold text-xs w-full sm:w-auto"
                       disabled={sendEmailMutation.isPending}
                       onClick={() => sendEmailMutation.mutate({
                         employeeId: entry.employeeId,

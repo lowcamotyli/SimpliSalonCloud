@@ -18,7 +18,7 @@ export default function EmployeeRevenueChart({ data }: EmployeeRevenueChartProps
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-bold text-gray-900">Przychód wg pracowników (7 dni)</CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px] w-full pt-4">
+            <CardContent className="h-[220px] sm:h-[300px] w-full pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />

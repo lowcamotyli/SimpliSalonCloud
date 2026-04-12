@@ -51,21 +51,22 @@ export const PATCH = withErrorHandling(async (
   }
 
   const body = await request.json()
-  const validatedData = updateServiceSchema.parse(body)
+  const data = updateServiceSchema.parse(body)
 
   const { data: service, error } = await supabase
     .from('services')
     .update({
       version: existingService.version, // Required by check_version() trigger
-      ...(validatedData.category !== undefined && { category: validatedData.category }),
-      ...(validatedData.subcategory !== undefined && { subcategory: validatedData.subcategory }),
-      ...(validatedData.name !== undefined && { name: validatedData.name }),
-      ...(validatedData.duration !== undefined && { duration: validatedData.duration }),
-      ...(validatedData.price !== undefined && { price: validatedData.price }),
-      ...(validatedData.active !== undefined && { active: validatedData.active }),
-      ...(validatedData.surcharge_allowed !== undefined && { surcharge_allowed: validatedData.surcharge_allowed }),
-      ...(validatedData.survey_enabled !== undefined && { survey_enabled: validatedData.survey_enabled }),
-      ...(validatedData.survey_custom_message !== undefined && { survey_custom_message: validatedData.survey_custom_message }),
+      ...(data.category !== undefined && { category: data.category }),
+      ...(data.subcategory !== undefined && { subcategory: data.subcategory }),
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.duration !== undefined && { duration: data.duration }),
+      ...(data.price !== undefined && { price: data.price }),
+      ...(data.active !== undefined && { active: data.active }),
+      ...(data.surcharge_allowed !== undefined && { surcharge_allowed: data.surcharge_allowed }),
+      ...(data.survey_enabled !== undefined && { survey_enabled: data.survey_enabled }),
+      ...(data.survey_custom_message !== undefined && { survey_custom_message: data.survey_custom_message }),
+      ...(data.description !== undefined && { description: data.description }),
     })
     .eq('id', id)
     .select()

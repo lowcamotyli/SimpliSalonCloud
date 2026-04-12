@@ -240,7 +240,7 @@ export function PhotoUpload({
       </form>
       ) : (
         <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-          Dokumentacja fotograficzna jest dostÄ™pna w trybie tylko do odczytu.
+          Dokumentacja fotograficzna jest dostępna w trybie tylko do odczytu.
         </div>
       )}
 

@@ -1,0 +1,10 @@
+{
+  "_comment": "Minimal lifecycle hooks — sparse by design. Hooks are for logging/gentle validation, NOT brittle blocking.",
+  "post-task": [
+    {
+      "command": "npx tsc --noEmit 2>&1 | tail -5",
+      "description": "TypeScript check after task — surface errors early, does not block",
+      "failBehavior": "warn"
+    }
+  ]
+}

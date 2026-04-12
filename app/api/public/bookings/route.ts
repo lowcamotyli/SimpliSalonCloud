@@ -7,6 +7,14 @@ import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
 
+function jsonWithCors(
+    request: NextRequest,
+    body: unknown,
+    init?: ResponseInit
+) {
+    return setCorsHeaders(request, NextResponse.json(body, init))
+}
+
 export async function POST(request: NextRequest) {
     try {
         logger.info('[PUBLIC_BOOKINGS] start')
@@ -17,7 +25,8 @@ export async function POST(request: NextRequest) {
 
         if (!rateLimitResult.success) {
             logger.warn('[PUBLIC_BOOKINGS] rate limit exceeded')
-            return NextResponse.json(
+            return jsonWithCors(
+                request,
                 {
                     error: 'Rate limit exceeded. Too many requests.',
                     limit: rateLimitResult.limit,
@@ -38,23 +47,38 @@ export async function POST(request: NextRequest) {
         const authResult = await resolveApiKey(request)
         if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
         const { salonId } = authResult
+        const supabase = createAdminSupabaseClient()
+
+        const { data: salonSettings, error: salonSettingsError } = await supabase
+            .from('salon_settings')
+            .select('terms_text, terms_url')
+            .eq('salon_id', salonId)
+            .maybeSingle()
+
+        if (salonSettingsError) {
+            logger.error('[PUBLIC_BOOKINGS] salon settings fetch error', salonSettingsError)
+            return jsonWithCors(request, { error: 'Salon settings fetch failed' }, { status: 500 })
+        }
 
         let body: unknown
         try {
             body = await request.json()
         } catch (error) {
             logger.error('[PUBLIC_BOOKINGS] invalid json body', error as Error)
-            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+            return jsonWithCors(request, { error: 'Invalid JSON body' }, { status: 400 })
         }
 
         const parsed = publicBookingSchema.safeParse(body)
         if (!parsed.success) {
             logger.warn('[PUBLIC_BOOKINGS] validation failed')
-            return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
+            return jsonWithCors(request, { error: parsed.error.issues }, { status: 400 })
         }
 
-        const { name, phone, email, serviceId, employeeId, date, time } = parsed.data
-        const supabase = createAdminSupabaseClient()
+        const { name, phone, email, serviceId, employeeId, date, time, terms_accepted } = parsed.data
+
+        if ((salonSettings?.terms_text || salonSettings?.terms_url) && !terms_accepted) {
+            return jsonWithCors(request, { error: 'terms_not_accepted' }, { status: 422 })
+        }
 
         logger.info('[PUBLIC_BOOKINGS] payload', { serviceId, date, time })
 
@@ -77,12 +101,12 @@ export async function POST(request: NextRequest) {
 
         if (serviceError) {
             logger.error('[PUBLIC_BOOKINGS] service fetch error', serviceError)
-            return NextResponse.json({ error: 'Service fetch failed' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Service fetch failed' }, { status: 500 })
         }
 
         if (!service) {
             logger.warn('[PUBLIC_BOOKINGS] service not found', { serviceId })
-            return NextResponse.json({ error: 'Service not found' }, { status: 404 })
+            return jsonWithCors(request, { error: 'Service not found' }, { status: 404 })
         }
 
         // find or create client po telefonie
@@ -98,7 +122,7 @@ export async function POST(request: NextRequest) {
 
         if (clientFetchError && clientFetchError.code !== 'PGRST116') {
             logger.error('[PUBLIC_BOOKINGS] client fetch error', clientFetchError)
-            return NextResponse.json({ error: 'Client fetch failed' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Client fetch failed' }, { status: 500 })
         }
 
         if (!client) {
@@ -129,12 +153,12 @@ export async function POST(request: NextRequest) {
 
             if (clientCreateError) {
                 logger.error('[PUBLIC_BOOKINGS] client create error', clientCreateError)
-                return NextResponse.json({ error: 'Client create failed' }, { status: 500 })
+                return jsonWithCors(request, { error: 'Client create failed' }, { status: 500 })
             }
 
             if (!newClient) {
                 logger.error('[PUBLIC_BOOKINGS] client create returned null')
-                return NextResponse.json({ error: 'Client create failed' }, { status: 500 })
+                return jsonWithCors(request, { error: 'Client create failed' }, { status: 500 })
             }
 
             client = newClient
@@ -142,7 +166,7 @@ export async function POST(request: NextRequest) {
 
         if (!client) {
             logger.error('[PUBLIC_BOOKINGS] client missing after create')
-            return NextResponse.json({ error: 'Client not resolved' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Client not resolved' }, { status: 500 })
         }
 
         if (email && !client.email) {
@@ -159,7 +183,7 @@ export async function POST(request: NextRequest) {
                 logger.error('[PUBLIC_BOOKINGS] client email update error', clientUpdateError, {
                     clientId: client.id,
                 })
-                return NextResponse.json({ error: 'Client update failed' }, { status: 500 })
+                return jsonWithCors(request, { error: 'Client update failed' }, { status: 500 })
             }
 
             if (updatedClient) {
@@ -175,7 +199,8 @@ export async function POST(request: NextRequest) {
         const bookingEligibility = await validateClientCanBook(phone, salonId)
         if (!bookingEligibility.allowed) {
             logger.warn('[PUBLIC_BOOKINGS] blocked blacklisted client', { phone, salonId })
-            return NextResponse.json(
+            return jsonWithCors(
+                request,
                 { error: bookingEligibility.message || 'Booking unavailable for this client' },
                 { status: 403 }
             )
@@ -199,7 +224,7 @@ export async function POST(request: NextRequest) {
 
             if (specificEmployeeError || !specificEmployee) {
                 logger.warn('[PUBLIC_BOOKINGS] provided employee not found or invalid')
-                return NextResponse.json({ error: 'Invalid employee specified' }, { status: 400 })
+                return jsonWithCors(request, { error: 'Invalid employee specified' }, { status: 400 })
             }
             employee = specificEmployee
         } else {
@@ -216,7 +241,7 @@ export async function POST(request: NextRequest) {
 
             if (anyEmployeeError) {
                 logger.error('[PUBLIC_BOOKINGS] employee fetch error', anyEmployeeError)
-                return NextResponse.json({ error: 'Employee fetch failed' }, { status: 500 })
+                return jsonWithCors(request, { error: 'Employee fetch failed' }, { status: 500 })
             }
             employee = anyEmployee
         }
@@ -225,7 +250,7 @@ export async function POST(request: NextRequest) {
 
         if (!employee) {
             logger.warn('[PUBLIC_BOOKINGS] no active employee found')
-            return NextResponse.json({ error: 'No active employee available' }, { status: 404 })
+            return jsonWithCors(request, { error: 'No active employee available' }, { status: 404 })
         }
 
         // overlap check — zajęte sloty tego dnia dla wybranego pracownika
@@ -242,7 +267,7 @@ export async function POST(request: NextRequest) {
 
         if (bookingsError) {
             logger.error('[PUBLIC_BOOKINGS] bookings fetch error', bookingsError)
-            return NextResponse.json({ error: 'Bookings fetch failed' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Bookings fetch failed' }, { status: 500 })
         }
 
         const [h, m] = time.split(':').map(Number)
@@ -258,7 +283,7 @@ export async function POST(request: NextRequest) {
 
         if (conflict) {
             logger.warn('[PUBLIC_BOOKINGS] time slot conflict', { date, time })
-            return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
+            return jsonWithCors(request, { error: 'Time slot not available' }, { status: 409 })
         }
 
         // sprawdź dostępność sprzętu
@@ -274,7 +299,7 @@ export async function POST(request: NextRequest) {
             const equipmentConflicts = (equipmentAvailability ?? []).filter((a: any) => !a.is_available)
             if (equipmentConflicts.length > 0) {
                 logger.warn('[PUBLIC_BOOKINGS] equipment conflict', { date, time, conflicts: equipmentConflicts.length })
-                return NextResponse.json({ error: 'Time slot not available' }, { status: 409 })
+                return jsonWithCors(request, { error: 'Time slot not available' }, { status: 409 })
             }
         }
 
@@ -293,6 +318,7 @@ export async function POST(request: NextRequest) {
                 base_price: service.price,
                 status: 'scheduled',
                 source: 'website',
+                ...(terms_accepted ? { terms_accepted_at: new Date().toISOString() } : {}),
             })
             .select('id, status, booking_date, booking_time')
             .single()
@@ -300,12 +326,12 @@ export async function POST(request: NextRequest) {
 
         if (bookingError) {
             logger.error('[PUBLIC_BOOKINGS] booking create error', bookingError)
-            return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Booking failed' }, { status: 500 })
         }
 
         if (!booking) {
             logger.error('[PUBLIC_BOOKINGS] booking create returned null')
-            return NextResponse.json({ error: 'Booking failed' }, { status: 500 })
+            return jsonWithCors(request, { error: 'Booking failed' }, { status: 500 })
         }
 
         // zarezerwuj sprzęt
@@ -323,9 +349,9 @@ export async function POST(request: NextRequest) {
         }
 
         logger.info('[PUBLIC_BOOKINGS] success', { bookingId: booking.id })
-        return NextResponse.json({ booking }, { status: 201 })
+        return jsonWithCors(request, { booking }, { status: 201 })
     } catch (error) {
         logger.error('[PUBLIC_BOOKINGS] unhandled error', error as Error)
-        return NextResponse.json({ error: 'Unhandled server error' }, { status: 500 })
+        return jsonWithCors(request, { error: 'Unhandled server error' }, { status: 500 })
     }
 }
