@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/use-services'
 import { useSalon } from '@/hooks/use-salon'
 import { AddonsEditor } from '@/components/services/addons-editor'
+import { BulkAddonDialog } from '@/components/services/bulk-addon-dialog'
 import { ServiceMediaGallery } from '@/components/services/service-media-gallery'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -97,6 +98,7 @@ export default function ServicesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [isBulkApplying, setIsBulkApplying] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
+  const [bulkAddonDialog, setBulkAddonDialog] = useState<{ open: boolean; mode: 'assign' | 'remove' }>({ open: false, mode: 'assign' })
   const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('')
 
   const { data: servicesData, isLoading } = useServices()
@@ -619,6 +621,24 @@ export default function ServicesPage() {
               </Button>
               <Button
                 size="sm"
+                variant="outline"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={() => setBulkAddonDialog({ open: true, mode: 'assign' })}
+                disabled={isBulkApplying}
+              >
+                Przypisz dodatki
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={() => setBulkAddonDialog({ open: true, mode: 'remove' })}
+                disabled={isBulkApplying}
+              >
+                Usuń dodatki
+              </Button>
+              <Button
+                size="sm"
                 variant="destructive"
                 className="h-11 px-3 min-h-[44px] min-w-[44px]"
                 onClick={() => setIsBulkDeleteDialogOpen(true)}
@@ -1023,6 +1043,16 @@ export default function ServicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <BulkAddonDialog
+        serviceIds={selectedServiceIds}
+        mode={bulkAddonDialog.mode}
+        open={bulkAddonDialog.open}
+        onClose={() => setBulkAddonDialog((prev) => ({ ...prev, open: false }))}
+        onSuccess={() => {
+          setBulkAddonDialog((prev) => ({ ...prev, open: false }))
+          clearSelection()
+        }}
+      />
       <Button
         type="button"
         size="icon"
