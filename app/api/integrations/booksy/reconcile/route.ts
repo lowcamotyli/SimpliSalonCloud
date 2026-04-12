@@ -11,11 +11,19 @@ function getCronHeaders(): HeadersInit {
     throw new Error('CRON_SECRET not configured')
   }
 
-  return {
+  const headers: Record<string, string> = {
     authorization: `Bearer ${secret}`,
     'x-cron-secret': secret,
     'content-type': 'application/json',
   }
+
+  // Bypass Vercel Deployment Protection for server-to-server calls on preview deployments
+  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+  if (bypassSecret) {
+    headers['x-vercel-protection-bypass'] = bypassSecret
+  }
+
+  return headers
 }
 
 async function requireOwnerRole(supabase: Awaited<ReturnType<typeof getAuthContext>>['supabase']): Promise<void> {
