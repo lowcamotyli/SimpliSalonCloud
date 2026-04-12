@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/layout/navbar'
 import { Sidebar } from '@/components/layout/sidebar'
 import { ThemeProvider } from '@/components/layout/theme-provider'
+import { MobileNavProvider } from '@/components/layout/mobile-nav-context'
+import { DashboardCommandPalette } from '@/components/layout/dashboard-command-palette'
 import { ThemeKey } from '@/lib/types/settings'
 import DunningBanner from '@/components/billing/DunningBanner'
 
@@ -90,18 +92,21 @@ export default async function DashboardLayout({
 
   return (
     <ThemeProvider themeKey={themeKey}>
+      <MobileNavProvider>
       <div className="theme-dashboard-shell flex h-screen overflow-hidden bg-background">
+        <DashboardCommandPalette salonSlug={slug} />
         <Sidebar salonSlug={slug} userName={typedProfile?.full_name ?? undefined} />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar salonName={salon.name} />
 
-          <main className="theme-dashboard-main flex-1 overflow-y-auto p-6">
+          <main className="theme-dashboard-main flex-1 overflow-y-auto p-4 md:p-6">
             <DunningBanner salonId={salon.id} slug={slug} />
             {children}
           </main>
         </div>
       </div>
+      </MobileNavProvider>
     </ThemeProvider>
   )
 }

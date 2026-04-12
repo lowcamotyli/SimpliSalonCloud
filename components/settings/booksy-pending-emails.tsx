@@ -46,6 +46,7 @@ import {
 
 interface PendingEmail {
   id: string;
+  source?: 'pending_email' | 'manual_review';
   message_id: string;
   subject: string | null;
   body_snippet: string | null;
@@ -313,7 +314,16 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                       <td className="py-2 pr-3 text-xs text-gray-500 italic max-w-[130px] truncate">
                         {email.parsed_data?.employeeName ?? '—'}
                       </td>
-                      <td className="py-2 pr-3">{getReasonBadge(email.failure_reason)}</td>
+                      <td className="py-2 pr-3">
+                        <div className="space-y-1">
+                          {getReasonBadge(email.failure_reason)}
+                          {email.failure_detail && (
+                            <p className="max-w-[220px] truncate text-[11px] text-muted-foreground" title={email.failure_detail}>
+                              {email.failure_detail}
+                            </p>
+                          )}
+                        </div>
+                      </td>
                       <td className="py-2 text-right whitespace-nowrap space-x-1.5">
                         <TooltipProvider>
                           <Tooltip>

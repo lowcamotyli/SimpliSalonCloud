@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { GmailClient } from '@/lib/booksy/gmail-client'
 import { encrypt } from '@/lib/booksy/gmail-auth'
 
 type GmailOAuthState = {
     salonId?: string
+    userId?: string
     action?: 'connect_new_mailbox' | 'reconnect_mailbox'
     accountId?: string
+}
+
+function mapCallbackError(error: unknown): string {
+    const message =
+        typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as { message?: unknown }).message ?? 'oauth_callback_failed')
+            : error instanceof Error
+                ? error.message
+                : String(error ?? 'oauth_callback_failed')
+
+    if (message.includes('permission denied for table booksy_gmail_accounts')) {
+        return 'booksy_mailbox_table_permission_denied'
+    }
+
+    if (message.includes('BOOKSY_TOKEN_ENCRYPTION_KEY')) {
+        return 'missing_booksy_token_encryption_key'
+    }
+
+    if (message.includes('Google OAuth response did not include both access and refresh tokens')) {
+        return 'missing_google_refresh_token'
+    }
+
+    return message || 'oauth_callback_failed'
 }
 
 function parseState(stateStr: string): GmailOAuthState | null {
@@ -46,6 +71,11 @@ export async function GET(request: NextRequest) {
     const oauthError = searchParams.get('error')
     const state = stateStr ? parseState(stateStr) : null
 
+    console.log('Booksy Gmail callback env check', {
+        hasBooksyTokenKey: Boolean(process.env.BOOKSY_TOKEN_ENCRYPTION_KEY),
+        booksyTokenKeyLength: process.env.BOOKSY_TOKEN_ENCRYPTION_KEY?.trim().length ?? 0,
+    })
+
     if (!stateStr) {
         return NextResponse.json({ error: 'Missing code or state' }, { status: 400 })
     }
@@ -62,6 +92,7 @@ export async function GET(request: NextRequest) {
         }
 
         const supabase = await createServerSupabaseClient()
+        const adminSupabase = createAdminSupabaseClient()
 
         if (oauthError) {
             const redirectUrl = await getRedirectUrl(request, supabase, salonId, oauthError)
@@ -77,12 +108,36 @@ export async function GET(request: NextRequest) {
                 : NextResponse.json({ error: 'Missing code' }, { status: 400 })
         }
 
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        if (state.userId && state.userId !== user.id) {
+            return NextResponse.json({ error: 'OAuth state user mismatch' }, { status: 403 })
+        }
+
+        const { data: profile, error: profileError } = await (supabase
+            .from('profiles') as any)
+            .select('salon_id')
+            .eq('user_id', user.id)
+            .single()
+
+        if (profileError || !profile?.salon_id) {
+            return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+        }
+
+        if (profile.salon_id !== salonId) {
+            return NextResponse.json({ error: 'OAuth state salon mismatch' }, { status: 403 })
+        }
+
         const action = state.action ?? 'connect_new_mailbox'
 
         let existingAccount: any = null
 
         if (action === 'reconnect_mailbox' && state.accountId) {
-            const { data } = await (supabase
+            const { data } = await (adminSupabase
                 .from('booksy_gmail_accounts') as any)
                 .select('id, gmail_email, is_primary')
                 .eq('id', state.accountId)
@@ -101,7 +156,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (!existingAccount) {
-            const { data } = await (supabase
+            const { data } = await (adminSupabase
                 .from('booksy_gmail_accounts') as any)
                 .select('id, gmail_email, is_primary')
                 .eq('salon_id', salonId)
@@ -131,7 +186,7 @@ export async function GET(request: NextRequest) {
         const now = new Date().toISOString()
 
         if (action === 'reconnect_mailbox' && existingAccount?.id) {
-            const { error: updateError } = await (supabase
+            const { error: updateError } = await (adminSupabase
                 .from('booksy_gmail_accounts') as any)
                 .update({
                     gmail_email: email,
@@ -149,13 +204,13 @@ export async function GET(request: NextRequest) {
 
             if (updateError) throw updateError
         } else {
-            const { count } = await (supabase
+            const { count } = await (adminSupabase
                 .from('booksy_gmail_accounts') as any)
                 .select('id', { count: 'exact', head: true })
                 .eq('salon_id', salonId)
                 .eq('is_primary', true)
 
-            const { error: upsertError } = await (supabase
+            const { error: upsertError } = await (adminSupabase
                 .from('booksy_gmail_accounts') as any)
                 .upsert({
                     salon_id: salonId,
@@ -174,7 +229,7 @@ export async function GET(request: NextRequest) {
             if (upsertError) throw upsertError
         }
 
-        const { error: settingsError } = await (supabase
+        const { error: settingsError } = await (adminSupabase
             .from('salon_settings') as any)
             .upsert({
                 salon_id: salonId,
@@ -192,7 +247,7 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
         console.error('Callback error:', error)
         const supabase = await createServerSupabaseClient()
-        const redirectUrl = await getRedirectUrl(request, supabase, state?.salonId, error?.message || 'oauth_callback_failed')
+        const redirectUrl = await getRedirectUrl(request, supabase, state?.salonId, mapCallbackError(error))
 
         return redirectUrl
             ? NextResponse.redirect(redirectUrl)

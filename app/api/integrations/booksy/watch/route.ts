@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandling } from '@/lib/error-handler'
+import { AppError } from '@/lib/errors'
 import { ForbiddenError, ValidationError } from '@/lib/errors'
 import { renewWatch, startWatch } from '@/lib/booksy/watch-client'
 import { validateCronSecret } from '@/lib/middleware/cron-auth'
@@ -30,6 +31,23 @@ function watchCircuitBreakerResponse(): NextResponse<{ error: string }> {
   )
 }
 
+function ensureWatchConfiguration(): void {
+  const requiredEnvVars = ['GOOGLE_BOOKSY_PUBSUB_TOPIC'] as const
+  const missing = requiredEnvVars.filter((name) => {
+    const value = process.env[name]
+    return !value || value.trim().length === 0
+  })
+
+  if (missing.length > 0) {
+    throw new AppError(
+      `Booksy watch is enabled but missing required configuration: ${missing.join(', ')}`,
+      'BOOKSY_WATCH_NOT_CONFIGURED',
+      503,
+      { missing }
+    )
+  }
+}
+
 async function requireOwnerRole(supabase: Awaited<ReturnType<typeof getAuthContext>>['supabase']): Promise<void> {
   const { data, error } = await supabase.rpc('has_salon_role', {
     required_role: 'owner',
@@ -48,6 +66,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!isWatchFeatureEnabled()) {
     return watchCircuitBreakerResponse()
   }
+
+  ensureWatchConfiguration()
 
   const cronAuthError = validateCronSecret(request)
   if (!cronAuthError) {
@@ -97,6 +117,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const { supabase, salonId } = await getAuthContext()
   await requireOwnerRole(supabase)
+  const adminSupabase = createAdminClient()
 
   const body = await request.json().catch(() => ({}))
   const requestedAccountId = typeof body?.accountId === 'string' ? body.accountId : null
@@ -131,8 +152,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   const watchResult = existingWatch?.id
-    ? await renewWatch(salonId, supabase, account.id)
-    : await startWatch(salonId, supabase, account.id)
+    ? await renewWatch(salonId, adminSupabase, account.id)
+    : await startWatch(salonId, adminSupabase, account.id)
 
   return NextResponse.json({
     watch_status: watchResult.watchStatus,
@@ -144,6 +165,8 @@ export const GET = withErrorHandling(async () => {
   if (!isWatchFeatureEnabled()) {
     return watchCircuitBreakerResponse()
   }
+
+  ensureWatchConfiguration()
 
   const { supabase, salonId } = await getAuthContext()
   await requireOwnerRole(supabase)

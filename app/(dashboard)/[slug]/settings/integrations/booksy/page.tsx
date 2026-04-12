@@ -1,14 +1,16 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { AddMailboxButton } from '@/components/integrations/booksy/AddMailboxButton'
+import { BooksySyncOptions, type BooksySyncOptionsValue } from '@/components/integrations/booksy/BooksySyncOptions'
 import { MailboxList } from '@/components/integrations/booksy/MailboxList'
 import { BooksyPendingEmails } from '@/components/settings/booksy-pending-emails'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getInternalBaseUrl } from '@/lib/config/app-url'
-import { Calendar, ChevronRight, Info, RefreshCw } from 'lucide-react'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { getSalonHealth } from '@/lib/booksy/health-check'
+import { AlertTriangle, Calendar, ChevronRight, Info, RefreshCw } from 'lucide-react'
 
 type Params = {
   slug: string
@@ -61,12 +63,65 @@ type BooksyLog = {
   created_at: string
   base_price: number
   clients: { full_name: string; phone: string } | null
-  employees: { first_name: string; last_name: string } | null
+  employees: { first_name: string; last_name: string | null } | null
   services: { name: string } | null
 }
 
 type BooksyLogsResponse = {
   bookings: BooksyLog[]
+}
+
+type BooksyMailboxRow = {
+  id: string
+  gmail_email: string
+  mailbox_label: string | null
+  auth_status: 'active' | 'revoked' | 'expired' | 'error'
+  is_active: boolean
+  is_primary: boolean
+  created_at: string
+}
+
+type BooksySettingsRow = {
+  booksy_sync_interval_minutes: number | null
+  booksy_sender_filter: string | null
+  booksy_sync_from_date: string | null
+  booksy_auto_create_clients: boolean | null
+  booksy_auto_create_services: boolean | null
+}
+
+function getOauthErrorCopy(errorCode?: string): { title: string; description: string } | null {
+  if (!errorCode) {
+    return null
+  }
+
+  if (errorCode === 'missing_booksy_token_encryption_key') {
+    return {
+      title: 'Nie mozna zapisac skrzynki Gmail',
+      description:
+        'Brakuje zmiennej srodowiskowej BOOKSY_TOKEN_ENCRYPTION_KEY. Dodaj 64-znakowy klucz hex do env i ponow autoryzacje.',
+    }
+  }
+
+  if (errorCode === 'missing_google_refresh_token') {
+    return {
+      title: 'Google nie zwrocilo refresh tokena',
+      description:
+        'Sprobuj ponownie autoryzowac skrzynke i upewnij sie, ze zgoda Google jest wymuszona dla konta Gmail.',
+    }
+  }
+
+  if (errorCode === 'booksy_mailbox_table_permission_denied') {
+    return {
+      title: 'Brak uprawnien do zapisu skrzynki Booksy',
+      description:
+        'Callback OAuth nie mogl zapisac rekordu skrzynki w bazie. Aplikacja uzyje teraz zapisu przez klient admin po weryfikacji sesji.',
+    }
+  }
+
+  return {
+    title: 'Autoryzacja Gmail nie powiodla sie',
+    description: decodeURIComponent(errorCode),
+  }
 }
 
 function statusBadge(status: string) {
@@ -101,32 +156,25 @@ function statusBadge(status: string) {
   )
 }
 
-async function fetchWithAuth<T>(path: string): Promise<T> {
-  const appUrl = getInternalBaseUrl()
-  const cookieHeader = (await cookies()).toString()
-  const response = await fetch(`${appUrl}${path}`, {
-    headers: {
-      cookie: cookieHeader,
-      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET && {
-        'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
-      }),
-    },
-    cache: 'no-store',
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${path}: HTTP ${response.status}`)
+function mapMailboxAuthStatus(account: BooksyMailboxRow): MailboxAccount['auth_status'] {
+  if (!account.is_active) {
+    return 'disconnected'
   }
 
-  return response.json() as Promise<T>
+  return account.auth_status === 'active' ? 'connected' : 'reauth_required'
 }
+
 
 export default async function BooksySettingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>
+  searchParams?: Promise<{ error?: string }>
 }): Promise<JSX.Element> {
   const { slug } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const oauthError = getOauthErrorCopy(resolvedSearchParams?.error)
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -178,11 +226,44 @@ export default async function BooksySettingsPage({
     throw new Error(`Failed to load Booksy mailboxes: ${accountsError.message}`)
   }
 
-  const accounts = (accountsData ?? []) as MailboxAccount[]
-  const [health, logsData] = await Promise.all([
-    fetchWithAuth<SalonHealth>('/api/integrations/booksy/health'),
-    fetchWithAuth<BooksyLogsResponse>('/api/integrations/booksy/logs'),
+  const accounts = ((accountsData ?? []) as BooksyMailboxRow[]).map((account) => ({
+    id: account.id,
+    gmail_email: account.gmail_email,
+    mailbox_label: account.mailbox_label,
+    auth_status: mapMailboxAuthStatus(account),
+    is_active: account.is_active,
+    is_primary: account.is_primary,
+    created_at: account.created_at,
+  }))
+  const adminSupabase = createAdminSupabaseClient()
+  const [health, logsResult, settingsResult] = await Promise.all([
+    getSalonHealth(typedProfile.salon_id, supabase),
+    adminSupabase
+      .from('bookings')
+      .select('id, booking_date, booking_time, status, created_at, base_price, clients(full_name, phone), employees(first_name, last_name), services(name)')
+      .eq('salon_id', typedProfile.salon_id)
+      .eq('source', 'booksy')
+      .order('created_at', { ascending: false })
+      .limit(20),
+    supabase
+      .from('salon_settings')
+      .select('*')
+      .eq('salon_id', typedProfile.salon_id)
+      .maybeSingle(),
   ])
+  if (settingsResult.error) {
+    throw new Error(`Failed to load Booksy settings: ${settingsResult.error.message}`)
+  }
+
+  const logsData: BooksyLogsResponse = { bookings: logsResult.data ?? [] }
+  const settingsRow = settingsResult.data as BooksySettingsRow | null
+  const booksySettings: BooksySyncOptionsValue = {
+    booksy_sync_interval_minutes: settingsRow?.booksy_sync_interval_minutes ?? 15,
+    booksy_sender_filter: settingsRow?.booksy_sender_filter ?? 'noreply@booksy.com',
+    booksy_sync_from_date: settingsRow?.booksy_sync_from_date ?? '',
+    booksy_auto_create_clients: settingsRow?.booksy_auto_create_clients ?? true,
+    booksy_auto_create_services: settingsRow?.booksy_auto_create_services ?? false,
+  }
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -196,7 +277,17 @@ export default async function BooksySettingsPage({
         <AddMailboxButton salonSlug={slug} />
       </div>
 
+      {oauthError ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{oauthError.title}</AlertTitle>
+          <AlertDescription>{oauthError.description}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <MailboxList mailboxes={accounts} health={health} salonSlug={slug} />
+
+      <BooksySyncOptions salonId={typedProfile.salon_id} initialSettings={booksySettings} />
 
       <BooksyPendingEmails salonId={typedProfile.salon_id} />
 

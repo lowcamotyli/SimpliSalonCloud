@@ -84,6 +84,7 @@ export const PUT = withErrorHandling(async (
   if (validatedData.phone) updateData.phone = validatedData.phone
   if (validatedData.email !== undefined) updateData.email = validatedData.email || null
   if (validatedData.notes !== undefined) updateData.notes = validatedData.notes || null
+  if (validatedData.tags !== undefined) updateData.tags = validatedData.tags
 
   const { data: client, error } = await (supabase as any)
     .from('clients')
@@ -105,6 +106,8 @@ export const PUT = withErrorHandling(async (
 
   return NextResponse.json({ client })
 })
+
+export const PATCH = PUT
 
 // DELETE /api/clients/[id] – soft-delete
 export const DELETE = withErrorHandling(async (

@@ -39,8 +39,8 @@ export function HoursEditor({ hours, onChange }: HoursEditorProps) {
         const dayHours = hours[day] || { open: '09:00', close: '18:00', closed: false }
         
         return (
-          <div key={day} className="flex items-center gap-4">
-            <div className="w-32">
+          <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <div className="w-full sm:w-32">
               <Label>{DAY_LABELS[day]}</Label>
             </div>
             
@@ -60,14 +60,14 @@ export function HoursEditor({ hours, onChange }: HoursEditorProps) {
                   type="time"
                   value={dayHours.open || '09:00'}
                   onChange={(e) => handleDayChange(day, 'open', e.target.value)}
-                  className="w-32"
+                  className="w-full sm:w-auto"
                 />
                 <span className="text-muted-foreground">-</span>
                 <Input
                   type="time"
                   value={dayHours.close || '18:00'}
                   onChange={(e) => handleDayChange(day, 'close', e.target.value)}
-                  className="w-32"
+                  className="w-full sm:w-auto"
                 />
               </>
             )}

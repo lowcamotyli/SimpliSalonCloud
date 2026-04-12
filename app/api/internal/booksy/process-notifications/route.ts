@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
@@ -17,6 +17,7 @@ type AccountRow = Tables<'booksy_gmail_accounts'>
 
 const RAW_EMAIL_BUCKET = 'booksy-raw-emails'
 const MAILBOX_BATCH_LIMIT = 25
+const CLAIM_STALE_AFTER_MS = 10 * 60 * 1000
 
 type PendingMailbox = {
   accountId: string
@@ -207,6 +208,58 @@ async function loadMailboxContext(
   }
 
   return { watch, account }
+}
+
+async function tryClaimMailbox(
+  supabase: AdminSupabaseClient,
+  mailbox: PendingMailbox
+): Promise<string | null> {
+  const claimToken = randomUUID()
+  const nowIso = new Date().toISOString()
+  const staleBeforeIso = new Date(Date.now() - CLAIM_STALE_AFTER_MS).toISOString()
+
+  const { data: claimedRows, error } = await (supabase
+    .from('booksy_gmail_watches') as any)
+    .update({
+      processing_claim_token: claimToken,
+      processing_claimed_at: nowIso,
+      updated_at: nowIso,
+    })
+    .eq('booksy_gmail_account_id', mailbox.accountId)
+    .eq('salon_id', mailbox.salonId)
+    .or(`processing_claim_token.is.null,processing_claimed_at.lt.${staleBeforeIso}`)
+    .select('id')
+
+  if (error) {
+    throw new Error(`Failed to claim Booksy Gmail watch mailbox: ${error.message}`)
+  }
+
+  return (claimedRows?.length ?? 0) > 0 ? claimToken : null
+}
+
+async function releaseMailboxClaim(
+  supabase: AdminSupabaseClient,
+  mailbox: PendingMailbox,
+  claimToken: string
+): Promise<void> {
+  const { error } = await (supabase
+    .from('booksy_gmail_watches') as any)
+    .update({
+      processing_claim_token: null,
+      processing_claimed_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('booksy_gmail_account_id', mailbox.accountId)
+    .eq('salon_id', mailbox.salonId)
+    .eq('processing_claim_token', claimToken)
+
+  if (error) {
+    logger.error('Booksy notification worker: failed to release mailbox claim', error, {
+      action: 'booksy_notification_release_claim_failed',
+      salonId: mailbox.salonId,
+      accountId: mailbox.accountId,
+    })
+  }
 }
 
 async function listHistoryMessageIds(
@@ -415,15 +468,27 @@ async function processMailbox(
   supabase: AdminSupabaseClient,
   mailbox: PendingMailbox
 ): Promise<{ processed: boolean; messageCount: number; fullSyncRequired: boolean }> {
-  const { watch } = await loadMailboxContext(supabase, mailbox)
+  const claimToken = await tryClaimMailbox(supabase, mailbox)
 
-  if (!watch.last_history_id) {
-    throw new Error(`Booksy Gmail watch ${watch.id} is missing last_history_id`)
+  if (!claimToken) {
+    return {
+      processed: false,
+      messageCount: 0,
+      fullSyncRequired: false,
+    }
   }
 
-  const oauth2Client = await createOAuthClient(mailbox.accountId, supabase)
+  let watch: WatchRow | null = null
 
   try {
+    const context = await loadMailboxContext(supabase, mailbox)
+    watch = context.watch
+
+    if (!watch.last_history_id) {
+      throw new Error(`Booksy Gmail watch ${watch.id} is missing last_history_id`)
+    }
+
+    const oauth2Client = await createOAuthClient(mailbox.accountId, supabase)
     const { messageIds, latestHistoryId } = await listHistoryMessageIds(oauth2Client, watch.last_history_id)
 
     for (const gmailMessageId of messageIds) {
@@ -443,7 +508,7 @@ async function processMailbox(
   } catch (error) {
     const status = (error as { code?: number; status?: number })?.status ?? (error as { code?: number })?.code
 
-    if (status === 404) {
+    if (status === 404 && watch) {
       const message = 'Gmail history cursor expired; full sync required'
       await markNeedsFullSync(supabase, watch, message)
       await markNotificationsProcessed(supabase, mailbox.notifications)
@@ -462,6 +527,8 @@ async function processMailbox(
     }
 
     throw error
+  } finally {
+    await releaseMailboxClaim(supabase, mailbox, claimToken)
   }
 }
 
@@ -532,10 +599,6 @@ export async function POST(request: NextRequest) {
         .reduce((sum, result) => sum + result.notificationCount, 0),
       rawEmailsDiscovered: results.reduce((sum, result) => sum + result.rawEmailsDiscovered, 0),
       results,
-      warnings: [
-        'Mailbox-level FOR UPDATE SKIP LOCKED could not be held across Gmail API work with the current app stack; this route deduplicates per mailbox within one invocation but still needs a DB-backed claim primitive for cross-worker isolation.',
-        'The current generated schema does not include booksy_gmail_watches.needs_full_sync; 404 handling assumes that column exists in the linked database.',
-      ],
     })
   } catch (error) {
     logger.error('Booksy notification worker fatal error', error, {

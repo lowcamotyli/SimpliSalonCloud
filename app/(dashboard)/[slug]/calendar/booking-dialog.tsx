@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { Clock, PlusCircle, Trash2, UserX, XCircle, Banknote, CreditCard, Tag } from 'lucide-react'
+import { Clock, PlusCircle, Trash2, UserX, XCircle, Banknote, CreditCard, Tag, MoreHorizontal, ChevronDown } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BookingCartItem } from '@/components/calendar/booking-cart-item'
 import BookingServicesEditor from '@/components/calendar/booking-services-editor'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { useCreateBooking, useUpdateBooking } from '@/hooks/use-bookings'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
@@ -128,6 +130,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   )
   const [addonsTotal, setAddonsTotal] = useState(0)
   const [showVoucherPanel, setShowVoucherPanel] = useState(false)
+  const [showEditServices, setShowEditServices] = useState(false)
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherData, setVoucherData] = useState<{ id: string; code: string; current_balance: number; status: string } | null>(null)
   const [voucherLoading, setVoucherLoading] = useState(false)
@@ -1012,13 +1015,13 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden">
         <DialogHeader className="shrink-0">
           <DialogTitle>{booking ? 'Edycja wizyty' : 'Nowa wizyta'}</DialogTitle>
         </DialogHeader>
 
         {booking ? (
-          <div className="flex-1 space-y-6 overflow-y-auto pr-1">
+          <div className="flex-1 space-y-6 overflow-y-auto pb-4 pr-1">
             <div className="space-y-4">
               {booking.visit_group_id && (
                 <div className="glass rounded-lg p-3">
@@ -1153,7 +1156,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 </div>
               )}
 
-              <DialogFooter className="flex-wrap gap-2">
+              <DialogFooter className="sticky bottom-0 flex-wrap gap-2 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
                 {(booking.status === 'scheduled' || booking.status === 'confirmed') && (
                   <>
                     <div className="flex w-full gap-2 sm:w-auto">
@@ -1389,7 +1392,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="border-t bg-background/95 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <Button type="button" variant="outline" onClick={onClose}>
                 Anuluj
               </Button>
@@ -1599,7 +1602,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               </Alert>
             )}
 
-            <DialogFooter className="flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <DialogFooter className="sticky bottom-0 flex-col items-stretch gap-4 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1 text-sm">
                 <div>Laczny czas: {totalDuration} min</div>
                 <div>Laczna cena: {formatPrice(totalPrice)}</div>

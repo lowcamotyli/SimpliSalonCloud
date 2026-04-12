@@ -10,6 +10,32 @@ const previewSchema = z.object({
   sampleSize: z.number().int().min(0).max(20).optional().default(5),
 })
 
+type SegmentCriterion = {
+  field?: unknown
+  operator?: unknown
+  values?: unknown
+}
+
+function normalizePreviewFilters(rawFilters: Record<string, unknown>): Record<string, unknown> {
+  const nextFilters: Record<string, unknown> = { ...rawFilters }
+  const criteria = Array.isArray(rawFilters.criteria) ? (rawFilters.criteria as SegmentCriterion[]) : []
+  const tagCriteriaValues = criteria
+    .filter((criterion) => criterion.field === 'tags' && criterion.operator === 'contains')
+    .flatMap((criterion) => (Array.isArray(criterion.values) ? criterion.values : []))
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .map((value) => value.trim())
+
+  if (tagCriteriaValues.length > 0) {
+    const existingTags = Array.isArray(rawFilters.tags)
+      ? rawFilters.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0).map((tag) => tag.trim())
+      : []
+
+    nextFilters.tags = Array.from(new Set([...existingTags, ...tagCriteriaValues]))
+  }
+
+  return nextFilters
+}
+
 async function authorize(supabase: any, salonId: string, userId: string) {
   const { data: membership, error: membershipError } = await supabase
     .from('profiles')
@@ -55,10 +81,11 @@ export async function POST(request: NextRequest) {
     const payload = previewSchema.parse(await request.json())
     const auth = await authorize(supabase as any, payload.salonId, user.id)
     if (!auth.ok) return auth.response
+    const normalizedFilters = normalizePreviewFilters(payload.filters)
 
     const [count, sampleRaw] = await Promise.all([
-      countSegmentRecipients(payload.salonId, payload.filters),
-      payload.sampleSize > 0 ? listSegmentRecipients(payload.salonId, payload.filters, payload.sampleSize) : Promise.resolve([]),
+      countSegmentRecipients(payload.salonId, normalizedFilters),
+      payload.sampleSize > 0 ? listSegmentRecipients(payload.salonId, normalizedFilters, payload.sampleSize) : Promise.resolve([]),
     ])
 
     const sample = (sampleRaw || []).map((row: any) => ({

@@ -57,6 +57,8 @@ export interface SalonSettings {
   contact_email?: string
   accounting_email?: string
   website_url?: string
+  terms_text?: string | null
+  terms_url?: string | null
   address?: {
     street: string
     city: string
@@ -95,6 +97,7 @@ export interface SalonSettings {
   booksy_gmail_tokens?: any
   booksy_sync_interval_minutes?: number
   booksy_sender_filter?: string
+  booksy_sync_from_date?: string
   booksy_auto_create_clients?: boolean
   booksy_auto_create_services?: boolean
   booksy_notify_on_new?: boolean

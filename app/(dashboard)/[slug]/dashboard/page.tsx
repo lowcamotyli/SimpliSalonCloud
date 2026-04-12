@@ -4,6 +4,7 @@ import { Calendar, Users, DollarSign, TrendingUp, Plus, Clock, ArrowUpRight, Act
 import Link from 'next/link'
 import { StatCard } from '@/components/dashboard/stat-card'
 import RevenueChart from '@/components/dashboard/revenue-chart'
+import { BooksyStatusWidget } from '@/components/dashboard/booksy-status-widget'
 import { format, subDays, startOfDay, endOfDay } from 'date-fns'
 
 import { EmptyState } from '@/components/ui/empty-state'
@@ -213,12 +214,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0 animate-luxe-fade-in-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-lg font-medium theme-header-subtitle">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
+          <p className="text-muted-foreground text-base sm:text-lg font-medium theme-header-subtitle">Witaj w {typedSalon?.name || 'salonie'}! Oto podsumowanie Twojej firmy.</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/${slug}/bookings`}>
@@ -231,18 +232,24 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <StatCard key={stat.title} {...stat} index={index} />
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-4">
         {/* Revenue Chart */}
-        <RevenueChart data={chartData} />
+        <div className="lg:col-span-3 flex flex-col">
+          <RevenueChart data={chartData} />
+        </div>
+
+        {/* Right sidebar: Booksy + Quick Actions stacked */}
+        <div className="lg:col-span-1 flex flex-col gap-4 sm:gap-6">
+          <BooksyStatusWidget salonId={typedSalon.id} salonSlug={slug} />
 
         {/* Quick Actions */}
-        <div className="theme-quick-actions glass p-6 rounded-2xl flex flex-col h-full bg-white/50 backdrop-blur-sm border-none">
+        <div className="theme-quick-actions glass p-6 rounded-2xl flex flex-col flex-1 bg-white/50 backdrop-blur-sm border-none">
           <h2 className="theme-section-title text-xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-600" />
             Szybkie akcje
@@ -294,6 +301,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
             </Link>
           </div>
         </div>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-1">
@@ -311,7 +319,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
                 <div
                   key={booking.id}
                   style={{ animationDelay: `${index * 50}ms` }}
-                  className="theme-upcoming-item flex items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
+                  className="theme-upcoming-item flex flex-wrap items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
                 >
                   <div className="flex items-center gap-4">
                     <div className="theme-upcoming-avatar h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">

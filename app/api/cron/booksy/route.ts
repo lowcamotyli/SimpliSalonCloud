@@ -173,7 +173,8 @@ export async function GET(request: NextRequest) {
         salon_settings!inner(
           booksy_enabled,
           booksy_gmail_tokens,
-          booksy_sender_filter
+          booksy_sender_filter,
+          booksy_sync_from_date
         )
       `)
       .eq('subscription_status', 'active')
@@ -215,7 +216,9 @@ export async function GET(request: NextRequest) {
           },
         })
 
-        const messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com')
+        const messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com', {
+          syncFromDate: settings.booksy_sync_from_date ?? null,
+        })
 
         const processor = new BooksyProcessor(supabase, salon.id)
         const salonEmailResults: any[] = []

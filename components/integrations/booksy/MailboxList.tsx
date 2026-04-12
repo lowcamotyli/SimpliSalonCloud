@@ -1,6 +1,5 @@
 "use client"
 
-import { AddMailboxButton } from "./AddMailboxButton"
 import { MailboxHealthCard } from "./MailboxHealthCard"
 
 type MailboxAuthStatus = "connected" | "reauth_required" | "disconnected"
@@ -72,7 +71,6 @@ export function MailboxList({ mailboxes, health, salonSlug }: MailboxListProps):
           )
         })}
       </div>
-      <AddMailboxButton salonSlug={salonSlug} />
     </section>
   )
 }

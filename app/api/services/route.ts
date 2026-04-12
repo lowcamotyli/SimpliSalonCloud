@@ -48,6 +48,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       name: service.name,
       price: service.price,
       duration: service.duration,
+      description: service.description,
       surchargeAllowed: service.surcharge_allowed,
       assignedEmployeeCount: service.assigned_employee_count,
     })
@@ -84,6 +85,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       name: validatedData.name,
       duration: validatedData.duration,
       price: validatedData.price,
+      description: validatedData.description ?? null,
       active: validatedData.active ?? true,
       surcharge_allowed: validatedData.surcharge_allowed ?? true,
     })

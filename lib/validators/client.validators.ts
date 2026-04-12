@@ -10,6 +10,7 @@ export const createClientSchema = z.object({
     ),
     email: z.string().email('Nieprawidłowy adres email').optional().or(z.literal('')),
     notes: z.string().max(1000).optional(),
+    tags: z.array(z.string()).optional(),
 })
 
 export const updateClientSchema = createClientSchema.partial()

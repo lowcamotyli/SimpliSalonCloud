@@ -18,10 +18,13 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
         .from('services')
-        .select('id, name, category, subcategory, duration, price')
+        .select(
+            'id, name, category, subcategory, duration, price, description, service_media(id, public_url, alt_text, sort_order)',
+        )
         .eq('salon_id', salonId)
         .eq('active', true)
         .is('deleted_at', null)
+        .order('sort_order', { foreignTable: 'service_media', ascending: true })
         .order('category')
         .order('name')
 
@@ -30,6 +33,11 @@ export async function GET(request: NextRequest) {
         return setCorsHeaders(request, response)
     }
 
-    const response = NextResponse.json({ services: data })
+    const services = (data ?? []).map(({ service_media, ...service }) => ({
+        ...service,
+        images: service_media ?? [],
+    }))
+
+    const response = NextResponse.json({ services })
     return setCorsHeaders(request, response)
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,7 +35,8 @@ import {
   MessageSquare,
   AlertTriangle,
   Ban,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -46,6 +47,7 @@ import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ListLoadingState } from '@/components/ui/list-loading-state'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 
@@ -95,6 +97,8 @@ type ClientFormData = z.infer<typeof clientFormSchema>
 
 export default function ClientsPage() {
   const params = useParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const slug = params.slug as string
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -109,10 +113,26 @@ export default function ClientsPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [historyClient, setHistoryClient] = useState<any>(null)
   const [historyPage, setHistoryPage] = useState(1)
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([])
+  const [isBulkDeletingClients, setIsBulkDeletingClients] = useState(false)
 
   const debouncedSearch = useDebounce(search, 300)
   const { data: clients, isLoading, refetch } = useClients(debouncedSearch)
   const createMutation = useCreateClient()
+
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action !== 'new-client') {
+      return
+    }
+
+    handleAddClient()
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('action')
+    const nextUrl = nextParams.toString() ? `/${slug}/clients?${nextParams.toString()}` : `/${slug}/clients`
+    router.replace(nextUrl, { scroll: false })
+  }, [router, searchParams, slug])
 
   const { data: salon } = useQuery<{ id: string; slug: string } | null>({
     queryKey: ['salon', slug],
@@ -186,6 +206,35 @@ export default function ClientsPage() {
     }
   }, [clients])
 
+  const selectedClients = useMemo(
+    () => (clients || []).filter((client: any) => selectedClientIds.includes(client.id)),
+    [clients, selectedClientIds]
+  )
+
+  const selectedClientStats = useMemo(() => {
+    return selectedClients.reduce(
+      (acc, client: any) => {
+        const status = (client.blacklist_status || 'clean') as BlacklistStatus
+        if (status === 'blacklisted') acc.blacklisted += 1
+        else if (status === 'warned') acc.warned += 1
+        else acc.clean += 1
+        return acc
+      },
+      { clean: 0, warned: 0, blacklisted: 0 }
+    )
+  }, [selectedClients])
+
+  const visibleSelectedClientCount = useMemo(
+    () => (clients || []).filter((client: any) => selectedClientIds.includes(client.id)).length,
+    [clients, selectedClientIds]
+  )
+
+  useEffect(() => {
+    if (selectedClientIds.length === 0) return
+    const validIds = new Set((clients || []).map((client: any) => client.id))
+    setSelectedClientIds((prev) => prev.filter((id) => validIds.has(id)))
+  }, [clients, selectedClientIds.length])
+
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -219,10 +268,15 @@ export default function ClientsPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteClient = async (clientId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm('Czy na pewno chcesz usunąć tego klienta?')) return
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    const confirmToken = 'USUN 1'
+    const confirmation = window.prompt(
+      `Usuwasz 1 klienta: "${clientName}".\nWpisz "${confirmToken}", aby potwierdzić.`,
+      ''
+    )
+    if (confirmation !== confirmToken) return
 
+    setDeletingClientId(clientId)
     try {
       const response = await fetch(`/api/clients/${clientId}`, {
         method: 'DELETE',
@@ -231,9 +285,12 @@ export default function ClientsPage() {
       if (!response.ok) throw new Error('Błąd usuwania')
 
       toast.success('Klient usunięty')
+      setSelectedClientIds((prev) => prev.filter((id) => id !== clientId))
       refetch()
     } catch (error) {
       toast.error('Nie udało się usunąć klienta')
+    } finally {
+      setDeletingClientId(null)
     }
   }
 
@@ -330,6 +387,67 @@ export default function ClientsPage() {
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Błąd podczas zapisywania klienta')
+    }
+  }
+
+  const toggleClientSelection = (clientId: string) => {
+    setSelectedClientIds((prev) =>
+      prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId]
+    )
+  }
+
+  const selectAllVisibleClients = () => {
+    setSelectedClientIds((prev) => {
+      const visibleIds = (clients || []).map((client: any) => client.id)
+      const merged = new Set([...prev, ...visibleIds])
+      return Array.from(merged)
+    })
+  }
+
+  const clearClientSelection = () => {
+    setSelectedClientIds([])
+  }
+
+  const handleBulkDeleteClients = async () => {
+    if (selectedClients.length === 0) return
+
+    const confirmToken = `USUN ${selectedClients.length}`
+    const namesPreview = selectedClients
+      .slice(0, 3)
+      .map((client: any) => client.full_name)
+      .join(', ')
+    const confirmation = window.prompt(
+      `Usuwasz ${selectedClients.length} klientów (${namesPreview}${selectedClients.length > 3 ? ', ...' : ''}).\nWpisz "${confirmToken}", aby potwierdzić.`,
+      ''
+    )
+    if (confirmation !== confirmToken) return
+
+    setIsBulkDeletingClients(true)
+    try {
+      const results = await Promise.allSettled(
+        selectedClients.map((client: any) =>
+          fetch(`/api/clients/${client.id}`, {
+            method: 'DELETE',
+          })
+        )
+      )
+
+      const deletedCount = results.filter(
+        (result): result is PromiseFulfilledResult<Response> => result.status === 'fulfilled' && result.value.ok
+      ).length
+      const failedCount = selectedClients.length - deletedCount
+
+      if (deletedCount > 0) {
+        toast.success(`Usunięto ${deletedCount} klientów`)
+      }
+      if (failedCount > 0) {
+        toast.error(`Nie udało się usunąć ${failedCount} klientów`)
+      }
+
+      setSelectedClientIds([])
+      refetch()
+    } finally {
+      setIsBulkDeletingClients(false)
     }
   }
 
@@ -432,7 +550,7 @@ export default function ClientsPage() {
           </Link>
           <Button
             size="lg"
-            className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold"
+            className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold hidden sm:inline-flex"
             onClick={handleAddClient}
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -487,12 +605,41 @@ export default function ClientsPage() {
         </div>
       </Card>
 
+      {selectedClientIds.length > 0 && (
+        <Card className="p-4 border border-amber-200 bg-amber-50/60 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-amber-900">
+                Zaznaczono {selectedClientIds.length} klientów (widoczne: {visibleSelectedClientCount})
+              </p>
+              <p className="text-xs text-amber-800">
+                Statusy: {selectedClientStats.clean} czysty, {selectedClientStats.warned} ostrzeżenie, {selectedClientStats.blacklisted} czarna lista.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={selectAllVisibleClients} className="h-11 px-3 min-h-[44px] min-w-[44px]">
+                Zaznacz widoczne ({clients?.length || 0})
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={handleBulkDeleteClients}
+                disabled={isBulkDeletingClients}
+              >
+                {isBulkDeletingClients ? 'Usuwanie...' : 'Usuń zaznaczonych'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={clearClientSelection} className="h-11 px-3 min-h-[44px] min-w-[44px]">
+                Wyczyść
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Clients List */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium animate-pulse">Ładowanie bazy klientów...</p>
-        </div>
+        <ListLoadingState rows={6} />
       ) : clients && clients.length > 0 ? (
         <motion.div
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -513,6 +660,19 @@ export default function ClientsPage() {
                   className="group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
                   onClick={() => handleEditClient(client)}
                 >
+                  <div className="absolute right-4 top-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedClientIds.includes(client.id)}
+                      onChange={(e) => {
+                        e.stopPropagation()
+                        toggleClientSelection(client.id)
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-4 w-4 rounded accent-primary"
+                      aria-label={`Zaznacz klienta ${client.full_name}`}
+                    />
+                  </div>
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
@@ -536,10 +696,14 @@ export default function ClientsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-300 hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
-                        onClick={(e) => handleDeleteClient(client.id, e)}
+                        className="h-11 w-11 min-h-[44px] min-w-[44px] text-slate-300 hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+                        disabled={deletingClientId === client.id || isBulkDeletingClients}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void handleDeleteClient(client.id, client.full_name)
+                        }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {deletingClientId === client.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                     </div>
 
@@ -598,7 +762,7 @@ export default function ClientsPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="w-full"
+                        className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
                         onClick={(e) => openQuickSend(client, e)}
                       >
                         Wyślij wiadomość
@@ -607,7 +771,7 @@ export default function ClientsPage() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="w-full"
+                        className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
                         onClick={(e) => openClientHistory(client, e)}
                       >
                         Historia
@@ -662,7 +826,7 @@ export default function ClientsPage() {
                       id="fullName"
                       {...form.register('fullName')}
                       placeholder="Anna Kowalska"
-                      className="glass h-11 rounded-xl focus:bg-white pl-10"
+                      className="glass h-11 py-3 rounded-xl focus:bg-white pl-10"
                     />
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
@@ -681,7 +845,7 @@ export default function ClientsPage() {
                         id="phone"
                         {...form.register('phone')}
                         placeholder="9-cyfrowy numer"
-                        className="glass h-11 rounded-xl focus:bg-white pl-10"
+                        className="glass h-11 py-3 rounded-xl focus:bg-white pl-10"
                       />
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                     </div>
@@ -700,7 +864,7 @@ export default function ClientsPage() {
                         type="email"
                         {...form.register('email')}
                         placeholder="anna@example.com"
-                        className="glass h-11 rounded-xl focus:bg-white pl-10"
+                        className="glass h-11 py-3 rounded-xl focus:bg-white pl-10"
                       />
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                     </div>
@@ -718,7 +882,7 @@ export default function ClientsPage() {
                     id="notes"
                     {...form.register('notes')}
                     placeholder="Ważne informacje o kliencie..."
-                    className="glass h-11 rounded-xl focus:bg-white"
+                    className="glass h-11 py-3 rounded-xl focus:bg-white"
                   />
                 </div>
 
@@ -750,6 +914,7 @@ export default function ClientsPage() {
                           type="button"
                           variant="destructive"
                           size="sm"
+                          className="h-11 px-3 min-h-[44px] min-w-[44px]"
                           onClick={() => handleBlacklistAction(selectedClient.id, 'add')}
                         >
                           Dodaj do czarnej listy
@@ -759,6 +924,7 @@ export default function ClientsPage() {
                           type="button"
                           variant="outline"
                           size="sm"
+                          className="h-11 px-3 min-h-[44px] min-w-[44px]"
                           onClick={() => handleBlacklistAction(selectedClient.id, 'remove')}
                         >
                           Usun z czarnej listy
@@ -801,16 +967,17 @@ export default function ClientsPage() {
                   type="button"
                   variant="ghost"
                   onClick={() => setIsDialogOpen(false)}
-                  className="rounded-xl font-bold"
+                  className="rounded-xl font-bold h-11 px-3 min-h-[44px] min-w-[44px]"
                 >
                   Anuluj
                 </Button>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="gradient-button rounded-xl font-bold flex-1"
+                  className="gradient-button rounded-xl font-bold flex-1 h-11 px-3 min-h-[44px] min-w-[44px]"
                 >
-                  {selectedClient ? 'Zapisz zmiany' : 'Dodaj klienta'}
+                  {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {createMutation.isPending ? 'Zapisywanie...' : selectedClient ? 'Zapisz zmiany' : 'Dodaj klienta'}
                 </Button>
               </DialogFooter>
             </form>
@@ -830,10 +997,11 @@ export default function ClientsPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Kanał</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-nowrap">
                 <Button
                   type="button"
                   variant={quickChannel === 'email' ? 'default' : 'outline'}
+                  className="h-11 px-3 min-h-[44px] min-w-[44px] shrink-0"
                   onClick={() => {
                     setQuickChannel('email')
                     setQuickTemplateId('')
@@ -846,6 +1014,7 @@ export default function ClientsPage() {
                 <Button
                   type="button"
                   variant={quickChannel === 'sms' ? 'default' : 'outline'}
+                  className="h-11 px-3 min-h-[44px] min-w-[44px] shrink-0"
                   onClick={() => {
                     setQuickChannel('sms')
                     setQuickTemplateId('')
@@ -876,7 +1045,7 @@ export default function ClientsPage() {
                 <select
                   value={quickTemplateId}
                   onChange={(e) => handleTemplatePick(e.target.value)}
-                  className="w-full border rounded-md h-10 px-3 bg-background"
+                  className="w-full border rounded-md h-11 py-3 px-3 bg-background min-h-[44px]"
                 >
                   <option value="">Brak szablonu</option>
                   {(quickTemplatesQuery.data?.templates || [])
@@ -891,13 +1060,13 @@ export default function ClientsPage() {
             {quickChannel === 'email' && (
               <div className="space-y-2">
                 <Label>Temat</Label>
-                <Input value={quickSubject} onChange={(e) => setQuickSubject(e.target.value)} placeholder="Temat wiadomości" />
+                <Input value={quickSubject} onChange={(e) => setQuickSubject(e.target.value)} placeholder="Temat wiadomości" className="py-3 min-h-[44px]" />
               </div>
             )}
 
             <div className="space-y-2">
               <Label>Treść</Label>
-              <Textarea value={quickBody} onChange={(e) => setQuickBody(e.target.value)} rows={6} placeholder="Treść wiadomości..." />
+              <Textarea value={quickBody} onChange={(e) => setQuickBody(e.target.value)} rows={6} placeholder="Treść wiadomości..." className="py-3 min-h-[44px]" />
               {quickChannel === 'sms' && (
                 <p className="text-xs text-muted-foreground">Znaki SMS: {quickBody.length}</p>
               )}
@@ -910,10 +1079,11 @@ export default function ClientsPage() {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsQuickDialogOpen(false)}>
+            <Button type="button" variant="ghost" onClick={() => setIsQuickDialogOpen(false)} className="h-11 px-3 min-h-[44px] min-w-[44px]">
               Anuluj
             </Button>
-            <Button type="button" onClick={handleQuickSend} disabled={isQuickSending || !salonId}>
+            <Button type="button" onClick={handleQuickSend} disabled={isQuickSending || !salonId} className="h-11 px-3 min-h-[44px] min-w-[44px]">
+              {isQuickSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isQuickSending ? 'Wysyłanie...' : 'Wyślij'}
             </Button>
           </DialogFooter>
@@ -976,6 +1146,7 @@ export default function ClientsPage() {
             <Button
               type="button"
               variant="outline"
+              className="h-11 px-3 min-h-[44px] min-w-[44px]"
               onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
               disabled={(clientHistoryQuery.data?.pagination.page || 1) <= 1 || clientHistoryQuery.isLoading}
             >
@@ -987,6 +1158,7 @@ export default function ClientsPage() {
             <Button
               type="button"
               variant="outline"
+              className="h-11 px-3 min-h-[44px] min-w-[44px]"
               onClick={() =>
                 setHistoryPage((p) => {
                   const max = clientHistoryQuery.data?.pagination.totalPages || 1
@@ -1003,6 +1175,14 @@ export default function ClientsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Button
+        type="button"
+        size="icon"
+        onClick={handleAddClient}
+        className="fixed bottom-5 right-5 z-40 h-11 w-11 min-h-[44px] min-w-[44px] rounded-full shadow-lg shadow-primary/25 gradient-button sm:hidden"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
     </div>
   )
 }

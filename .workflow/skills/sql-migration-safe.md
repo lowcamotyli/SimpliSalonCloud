@@ -23,17 +23,18 @@ This is not "dad knows SQL" — it is an explicit, auditable procedure for produ
 
 ## Procedure
 1. Read: existing migration file naming convention + latest 2 migration files
-2. Check current schema state for affected tables
-3. Write migration SQL:
+2. Run `supabase migration list --linked` — confirm no drift before writing (drift now = conflict at push)
+3. Check current schema state for affected tables
+4. Write migration SQL:
    - One logical change per file
    - Filename: `YYYYMMDDHHMMSS_<descriptive-name>.sql`
    - RLS policy on every new table — no exceptions
    - Index on FK columns and all columns used in `WHERE` / `ORDER BY`
    - multi-tenant tables: `salon_id` column + RLS using `get_user_salon_id()`
-4. State rollback posture (what reverse migration looks like)
-5. Assess: rows affected, lock risk, backfill size, constraint violation risk
-6. **Wait for Claude explicit approval before `supabase db push`** on any destructive migration
-7. After approval:
+5. State rollback posture (what reverse migration looks like)
+6. Assess: rows affected, lock risk, backfill size, constraint violation risk
+7. **Wait for Claude explicit approval before `supabase db push`** on any destructive migration
+8. After approval:
    ```bash
    supabase db push
    supabase gen types typescript --linked > types/supabase.ts

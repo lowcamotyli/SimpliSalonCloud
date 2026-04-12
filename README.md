@@ -54,7 +54,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # Google Calendar API
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
+GOOGLE_BOOKSY_REDIRECT_URI=http://localhost:3000/api/integrations/gmail/callback
+GOOGLE_GMAIL_SEND_REDIRECT_URI=http://localhost:3000/api/integrations/gmail-send/callback
 
 # Booksy API (opcjonalne)
 BOOKSY_API_KEY=your-api-key

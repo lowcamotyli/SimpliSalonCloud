@@ -13,11 +13,11 @@ interface RevenueChartProps {
 
 export default function RevenueChart({ data, title = "Przychody (ostatnie 7 dni)" }: RevenueChartProps) {
     return (
-        <Card className="theme-chart-card col-span-1 lg:col-span-2 glass border-none overflow-hidden">
+        <Card className="theme-chart-card col-span-1 lg:col-span-2 glass border-none overflow-hidden h-full flex flex-col">
             <CardHeader className="pb-2">
                 <CardTitle className="theme-chart-title text-lg font-bold text-gray-900">{title}</CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px] w-full pt-4">
+            <CardContent className="flex-1 min-h-[220px] w-full pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>

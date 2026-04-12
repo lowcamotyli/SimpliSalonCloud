@@ -111,7 +111,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
     <Tooltip delayDuration={300}>
       <TooltipTrigger asChild>
         <Card
-          className={`theme-booking-card h-full w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
+          className={`theme-booking-card h-full min-h-11 w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
           onClick={onClick}
         >
           <div className="flex-1 flex flex-col justify-between min-h-0">
@@ -146,7 +146,7 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
                   size="sm"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="absolute right-0 -top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
+                  className="absolute right-0 -top-1 h-11 w-11 min-h-[44px] min-w-[44px] p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
                   title="Anuluj wizytę"
                 >
                   <Trash2 className="h-3 w-3" />

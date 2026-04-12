@@ -29,6 +29,9 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { SmsChat } from '@/components/crm/SmsChat'
 import { SubmissionViewDialog } from '@/components/forms/submission-view-dialog'
+import { ClientBalanceCard } from '@/components/clients/client-balance-card'
+import { PaymentLinkDialog } from '@/components/clients/payment-link-dialog'
+import { ClientTags } from '@/components/clients/client-tags'
 import { createClient } from '@/lib/supabase/client'
 
 interface Client {
@@ -38,6 +41,7 @@ interface Client {
   email?: string;
   notes?: string;
   visit_count: number;
+  tags?: string[];
 }
 
 interface ClientForm {
@@ -93,6 +97,7 @@ export default function ClientDetailPage() {
   const [beautyPlans, setBeautyPlans] = useState<BeautyPlan[]>([])
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [loading, setLoading] = useState(true)
+  const [paymentLinkOpen, setPaymentLinkOpen] = useState(false)
   const [showAddVoucher, setShowAddVoucher] = useState(false)
   const [newVoucherValue, setNewVoucherValue] = useState(100)
   const [newVoucherDays, setNewVoucherDays] = useState(365)
@@ -106,6 +111,10 @@ export default function ClientDetailPage() {
   const [isAddStepOpen, setIsAddStepOpen] = useState(false)
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
   const [newStepData, setNewStepData] = useState({ service_id: '', planned_date: '', notes: '', step_order: 1 })
+
+  const handleTagsUpdate = useCallback((tags: string[]) => {
+    setClient((current) => current ? { ...current, tags } : current)
+  }, [])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pl-PL', {
@@ -282,6 +291,17 @@ export default function ClientDetailPage() {
         </Badge>
       </div>
 
+      {client ? (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setPaymentLinkOpen(true)}>
+              Wyślij link do płatności
+            </Button>
+          </div>
+          <ClientBalanceCard clientId={client.id} />
+        </div>
+      ) : null}
+
       <Tabs defaultValue="ogolne" className="w-full">
         <TabsList className="grid w-full grid-cols-6 lg:w-[860px]">
           <TabsTrigger value="ogolne">Ogólne</TabsTrigger>
@@ -315,6 +335,18 @@ export default function ClientDetailPage() {
                   <Label className="text-muted-foreground">Liczba wizyt</Label>
                   <p className="font-medium text-lg">{client?.visit_count || 0}</p>
                 </div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Tagi</Label>
+                {client ? (
+                  <div className="mt-2">
+                    <ClientTags
+                      clientId={client.id}
+                      initialTags={client.tags ?? []}
+                      onUpdate={handleTagsUpdate}
+                    />
+                  </div>
+                ) : null}
               </div>
               <div>
                 <Label className="text-muted-foreground">Notatki</Label>
@@ -618,6 +650,14 @@ export default function ClientDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {client ? (
+        <PaymentLinkDialog
+          clientId={client.id}
+          open={paymentLinkOpen}
+          onClose={() => setPaymentLinkOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }

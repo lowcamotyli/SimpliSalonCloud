@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## Primary Mode: Claude as Orchestrator
 
@@ -107,6 +107,7 @@ Use this mode when Claude context window is exhausted. Codex takes the orchestra
 - Codex reads `AGENTS.md` (this file) and `CLAUDE.md` for project context.
 - Codex reads local project files -- always tell it which files to read for context.
 - Codex delegates large-file reading or heavy first-pass drafting to codex-dad when useful.
+- Codex should do this proactively without requiring repeated user reminders; for large-file reads and large-context summaries, prefer `codex-dad` via the documented Git Bash / WSL-style `/mnt/d/SimpliSalonCLoud/...` paths.
 
 ### Codex Invocation (Windows, project directory)
 ```powershell
@@ -190,7 +191,14 @@ codex exec --dangerously-bypass-approvals-and-sandbox 'Read WORK.md, [file1], [f
 ## Encoding Discipline
 - Prefer ASCII-only edits by default.
 - Use non-ASCII only if the target file already uses it or there is explicit product/content need.
-
+- Never use lossy re-encoding passes on source files (no ad-hoc charset conversions).
+- CRITICAL: never use `Set-Content` (or any full-file rewrite command) for source edits; use `apply_patch` or line-scoped edits only.
+- Always write edited files as UTF-8 (without BOM when tooling allows).
+- After editing UI text, run a mojibake check before finishing:
+  - `pwsh ./scripts/check-encoding.ps1` -- exits 1 on Polish mojibake sequences
+  - if found, fix strings in the same work package before returning results.
+- Avoid broad text replacement scripts for multilingual content unless line-scoped and reviewed.
+- lib/booksy/processor.ts intentionally contains mojibake pattern strings (email normalization) -- excluded from encoding checks.
 ## Output Discipline
 - When codex-dad is used, state it briefly and list analyzed files.
 - Keep extracted snippets minimal and focused on decisions, patching, and validation.

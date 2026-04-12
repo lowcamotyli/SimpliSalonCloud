@@ -45,11 +45,15 @@ export const updateSettingsSchema = z.object({
     // Booksy Gmail integration
     booksy_sync_interval_minutes: z.number().int().positive().optional(),
     booksy_sender_filter: z.string().optional(),
+    booksy_sync_from_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')).nullable().optional(),
     booksy_auto_create_clients: z.boolean().optional(),
     booksy_auto_create_services: z.boolean().optional(),
     booksy_notify_on_new: z.boolean().optional(),
     booksy_notify_on_cancel: z.boolean().optional(),
     booksy_notify_email: z.string().email().optional().or(z.literal('')).nullable().optional(),
+    // Salon terms
+    terms_text: z.string().max(5000).optional().or(z.literal('')).nullable().optional(),
+    terms_url: z.string().url().optional().or(z.literal('')).nullable().optional(),
 })
 
 export const updateSmsSettingsSchema = z.object({

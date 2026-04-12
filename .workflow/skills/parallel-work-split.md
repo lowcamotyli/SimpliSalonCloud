@@ -34,12 +34,14 @@ Parallelism is useful only when the split is clean. This skill makes it delibera
 ## Expected Outputs
 ```
 Worker A (codex-main):
+  Prompt start (REQUIRED): Read .workflow/skills/scoped-implementation.md and follow it.
   Files: [list]
   Task: [description]
   Constraints: [what must not change]
   Produces: [exports/types needed by Worker B, if any]
 
 Worker B (codex-dad):
+  Prompt start (REQUIRED): Read .workflow/skills/[sql-migration-safe|large-context-analysis|scoped-implementation].md and follow it.
   Files: [list]
   Task: [description]
   Constraints: [what must not change]
@@ -76,3 +78,4 @@ npx tsc --noEmit   # catches interface contract violations between slices
 - DB migration always sequential: migration → type generation → code that uses new types
 - If split is uncertain, default to sequential over parallel — clean parallelism only
 - Worker scope must be bounded before dispatch, not discovered during execution
+- **Every generated prompt MUST start with `Read .workflow/skills/[name].md and follow it.`** — prompt without this prefix is invalid, do not dispatch

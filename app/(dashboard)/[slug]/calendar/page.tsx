@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useBookings, useUpdateBookingSchedule } from '@/hooks/use-bookings'
 import { useEmployees } from '@/hooks/use-employees'
 import { Button } from '@/components/ui/button'
@@ -9,12 +10,13 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate, generateWeekDays } from '@/lib/utils/date'
 import { addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
 import { BUSINESS_HOURS } from '@/lib/constants'
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 const BookingDialog = dynamic(() => import('./booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
@@ -88,8 +90,13 @@ function buildCalendarEntries(dayBookings: any[], previewDurations: Record<strin
 const snapMinutes = (minutes: number) => Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES
 
 export default function CalendarPage() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewType, setViewType] = useState<ViewType>('week')
+  const [viewType, setViewType] = useState<ViewType>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
+  )
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [selectedGroupBookings, setSelectedGroupBookings] = useState<any[] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -243,6 +250,19 @@ export default function CalendarPage() {
     setIsDialogOpen(true)
   }
 
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action !== 'new-booking') {
+      return
+    }
+
+    handleAddBooking()
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('action')
+    const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname
+    router.replace(nextUrl, { scroll: false })
+  }, [pathname, router, searchParams])
+
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
     setSelectedSlot(null)
@@ -310,19 +330,49 @@ export default function CalendarPage() {
           <p className="text-muted-foreground text-base font-medium theme-header-subtitle">{getPeriodLabel()}</p>
         </div>
 
-        <div className="flex items-center gap-2 p-1 glass rounded-xl w-max">
-          <Button variant={viewType === 'day' ? 'default' : 'ghost'} onClick={() => setViewType('day')} size="sm" className={`rounded-lg transition-all ${viewType === 'day' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Dzień</Button>
-          <Button variant={viewType === 'week' ? 'default' : 'ghost'} onClick={() => setViewType('week')} size="sm" className={`rounded-lg transition-all ${viewType === 'week' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Tydzień</Button>
-          <Button variant={viewType === 'month' ? 'default' : 'ghost'} onClick={() => setViewType('month')} size="sm" className={`rounded-lg transition-all ${viewType === 'month' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Miesiąc</Button>
+        <div className="w-full overflow-x-auto scrollbar-hide sm:w-auto">
+          <div className="flex min-w-max items-center gap-2 p-1 glass rounded-xl">
+            <Button variant={viewType === 'day' ? 'default' : 'ghost'} onClick={() => setViewType('day')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'day' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Dzień</Button>
+            <Button variant={viewType === 'week' ? 'default' : 'ghost'} onClick={() => setViewType('week')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'week' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Tydzień</Button>
+            <Button variant={viewType === 'month' ? 'default' : 'ghost'} onClick={() => setViewType('month')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'month' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Miesiąc</Button>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={handleToday} className="rounded-lg">Dziś</Button>
-        <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="rounded-lg"><ChevronLeft className="h-4 w-4" /></Button>
-        <Button variant="outline" size="icon" onClick={handleNextPeriod} className="rounded-lg"><ChevronRight className="h-4 w-4" /></Button>
+        <Button variant="outline" onClick={handleToday} className="h-11 min-h-[44px] min-w-[44px] rounded-lg px-4">Dziś</Button>
+        <Button variant="outline" size="icon" onClick={handlePrevPeriod} className="h-11 w-11 rounded-lg"><ChevronLeft className="h-4 w-4" /></Button>
+        <Button variant="outline" size="icon" onClick={handleNextPeriod} className="h-11 w-11 rounded-lg"><ChevronRight className="h-4 w-4" /></Button>
         <div className="flex-1" />
-        <Button onClick={handleAddBooking} className="rounded-lg shadow-lg">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-lg lg:hidden">
+              <Users className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="max-h-[70vh]">
+            <SheetHeader>
+              <SheetTitle>Pracownicy</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col gap-2 mt-4 overflow-y-auto pb-6">
+              {employees?.map((emp, idx) => {
+                const colors = getEmployeeColor(idx)
+                const isVisible = visibleEmployees.has(emp.id)
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => toggleEmployee(emp.id)}
+                    className={`rounded-lg text-sm font-medium px-4 py-3 border transition-all text-left ${isVisible ? `${colors.bgAccent} text-white border-transparent shadow-sm` : 'bg-white border-gray-200 text-gray-700'}`}
+                  >
+                    {emp.first_name} {emp.last_name}
+                  </button>
+                )
+              })}
+            </div>
+          </SheetContent>
+        </Sheet>
+        <Button onClick={handleAddBooking} className="h-11 min-h-[44px] min-w-[44px] rounded-lg shadow-lg px-4">
           <Plus className="mr-2 h-4 w-4" />
           Nowa wizyta
         </Button>
@@ -330,7 +380,7 @@ export default function CalendarPage() {
 
       <div className="flex gap-4 items-start">
         {viewType !== 'month' && (
-          <div className="w-[240px] flex-shrink-0 space-y-3">
+          <div className="hidden lg:block w-[240px] flex-shrink-0 space-y-3">
             <MiniCalendar
               currentDate={currentDate}
               onDayClick={(date) => {
@@ -462,8 +512,9 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   }
 
   return (
-    <div className="flex h-full flex-col min-w-0 overflow-hidden">
-      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
+    <div className="overflow-x-auto">
+      <div className="flex flex-col">
+      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minWidth: `${Math.max(560, 80 + columnCount * 160)}px` }}>
         <div className="theme-calendar-time-head border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
         {visibleEmployeesList.map((emp: any) => {
           const empIdx = employees.findIndex((e: any) => e.id === emp.id)
@@ -474,9 +525,9 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minHeight: '100%' }}>
+        <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minWidth: `${Math.max(560, 80 + columnCount * 160)}px`, minHeight: '100%' }}>
           <div className="theme-calendar-time-column border-r bg-gray-50/80 sticky left-0 z-20">
-            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center">{String(hour).padStart(2, '0')}:00</div>)}
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {visibleEmployeesList.map((employee: any) => {
@@ -549,7 +600,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                       key={booking.id}
                       draggable
                       className={`absolute transition-all p-[1px] group/card ${isDragging ? 'opacity-70' : 'cursor-pointer'} hover:!z-50 hover:scale-[1.02]`}
-                      style={{ top: `${top}%`, height: `${height}%`, minHeight: '34px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
+                      style={{ top: `${top}%`, height: `${height}%`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/plain', booking.id)
                         suppressClicks()
@@ -585,6 +636,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )
@@ -637,8 +689,9 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50">
+    <div className="overflow-x-auto">
+      <div className="flex h-full flex-col">
+      <div className="theme-calendar-week-header grid grid-cols-8 min-w-[700px] border-b bg-slate-50/50">
         <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
         {weekDays.map((day) => {
           const today = isSameDay(day, now)
@@ -652,9 +705,9 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-8">
+        <div className="grid grid-cols-8 min-w-[700px]">
           <div className="theme-calendar-time-column border-r bg-gray-50">
-            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center">{String(hour).padStart(2, '0')}:00</div>)}
+            {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
 
           {weekDays.map((day) => {
@@ -729,7 +782,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                         key={booking.id}
                         draggable
                         className={`absolute transition-all hover:!z-50 hover:scale-[1.02] p-[1px] ${isDragging ? 'opacity-70' : 'cursor-pointer'}`}
-                        style={{ top: `${top}px`, height: `${height}px`, left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
+                        style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
                         onDragStart={(e) => {
                           e.dataTransfer.setData('text/plain', booking.id)
                           suppressClicks()
@@ -760,6 +813,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
             )
           })}
         </div>
+      </div>
       </div>
     </div>
   )

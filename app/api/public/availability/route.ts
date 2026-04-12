@@ -36,6 +36,22 @@ interface EquipmentBlockRow {
     ends_at: string
 }
 
+interface PremiumSlotRow {
+    name: string
+    price_modifier: number | null
+    requires_prepayment: boolean
+    start_time: string
+    end_time: string
+    employee_id: string | null
+    service_ids: string[] | null
+}
+
+interface PremiumSlotMeta {
+    name: string
+    priceModifier: number | null
+    requiresPrepayment: boolean
+}
+
 function parseTimeToMinutes(time: string): number {
     const [h, m] = time.split(':').map(Number)
     return h * 60 + m
@@ -99,7 +115,43 @@ function generateSlots(
     return slots
 }
 
-export async function GET(request: NextRequest) {
+function buildPremiumMeta(
+    slotsSet: Set<string>,
+    premiumSlots: PremiumSlotRow[],
+    serviceId: string,
+    employeeId?: string
+): Record<string, PremiumSlotMeta> {
+    const premiumMeta: Record<string, PremiumSlotMeta> = {}
+
+    for (const slot of slotsSet) {
+        const slotMinutes = parseTimeToMinutes(slot)
+        for (const premiumSlot of premiumSlots) {
+            if (employeeId && premiumSlot.employee_id && premiumSlot.employee_id !== employeeId) {
+                continue
+            }
+            if (premiumSlot.service_ids && !premiumSlot.service_ids.includes(serviceId)) {
+                continue
+            }
+            const premiumStartMinutes = parseTimeToMinutes(premiumSlot.start_time)
+            const premiumEndMinutes = parseTimeToMinutes(premiumSlot.end_time)
+            if (
+                slotMinutes >= premiumStartMinutes &&
+                slotMinutes < premiumEndMinutes
+            ) {
+                premiumMeta[slot] = {
+                    name: premiumSlot.name,
+                    priceModifier: premiumSlot.price_modifier,
+                    requiresPrepayment: premiumSlot.requires_prepayment,
+                }
+                break
+            }
+        }
+    }
+
+    return premiumMeta
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
     const authResult = await resolveApiKey(request)
     if (authResult instanceof NextResponse) return authResult
     const { salonId } = authResult
@@ -160,7 +212,7 @@ export async function GET(request: NextRequest) {
     const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }
 
     if (dayHours.closed) {
-        return NextResponse.json({ date, serviceId, slots: [] })
+        return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
     }
 
     const salonOpen = parseTimeToMinutes(dayHours.open ?? '09:00')
@@ -203,18 +255,31 @@ export async function GET(request: NextRequest) {
             (exceptions ?? []) as EmployeeExceptionRow[]
         )
 
-        if (!window) return NextResponse.json({ date, serviceId, slots: [] })
+        if (!window) return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
 
         const [empStart, empEnd] = window
         const effectiveStart = Math.max(salonOpen, empStart)
         const effectiveEnd = Math.min(salonClose, empEnd)
 
         if (effectiveStart >= effectiveEnd) {
-            return NextResponse.json({ date, serviceId, slots: [] })
+            return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
         }
 
         const slots = generateSlots(effectiveStart, effectiveEnd, service.duration, bookingRows, employeeId, equipmentBlocks)
-        return NextResponse.json({ date, serviceId, slots })
+        const slotsSet = new Set<string>(slots)
+        const { data: premiumSlotsData } = await supabase
+            .from('premium_slots')
+            .select('name, price_modifier, requires_prepayment, start_time, end_time, employee_id, service_ids')
+            .eq('salon_id', salonId)
+            .eq('date', date)
+            .order('start_time', { ascending: true })
+        const premiumMeta = buildPremiumMeta(
+            slotsSet,
+            (premiumSlotsData ?? []) as PremiumSlotRow[],
+            serviceId,
+            employeeId
+        )
+        return NextResponse.json({ date, serviceId, slots, premiumMeta })
     }
 
     // --- Tryb bez konkretnego pracownika: unia slotów wszystkich dostępnych pracowników ---
@@ -226,7 +291,7 @@ export async function GET(request: NextRequest) {
         .is('deleted_at', null)
 
     if (!employees || employees.length === 0) {
-        return NextResponse.json({ date, serviceId, slots: [] })
+        return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
     }
 
     const empIds = (employees as { id: string }[]).map(e => e.id)
@@ -277,5 +342,17 @@ export async function GET(request: NextRequest) {
     }
 
     const slots = Array.from(slotsSet).sort()
-    return NextResponse.json({ date, serviceId, slots })
+    const { data: premiumSlotsData } = await supabase
+        .from('premium_slots')
+        .select('name, price_modifier, requires_prepayment, start_time, end_time, employee_id, service_ids')
+        .eq('salon_id', salonId)
+        .eq('date', date)
+        .order('start_time', { ascending: true })
+    const premiumMeta = buildPremiumMeta(
+        slotsSet,
+        (premiumSlotsData ?? []) as PremiumSlotRow[],
+        serviceId,
+        employeeId
+    )
+    return NextResponse.json({ date, serviceId, slots, premiumMeta })
 }

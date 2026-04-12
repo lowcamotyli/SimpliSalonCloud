@@ -120,20 +120,20 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Powiadomienia</h1>
           <p className="text-muted-foreground">Zarządzaj komunikacją z klientami</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
             <Link href={`/${slug}/settings/notifications/logs`}>
               <ClipboardList className="mr-2 h-4 w-4" />
               Logi wysyłki
             </Link>
           </Button>
-          <Button onClick={handleSave} disabled={updateSettings.isPending}>
+          <Button className="w-full sm:w-auto" onClick={handleSave} disabled={updateSettings.isPending}>
             {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
           </Button>
         </div>
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
               <>
                 <div className="space-y-2">
                   <Label>Kanały komunikacji</Label>
-                  <div className="flex gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="rem-sms"
@@ -217,7 +217,7 @@ export default function NotificationsPage() {
             {notifications.clientConfirmations.enabled && (
               <div className="space-y-2">
                 <Label>Kanały komunikacji</Label>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="conf-email"
@@ -318,7 +318,7 @@ export default function NotificationsPage() {
               <RadioGroup
                 value={notifications.surveys?.channel ?? "sms"}
                 onValueChange={(v: string) => updateNotification("surveys", { channel: v })}
-                className="flex gap-4"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem id="surveys-channel-sms" value="sms" />
@@ -360,7 +360,7 @@ export default function NotificationsPage() {
               <RadioGroup
                 value={notifications.preAppointmentForms?.channel ?? "sms"}
                 onValueChange={(v: string) => updateNotification("preAppointmentForms", { channel: v })}
-                className="flex gap-4"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem id="pre-forms-channel-sms" value="sms" />

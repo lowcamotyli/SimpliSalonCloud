@@ -114,7 +114,9 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "WebSearch",
-      "WebFetch(domain:developers.openai.com)"
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:developers.przelewy24.pl)",
+      "WebFetch(domain:www.przelewy24.pl)"
     ]
   }
 }

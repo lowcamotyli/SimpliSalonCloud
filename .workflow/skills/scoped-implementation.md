@@ -57,3 +57,4 @@ pnpm test -- --testPathPattern=[affected file basename]
 - Do not fix unrelated issues in the same commit
 - `salon_id` filter MUST be present on all tenant-scoped queries
 - `supabase.auth.getUser()` — never replace with `getSession()`
+- `noUncheckedIndexedAccess` is enabled — do NOT use `for (let i = 0; ...)` index loops; use `for...of` with `.entries()` instead

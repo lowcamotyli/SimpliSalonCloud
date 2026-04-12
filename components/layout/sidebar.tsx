@@ -27,6 +27,7 @@ import {
   Inbox,
   Gift,
   Wallet,
+  BookOpen,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -34,6 +35,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { RBAC_ROLES } from '@/lib/rbac/role-maps'
+import { useMobileNav } from '@/components/layout/mobile-nav-context'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 
 interface SubNavItem {
   href: string
@@ -55,6 +58,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
   const pathname = usePathname()
   const router = useRouter()
   const { currentRole, hasPermission, isOwnerOrManager } = useCurrentRole()
+  const { isOpen, setOpen } = useMobileNav()
 
   const crmSubItemsAll: (SubNavItem & { requiresManage?: boolean })[] = [
     { href: `/${salonSlug}/clients`, label: 'Lista klientów', icon: List },
@@ -85,6 +89,7 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     { href: `/${salonSlug}/payroll`, label: 'Wynagrodzenia', icon: DollarSign, requiredPermission: 'finance:view' },
     { href: `/${salonSlug}/payments`, label: 'Płatności online', icon: Wallet, requiredPermission: 'finance:view' },
     { href: `/${salonSlug}/reports`, label: 'Raporty', icon: BarChart3, requiredPermission: 'reports:view' },
+    { href: `/${salonSlug}/booksy`, label: 'Booksy', icon: BookOpen, ownerOnly: true },
     { href: `/${salonSlug}/billing`, label: 'Subskrypcja', icon: CreditCard, ownerOnly: true },
     { href: `/${salonSlug}/settings`, label: 'Ustawienia', icon: Settings, requiredPermission: 'settings:view' },
   ]
@@ -104,8 +109,8 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
     router.refresh()
   }
 
-  return (
-    <aside className="theme-sidebar w-64 bg-background/95 backdrop-blur-xl border-r border-border flex flex-col shadow-2xl">
+  const sidebarContent = (
+    <>
       {/* Logo Section */}
       <div className="theme-sidebar-brand p-6 border-b border-border/10">
         <div className="flex items-center gap-2 mb-2">
@@ -158,8 +163,9 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
                         <Link
                           key={sub.href}
                           href={sub.href}
+                          onClick={() => setOpen(false)}
                           className={cn(
-                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 group',
+                            'flex min-h-[44px] items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 group',
                             isSubActive
                               ? 'bg-primary/10 text-primary'
                               : 'text-foreground/60 hover:bg-primary/5 hover:text-foreground/90'
@@ -180,11 +186,12 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setOpen(false)}
                 style={{
                   animationDelay: `${index * 50}ms`,
                 }}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-300 group',
+                  'flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-300 group',
                   isActive || isInSection
                     ? 'bg-primary/10 text-primary shadow-lg border border-primary/20'
                     : 'text-foreground/70 hover:bg-primary/5 hover:shadow-md border border-transparent'
@@ -215,12 +222,28 @@ export function Sidebar({ salonSlug, userName }: { salonSlug: string; userName?:
 
         <Button
           onClick={handleLogout}
-          className="w-full justify-start bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg transition-all"
+          className="h-11 min-h-[44px] w-full justify-start bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg transition-all"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Wyloguj
         </Button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      <aside className="theme-sidebar w-64 bg-background/95 backdrop-blur-xl border-r border-border flex flex-col shadow-2xl hidden md:flex">
+        {sidebarContent}
+      </aside>
+      <Sheet open={isOpen} onOpenChange={setOpen}>
+        <SheetContent side="left" className="w-64 p-0 border-r">
+          <SheetTitle className="sr-only">Nawigacja</SheetTitle>
+          <div className="theme-sidebar h-full bg-background/95 backdrop-blur-xl flex flex-col shadow-2xl">
+            {sidebarContent}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }

@@ -119,7 +119,7 @@ export default function SmsSettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">SMS</h1>
         <p className="text-muted-foreground">Konfiguracja dostawcy i przypomnień SMS</p>
@@ -130,7 +130,7 @@ export default function SmsSettingsPage() {
           <div>
             <Label>Provider</Label>
             <Select value={smsProvider} onValueChange={(value) => setSmsProvider(value as 'smsapi' | 'bulkgate')}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Wybierz dostawcę" />
               </SelectTrigger>
               <SelectContent>
@@ -150,6 +150,7 @@ export default function SmsSettingsPage() {
                   value={smsapiToken}
                   onChange={(event) => setSmsapiToken(event.target.value)}
                   placeholder={smsSettings?.has_smsapi_token ? '•••••••• (bez zmian)' : 'token...'}
+                  className="w-full"
                 />
               </div>
 
@@ -161,6 +162,7 @@ export default function SmsSettingsPage() {
                   onChange={(event) => setSmsapiSenderName(event.target.value)}
                   placeholder="SalonPL"
                   maxLength={11}
+                  className="w-full"
                 />
               </div>
             </>
@@ -173,6 +175,7 @@ export default function SmsSettingsPage() {
                   value={bulkgateAppId}
                   onChange={(event) => setBulkgateAppId(event.target.value)}
                   placeholder="app_id"
+                  className="w-full"
                 />
               </div>
               <div>
@@ -183,6 +186,7 @@ export default function SmsSettingsPage() {
                   value={bulkgateAppToken}
                   onChange={(event) => setBulkgateAppToken(event.target.value)}
                   placeholder={smsSettings?.has_bulkgate_app_token ? '•••••••• (bez zmian)' : 'token...'}
+                  className="w-full"
                 />
               </div>
             </>
@@ -195,13 +199,14 @@ export default function SmsSettingsPage() {
             w SimpliSalon.
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               value={testSmsTo}
               onChange={(event) => setTestSmsTo(event.target.value)}
               placeholder="numer testowy, np. +48500600700"
+              className="w-full"
             />
-            <Button variant="outline" onClick={handleTestSms} disabled={isTestingSms || !salonId}>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={handleTestSms} disabled={isTestingSms || !salonId}>
               {isTestingSms ? 'Wysyłanie...' : 'Wyślij test'}
             </Button>
           </div>
@@ -211,8 +216,8 @@ export default function SmsSettingsPage() {
       <SettingsCard title="Reguły przypomnień" description="Wysyłka automatycznych przypomnień przed wizytą">
         <div className="space-y-3">
           {rules.map((rule, index) => (
-            <div key={`${rule.id || 'new'}-${index}`} className="rounded-md border p-3 space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div key={`${rule.id || 'new'}-${index}`} className="rounded-md border p-4 sm:p-6 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Godzin przed wizytą</Label>
                   <Input
@@ -220,6 +225,7 @@ export default function SmsSettingsPage() {
                     min={1}
                     value={rule.hours_before}
                     onChange={(event) => updateRule(index, { hours_before: Number(event.target.value || 1) })}
+                    className="w-full"
                   />
                 </div>
                 <div className="flex items-end gap-2 flex-wrap">
@@ -246,6 +252,7 @@ export default function SmsSettingsPage() {
                   value={rule.message_template}
                   onChange={(event) => updateRule(index, { message_template: event.target.value })}
                   placeholder="{{clientName}}, przypomnienie o wizycie {{date}} {{time}}"
+                  className="w-full"
                 />
               </div>
             </div>
@@ -256,7 +263,7 @@ export default function SmsSettingsPage() {
       </SettingsCard>
 
       <div className="mt-6 flex justify-end">
-        <Button onClick={handleSave} disabled={updateSmsSettings.isPending || !salonId}>
+        <Button className="w-full sm:w-auto" onClick={handleSave} disabled={updateSmsSettings.isPending || !salonId}>
           {updateSmsSettings.isPending ? 'Zapisywanie...' : 'Zapisz ustawienia SMS'}
         </Button>
       </div>

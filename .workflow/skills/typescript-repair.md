@@ -32,7 +32,8 @@ Fix TypeScript errors safely with minimal blast radius — without turning a typ
 2. `Parameter 'X' implicitly has 'any' type` → `React.ChangeEvent<HTMLInputElement>` or appropriate event type
 3. `Cannot find name 'X'` in route → missing import (usually `createAdminSupabaseClient`)
 4. `Type '...' is not assignable` in Supabase insert → check if trigger-generated field needs `as any` (e.g. `invoice_number`)
-5. Generic type errors → add explicit type parameter or `as unknown as TargetType`
+5. `.maybeSingle<Type>()` has a generic argument → remove it: `.maybeSingle()` — Supabase client does not support generics on maybeSingle; type inference handles it without the explicit parameter
+6. Generic type errors → add explicit type parameter or `as unknown as TargetType`
 
 ## Expected Outputs
 - List of fixed type errors: file + line + what changed

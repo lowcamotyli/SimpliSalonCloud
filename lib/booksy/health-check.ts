@@ -131,43 +131,14 @@ export function isBusinessHours(now: Date): boolean {
   return dayNumber >= 1 && dayNumber <= 5 && hour >= 8 && hour < 20
 }
 
-async function getNotificationMessageIds(
+async function getRawEmailIds(
   accountId: string,
   supabase: SupabaseClient
 ): Promise<string[]> {
   const { data, error } = await supabase
-    .from('booksy_gmail_notifications')
-    .select('gmail_message_id')
-    .eq('booksy_gmail_account_id', accountId)
-
-  if (error) {
-    throw new Error(`Failed to load Gmail notifications: ${error.message}`)
-  }
-
-  const messageIds = new Set<string>()
-
-  for (const row of data ?? []) {
-    const gmailMessageId = row.gmail_message_id
-    if (typeof gmailMessageId === 'string' && gmailMessageId.length > 0) {
-      messageIds.add(gmailMessageId)
-    }
-  }
-
-  return Array.from(messageIds)
-}
-
-async function getRawEmailIds(
-  messageIds: string[],
-  supabase: SupabaseClient
-): Promise<string[]> {
-  if (messageIds.length === 0) {
-    return []
-  }
-
-  const { data, error } = await supabase
     .from('booksy_raw_emails')
     .select('id')
-    .in('gmail_message_id', messageIds)
+    .eq('booksy_gmail_account_id', accountId)
 
   if (error) {
     throw new Error(`Failed to load raw email IDs: ${error.message}`)
@@ -195,7 +166,7 @@ async function getParsedEventIds(
   const { data, error } = await supabase
     .from('booksy_parsed_events')
     .select('id')
-    .in('raw_email_id', rawEmailIds)
+    .in('booksy_raw_email_id', rawEmailIds)
 
   if (error) {
     throw new Error(`Failed to load parsed event IDs: ${error.message}`)
@@ -243,27 +214,21 @@ export async function getMailboxHealth(
     throw new Error(`Failed to load Booksy Gmail watch: ${watchError.message}`)
   }
 
-  const messageIds = await getNotificationMessageIds(accountId, supabase)
-
   const now = new Date()
   const sinceIso = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
 
   const [rawBacklogCount, parseRowsResult, rawEmailIds, reconciliationResult] = await Promise.all([
-    messageIds.length > 0
-      ? supabase
-          .from('booksy_raw_emails')
-          .select('id', { count: 'exact', head: true })
-          .eq('parse_status', 'pending')
-          .in('gmail_message_id', messageIds)
-      : Promise.resolve({ count: 0, error: null }),
-    messageIds.length > 0
-      ? supabase
-          .from('booksy_raw_emails')
-          .select('parse_status')
-          .in('gmail_message_id', messageIds)
-          .gte('created_at', sinceIso)
-      : Promise.resolve({ data: [], error: null }),
-    getRawEmailIds(messageIds, supabase),
+    supabase
+      .from('booksy_raw_emails')
+      .select('id', { count: 'exact', head: true })
+      .eq('booksy_gmail_account_id', accountId)
+      .eq('parse_status', 'pending'),
+    supabase
+      .from('booksy_raw_emails')
+      .select('parse_status')
+      .eq('booksy_gmail_account_id', accountId)
+      .gte('created_at', sinceIso),
+    getRawEmailIds(accountId, supabase),
     supabase
       .from('booksy_reconciliation_runs')
       .select('emails_missing')
@@ -307,7 +272,7 @@ export async function getMailboxHealth(
           .from('booksy_parsed_events')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'manual_review')
-          .in('raw_email_id', rawEmailIds)
+          .in('booksy_raw_email_id', rawEmailIds)
       : Promise.resolve({ count: 0, error: null }),
     (async (): Promise<{ count: number | null; error: { message: string } | null }> => {
       const parsedEventIds = await getParsedEventIds(rawEmailIds, supabase)
@@ -320,8 +285,8 @@ export async function getMailboxHealth(
         .from('booksy_apply_ledger')
         .select('id', { count: 'exact', head: true })
         .eq('operation', 'failed')
-        .gte('created_at', sinceIso)
-        .in('parsed_event_id', parsedEventIds)
+        .gte('applied_at', sinceIso)
+        .in('booksy_parsed_event_id', parsedEventIds)
 
       if (error) {
         return { count: null, error: { message: error.message } }

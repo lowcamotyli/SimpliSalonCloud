@@ -23,6 +23,10 @@ type GmailClientOptions = {
   }
 }
 
+type SearchBooksyEmailsOptions = {
+  syncFromDate?: string | null
+}
+
 export class GmailClient {
   private gmail: any
   private oauth2Client: any
@@ -137,10 +141,17 @@ export class GmailClient {
   /**
    * Search for Booksy emails (new bookings, cancellations, reschedules)
    */
-  async searchBooksyEmails(maxResults = 20, senderFilter = '@booksy.com'): Promise<GmailMessage[]> {
+  async searchBooksyEmails(
+    maxResults = 20,
+    senderFilter = '@booksy.com',
+    options?: SearchBooksyEmailsOptions
+  ): Promise<GmailMessage[]> {
     try {
       const sender = senderFilter.trim() || '@booksy.com'
-      const commonFilters = '-label:booksy/processed -label:booksy/error'
+      const syncFromFilter = GmailClient.toGmailAfterFilter(options?.syncFromDate)
+      const commonFilters = ['-label:booksy/processed', '-label:booksy/error', syncFromFilter]
+        .filter(Boolean)
+        .join(' ')
 
       // Run separate queries for each email type Booksy sends
       const queries = [
@@ -188,6 +199,19 @@ export class GmailClient {
       logger.error('Gmail: searchBooksyEmails failed', error)
       throw error
     }
+  }
+
+  private static toGmailAfterFilter(syncFromDate?: string | null): string {
+    if (!syncFromDate) {
+      return ''
+    }
+
+    const match = syncFromDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) {
+      return ''
+    }
+
+    return `after:${match[1]}/${match[2]}/${match[3]}`
   }
 
   /**

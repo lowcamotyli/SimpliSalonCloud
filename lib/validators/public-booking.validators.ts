@@ -14,6 +14,7 @@ export const publicBookingSchema = z.object({
     employeeId: z.string().uuid().optional(),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     time: z.string().regex(/^\d{2}:\d{2}$/),
+    terms_accepted: z.boolean().optional(),
 })
 
 export const availabilityDatesQuerySchema = z.object({

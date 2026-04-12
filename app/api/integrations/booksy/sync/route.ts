@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient()
 
-    const { data: settings, error: settingsError } = await admin
-      .from('salon_settings')
-      .select('booksy_enabled, booksy_gmail_tokens, booksy_sync_stats, booksy_sender_filter')
+    const { data: settings, error: settingsError } = await (admin
+      .from('salon_settings') as any)
+      .select('*')
       .eq('salon_id', profile.salon_id)
       .single()
 
@@ -87,7 +87,9 @@ export async function POST(request: NextRequest) {
 
     let messages
     try {
-      messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com')
+      messages = await gmailClient.searchBooksyEmails(20, settings.booksy_sender_filter ?? '@booksy.com', {
+        syncFromDate: settings.booksy_sync_from_date ?? null,
+      })
     } catch (error: any) {
       if (error?.code === 'GMAIL_REAUTH_REQUIRED' || GmailClient.isInvalidGrantError(error)) {
         await saveReauthLog(admin, profile.salon_id)
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
       action: 'booksy_sync_start',
       salonId: profile.salon_id,
       found: messages.length,
+      syncFromDate: settings.booksy_sync_from_date ?? null,
     })
 
     for (const message of messages) {

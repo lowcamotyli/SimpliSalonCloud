@@ -24,9 +24,16 @@ interface ProcessEmailOptions {
   messageId?: string  // Gmail message ID — used to save failed emails for manual review
 }
 
+interface BooksyAutomationSettings {
+  autoCreateClients: boolean
+  autoCreateServices: boolean
+}
+
 type ParsedEventType = 'created' | 'cancelled' | 'rescheduled' | 'unknown'
 
 export class BooksyProcessor {
+  private automationSettingsPromise: Promise<BooksyAutomationSettings> | null = null
+
   constructor(
     private supabase: SupabaseClient,
     private salonId: string
@@ -129,8 +136,17 @@ export class BooksyProcessor {
       .eq('idempotency_key', idempotencyKey)
       .maybeSingle()
 
-    if (existingLedger) {
+    if (existingLedger && existingLedger.operation !== 'failed') {
       return { success: true, deduplicated: true, ledger: existingLedger }
+    }
+
+    // Failed ledger entries block retries — delete and attempt again.
+    if (existingLedger?.operation === 'failed') {
+      await this.supabase
+        .from('booksy_apply_ledger')
+        .delete()
+        .eq('id', (existingLedger as unknown as { id: string }).id)
+        .eq('salon_id', this.salonId)
     }
 
     const { data: createdLedger, error: createdLedgerError } = await this.supabase
@@ -312,9 +328,14 @@ export class BooksyProcessor {
     logger.info('[Booksy] Step 3: Employee found', { employeeId: employee.id })
 
     logger.info('[Booksy] Step 4: Finding service', { serviceName: parsed.serviceName })
-    const service = await this.findServiceByName(parsed.serviceName)
+    let service = await this.findServiceByName(parsed.serviceName)
     if (!service) {
-      throw new Error(`Service not found: ${parsed.serviceName}`)
+      const settings = await this.getAutomationSettings()
+      if (!settings.autoCreateServices) {
+        throw new Error(`Service not found: ${parsed.serviceName}`)
+      }
+
+      service = await this.createServiceFromParsedBooking(parsed)
     }
     logger.info('[Booksy] Step 4: Service found', { serviceId: service.id })
 
@@ -626,7 +647,9 @@ export class BooksyProcessor {
       // Extract service name and price. Booksy email layouts vary.
       let serviceName = ''
       let price = 0
-      const serviceMatch = cleanBody.match(/\n\n(.+?)\n([\d,]+)\s*z[łl]/ms)
+      // No `s` (dotall) flag — `.` must not match newlines, otherwise the lazy
+      // `.+?` captures the entire body up to the first price line (Bug B).
+      const serviceMatch = cleanBody.match(/\n\n(.+?)\n([\d,]+)\s*z[łl]/m)
       if (serviceMatch) {
         serviceName = serviceMatch[1].trim()
         price = parseFloat(serviceMatch[2].replace(',', '.'))
@@ -772,6 +795,11 @@ export class BooksyProcessor {
       return existingClient
     }
 
+    const settings = await this.getAutomationSettings()
+    if (!settings.autoCreateClients) {
+      throw new Error(`Client not found: ${parsed.clientName}`)
+    }
+
     // Generate client code
     const { data: codeData } = await this.supabase.rpc('generate_client_code', {
       salon_uuid: this.salonId,
@@ -818,6 +846,40 @@ export class BooksyProcessor {
     }
 
     return newClient
+  }
+
+  private async getAutomationSettings(): Promise<BooksyAutomationSettings> {
+    if (!this.automationSettingsPromise) {
+      this.automationSettingsPromise = this.loadAutomationSettings()
+    }
+
+    return this.automationSettingsPromise
+  }
+
+  private async loadAutomationSettings(): Promise<BooksyAutomationSettings> {
+    const defaults: BooksyAutomationSettings = {
+      autoCreateClients: true,
+      autoCreateServices: false,
+    }
+
+    const { data, error } = await this.supabase
+      .from('salon_settings')
+      .select('booksy_auto_create_clients, booksy_auto_create_services')
+      .eq('salon_id', this.salonId)
+      .maybeSingle()
+
+    if (error) {
+      logger.warn('[Booksy] Failed to load automation settings, using defaults', {
+        error: error.message,
+        salonId: this.salonId,
+      })
+      return defaults
+    }
+
+    return {
+      autoCreateClients: data?.booksy_auto_create_clients ?? defaults.autoCreateClients,
+      autoCreateServices: data?.booksy_auto_create_services ?? defaults.autoCreateServices,
+    }
   }
 
   /**
@@ -961,6 +1023,51 @@ export class BooksyProcessor {
     }
 
     return match || null
+  }
+
+  private sanitizeServiceNameForAutoCreate(name: string): string | null {
+    const cleaned = name.replace(/\s+/g, ' ').trim()
+
+    if (cleaned.length < 2 || cleaned.length > 160) {
+      return null
+    }
+
+    if (/https?:\/\//i.test(cleaned) || /mailto:/i.test(cleaned) || /^\[image:/i.test(cleaned)) {
+      return null
+    }
+
+    return cleaned
+  }
+
+  private async createServiceFromParsedBooking(parsed: ParsedBooking) {
+    const serviceName = this.sanitizeServiceNameForAutoCreate(parsed.serviceName)
+
+    if (!serviceName) {
+      throw new Error(`Service not found: ${parsed.serviceName}`)
+    }
+
+    const { data: service, error } = await this.supabase
+      .from('services')
+      .insert({
+        salon_id: this.salonId,
+        category: 'Booksy',
+        subcategory: 'Import Booksy',
+        name: serviceName,
+        price: parsed.price && parsed.price > 0 ? parsed.price : 0,
+        duration: parsed.duration && parsed.duration > 0 ? parsed.duration : 30,
+        surcharge_allowed: true,
+        active: true,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      logger.error('[Booksy] Failed to auto-create service', error, { serviceName })
+      throw error
+    }
+
+    logger.info('[Booksy] Service auto-created', { serviceId: service.id, serviceName })
+    return service
   }
 
   /**

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { GmailClient } from '@/lib/booksy/gmail-client'
 
+type BooksyAuthAction = 'connect_new_mailbox' | 'reconnect_mailbox'
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = await createServerSupabaseClient()
@@ -22,9 +24,16 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
         }
 
+        const requestedAction = request.nextUrl.searchParams.get('action')
+        const requestedAccountId = request.nextUrl.searchParams.get('accountId')
+        const action: BooksyAuthAction =
+            requestedAction === 'reconnect_mailbox' ? 'reconnect_mailbox' : 'connect_new_mailbox'
+
         const state = JSON.stringify({
             salonId: profile.salon_id,
-            userId: user.id
+            userId: user.id,
+            action,
+            accountId: action === 'reconnect_mailbox' ? requestedAccountId ?? undefined : undefined,
         })
 
         const authUrl = GmailClient.getAuthUrl(state)

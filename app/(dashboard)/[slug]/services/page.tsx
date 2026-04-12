@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/use-services'
 import { useSalon } from '@/hooks/use-salon'
 import { AddonsEditor } from '@/components/services/addons-editor'
@@ -42,6 +42,7 @@ import {
   Lock,
   Unlock,
   Wrench,
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -50,6 +51,7 @@ import { z } from 'zod'
 import { formatPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils/cn'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ListLoadingState } from '@/components/ui/list-loading-state'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const serviceSchema = z.object({
@@ -75,6 +77,8 @@ interface Service {
 
 export default function ServicesPage() {
   const params = useParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const slug = params.slug as string
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -82,6 +86,10 @@ export default function ServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [availableEquipment, setAvailableEquipment] = useState<{ id: string; name: string; type: string }[]>([])
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([])
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
+  const [isBulkApplying, setIsBulkApplying] = useState(false)
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
+  const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('')
 
   const { data: servicesData, isLoading } = useServices()
   const { data: salonData } = useSalon(slug)
@@ -109,6 +117,19 @@ export default function ServicesPage() {
     },
     mode: 'onChange',
   })
+
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action !== 'new-service') {
+      return
+    }
+
+    handleOpenDialog()
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('action')
+    const nextUrl = nextParams.toString() ? `/${slug}/services?${nextParams.toString()}` : `/${slug}/services`
+    router.replace(nextUrl, { scroll: false })
+  }, [router, searchParams, slug])
 
   // Flatten and filter services
   const { allServices, categories, stats } = useMemo(() => {
@@ -161,6 +182,36 @@ export default function ServicesPage() {
       return matchesSearch && matchesCategory
     })
   }, [allServices, search, activeCategory])
+
+  useEffect(() => {
+    if (selectedServiceIds.length === 0) return
+    const validIds = new Set(allServices.map((service) => service.id))
+    setSelectedServiceIds((prev) => prev.filter((id) => validIds.has(id)))
+  }, [allServices, selectedServiceIds.length])
+
+  const selectedServices = useMemo(
+    () => allServices.filter((service) => selectedServiceIds.includes(service.id)),
+    [allServices, selectedServiceIds]
+  )
+
+  const selectedVisibleCount = useMemo(
+    () => filteredServices.filter((service) => selectedServiceIds.includes(service.id)).length,
+    [filteredServices, selectedServiceIds]
+  )
+
+  const selectedStats = useMemo(() => {
+    return selectedServices.reduce(
+      (acc, service) => {
+        if (service.active) {
+          acc.active += 1
+        } else {
+          acc.inactive += 1
+        }
+        return acc
+      },
+      { active: 0, inactive: 0 }
+    )
+  }, [selectedServices])
 
   // Group filtered services by category/subcategory for display
   const groupedDisplay = useMemo(() => {
@@ -264,7 +315,13 @@ export default function ServicesPage() {
   }
 
   const handleDelete = async (service: Service) => {
-    if (!confirm(`Czy na pewno chcesz usunąć usługę "${service.name}"?`)) {
+    const confirmToken = 'USUN 1'
+    const confirmation = window.prompt(
+      `Usuwasz 1 usługę: "${service.name}".\nWpisz "${confirmToken}", aby potwierdzić.`,
+      ''
+    )
+
+    if (confirmation !== confirmToken) {
       return
     }
 
@@ -285,6 +342,97 @@ export default function ServicesPage() {
       toast.success(service.active ? 'Usługa dezaktywowana' : 'Usługa aktywowana')
     } catch (error: any) {
       toast.error(error.message || 'Błąd podczas zmiany statusu')
+    }
+  }
+
+  const toggleServiceSelection = (serviceId: string) => {
+    setSelectedServiceIds((prev) =>
+      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
+    )
+  }
+
+  const selectAllVisible = () => {
+    setSelectedServiceIds((prev) => {
+      const visibleIds = filteredServices.map((service) => service.id)
+      const merged = new Set([...prev, ...visibleIds])
+      return Array.from(merged)
+    })
+  }
+
+  const clearSelection = () => {
+    setSelectedServiceIds([])
+  }
+
+  const refreshServices = async () => {
+    window.dispatchEvent(new Event('focus'))
+  }
+
+  const applyBulkStatus = async (action: 'activate' | 'deactivate', ids = selectedServiceIds, enableUndo = true) => {
+    if (ids.length === 0) return
+
+    setIsBulkApplying(true)
+    try {
+      const response = await fetch('/api/services/batch', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, action }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Nie udało się zaktualizować statusu usług')
+      }
+
+      const updatedCount = payload?.updated_count ?? ids.length
+      toast.success(
+        action === 'activate'
+          ? `Aktywowano ${updatedCount} usług`
+          : `Dezaktywowano ${updatedCount} usług`,
+        enableUndo
+          ? {
+              action: {
+                label: 'Cofnij',
+                onClick: () => {
+                  void applyBulkStatus(action === 'activate' ? 'deactivate' : 'activate', ids, false)
+                },
+              },
+            }
+          : undefined
+      )
+
+      setSelectedServiceIds((prev) => prev.filter((id) => !ids.includes(id)))
+      await refreshServices()
+    } catch (error: any) {
+      toast.error(error.message || 'Błąd podczas aktualizacji statusu')
+    } finally {
+      setIsBulkApplying(false)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedServiceIds.length === 0) return
+
+    setIsBulkApplying(true)
+    try {
+      const response = await fetch('/api/services/batch', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedServiceIds }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Nie udało się usunąć usług')
+      }
+
+      const deletedCount = payload?.deleted_count ?? selectedServiceIds.length
+      toast.success(`Usunięto ${deletedCount} usług`)
+      setSelectedServiceIds([])
+      setIsBulkDeleteDialogOpen(false)
+      setBulkDeleteConfirmText('')
+      await refreshServices()
+    } catch (error: any) {
+      toast.error(error.message || 'Błąd podczas usuwania usług')
+    } finally {
+      setIsBulkApplying(false)
     }
   }
 
@@ -313,7 +461,7 @@ export default function ServicesPage() {
         </div>
         <Button
           size="lg"
-          className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold"
+          className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold hidden sm:inline-flex"
           onClick={() => handleOpenDialog()}
         >
           <Plus className="h-5 w-5 mr-2" />
@@ -364,11 +512,11 @@ export default function ServicesPage() {
           />
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-nowrap pb-2 -mx-1 px-1 no-scrollbar">
           <button
             onClick={() => setActiveCategory('all')}
             className={cn(
-              "px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
+              "px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 min-h-[44px] min-w-[44px] shrink-0",
               activeCategory === 'all'
                 ? "bg-primary text-white shadow-lg shadow-primary/20 translate-y-[-1px]"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-semibold"
@@ -387,7 +535,7 @@ export default function ServicesPage() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
+                "px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 min-h-[44px] min-w-[44px] shrink-0",
                 activeCategory === cat
                   ? "bg-primary text-white shadow-lg shadow-primary/20 translate-y-[-1px]"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-semibold"
@@ -405,12 +553,59 @@ export default function ServicesPage() {
         </div>
       </Card>
 
+      {selectedServiceIds.length > 0 && (
+        <Card className="p-4 border border-amber-200 bg-amber-50/60 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-amber-900">
+                Zaznaczono {selectedServiceIds.length} usług (widoczne: {selectedVisibleCount})
+              </p>
+              <p className="text-xs text-amber-800">
+                W selekcji: {selectedStats.active} aktywnych, {selectedStats.inactive} nieaktywnych.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={selectAllVisible} className="h-11 px-3 min-h-[44px] min-w-[44px]">
+                Zaznacz widoczne ({filteredServices.length})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={() => applyBulkStatus('activate')}
+                disabled={isBulkApplying}
+              >
+                Aktywuj
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={() => applyBulkStatus('deactivate')}
+                disabled={isBulkApplying}
+              >
+                Dezaktywuj
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-11 px-3 min-h-[44px] min-w-[44px]"
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
+                disabled={isBulkApplying}
+              >
+                Usuń zaznaczone
+              </Button>
+              <Button size="sm" variant="ghost" onClick={clearSelection} className="h-11 px-3 min-h-[44px] min-w-[44px]">
+                Wyczyść
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Services List */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="h-12 w-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium animate-pulse">Ładowanie usług...</p>
-        </div>
+        <ListLoadingState rows={6} />
       ) : groupedDisplay.length > 0 ? (
         <motion.div
           className="space-y-10"
@@ -469,6 +664,13 @@ export default function ServicesPage() {
                                     <div className="flex items-start justify-between gap-4">
                                       <div className="space-y-2 flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedServiceIds.includes(service.id)}
+                                            onChange={() => toggleServiceSelection(service.id)}
+                                            className="h-4 w-4 rounded accent-primary"
+                                            aria-label={`Zaznacz usługę ${service.name}`}
+                                          />
                                           <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate theme-service-name">
                                             {service.name}
                                           </h4>
@@ -495,7 +697,7 @@ export default function ServicesPage() {
                                           size="icon"
                                           variant="ghost"
                                           className={cn(
-                                            "h-9 w-9 rounded-lg transition-colors",
+                                            "h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg transition-colors",
                                             service.active ? "text-slate-400 hover:text-amber-500 hover:bg-amber-50" : "text-slate-400 hover:text-emerald-500 hover:bg-emerald-50"
                                           )}
                                           onClick={() => handleToggleActive(service)}
@@ -510,7 +712,7 @@ export default function ServicesPage() {
                                         <Button
                                           size="icon"
                                           variant="ghost"
-                                          className="h-9 w-9 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
+                                          className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
                                           onClick={() => handleOpenDialog(service)}
                                           title="Edytuj"
                                         >
@@ -519,7 +721,7 @@ export default function ServicesPage() {
                                         <Button
                                           size="icon"
                                           variant="ghost"
-                                          className="h-9 w-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                          className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                                           onClick={() => handleDelete(service)}
                                           title="Usuń"
                                         >
@@ -575,7 +777,7 @@ export default function ServicesPage() {
                     id="category"
                     placeholder="np. Fryzjerstwo"
                     {...form.register('category')}
-                    className="glass h-11 rounded-xl focus:bg-white"
+                    className="glass h-11 py-3 rounded-xl focus:bg-white"
                   />
                   <Layers className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
@@ -594,7 +796,7 @@ export default function ServicesPage() {
                     id="subcategory"
                     placeholder="np. Strzyżenie"
                     {...form.register('subcategory')}
-                    className="glass h-11 rounded-xl focus:bg-white"
+                    className="glass h-11 py-3 rounded-xl focus:bg-white"
                   />
                   <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 </div>
@@ -612,7 +814,7 @@ export default function ServicesPage() {
                   id="name"
                   placeholder="np. Strzyżenie damskie"
                   {...form.register('name')}
-                  className="glass h-11 rounded-xl focus:bg-white"
+                  className="glass h-11 py-3 rounded-xl focus:bg-white"
                 />
                 {form.formState.errors.name && (
                   <p className="text-sm text-rose-600 font-bold flex items-center gap-1">
@@ -632,7 +834,7 @@ export default function ServicesPage() {
                       step="0.01"
                       placeholder="0.00"
                       {...form.register('price', { valueAsNumber: true })}
-                      className="glass h-11 rounded-xl focus:bg-white pr-10"
+                      className="glass h-11 py-3 rounded-xl focus:bg-white pr-10"
                     />
                     <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
@@ -653,7 +855,7 @@ export default function ServicesPage() {
                       step="5"
                       placeholder="30"
                       {...form.register('duration', { valueAsNumber: true })}
-                      className="glass h-11 rounded-xl focus:bg-white pr-10"
+                      className="glass h-11 py-3 rounded-xl focus:bg-white pr-10"
                     />
                     <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   </div>
@@ -710,16 +912,73 @@ export default function ServicesPage() {
             )}
 
             <DialogFooter className="gap-2">
-              <Button type="button" variant="ghost" onClick={handleCloseDialog} className="rounded-xl font-bold">
+              <Button type="button" variant="ghost" onClick={handleCloseDialog} className="rounded-xl font-bold h-11 px-3 min-h-[44px] min-w-[44px]">
                 Anuluj
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting} className="gradient-button rounded-xl font-bold flex-1">
-                {editingService ? 'Zapisz zmiany' : 'Dodaj usługę'}
+              <Button type="submit" disabled={form.formState.isSubmitting} className="gradient-button rounded-xl font-bold flex-1 h-11 px-3 min-h-[44px] min-w-[44px]">
+                {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {form.formState.isSubmitting ? 'Zapisywanie...' : editingService ? 'Zapisz zmiany' : 'Dodaj usługę'}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Potwierdź usunięcie usług</DialogTitle>
+            <DialogDescription>
+              Usuniesz {selectedServiceIds.length} usług. Tej operacji nie można cofnąć.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="bulk-delete-services-confirm">
+              Wpisz <strong>{`USUN ${selectedServiceIds.length}`}</strong>, aby potwierdzić
+            </Label>
+            <Input
+              id="bulk-delete-services-confirm"
+              value={bulkDeleteConfirmText}
+              onChange={(e) => setBulkDeleteConfirmText(e.target.value)}
+              placeholder={`USUN ${selectedServiceIds.length}`}
+              className="py-3 min-h-[44px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              W selekcji: {selectedStats.active} aktywnych i {selectedStats.inactive} nieaktywnych.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-11 px-3 min-h-[44px] min-w-[44px]"
+              onClick={() => {
+                setIsBulkDeleteDialogOpen(false)
+                setBulkDeleteConfirmText('')
+              }}
+            >
+              Anuluj
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-11 px-3 min-h-[44px] min-w-[44px]"
+              disabled={bulkDeleteConfirmText !== `USUN ${selectedServiceIds.length}` || isBulkApplying}
+              onClick={handleBulkDelete}
+            >
+              Usuń na stałe
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Button
+        type="button"
+        size="icon"
+        onClick={() => handleOpenDialog()}
+        className="fixed bottom-5 right-5 z-40 h-11 w-11 min-h-[44px] min-w-[44px] rounded-full shadow-lg shadow-primary/25 gradient-button sm:hidden"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
     </div>
   )
 }
