@@ -60,18 +60,25 @@ async function postInternal(
   path: string,
   body?: Record<string, unknown>
 ): Promise<unknown> {
-  const response = await fetch(`${getInternalBaseUrl()}${path}`, {
+  const baseUrl = getInternalBaseUrl()
+  const fullUrl = `${baseUrl}${path}`
+  const secret = process.env.CRON_SECRET ?? ''
+  console.log(`[postInternal/replay] url="${fullUrl}" secret_len=${secret.length} VERCEL_URL="${process.env.VERCEL_URL}" VERCEL_ENV="${process.env.VERCEL_ENV}"`)
+
+  const response = await fetch(fullUrl, {
     method: 'POST',
     headers: getCronHeaders(),
     body: JSON.stringify(body ?? {}),
   })
 
-  const payload = await response.json().catch(() => null)
-
   if (!response.ok) {
+    const rawText = await response.text().catch(() => '')
+    const payload = (() => { try { return JSON.parse(rawText) } catch { return null } })()
+    console.error(`[postInternal/replay] ${path} → ${response.status} | body="${rawText.slice(0, 300)}"`)
     throw new Error(`${path} failed with ${response.status}${payload ? `: ${JSON.stringify(payload)}` : ''}`)
   }
 
+  const payload = await response.json().catch(() => null)
   return payload
 }
 
