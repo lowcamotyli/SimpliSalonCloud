@@ -24,19 +24,15 @@ function normalizeConfiguredRedirectUri(value: string | undefined, expectedPath:
 function getGoogleRedirectUri(dedicatedEnvKey: string, callbackPath: string): string {
   const dedicatedRedirectUri = normalizeConfiguredRedirectUri(process.env[dedicatedEnvKey], callbackPath)
   if (dedicatedRedirectUri) {
-    console.log(`[redirect-uri] source=env:${dedicatedEnvKey} raw="${process.env[dedicatedEnvKey]}" resolved="${dedicatedRedirectUri}"`)
     return dedicatedRedirectUri
   }
 
   const legacyRedirectUri = normalizeConfiguredRedirectUri(process.env.GOOGLE_REDIRECT_URI, callbackPath)
   if (legacyRedirectUri) {
-    console.log(`[redirect-uri] source=env:GOOGLE_REDIRECT_URI raw="${process.env.GOOGLE_REDIRECT_URI}" resolved="${legacyRedirectUri}"`)
     return legacyRedirectUri
   }
 
-  const fallback = `${getAppUrl()}${callbackPath}`
-  console.log(`[redirect-uri] source=getAppUrl() resolved="${fallback}" | APP_URL="${process.env.APP_URL}" NEXT_PUBLIC_APP_URL="${process.env.NEXT_PUBLIC_APP_URL}" VERCEL_BRANCH_URL="${process.env.VERCEL_BRANCH_URL}" VERCEL_URL="${process.env.VERCEL_URL}" VERCEL_PROJECT_PRODUCTION_URL="${process.env.VERCEL_PROJECT_PRODUCTION_URL}"`)
-  return fallback
+  return `${getAppUrl()}${callbackPath}`
 }
 
 export function getGmailSendRedirectUri(): string {
