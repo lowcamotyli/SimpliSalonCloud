@@ -1,0 +1,581 @@
+Skills Layer
+15. Skills Architecture
+15.1 Purpose
+
+Skills are the only approved specialization layer in the workflow.
+
+Roles define who owns a class of work.
+Skills define how a repeatable type of work is executed.
+
+A skill is not a persona, not a second control plane, and not a hidden prompt habit.
+A skill is a repo-local execution module that standardizes recurring work patterns, reduces context waste, and keeps specialization portable across machines and operators.
+
+Skills exist to solve one problem cleanly:
+
+workers must stay generic,
+specialization must stay reusable,
+execution quality must not depend on undocumented memory or machine-specific setup.
+15.2 Rule Of Use
+
+If a capability is reused more than once, or requires a repeatable method, it must be codified as a skill.
+
+No specialization may live only in:
+
+worker naming,
+personal habit,
+global machine prompt,
+undocumented “this agent is usually good at X” behavior.
+
+Workers remain stable.
+Skills carry the specialization.
+
+15.3 Relationship To Roles
+
+Roles own decisions.
+Skills provide execution patterns.
+
+That means:
+
+Claude Orchestrator selects when a skill should be used.
+Codex Worker executes using the selected skill.
+Claude Reviewer verifies output quality against architecture, acceptance criteria, and repository standards.
+Skills never replace ownership.
+
+A skill may inform execution, but it does not decide scope, acceptance, or ship/no-ship.
+
+15.4 Skill Design Standard
+
+Every skill must be small, explicit, and operational.
+
+Each skill must contain:
+
+Purpose
+What problem this skill solves.
+Use When
+Exact trigger conditions.
+Do Not Use When
+Cases where the skill is the wrong tool.
+Required Inputs
+Minimum context needed to run it well.
+Execution Procedure
+Ordered steps, short and concrete.
+Expected Outputs
+Exact deliverables the worker must return.
+Validation
+Required checks, tests, or commands.
+Escalate When
+Conditions that require return to Claude.
+Context Budget Guidance
+What to read first, what to avoid, how to summarize findings.
+Safety Constraints
+Special rules for migrations, destructive operations, secrets, production-impacting work, or large refactors.
+15.5 What Skills Must Not Become
+
+Skills must not become:
+
+giant playbooks,
+shadow architecture,
+policy duplicates,
+role definitions,
+prompt novels,
+stale knowledge dumps.
+
+A skill is a compact operational pattern, not documentation theater.
+
+16. Skills Required For This Workflow
+
+This workflow should start with a small mandatory core skill set.
+No more than needed. No vanity skills.
+
+16.1 skill:scoped-implementation
+
+Purpose
+Default implementation skill for normal coding tasks.
+
+Use when
+A task has a clear objective, bounded files, and normal engineering risk.
+
+Covers
+
+feature implementation,
+bug fixes,
+small refactors,
+test updates,
+wiring changes.
+
+Expected output
+
+changed files,
+concise change summary,
+validation results,
+open risks if any.
+
+Why it matters in your workflow
+This becomes the default muscle of codex-main.
+Without this, everything turns into ad hoc prompting.
+
+16.2 skill:large-context-analysis
+
+Purpose
+Analyze large or unfamiliar code areas without brute-force full-repo reading.
+
+Use when
+
+task spans many files,
+ownership is unclear,
+request flow must be traced,
+old codebase must be understood before edits,
+Claude needs a compact map before delegating.
+
+Covers
+
+request path tracing,
+dependency surface mapping,
+module relationship summary,
+“what actually owns this behavior?” analysis.
+
+Expected output
+
+affected areas,
+probable change points,
+confidence level,
+unknowns,
+recommended next slice.
+
+Why it matters
+This is the clean replacement for the old overloaded “reader” behavior.
+If codex-dad survives, this is the sharpest place to put it.
+
+16.3 skill:review-ready-diff
+
+Purpose
+Prepare a worker output so Claude can review it fast with low token waste.
+
+Use when
+
+implementation is complete,
+task is ready for review,
+worker touched multiple files or made non-trivial logic changes.
+
+Covers
+
+concise rationale per changed area,
+risk hotspots,
+test status,
+known assumptions,
+explicit unresolved items.
+
+Expected output
+
+compact review packet,
+not a diary,
+not raw chain-of-thought,
+not full file restatement.
+
+Why it matters
+This skill massively improves Claude review speed and quality.
+
+16.4 skill:typescript-repair
+
+Purpose
+Fix TypeScript issues safely without turning a local type error into a broad random refactor.
+
+Use when
+
+TS compiler errors,
+type drift after refactor,
+unsafe inference issues,
+interface mismatch,
+generic misuse,
+import/export typing breakage.
+
+Covers
+
+targeted type fixes,
+compiler-guided repairs,
+minimal blast radius edits.
+
+Expected output
+
+list of fixed type issues,
+remaining type issues if any,
+compile/test result.
+
+Why it matters
+This was previously mixed into random roles. It should be a reusable skill instead.
+
+16.5 skill:sql-migration-safe
+
+Purpose
+Handle schema and data migrations conservatively and explicitly.
+
+Use when
+
+schema changes,
+backfills,
+data corrections,
+indexes,
+destructive migration risks,
+compatibility-sensitive database work.
+
+Covers
+
+forward migration shape,
+rollback posture,
+data impact analysis,
+lock/risk awareness,
+idempotency checks where relevant.
+
+Expected output
+
+migration summary,
+risk notes,
+rollback or recovery notes,
+validation plan.
+
+Why it matters
+This is exactly the type of sensitive work that should never sit in vague “dad knows SQL” territory.
+
+16.6 skill:test-impact-check
+
+Purpose
+Determine what must be validated for a given change without running the entire universe.
+
+Use when
+
+worker changed logic,
+worker changed interfaces,
+worker changed persistence,
+worker changed request flow,
+test scope needs to be right-sized.
+
+Covers
+
+nearest tests,
+integration risk areas,
+build/lint/test command selection,
+smoke test recommendation.
+
+Expected output
+
+what was run,
+what should still be run,
+what was intentionally skipped and why.
+
+Why it matters
+This keeps validation serious but lightweight.
+
+16.7 skill:safe-sensitive-change
+
+Purpose
+Apply additional discipline to high-risk domains.
+
+Use when
+
+auth,
+permissions,
+billing,
+secrets,
+production migrations,
+deletion logic,
+irreversible state transitions,
+compliance-sensitive code.
+
+Covers
+
+explicit assumptions,
+danger points,
+negative-case checks,
+“what can break badly?” framing.
+
+Expected output
+
+implementation result plus explicit risk register.
+
+Why it matters
+You do not want standard coding tempo applied blindly to sensitive domains.
+
+16.8 skill:parallel-work-split
+
+Purpose
+Split a task into independent worker slices that can run in parallel without merge chaos.
+
+Use when
+
+task has separable subproblems,
+multiple workers can progress independently,
+orchestration overhead is justified.
+
+Covers
+
+slice boundaries,
+dependency ordering,
+interface contracts,
+merge coordination notes.
+
+Expected output
+
+worker A scope,
+worker B scope,
+shared assumptions,
+recombination instructions.
+
+Why it matters
+Parallelism is useful only when the split is clean. This skill makes it deliberate instead of impulsive.
+
+17. Recommended Skill Mapping For Your Workflow
+
+For your setup, the cleanest mapping is this:
+
+Claude
+
+Claude should not “be a skill.”
+Claude should:
+
+select skills,
+define task slices,
+interpret results,
+review final work,
+decide ship/no-ship.
+
+Claude mainly invokes:
+
+large-context-analysis
+parallel-work-split
+review-ready-diff
+safe-sensitive-change as an overlay when needed
+codex-main
+
+This should be the default implementation worker.
+
+Primary skills:
+
+scoped-implementation
+typescript-repair
+test-impact-check
+review-ready-diff
+
+This is your main delivery engine.
+
+codex-dad
+
+If it remains, it should survive only as a specialist analysis worker, not as a floating “smart helper.”
+
+Primary skills:
+
+large-context-analysis
+sql-migration-safe
+
+Optional secondary:
+
+parallel-work-split support only when Claude explicitly uses it for decomposition help
+
+It should not be a default reviewer.
+It should not be a catch-all fixer.
+It should not be a first-pass drafter for random work.
+
+That one change alone removes a lot of chaos.
+
+18. Skill Selection Rules
+
+The workflow should use these default rules:
+
+Direct by Claude
+
+Claude works directly only when the task is:
+
+architectural,
+ambiguous,
+cross-cutting,
+review-oriented,
+policy-defining,
+decomposition-heavy,
+acceptance-critical.
+Delegate to codex-main
+
+Delegate when the task is:
+
+concrete,
+implementable,
+scoped,
+code-heavy,
+testable,
+low-to-moderate ambiguity.
+
+Default skills:
+
+scoped-implementation
+test-impact-check
+review-ready-diff
+Delegate to codex-dad
+
+Delegate only when the task is:
+
+analysis-heavy across large context,
+migration-heavy,
+schema-sensitive,
+repo-trace-heavy.
+
+Default skills:
+
+large-context-analysis
+sql-migration-safe
+Multi-skill usage
+
+A worker may use more than one skill in sequence, but only if the sequence is obvious and bounded.
+
+Valid example:
+
+large-context-analysis -> scoped-implementation -> review-ready-diff
+
+Invalid example:
+
+6 loosely connected skills because the operator is unsure what they are doing
+
+Skills should reduce ambiguity, not decorate it.
+
+19. Skill Storage In The Repository
+
+Skills should live in-repo, not in hidden machine config.
+
+Recommended structure:
+
+/.workflow/
+  /architecture/
+    ARCHITECTURE.md
+  /skills/
+    scoped-implementation.md
+    large-context-analysis.md
+    review-ready-diff.md
+    typescript-repair.md
+    sql-migration-safe.md
+    test-impact-check.md
+    safe-sensitive-change.md
+    parallel-work-split.md
+  /contracts/
+    HANDOFF.md
+  /policies/
+    runtime-guardrails.md
+    review-policy.md
+
+Each skill file should be short, operational, and follow the same schema.
+
+That gives you:
+
+portability,
+auditability,
+consistent onboarding,
+easy cleanup of stale patterns.
+20. Minimal Skill Template
+
+To keep this practical, every skill should use the same skeleton:
+
+# skill:<name>
+
+## Purpose
+## Use When
+## Do Not Use When
+## Required Inputs
+## Procedure
+## Expected Outputs
+## Validation
+## Escalate When
+## Context Budget Guidance
+## Safety Constraints
+
+No extra fluff unless a specific skill truly needs it.
+
+21. Skills Governance
+
+New skills may be added only when all of the following are true:
+
+the pattern is reused,
+the pattern is distinct,
+the pattern cannot be expressed cleanly as a normal task instruction,
+the skill reduces ambiguity or token waste,
+the skill does not duplicate an existing skill.
+
+A new skill must have:
+
+one owner,
+one purpose,
+one filename,
+one stable invocation meaning.
+
+If two skills overlap heavily, they must be merged or one removed.
+
+The target state is a small, sharp skill library, not a marketplace.
+
+22. Skills Anti-Patterns
+
+The following are forbidden:
+
+using worker names as hidden skills,
+“codex-dad handles weird stuff” as a policy,
+creating a skill for one rare task,
+mixing role rules and skill instructions in one file,
+putting repository architecture inside a skill,
+using skills as substitute for proper task scoping,
+invoking a skill without required inputs,
+using review as a skill owned by everyone,
+accumulating stale skills nobody audits,
+keeping the real skill logic only in personal global prompts.
+23. Final Skills Decision For This Workflow
+
+This workflow should use skills as the specialization layer and roles as the ownership layer.
+
+The initial approved skill set should be:
+
+skill:scoped-implementation
+skill:large-context-analysis
+skill:review-ready-diff
+skill:typescript-repair
+skill:sql-migration-safe
+skill:test-impact-check
+skill:safe-sensitive-change
+skill:parallel-work-split
+
+This is enough to cover almost all of your real work without zrobienia z tego potwora.
+
+Najważniejsze praktycznie:
+
+codex-main = buduje
+codex-dad = czyta duży kontekst i ogarnia migracje
+Claude = orkiestruje i robi finalny gate
+skills = opisują powtarzalny sposób działania, zamiast wciskać kompetencje do nazw agentów
+
+24. Addendum: skill:runtime-debug-triage
+
+Purpose
+Diagnose broken runtime behavior before implementation starts.
+
+Use when
+
+user reports a broken flow,
+500 or infinite-loading behavior appears,
+regression source is unknown,
+typecheck passes but runtime behavior is wrong.
+
+Covers
+
+reproduction,
+failure-layer isolation,
+log and error capture,
+hypothesis elimination,
+root-cause confirmation,
+smallest-safe fix handoff.
+
+Expected output
+
+symptom summary,
+reproduction status,
+failure layer,
+evidence,
+confirmed root cause or explicit unknown,
+fix status,
+validation results,
+open risks if any.
+
+Why it matters
+The current library is strong on implementation and review, but it lacked a dedicated pattern for "find why this is broken" work. This skill keeps debugging bounded and evidence-driven instead of ad hoc.
+

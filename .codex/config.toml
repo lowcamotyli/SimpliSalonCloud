@@ -1,0 +1,16 @@
+# SimpliSalonCloud — project-scoped Codex config
+# Precedence: CLI flags > profile > project config > user config
+# Note: model selection stays in ~/.codex/config.toml (global)
+
+approval_mode = "never"
+
+# AGENTS.md is the canonical project brief — loaded automatically.
+# instructions.md kept as fallback for worker-dad compatibility.
+project_doc_fallback_filenames = ["AGENTS.md", "instructions.md"]
+
+# Per-run reasoning effort profiles — use with: codex exec --config 'model_reasoning_effort="high"'
+[profiles.fast]
+model_reasoning_effort = "minimal"   # quick fixes, obvious imports
+
+[profiles.deep]
+model_reasoning_effort = "high"      # complex types, multi-file dependencies, migrations

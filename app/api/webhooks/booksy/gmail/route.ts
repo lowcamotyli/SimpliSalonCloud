@@ -54,6 +54,11 @@ async function verifyGoogleOidcToken(request: NextRequest): Promise<void> {
   if (payload.email_verified === false) {
     throw new Error('Google OIDC token email is not verified')
   }
+
+  const expectedServiceAccount = process.env.GOOGLE_BOOKSY_PUBSUB_SERVICE_ACCOUNT?.trim()
+  if (expectedServiceAccount && payload.email !== expectedServiceAccount) {
+    throw new Error(`Unexpected Pub/Sub sender: ${String(payload.email)}`)
+  }
 }
 
 function decodePubSubData(encoded: string): z.infer<typeof gmailNotificationSchema> {
