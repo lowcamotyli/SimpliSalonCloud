@@ -3,6 +3,7 @@ import { withErrorHandling } from '@/lib/error-handler'
 import { ForbiddenError, ValidationError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
 import { getAuthContext } from '@/lib/supabase/get-auth-context'
+import { getInternalBaseUrl } from '@/lib/config/app-url'
 
 function getCronHeaders(): HeadersInit {
   const secret = process.env.CRON_SECRET
@@ -55,11 +56,11 @@ async function ensureAccountBelongsToSalon(
 }
 
 async function postInternal(
-  request: NextRequest,
+  _request: NextRequest,
   path: string,
   body?: Record<string, unknown>
 ): Promise<unknown> {
-  const response = await fetch(new URL(path, request.url), {
+  const response = await fetch(`${getInternalBaseUrl()}${path}`, {
     method: 'POST',
     headers: getCronHeaders(),
     body: JSON.stringify(body ?? {}),
