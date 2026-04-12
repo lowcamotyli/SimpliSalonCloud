@@ -1280,10 +1280,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 <div className="space-y-4">
                   <Separator />
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between text-sm font-semibold uppercase tracking-wide text-gray-700"
+                      onClick={() => setShowEditServices((v) => !v)}
+                    >
                       Usługi w wizycie
-                    </h3>
-                    <BookingServicesEditor
+                      <ChevronDown className={cn('h-4 w-4 transition-transform', showEditServices && 'rotate-180')} />
+                    </button>
+                    {showEditServices && <BookingServicesEditor
                       bookingId={booking.id}
                       groupId={booking.visit_group_id ?? undefined}
                       initialServices={
@@ -1314,7 +1319,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                         void queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
                         onClose()
                       }}
-                    />
+                    />}
                   </div>
                 </div>
               )}
