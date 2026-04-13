@@ -96,15 +96,25 @@ async function createBookingFromParsedData(
 
   let client: Record<string, any> | null = null
 
-  const { data: existingClient } = await (admin.from('clients') as any)
-    .select('*')
-    .eq('salon_id', salonId)
-    .eq('phone', parsed.clientPhone)
-    .maybeSingle()
+  if (parsed.clientPhone) {
+    const { data: existingByPhone } = await (admin.from('clients') as any)
+      .select('*')
+      .eq('salon_id', salonId)
+      .eq('phone', parsed.clientPhone)
+      .maybeSingle()
+    if (existingByPhone) client = existingByPhone
+  }
 
-  if (existingClient) {
-    client = existingClient
-  } else {
+  if (!client) {
+    const { data: existingByName } = await (admin.from('clients') as any)
+      .select('*')
+      .eq('salon_id', salonId)
+      .ilike('full_name', clientName)
+      .maybeSingle()
+    if (existingByName) client = existingByName
+  }
+
+  if (!client) {
     const { data: codeData } = await (admin as any).rpc('generate_client_code', { salon_uuid: salonId })
     const clientCode = codeData || `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
 
@@ -113,7 +123,7 @@ async function createBookingFromParsedData(
         salon_id: salonId,
         client_code: clientCode,
         full_name: clientName,
-        phone: parsed.clientPhone || null,
+        phone: parsed.clientPhone || '',
         email: parsed.clientEmail || null,
         visit_count: 0,
       })
@@ -134,7 +144,7 @@ async function createBookingFromParsedData(
           salon_id: salonId,
           client_code: fallbackClientCode,
           full_name: clientName,
-          phone: parsed.clientPhone || null,
+          phone: parsed.clientPhone || '',
           email: parsed.clientEmail || null,
           visit_count: 0,
         })
