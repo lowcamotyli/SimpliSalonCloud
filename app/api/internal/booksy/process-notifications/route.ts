@@ -372,7 +372,12 @@ async function fetchMessageSummary(
     throw new Error(`Gmail message ${gmailMessageId} does not contain raw MIME`)
   }
 
-  const headers = response.data.payload?.headers ?? []
+  // format=raw returns raw MIME only — payload.headers is undefined.
+  // Extract subject/from from the decoded MIME headers instead.
+  const decodedMime = Buffer.from(rawMime, 'base64url').toString('utf8')
+  const getMimeHeader = (name: string): string | null =>
+    decodedMime.match(new RegExp(`^${name}:\\s*(.+)$`, 'im'))?.[1]?.trim() ?? null
+
   const internalDate = parseInternalDate(response.data.internalDate)
   const internalDateSource = internalDate ? new Date(internalDate) : new Date()
   const year = internalDateSource.getUTCFullYear()
@@ -385,9 +390,9 @@ async function fetchMessageSummary(
     gmailThreadId: response.data.threadId ?? null,
     gmailHistoryId: parseHistoryId(response.data.historyId),
     internalDate,
-    subject: getHeaderValue(headers, 'subject'),
-    fromAddress: getHeaderValue(headers, 'from'),
-    messageIdHeader: getHeaderValue(headers, 'message-id'),
+    subject: getMimeHeader('subject'),
+    fromAddress: getMimeHeader('from'),
+    messageIdHeader: getMimeHeader('message-id'),
     rawMime,
     storagePath,
     rawSha256,

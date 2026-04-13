@@ -389,11 +389,15 @@ async function downloadRawMime(supabase: AdminSupabaseClient, storagePath: strin
 }
 
 function parseRawEmail(raw: RawEmailRow, rawMime: string): ParsedEventPayload {
-  if (!raw.subject?.trim()) {
+  // subject may be null when ingested with format=raw (payload.headers unavailable).
+  // Fall back to extracting from the raw MIME string.
+  const subjectRaw = raw.subject?.trim() ||
+    rawMime.match(/^Subject:\s*(.+)$/im)?.[1]?.trim() || ''
+  if (!subjectRaw) {
     throw new Error('Raw email subject missing')
   }
 
-  const decodedSubject = decodeMimeHeader(raw.subject)
+  const decodedSubject = decodeMimeHeader(subjectRaw)
 
   const extracted = extractMimeText(rawMime)
   const rawTextBody = extracted.text?.trim() ?? ''
@@ -526,22 +530,6 @@ export async function POST(request: NextRequest) {
         salonId: raw.salon_id,
         rawMimeBytes: Buffer.byteLength(rawMime, 'utf8'),
       })
-
-      // If from_address wasn't saved during ingest, extract it from MIME headers.
-      // Non-Booksy emails (e.g. regular inbox messages) are silently skipped.
-      const effectiveFrom = raw.from_address ??
-        (rawMime.match(/^From:\s*(.+)$/im)?.[1]?.trim() ?? '')
-      if (!effectiveFrom.toLowerCase().includes('booksy')) {
-        logger.info('Booksy parse worker: skipping non-Booksy email', {
-          action: 'booksy_parse_skipped_non_booksy',
-          rawEmailId: raw.id,
-          salonId: raw.salon_id,
-          effectiveFrom: effectiveFrom.slice(0, 80),
-        })
-        await markRawEmail(supabase, raw, 'parsed')
-        skipped += 1
-        continue
-      }
 
       const parsedPayload = parseRawEmail(raw, rawMime)
       const normalizedBodyPreview = normalizeBooksyBody(
