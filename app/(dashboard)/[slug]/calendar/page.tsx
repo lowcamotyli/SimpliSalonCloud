@@ -540,7 +540,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   return (
                     <div
                       key={hour}
-                      className="theme-calendar-drop-slot h-24 border-b cursor-pointer transition-colors group relative"
+                      className="theme-calendar-drop-slot h-24 border-b border-gray-200 cursor-pointer transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][DayView] slot-click:suppressed', { dateStr, dropTime, employeeId: employee.id })
@@ -720,7 +720,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                   return (
                     <div
                       key={hour}
-                      className="theme-calendar-drop-slot h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
+                      className="theme-calendar-drop-slot h-20 border-b border-gray-200 cursor-pointer hover:bg-slate-50 transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][WeekView] slot-click:suppressed', { dateStr, dropTime })
