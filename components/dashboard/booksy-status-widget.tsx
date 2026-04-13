@@ -56,7 +56,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
 
   const activeCount = activeCountResult.error ? 0 : activeCountResult.count ?? 0
   const lastSyncRow = lastSyncResult.error ? null : ((lastSyncResult.data as LastSyncRow | null) ?? null)
-  const syncSource = lastSyncRow?.triggered_by === 'cron' ? 'auto' : lastSyncRow?.triggered_by === 'manual' ? 'ręczna' : null
+  const syncSource = lastSyncRow?.triggered_by === 'cron' ? 'auto' : lastSyncRow?.triggered_by === 'manual' ? 'ręczna' : lastSyncRow?.triggered_by === 'webhook' ? 'webhook' : null
   const todayBookingsCount = todayBookingsResult.error ? 0 : todayBookingsResult.count ?? 0
   const dotClass = activeCount > 0 ? 'bg-emerald-500' : 'bg-red-500'
 
