@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { GmailClient } from '@/lib/booksy/gmail-client'
@@ -55,7 +55,7 @@ async function getRedirectUrl(request: NextRequest, supabase: any, salonId?: str
 
     const protocol = request.nextUrl.protocol
     const host = request.nextUrl.host
-    const redirectUrl = new URL(`${protocol}//${host}/${salon?.slug || ''}/settings/integrations/booksy`)
+    const redirectUrl = new URL(`${protocol}//${host}/${salon?.slug || ''}/booksy`)
 
     if (error) {
         redirectUrl.searchParams.set('error', error)
@@ -254,3 +254,4 @@ export async function GET(request: NextRequest) {
             : NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+

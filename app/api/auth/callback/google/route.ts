@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { GmailClient } from '@/lib/booksy/gmail-client'
 import { encrypt } from '@/lib/booksy/gmail-auth'
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
             .eq('id', salonId)
             .single()
 
-        const redirectUrl = `${protocol}//${host}/${salon?.slug || ''}/settings/integrations/booksy`
+        const redirectUrl = `${protocol}//${host}/${salon?.slug || ''}/booksy`
         return NextResponse.redirect(redirectUrl)
 
     } catch (error: any) {
@@ -134,3 +134,4 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+

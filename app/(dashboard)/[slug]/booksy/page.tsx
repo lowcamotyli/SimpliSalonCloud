@@ -1,19 +1,20 @@
 import type { JSX } from 'react'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { AddMailboxButton } from '@/components/integrations/booksy/AddMailboxButton'
+import { BooksySyncOptions, type BooksySyncOptionsValue } from '@/components/integrations/booksy/BooksySyncOptions'
 import { MailboxList } from '@/components/integrations/booksy/MailboxList'
 import { MailboxEmailActivity } from '@/components/integrations/booksy/MailboxEmailActivity'
 import { BooksyPendingEmails } from '@/components/settings/booksy-pending-emails'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { getSalonHealth } from '@/lib/booksy/health-check'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { AlertTriangle, BookOpen, Calendar, CheckCircle2, ChevronRight } from 'lucide-react'
+import { AlertTriangle, BookOpen, Calendar, CheckCircle2, RefreshCw } from 'lucide-react'
 
 type Params = {
   slug: string
@@ -75,6 +76,14 @@ type BooksySyncLogRow = {
   triggered_by: string | null
 }
 
+type BooksySettingsRow = {
+  booksy_sync_interval_minutes: number | null
+  booksy_sender_filter: string | null
+  booksy_sync_from_date: string | null
+  booksy_auto_create_clients: boolean | null
+  booksy_auto_create_services: boolean | null
+}
+
 type BookingRow = {
   id: string
   booking_date: string
@@ -84,6 +93,41 @@ type BookingRow = {
   clients: { full_name: string } | null
   services: { name: string } | null
   employees: { first_name: string; last_name: string | null } | null
+}
+
+function getOauthErrorCopy(errorCode?: string): { title: string; description: string } | null {
+  if (!errorCode) {
+    return null
+  }
+
+  if (errorCode === 'missing_booksy_token_encryption_key') {
+    return {
+      title: 'Nie mozna zapisac skrzynki Gmail',
+      description:
+        'Brakuje zmiennej srodowiskowej BOOKSY_TOKEN_ENCRYPTION_KEY. Dodaj 64-znakowy klucz hex do env i ponow autoryzacje.',
+    }
+  }
+
+  if (errorCode === 'missing_google_refresh_token') {
+    return {
+      title: 'Google nie zwrocilo refresh tokena',
+      description:
+        'Sprobuj ponownie autoryzowac skrzynke i upewnij sie, ze zgoda Google jest wymuszona dla konta Gmail.',
+    }
+  }
+
+  if (errorCode === 'booksy_mailbox_table_permission_denied') {
+    return {
+      title: 'Brak uprawnien do zapisu skrzynki Booksy',
+      description:
+        'Callback OAuth nie mogl zapisac rekordu skrzynki w bazie. Aplikacja uzyje teraz zapisu przez klient admin po weryfikacji sesji.',
+    }
+  }
+
+  return {
+    title: 'Autoryzacja Gmail nie powiodla sie',
+    description: decodeURIComponent(errorCode),
+  }
 }
 
 function mapMailboxAuthStatus(account: BooksyMailboxRow): MailboxAccount['auth_status'] {
@@ -149,10 +193,14 @@ function healthBadgeClass(health: SalonHealth['overall']): string {
 
 export default async function BooksyDashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>
+  searchParams?: Promise<{ error?: string }>
 }): Promise<JSX.Element> {
   const { slug } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const oauthError = getOauthErrorCopy(resolvedSearchParams?.error)
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -216,7 +264,7 @@ export default async function BooksyDashboardPage({
   }))
 
   const adminSupabase = createAdminSupabaseClient()
-  const [health, lastSyncResult, bookingsResult] = await Promise.all([
+  const [health, lastSyncResult, bookingsResult, settingsResult] = await Promise.all([
     getSalonHealth(salonId, supabase),
     (adminSupabase.from('booksy_sync_logs' as any) as any)
       .select('finished_at, emails_success, emails_error, triggered_by')
@@ -230,7 +278,12 @@ export default async function BooksyDashboardPage({
       .eq('salon_id', salonId)
       .eq('source', 'booksy')
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(20),
+    supabase
+      .from('salon_settings')
+      .select('*')
+      .eq('salon_id', salonId)
+      .maybeSingle(),
   ])
 
   if (bookingsResult.error) {
@@ -240,10 +293,21 @@ export default async function BooksyDashboardPage({
   if (lastSyncResult.error) {
     throw new Error(`Failed to load Booksy sync logs: ${lastSyncResult.error.message}`)
   }
+  if (settingsResult.error) {
+    throw new Error(`Failed to load Booksy settings: ${settingsResult.error.message}`)
+  }
 
   const typedHealth = health as SalonHealth
   const lastSync = (lastSyncResult.data as BooksySyncLogRow | null) ?? null
   const bookings = (bookingsResult.data ?? []) as BookingRow[]
+  const settingsRow = settingsResult.data as BooksySettingsRow | null
+  const booksySettings: BooksySyncOptionsValue = {
+    booksy_sync_interval_minutes: settingsRow?.booksy_sync_interval_minutes ?? 15,
+    booksy_sender_filter: settingsRow?.booksy_sender_filter ?? 'noreply@booksy.com',
+    booksy_sync_from_date: settingsRow?.booksy_sync_from_date ?? '',
+    booksy_auto_create_clients: settingsRow?.booksy_auto_create_clients ?? true,
+    booksy_auto_create_services: settingsRow?.booksy_auto_create_services ?? false,
+  }
   const activeAccounts = accounts.filter((account) => account.is_active).length
 
   return (
@@ -255,6 +319,14 @@ export default async function BooksyDashboardPage({
         </div>
         <AddMailboxButton salonSlug={slug} />
       </div>
+
+      {oauthError ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{oauthError.title}</AlertTitle>
+          <AlertDescription>{oauthError.description}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-4">
         <Card>
@@ -314,13 +386,23 @@ export default async function BooksyDashboardPage({
 
       <MailboxList mailboxes={accounts} health={typedHealth} salonSlug={slug} />
 
+      <BooksySyncOptions salonId={salonId} initialSettings={booksySettings} />
+
       <BooksyPendingEmails salonId={salonId} />
 
       <MailboxEmailActivity salonId={salonId} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Ostatnie rezerwacje z Booksy</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Ostatnie rezerwacje z Booksy</CardTitle>
+            <Button asChild variant="ghost" size="sm" className="gap-1.5 text-xs">
+              <a href={`/${slug}/booksy`}>
+                <RefreshCw className="h-3 w-3" />
+                Odswiez
+              </a>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
@@ -365,15 +447,6 @@ export default async function BooksyDashboardPage({
           )}
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <Link
-          href={`/${slug}/settings/integrations/booksy`}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          Zaawansowane ustawienia synchronizacji <ChevronRight className="h-4 w-4" />
-        </Link>
-      </div>
     </div>
   )
 }
