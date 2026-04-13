@@ -578,6 +578,10 @@ html[data-theme-key='auto_service'] .theme-calendar-day-column {
   background: rgba(255, 251, 246, 0.82) !important;
 }
 
+html[data-theme-key='auto_service'] .theme-calendar-drop-slot {
+  border-color: #e0d0bc !important;
+}
+
 html[data-theme-key='auto_service'] .theme-calendar-drop-slot:hover {
   background: rgba(243, 231, 213, 0.36) !important;
 }
