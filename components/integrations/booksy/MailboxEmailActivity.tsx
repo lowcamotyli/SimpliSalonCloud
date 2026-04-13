@@ -182,10 +182,12 @@ function decodeEmailSubject(subject: string | null): string {
 }
 
 function extractClientNameFromSubject(decodedSubject: string): string | null {
+  // Strip forwarding/reply prefixes: "Fw:", "Fwd:", "Re:", "Odp:", "PD:" (Polish)
+  const stripped = decodedSubject.replace(/^(Fw|Fwd|Re|Odp|PD):\s*/i, "").trim()
   // Booksy subjects: "Imię Nazwisko: nowa rezerwacja" or "Imię Nazwisko: zmienił rezerwację..."
-  const colonIdx = decodedSubject.indexOf(": ")
+  const colonIdx = stripped.indexOf(": ")
   if (colonIdx > 0) {
-    const candidate = decodedSubject.slice(0, colonIdx).trim()
+    const candidate = stripped.slice(0, colonIdx).trim()
     // Sanity check: looks like a name (2-50 chars, no digits)
     if (candidate.length >= 2 && candidate.length <= 50 && !/\d/.test(candidate)) {
       return candidate
