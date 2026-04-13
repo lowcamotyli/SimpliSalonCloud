@@ -92,6 +92,42 @@ function parseHistoryId(historyId: string | number): number {
   return parsed
 }
 
+function getCronHeaders(): HeadersInit | null {
+  const secret = process.env.CRON_SECRET?.trim()
+
+  if (!secret) {
+    return null
+  }
+
+  return {
+    authorization: `Bearer ${secret}`,
+  }
+}
+
+async function triggerPipelineStep(request: NextRequest, path: string): Promise<void> {
+  const headers = getCronHeaders()
+  if (!headers) {
+    console.warn('[booksy/gmail webhook] CRON_SECRET is missing; skipping immediate pipeline trigger')
+    return
+  }
+
+  const response = await fetch(new URL(path, request.url), {
+    method: 'POST',
+    headers,
+  })
+
+  if (!response.ok) {
+    const payload = await response.text().catch(() => '')
+    throw new Error(`Immediate Booksy pipeline step failed (${path}): HTTP ${response.status} ${payload}`)
+  }
+}
+
+async function triggerImmediateBooksyPipeline(request: NextRequest): Promise<void> {
+  await triggerPipelineStep(request, '/api/internal/booksy/process-notifications')
+  await triggerPipelineStep(request, '/api/internal/booksy/parse')
+  await triggerPipelineStep(request, '/api/internal/booksy/apply')
+}
+
 export async function POST(request: NextRequest) {
   try {
     await verifyGoogleOidcToken(request)
@@ -143,6 +179,12 @@ export async function POST(request: NextRequest) {
 
     if (watchError) {
       throw new Error(`Failed to update Booksy Gmail watch heartbeat: ${watchError.message}`)
+    }
+
+    try {
+      await triggerImmediateBooksyPipeline(request)
+    } catch (triggerError) {
+      console.error('Booksy Gmail webhook trigger error:', triggerError)
     }
 
     return NextResponse.json({ accepted: true }, { status: 200 })
