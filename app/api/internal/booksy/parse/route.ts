@@ -614,6 +614,17 @@ export async function POST(request: NextRequest) {
         })
       }
     } catch (routeError) {
+      // "BooksyProcessor could not parse email" means it's not a booking email
+      // (e.g. marketing, newsletters). Silently skip — no error badge in UI.
+      const isUnparseable = routeError instanceof Error &&
+        routeError.message === 'BooksyProcessor could not parse email'
+
+      if (isUnparseable) {
+        skipped += 1
+        try { await markRawEmail(supabase, raw, 'parsed') } catch { /* ignore */ }
+        continue
+      }
+
       failed += 1
 
       logger.error('Booksy parse worker: failed to parse raw email', routeError, {

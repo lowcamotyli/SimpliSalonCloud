@@ -632,13 +632,29 @@ export class BooksyProcessor {
         const oldDate = this.buildDate(oldMatch[1], oldMatch[2], oldMatch[3])
         const oldTime = `${oldMatch[4]}:${oldMatch[5]}`
 
+        // Try to extract service name and price from the appointment detail block.
+        let rescheduleServiceName = ''
+        let reschedulePrice = 0
+        const rescheduleLines = cleanBody.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+        const reschedulePriceIdx = rescheduleLines.findIndex((l) => /[\d]+,\d{2}\s*z[łl]/i.test(l))
+        if (reschedulePriceIdx >= 0) {
+          const priceM = rescheduleLines[reschedulePriceIdx].match(/([\d]+,\d{2})\s*z[łl]/i)
+          if (priceM) reschedulePrice = parseFloat(priceM[1].replace(',', '.'))
+          for (let i = Math.max(0, reschedulePriceIdx - 2); i < reschedulePriceIdx; i++) {
+            const l = rescheduleLines[i]
+            if (!l || /https?:\/\//i.test(l) || /mailto:/i.test(l)) continue
+            const colon = l.indexOf(':')
+            rescheduleServiceName = colon >= 0 ? l.slice(colon + 1).trim() : l.trim()
+          }
+        }
+
         return {
           type: 'reschedule',
           clientName,
           clientPhone: '',
           clientEmail: undefined,
-          serviceName: '',
-          price: 0,
+          serviceName: rescheduleServiceName,
+          price: reschedulePrice,
           bookingDate: newResult ? newResult.date : 'unknown',
           bookingTime: newResult ? newResult.time : 'unknown',
           duration: newResult ? newResult.duration : 0,
