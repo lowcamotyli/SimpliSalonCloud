@@ -358,10 +358,23 @@ function resolveClientContact(parsed: ParsedBooking): string {
   return parsed.clientName.trim()
 }
 
+const BOOKSY_SUBJECT_PATTERNS = [
+  /nowa rezerwacja/i,
+  /odwołał[aeę]?\s+wizytę/i,
+  /zmienił\s+rezerwację/i,
+  /zmiany w rezerwacji/i,
+]
+
 function computeConfidence(raw: RawEmailRow, eventType: ParsedEventPayload['event_type']): number {
   let score = 0.7
 
-  if ((raw.from_address ?? '').toLowerCase().includes('booksy')) {
+  // Subject matching is the reliable signal — covers both direct Booksy emails
+  // and forwarded/watch-routed emails where from_address is the mailbox owner.
+  const decodedSubject = decodeMimeHeader(raw.subject ?? '')
+  if (BOOKSY_SUBJECT_PATTERNS.some((p) => p.test(decodedSubject))) {
+    score += 0.15
+  } else if ((raw.from_address ?? '').toLowerCase().includes('booksy')) {
+    // Fallback: direct Booksy sender without matching subject
     score += 0.15
   }
 
