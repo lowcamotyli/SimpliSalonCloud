@@ -20,6 +20,9 @@ type ParsedBookingPayload = {
     bookingDate?: string
     bookingTime?: string
     serviceName?: string
+    oldDate?: string
+    oldTime?: string
+    price?: number
   }
 }
 
@@ -178,6 +181,26 @@ function decodeEmailSubject(subject: string | null): string {
   return clean.length > 60 ? clean.slice(0, 60) + '…' : clean
 }
 
+function extractClientNameFromSubject(decodedSubject: string): string | null {
+  // Booksy subjects: "Imię Nazwisko: nowa rezerwacja" or "Imię Nazwisko: zmienił rezerwację..."
+  const colonIdx = decodedSubject.indexOf(": ")
+  if (colonIdx > 0) {
+    const candidate = decodedSubject.slice(0, colonIdx).trim()
+    // Sanity check: looks like a name (2-50 chars, no digits)
+    if (candidate.length >= 2 && candidate.length <= 50 && !/\d/.test(candidate)) {
+      return candidate
+    }
+  }
+  return null
+}
+
+function detectEventTypeFromSubject(decodedSubject: string): "created" | "cancelled" | "rescheduled" | null {
+  if (/nowa rezerwacja/i.test(decodedSubject)) return "created"
+  if (/odwołał[aeę]?\s+wizytę/i.test(decodedSubject)) return "cancelled"
+  if (/zmienił\s+rezerwację|zmiany w rezerwacji/i.test(decodedSubject)) return "rescheduled"
+  return null
+}
+
 function getRelativeTime(dateValue: string | null, fallbackDate: string): string {
   const candidate = new Date(dateValue ?? fallbackDate)
   if (Number.isNaN(candidate.getTime())) {
@@ -220,16 +243,29 @@ export async function MailboxEmailActivity({ salonId }: MailboxEmailActivityProp
               const status = getEmailStatus(email)
               const classes = getColorClasses(status.color)
               const firstEvent = email.booksy_parsed_events?.[0]
-              const eventLabel = getEventLabel(firstEvent?.event_type)
               const parsedData = firstEvent?.payload?.parsed
               const ledger = firstEvent?.booksy_apply_ledger?.[0]
               const relativeTime = getRelativeTime(email.internal_date, email.created_at)
               const sourceLabel = getSourceLabel(email.ingest_source)
               const decodedSubject = decodeEmailSubject(email.subject)
 
-              const clientInfo = parsedData?.clientName
-                ? `${parsedData.clientName}${parsedData.bookingDate ? `, ${parsedData.bookingDate}${parsedData.bookingTime ? ' ' + parsedData.bookingTime : ''}` : ''}`
-                : null
+              const fallbackClientName = !parsedData ? extractClientNameFromSubject(decodedSubject) : null
+              const fallbackEventType = !firstEvent ? detectEventTypeFromSubject(decodedSubject) : null
+              const eventLabel = getEventLabel(firstEvent?.event_type ?? fallbackEventType ?? undefined)
+              const clientInfo = parsedData?.clientName ?? fallbackClientName
+              const bookingInfo = (() => {
+                if (!parsedData) return null
+                const parts: string[] = []
+                if (parsedData.oldDate && parsedData.oldDate !== 'unknown') {
+                  parts.push(`Z: ${parsedData.oldDate}${parsedData.oldTime ? ' ' + parsedData.oldTime : ''}`)
+                }
+                if (parsedData.bookingDate && parsedData.bookingDate !== 'unknown') {
+                  const prefix = parsedData.oldDate ? 'Na: ' : ''
+                  parts.push(`${prefix}${parsedData.bookingDate}${parsedData.bookingTime ? ' ' + parsedData.bookingTime : ''}`)
+                }
+                if (parsedData.serviceName) parts.push(parsedData.serviceName)
+                return parts.length > 0 ? parts.join(' · ') : null
+              })()
 
               return (
                 <li className="flex items-start justify-between gap-3 py-3" key={email.id}>
@@ -242,7 +278,10 @@ export async function MailboxEmailActivity({ salonId }: MailboxEmailActivityProp
                           <p className="mt-0.5 text-xs text-blue-600 font-medium">{eventLabel}</p>
                         ) : null}
                         {clientInfo ? (
-                          <p className="mt-0.5 text-xs text-foreground/70">{clientInfo}</p>
+                          <p className="mt-0.5 text-xs text-foreground/70 font-medium">{clientInfo}</p>
+                        ) : null}
+                        {bookingInfo ? (
+                          <p className="mt-0.5 text-xs text-foreground/60">{bookingInfo}</p>
                         ) : null}
                         {ledger?.error_message ? (
                           <p className="mt-0.5 text-xs text-red-600 truncate" title={ledger.error_message}>
