@@ -18,6 +18,8 @@ type AccountRow = Tables<'booksy_gmail_accounts'>
 const RAW_EMAIL_BUCKET = 'booksy-raw-emails'
 const MAILBOX_BATCH_LIMIT = 25
 const CLAIM_STALE_AFTER_MS = 10 * 60 * 1000
+const LEGACY_CLAIM_TOKEN = '__legacy_no_token_column__'
+const LEGACY_NO_CLAIM_TOKEN = '__legacy_no_claim_columns__'
 
 type PendingMailbox = {
   accountId: string
@@ -231,6 +233,44 @@ async function tryClaimMailbox(
     .select('id')
 
   if (error) {
+    // Backward-compatible fallback for databases that do not yet have
+    // processing_claim_token (schema drift in production).
+    if (error.message.includes('processing_claim_token') || error.message.includes('processing_claimed_at')) {
+      const { data: legacyClaimedRows, error: legacyError } = await (supabase
+        .from('booksy_gmail_watches') as any)
+        .update({
+          processing_claimed_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq('booksy_gmail_account_id', mailbox.accountId)
+        .eq('salon_id', mailbox.salonId)
+        .or(`processing_claimed_at.is.null,processing_claimed_at.lt.${staleBeforeIso}`)
+        .select('id')
+
+      if (legacyError) {
+        // Older schema may also miss processing_claimed_at. In that case,
+        // continue without mailbox claim instead of dropping notifications.
+        if (legacyError.message.includes('processing_claimed_at')) {
+          const { data: legacyWatch, error: legacyWatchError } = await supabase
+            .from('booksy_gmail_watches')
+            .select('id')
+            .eq('booksy_gmail_account_id', mailbox.accountId)
+            .eq('salon_id', mailbox.salonId)
+            .maybeSingle()
+
+          if (legacyWatchError) {
+            throw new Error(`Failed to claim Booksy Gmail watch mailbox: ${legacyWatchError.message}`)
+          }
+
+          return legacyWatch ? LEGACY_NO_CLAIM_TOKEN : null
+        }
+
+        throw new Error(`Failed to claim Booksy Gmail watch mailbox: ${legacyError.message}`)
+      }
+
+      return (legacyClaimedRows?.length ?? 0) > 0 ? LEGACY_CLAIM_TOKEN : null
+    }
+
     throw new Error(`Failed to claim Booksy Gmail watch mailbox: ${error.message}`)
   }
 
@@ -242,16 +282,30 @@ async function releaseMailboxClaim(
   mailbox: PendingMailbox,
   claimToken: string
 ): Promise<void> {
-  const { error } = await (supabase
+  if (claimToken === LEGACY_NO_CLAIM_TOKEN) {
+    return
+  }
+
+  const update = {
+    processing_claimed_at: null,
+    updated_at: new Date().toISOString(),
+  } as Record<string, string | null>
+
+  if (claimToken !== LEGACY_CLAIM_TOKEN) {
+    update.processing_claim_token = null
+  }
+
+  let query = (supabase
     .from('booksy_gmail_watches') as any)
-    .update({
-      processing_claim_token: null,
-      processing_claimed_at: null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq('booksy_gmail_account_id', mailbox.accountId)
     .eq('salon_id', mailbox.salonId)
-    .eq('processing_claim_token', claimToken)
+
+  if (claimToken !== LEGACY_CLAIM_TOKEN) {
+    query = query.eq('processing_claim_token', claimToken)
+  }
+
+  const { error } = await query
 
   if (error) {
     logger.error('Booksy notification worker: failed to release mailbox claim', error, {

@@ -11,6 +11,10 @@ export const runtime = 'nodejs'
 
 const RAW_EMAIL_BUCKET = 'booksy-raw-emails'
 const PARSE_BATCH_LIMIT = 50
+const INFORMATIONAL_SUBJECTS: RegExp[] = [
+  /potwierdzenie propozycji zmiany terminu/i,
+  /Twoje Faktury/i,
+]
 
 type AdminSupabaseClient = SupabaseClient<Database>
 type RawEmailRow = Tables<'booksy_raw_emails'>
@@ -487,6 +491,17 @@ export async function POST(request: NextRequest) {
   let failed = 0
 
   for (const raw of rawEmails ?? []) {
+    const decodedSubjectForSkip = decodeMimeHeader(raw.subject ?? '')
+    if (INFORMATIONAL_SUBJECTS.some((pattern) => pattern.test(decodedSubjectForSkip))) {
+      try {
+        await markRawEmail(supabase, raw, 'parsed')
+      } catch {
+        // ignore mark error
+      }
+      skipped += 1
+      continue
+    }
+
     try {
       logger.info('Booksy parse worker: processing raw email', {
         action: 'booksy_parse_processing_raw',

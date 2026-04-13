@@ -79,11 +79,34 @@ async function runWatchPipeline(request: NextRequest) {
   const threshold = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
 
   const processNotifications = await postCronEndpoint(request, '/api/internal/booksy/process-notifications')
+  logger.info('Booksy cron watch: process-notifications done', {
+    action: 'booksy_cron_watch_step',
+    step: 'process-notifications',
+    result: processNotifications,
+  })
+
   const parse = await postCronEndpoint(request, '/api/internal/booksy/parse')
+  logger.info('Booksy cron watch: parse done', {
+    action: 'booksy_cron_watch_step',
+    step: 'parse',
+    result: parse,
+  })
+
   const apply = await postCronEndpoint(request, '/api/internal/booksy/apply')
+  logger.info('Booksy cron watch: apply done', {
+    action: 'booksy_cron_watch_step',
+    step: 'apply',
+    result: apply,
+  })
+
   const reconcile = await shouldRunDailyReconciliation(supabase)
     ? await postCronEndpoint(request, '/api/internal/booksy/reconcile')
     : { skipped: true, reason: 'already-ran-today' }
+  logger.info('Booksy cron watch: reconcile done', {
+    action: 'booksy_cron_watch_step',
+    step: 'reconcile',
+    result: reconcile,
+  })
 
   const { data: expiringWatches, error: watchesError } = await (supabase
     .from('booksy_gmail_watches') as any)
@@ -149,7 +172,17 @@ async function sendBooksyHealthAlert(
   reasons: string[]
 ): Promise<void> {
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY ?? '')
+    const resendApiKey = process.env.RESEND_API_KEY?.trim() ?? ''
+    if (!resendApiKey) {
+      logger.warn('Booksy health alert skipped: RESEND_API_KEY is not configured', {
+        action: 'booksy_health_alert_skipped_missing_resend_api_key',
+        salonId,
+        alertEmail,
+      })
+      return
+    }
+
+    const resend = new Resend(resendApiKey)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'https://app.simplisalon.pl'
     const settingsUrl = `${appUrl.replace(/\/+$/, '')}/settings/integrations/booksy`
     const idempotencyKey = `booksy-health-critical-${salonId}-${new Date().toISOString().slice(0, 10)}`

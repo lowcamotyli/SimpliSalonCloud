@@ -549,17 +549,15 @@ export class BooksyProcessor {
       } else if (/zmienił\s+rezerwację/i.test(subject)) {
         type = 'reschedule'
         rawClientName = subject.match(/^(.+?):\s*zmienił/i)?.[1]?.trim() ?? ''
+      } else if (/Zmiany w rezerwacji/i.test(subject)) {
+        type = 'reschedule'
+        rawClientName = ''
       } else {
         logger.warn('[Booksy] Unknown email type in subject', { subject })
         return null
       }
 
-      const clientName = rawClientName.replace(/^(pd|re|fw|fwd)\s*:\s*/i, '').trim()
-
-      if (!clientName) {
-        logger.warn('[Booksy] Could not extract client name from subject')
-        return null
-      }
+      let clientName = rawClientName.replace(/^(pd|re|fw|fwd)\s*:\s*/i, '').trim()
 
       // Clean body text (remove special characters and normalize)
       const cleanBody = body
@@ -577,6 +575,20 @@ export class BooksyProcessor {
         .replace(/Ă…ÂĽ/g, 'ĹĽ')
 
       logger.info('[Booksy] Parsing email', { subjectLength: subject.length, bodyLength: body.length })
+
+      if (!clientName && /Zmiany w rezerwacji/i.test(subject)) {
+        const bodyClientName = cleanBody
+          .match(/([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)\s*\n[^\n]*\n?\s*\d{3}/m)?.[1]
+          ?.trim()
+        if (bodyClientName) {
+          clientName = bodyClientName
+        }
+      }
+
+      if (!clientName) {
+        logger.warn('[Booksy] Could not extract client name from subject')
+        return null
+      }
 
       // ── Early return for cancellation ──────────────────────────────────────
       if (type === 'cancel') {
@@ -601,7 +613,7 @@ export class BooksyProcessor {
       // ── Early return for reschedule ─────────────────────────────────────────
       if (type === 'reschedule') {
         // "z dnia 27 października 2024 10:00" or "z dnia czwartek, 23 października 2025 10:45"
-        const oldMatch = cleanBody.match(/z dnia\s+(?:[a-ząćęłńóśźż]+\s*,\s*)?(\d{1,2})\s+(.+?)\s+(\d{4})\s+(\d{2}):(\d{2})/i)
+        const oldMatch = cleanBody.match(/z dnia\s+(?:[a-ząćęłńóśźż]+\s*,\s*)?(\d{1,2})\s+(.+?)\s+(\d{4})\s+(?:o\s+)?(\d{2}):(\d{2})/i)
         // "na 28 października 2024, 14:00 — 15:00"
         const newResult = this.extractDateAndTime(cleanBody)
 
