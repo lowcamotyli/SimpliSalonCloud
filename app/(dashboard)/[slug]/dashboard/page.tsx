@@ -134,6 +134,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       .neq('status', 'cancelled')
       .neq('status', 'completed')
       .not('employee_id', 'is', null)
+      .is('deleted_at', null)
       .order('booking_time', { ascending: true })
       .limit(5)
   ])
