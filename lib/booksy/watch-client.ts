@@ -33,7 +33,14 @@ function requireEnv(name: string): string {
 }
 
 function isWatchEnabled(): boolean {
-  return process.env.BOOKSY_USE_WATCH === 'true'
+  const raw = process.env.BOOKSY_USE_WATCH
+
+  if (!raw) {
+    return false
+  }
+
+  const normalized = raw.trim().toLowerCase()
+  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on'
 }
 
 function getTopicName(): string {

@@ -90,7 +90,7 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null)
 
   const returnPath = useMemo<string>(
-    (): string => `/${salonSlug}/settings/integrations/booksy`,
+    (): string => `/${salonSlug}/booksy`,
     [salonSlug]
   )
 

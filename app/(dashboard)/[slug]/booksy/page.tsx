@@ -1,19 +1,21 @@
 import type { JSX } from 'react'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { AddMailboxButton } from '@/components/integrations/booksy/AddMailboxButton'
+import { BooksySyncOptions, type BooksySyncOptionsValue } from '@/components/integrations/booksy/BooksySyncOptions'
+import { BooksyRecentBookingsTable } from '@/components/integrations/booksy/BooksyRecentBookingsTable'
 import { MailboxList } from '@/components/integrations/booksy/MailboxList'
 import { MailboxEmailActivity } from '@/components/integrations/booksy/MailboxEmailActivity'
 import { BooksyPendingEmails } from '@/components/settings/booksy-pending-emails'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { getSalonHealth } from '@/lib/booksy/health-check'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { AlertTriangle, BookOpen, Calendar, CheckCircle2, ChevronRight } from 'lucide-react'
+import { AlertTriangle, BookOpen, Calendar, CheckCircle2 } from 'lucide-react'
 
 type Params = {
   slug: string
@@ -75,6 +77,14 @@ type BooksySyncLogRow = {
   triggered_by: string | null
 }
 
+type BooksySettingsRow = {
+  booksy_sync_interval_minutes: number | null
+  booksy_sender_filter: string | null
+  booksy_sync_from_date: string | null
+  booksy_auto_create_clients: boolean | null
+  booksy_auto_create_services: boolean | null
+}
+
 type BookingRow = {
   id: string
   booking_date: string
@@ -84,6 +94,41 @@ type BookingRow = {
   clients: { full_name: string } | null
   services: { name: string } | null
   employees: { first_name: string; last_name: string | null } | null
+}
+
+function getOauthErrorCopy(errorCode?: string): { title: string; description: string } | null {
+  if (!errorCode) {
+    return null
+  }
+
+  if (errorCode === 'missing_booksy_token_encryption_key') {
+    return {
+      title: 'Nie mozna zapisac skrzynki Gmail',
+      description:
+        'Brakuje zmiennej srodowiskowej BOOKSY_TOKEN_ENCRYPTION_KEY. Dodaj 64-znakowy klucz hex do env i ponow autoryzacje.',
+    }
+  }
+
+  if (errorCode === 'missing_google_refresh_token') {
+    return {
+      title: 'Google nie zwrocilo refresh tokena',
+      description:
+        'Sprobuj ponownie autoryzowac skrzynke i upewnij sie, ze zgoda Google jest wymuszona dla konta Gmail.',
+    }
+  }
+
+  if (errorCode === 'booksy_mailbox_table_permission_denied') {
+    return {
+      title: 'Brak uprawnien do zapisu skrzynki Booksy',
+      description:
+        'Callback OAuth nie mogl zapisac rekordu skrzynki w bazie. Aplikacja uzyje teraz zapisu przez klient admin po weryfikacji sesji.',
+    }
+  }
+
+  return {
+    title: 'Autoryzacja Gmail nie powiodla sie',
+    description: decodeURIComponent(errorCode),
+  }
 }
 
 function mapMailboxAuthStatus(account: BooksyMailboxRow): MailboxAccount['auth_status'] {
@@ -107,34 +152,6 @@ function formatRelativeTime(timestamp: string | null): string {
   return formatDistanceToNow(parsed, { addSuffix: true, locale: pl })
 }
 
-function statusBadge(status: string): JSX.Element {
-  if (status === 'scheduled') {
-    return <Badge className="text-xs">Zaplanowana</Badge>
-  }
-
-  if (status === 'cancelled') {
-    return (
-      <Badge variant="destructive" className="text-xs">
-        Anulowana
-      </Badge>
-    )
-  }
-
-  if (status === 'completed') {
-    return (
-      <Badge variant="secondary" className="text-xs">
-        Zakonczona
-      </Badge>
-    )
-  }
-
-  return (
-    <Badge variant="outline" className="text-xs">
-      {status}
-    </Badge>
-  )
-}
-
 function healthBadgeClass(health: SalonHealth['overall']): string {
   if (health === 'ok') {
     return 'bg-emerald-100 text-emerald-700 border-emerald-200'
@@ -149,10 +166,14 @@ function healthBadgeClass(health: SalonHealth['overall']): string {
 
 export default async function BooksyDashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>
+  searchParams?: Promise<{ error?: string }>
 }): Promise<JSX.Element> {
   const { slug } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const oauthError = getOauthErrorCopy(resolvedSearchParams?.error)
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -216,7 +237,7 @@ export default async function BooksyDashboardPage({
   }))
 
   const adminSupabase = createAdminSupabaseClient()
-  const [health, lastSyncResult, bookingsResult] = await Promise.all([
+  const [health, lastSyncResult, bookingsResult, settingsResult] = await Promise.all([
     getSalonHealth(salonId, supabase),
     (adminSupabase.from('booksy_sync_logs' as any) as any)
       .select('finished_at, emails_success, emails_error, triggered_by')
@@ -230,7 +251,12 @@ export default async function BooksyDashboardPage({
       .eq('salon_id', salonId)
       .eq('source', 'booksy')
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(20),
+    supabase
+      .from('salon_settings')
+      .select('*')
+      .eq('salon_id', salonId)
+      .maybeSingle(),
   ])
 
   if (bookingsResult.error) {
@@ -240,15 +266,26 @@ export default async function BooksyDashboardPage({
   if (lastSyncResult.error) {
     throw new Error(`Failed to load Booksy sync logs: ${lastSyncResult.error.message}`)
   }
+  if (settingsResult.error) {
+    throw new Error(`Failed to load Booksy settings: ${settingsResult.error.message}`)
+  }
 
   const typedHealth = health as SalonHealth
   const lastSync = (lastSyncResult.data as BooksySyncLogRow | null) ?? null
   const bookings = (bookingsResult.data ?? []) as BookingRow[]
+  const settingsRow = settingsResult.data as BooksySettingsRow | null
+  const booksySettings: BooksySyncOptionsValue = {
+    booksy_sync_interval_minutes: settingsRow?.booksy_sync_interval_minutes ?? 15,
+    booksy_sender_filter: settingsRow?.booksy_sender_filter ?? 'noreply@booksy.com',
+    booksy_sync_from_date: settingsRow?.booksy_sync_from_date ?? '',
+    booksy_auto_create_clients: settingsRow?.booksy_auto_create_clients ?? true,
+    booksy_auto_create_services: settingsRow?.booksy_auto_create_services ?? false,
+  }
   const activeAccounts = accounts.filter((account) => account.is_active).length
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-8 sm:px-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Booksy</h1>
           <p className="text-muted-foreground">Synchronizacja rezerwacji z platformy Booksy</p>
@@ -256,7 +293,15 @@ export default async function BooksyDashboardPage({
         <AddMailboxButton salonSlug={slug} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {oauthError ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{oauthError.title}</AlertTitle>
+          <AlertDescription>{oauthError.description}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -312,68 +357,50 @@ export default async function BooksyDashboardPage({
         </Alert>
       ) : null}
 
-      <MailboxList mailboxes={accounts} health={typedHealth} salonSlug={slug} />
-
-      <BooksyPendingEmails salonId={salonId} />
-
-      <MailboxEmailActivity salonId={salonId} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Ostatnie rezerwacje z Booksy</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {bookings.length === 0 ? (
-            <p>Brak rezerwacji</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="pb-2 text-left font-medium">Data wizyty</th>
-                    <th className="pb-2 text-left font-medium">Klient</th>
-                    <th className="pb-2 text-left font-medium">Usluga</th>
-                    <th className="pb-2 text-left font-medium">Pracownik</th>
-                    <th className="pb-2 text-left font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {bookings.map((booking) => (
-                    <tr key={booking.id}>
-                      <td className="whitespace-nowrap py-2.5 pr-4 text-xs text-muted-foreground">
-                        {new Date(`${booking.booking_date}T${booking.booking_time}`).toLocaleString('pl-PL', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                      <td className="py-2.5 pr-4">{booking.clients?.full_name ?? '-'}</td>
-                      <td className="py-2.5 pr-4">{booking.services?.name ?? '-'}</td>
-                      <td className="py-2.5 pr-4">
-                        {booking.employees
-                          ? `${booking.employees.first_name} ${booking.employees.last_name ?? ''}`.trim()
-                          : '-'}
-                      </td>
-                      <td className="py-2.5 pr-4">{statusBadge(booking.status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <Accordion type="multiple" defaultValue={['mailboxes', 'bookings']} className="space-y-4">
+        <AccordionItem value="mailboxes" className="rounded-xl border bg-card px-4">
+          <AccordionTrigger className="py-3">
+            <div className="flex items-center gap-2 text-base font-semibold">
+              Skrzynki i status integracji
+              <Badge variant="outline">{accounts.length}</Badge>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <MailboxList mailboxes={accounts} health={typedHealth} salonSlug={slug} />
+          </AccordionContent>
+        </AccordionItem>
 
-      <div className="flex justify-end">
-        <Link
-          href={`/${slug}/settings/integrations/booksy`}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          Zaawansowane ustawienia synchronizacji <ChevronRight className="h-4 w-4" />
-        </Link>
-      </div>
+        <AccordionItem value="settings" className="rounded-xl border bg-card px-4">
+          <AccordionTrigger className="py-3">
+            <div className="flex items-center gap-2 text-base font-semibold">Ustawienia synchronizacji</div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <BooksySyncOptions salonId={salonId} initialSettings={booksySettings} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="queue" className="rounded-xl border bg-card px-4">
+          <AccordionTrigger className="py-3">
+            <div className="flex items-center gap-2 text-base font-semibold">Kolejka i aktywnosc maili</div>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 pb-4">
+            <BooksyPendingEmails salonId={salonId} />
+            <MailboxEmailActivity salonId={salonId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="bookings" className="rounded-xl border bg-card px-4">
+          <AccordionTrigger className="py-3">
+            <div className="flex items-center gap-2 text-base font-semibold">
+              Ostatnie rezerwacje z Booksy
+              <Badge variant="outline">{bookings.length}</Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <BooksyRecentBookingsTable bookings={bookings} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   )
 }
