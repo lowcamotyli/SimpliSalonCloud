@@ -445,11 +445,14 @@ function parseRawEmail(raw: RawEmailRow, rawMime: string): ParsedEventPayload {
 async function markRawEmail(
   supabase: AdminSupabaseClient,
   raw: RawEmailRow,
-  parseStatus: TablesUpdate<'booksy_raw_emails'>['parse_status']
+  parseStatus: TablesUpdate<'booksy_raw_emails'>['parse_status'],
+  subjectOverride?: string
 ): Promise<void> {
+  const patch: TablesUpdate<'booksy_raw_emails'> = { parse_status: parseStatus }
+  if (subjectOverride && !raw.subject) patch.subject = subjectOverride
   const { error } = await supabase
     .from('booksy_raw_emails')
-    .update({ parse_status: parseStatus })
+    .update(patch)
     .eq('id', raw.id)
     .eq('salon_id', raw.salon_id)
 
@@ -589,7 +592,8 @@ export async function POST(request: NextRequest) {
         throw new Error(`Failed to insert parsed event: ${insertError.message}`)
       }
 
-      await markRawEmail(supabase, raw, 'parsed')
+      const mimeSubject = rawMime.match(/^Subject:\s*(.+)$/im)?.[1]?.trim()
+      await markRawEmail(supabase, raw, 'parsed', mimeSubject)
 
       if ((insertedRows?.length ?? 0) === 0) {
         skipped += 1
