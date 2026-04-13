@@ -131,6 +131,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       .eq('booking_date', todayStr)
       .neq('status', 'cancelled')
       .neq('status', 'completed')
+      .not('employee_id', 'is', null)
       .order('booking_time', { ascending: true })
       .limit(5)
   ])
