@@ -34,6 +34,7 @@ type ParsedEvent = {
 type RawEmail = {
   id: string
   subject: string | null
+  from_address?: string | null
   internal_date: string | null
   parse_status: "pending" | "parsed" | "failed"
   ingest_source: string
@@ -41,10 +42,43 @@ type RawEmail = {
   booksy_parsed_events: ParsedEvent[] | null
 }
 
+const BOOKSY_BOOKING_SUBJECT_PATTERNS: RegExp[] = [
+  /nowa rezerwacja/i,
+  /odwołał[aeę]?\s+wizytę/i,
+  /zmienił\s+rezerwację/i,
+  /zmiany w rezerwacji/i,
+]
+
+function isBooksyBookingRow(email: RawEmail): boolean {
+  // Decode subject first — encoded subjects (windows-1250, utf-8 QP) won't match Polish patterns
+  const rawSubject = email.subject ?? ""
+  const decoded = rawSubject
+    .replace(
+      /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g,
+      (_match, charset: string, encoding: string, text: string) => {
+        try {
+          if (encoding.toUpperCase() === "B") {
+            return new TextDecoder(charset).decode(new Uint8Array(Buffer.from(text, "base64")))
+          }
+          return decodeQP(text, charset)
+        } catch {
+          return _match
+        }
+      }
+    )
+    .replace(/\s+/g, " ")
+    .trim()
+  return BOOKSY_BOOKING_SUBJECT_PATTERNS.some((pattern) => pattern.test(decoded))
+}
+
 function getEmailStatus(email: RawEmail): { label: string; color: "green" | "yellow" | "red" | "gray" } {
   if (email.parse_status === "failed") return { label: "Błąd parsowania", color: "red" }
   const event = email.booksy_parsed_events?.[0]
-  if (!event) return { label: "Oczekuje", color: "yellow" }
+  if (!event) {
+    // parsed=true but no event means email was deduplicated or skipped as non-booking
+    if (email.parse_status === "parsed") return { label: "Przetworzone", color: "gray" }
+    return { label: "Oczekuje", color: "yellow" }
+  }
   const ledger = event.booksy_apply_ledger?.[0]
   if (!ledger) {
     if (event.status === "manual_review") return { label: "Do weryfikacji", color: "yellow" }
@@ -157,7 +191,7 @@ export async function MailboxEmailActivity({ salonId }: MailboxEmailActivityProp
   const adminSupabase = createAdminSupabaseClient()
   const { data } = await (adminSupabase.from("booksy_raw_emails") as any)
     .select(`
-      id, subject, internal_date, parse_status, ingest_source, created_at,
+      id, subject, from_address, internal_date, parse_status, ingest_source, created_at,
       booksy_parsed_events (
         event_type, status, confidence_score, payload,
         booksy_apply_ledger ( operation, error_message )
@@ -167,7 +201,7 @@ export async function MailboxEmailActivity({ salonId }: MailboxEmailActivityProp
     .order("created_at", { ascending: false })
     .limit(20)
 
-  const emails = (data ?? []) as RawEmail[]
+  const emails = ((data ?? []) as RawEmail[]).filter(isBooksyBookingRow)
 
   return (
     <Card>
