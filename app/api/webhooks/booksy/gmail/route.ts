@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { z } from 'zod'
@@ -34,7 +35,23 @@ function getBearerToken(request: NextRequest): string | null {
   return token
 }
 
+function verifyCronSecretToken(request: NextRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  const urlToken = request.nextUrl.searchParams.get('token')
+  if (!cronSecret || !urlToken) return false
+  try {
+    const a = Buffer.from(urlToken)
+    const b = Buffer.from(cronSecret)
+    return a.length === b.length && timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
+
 async function verifyGoogleOidcToken(request: NextRequest): Promise<void> {
+  // Alternative auth: CRON_SECRET as ?token= query param (for Pub/Sub without OIDC)
+  if (verifyCronSecretToken(request)) return
+
   const audience = process.env.GOOGLE_BOOKSY_PUBSUB_AUDIENCE?.trim()
 
   if (!audience) {
