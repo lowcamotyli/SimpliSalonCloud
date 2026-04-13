@@ -10,6 +10,8 @@ import { format, subDays, startOfDay, endOfDay } from 'date-fns'
 import { EmptyState } from '@/components/ui/empty-state'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const supabase = await createServerSupabaseClient()
@@ -131,6 +133,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
       .eq('booking_date', todayStr)
       .neq('status', 'cancelled')
       .neq('status', 'completed')
+      .not('employee_id', 'is', null)
+      .is('deleted_at', null)
       .order('booking_time', { ascending: true })
       .limit(5)
   ])

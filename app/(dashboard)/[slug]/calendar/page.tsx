@@ -512,9 +512,9 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex flex-col">
-      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minWidth: `${Math.max(560, 80 + columnCount * 160)}px` }}>
+    <div className="overflow-auto h-full">
+      <div style={{ minWidth: `${Math.max(560, 80 + columnCount * 160)}px` }}>
+      <div className="theme-calendar-day-header grid border-b bg-white sticky top-0 z-30" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
         <div className="theme-calendar-time-head border-r p-3 text-center flex items-center justify-center bg-gray-50/50"><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Czas</p></div>
         {visibleEmployeesList.map((emp: any) => {
           const empIdx = employees.findIndex((e: any) => e.id === emp.id)
@@ -524,8 +524,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
         {columnCount === 0 && <div className="p-3 text-center text-gray-500 text-sm">Brak wybranych pracowników</div>}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minWidth: `${Math.max(560, 80 + columnCount * 160)}px`, minHeight: '100%' }}>
+        <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)` }}>
           <div className="theme-calendar-time-column border-r bg-gray-50/80 sticky left-0 z-20">
             {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
           </div>
@@ -540,7 +539,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   return (
                     <div
                       key={hour}
-                      className="theme-calendar-drop-slot h-24 border-b cursor-pointer transition-colors group relative"
+                      className="theme-calendar-drop-slot h-24 border-b border-gray-200 cursor-pointer transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][DayView] slot-click:suppressed', { dateStr, dropTime, employeeId: employee.id })
@@ -637,7 +636,6 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
           )}
         </div>
       </div>
-      </div>
     </div>
   )
 }
@@ -689,9 +687,9 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex h-full flex-col">
-      <div className="theme-calendar-week-header grid grid-cols-8 min-w-[700px] border-b bg-slate-50/50">
+    <div className="overflow-auto h-full">
+      <div className="min-w-[700px]">
+      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50 sticky top-0 z-30">
         <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
         {weekDays.map((day) => {
           const today = isSameDay(day, now)
@@ -704,7 +702,6 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
         })}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-8 min-w-[700px]">
           <div className="theme-calendar-time-column border-r bg-gray-50">
             {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
@@ -720,7 +717,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                   return (
                     <div
                       key={hour}
-                      className="theme-calendar-drop-slot h-20 border-b cursor-pointer hover:bg-slate-50 transition-colors group relative"
+                      className="theme-calendar-drop-slot h-20 border-b border-gray-200 cursor-pointer hover:bg-slate-50 transition-colors group relative"
                       onClick={() => {
                         if (shouldSuppressClick()) {
                           console.debug('[Calendar][WeekView] slot-click:suppressed', { dateStr, dropTime })
@@ -813,7 +810,6 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
             )
           })}
         </div>
-      </div>
       </div>
     </div>
   )

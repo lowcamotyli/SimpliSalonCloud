@@ -14,6 +14,7 @@ type BooksyStatusWidgetProps = {
 
 type LastSyncRow = {
   finished_at: string | null
+  triggered_by: string | null
 }
 
 function formatSyncAge(timestamp: string | null): string {
@@ -39,7 +40,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
       .eq('salon_id', salonId)
       .eq('is_active', true),
     (adminSupabase.from('booksy_sync_logs' as any) as any)
-      .select('finished_at')
+      .select('finished_at, triggered_by')
       .eq('salon_id', salonId)
       .order('started_at', { ascending: false })
       .limit(1)
@@ -55,6 +56,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
 
   const activeCount = activeCountResult.error ? 0 : activeCountResult.count ?? 0
   const lastSyncRow = lastSyncResult.error ? null : ((lastSyncResult.data as LastSyncRow | null) ?? null)
+  const syncSource = lastSyncRow?.triggered_by === 'cron' ? 'auto' : lastSyncRow?.triggered_by === 'manual' ? 'ręczna' : lastSyncRow?.triggered_by === 'webhook' ? 'webhook' : null
   const todayBookingsCount = todayBookingsResult.error ? 0 : todayBookingsResult.count ?? 0
   const dotClass = activeCount > 0 ? 'bg-emerald-500' : 'bg-red-500'
 
@@ -70,7 +72,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
         </div>
 
         <p className="text-xs text-muted-foreground">
-          {activeCount} skrzynki · Sync: {formatSyncAge(lastSyncRow?.finished_at ?? null)} · Dziś: {todayBookingsCount} rez.
+          {activeCount} skrzynki · Sync: {formatSyncAge(lastSyncRow?.finished_at ?? null)}{syncSource ? ` (${syncSource})` : ''} · Dziś: {todayBookingsCount} rez.
         </p>
 
         <div>
