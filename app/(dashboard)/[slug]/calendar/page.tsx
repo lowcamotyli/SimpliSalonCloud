@@ -524,7 +524,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
         {columnCount === 0 && <div className="p-3 text-center text-gray-500 text-sm">Brak wybranych pracowników</div>}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" style={{ overflowX: 'clip' }}>
         <div className="grid relative" style={{ gridTemplateColumns: `80px repeat(${Math.max(1, columnCount)}, 1fr)`, minWidth: `${Math.max(560, 80 + columnCount * 160)}px`, minHeight: '100%' }}>
           <div className="theme-calendar-time-column border-r bg-gray-50/80 sticky left-0 z-20">
             {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-24 border-b p-2 text-[11px] font-bold text-gray-500 text-center flex items-center justify-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
@@ -704,7 +704,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
         })}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" style={{ overflowX: 'clip' }}>
         <div className="grid grid-cols-8 min-w-[700px]">
           <div className="theme-calendar-time-column border-r bg-gray-50">
             {timeSlots.map((hour: number) => <div key={hour} className="theme-calendar-time-slot h-20 border-b p-2 text-xs font-semibold text-gray-600 text-center sticky left-0 z-10 bg-background">{String(hour).padStart(2, '0')}:00</div>)}
