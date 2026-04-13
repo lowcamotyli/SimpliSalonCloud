@@ -66,7 +66,15 @@ export async function POST(request: NextRequest) {
   let skipped = 0
   const failures: Array<{ eventId: string; error: string }> = []
 
+  const runStartedAt = new Date()
+  const salonStats = new Map<string, { found: number; success: number; errors: number }>()
+  const getSalonStats = (salonId: string) => {
+    if (!salonStats.has(salonId)) salonStats.set(salonId, { found: 0, success: 0, errors: 0 })
+    return salonStats.get(salonId)!
+  }
+
   for (const event of pendingEvents ?? []) {
+    getSalonStats(event.salon_id).found += 1
     const threshold = resolveThreshold(event.event_type)
     logger.info('Booksy apply worker: processing parsed event', {
       action: 'booksy_apply_processing_event',
@@ -96,6 +104,7 @@ export async function POST(request: NextRequest) {
           })
         } else {
           applied += 1
+          getSalonStats(event.salon_id).success += 1
           logger.info('Booksy apply worker: event applied', {
             action: 'booksy_apply_applied',
             eventId: event.id,
@@ -105,6 +114,7 @@ export async function POST(request: NextRequest) {
       } catch (applyError) {
         const message = applyError instanceof Error ? applyError.message : 'Unknown apply error'
         failures.push({ eventId: event.id, error: message })
+        getSalonStats(event.salon_id).errors += 1
         logger.error('Booksy apply worker: failed to apply parsed event', applyError, {
           action: 'booksy_apply_failed',
           eventId: event.id,
@@ -171,6 +181,26 @@ export async function POST(request: NextRequest) {
     failureCount: failures.length,
     failures,
   })
+
+  if (salonStats.size > 0) {
+    const finishedAt = new Date()
+    const logRows = Array.from(salonStats.entries()).map(([salonId, stats]) => ({
+      salon_id: salonId,
+      triggered_by: 'webhook',
+      started_at: runStartedAt.toISOString(),
+      finished_at: finishedAt.toISOString(),
+      duration_ms: finishedAt.getTime() - runStartedAt.getTime(),
+      emails_found: stats.found,
+      emails_success: stats.success,
+      emails_error: stats.errors,
+      sync_results: [],
+    }))
+    supabase.from('booksy_sync_logs').insert(logRows).then(null, (err: unknown) => {
+      logger.error('Booksy apply worker: failed to insert sync logs', err, {
+        action: 'booksy_apply_sync_log_failed',
+      })
+    })
+  }
 
   return NextResponse.json({
     applied,
