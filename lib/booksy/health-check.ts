@@ -62,6 +62,8 @@ function minutesSince(timestampIso: string, nowMs: number): number {
 
 function inferOverall(mailbox: Omit<MailboxHealth, 'overall'>, now: Date): MailboxHealth['overall'] {
   const nowMs = now.getTime()
+  const NOTIFICATION_WARNING_MINUTES = 30
+  const NOTIFICATION_CRITICAL_MINUTES = 120
 
   if (mailbox.authStatus === 'revoked' || mailbox.authStatus === 'expired') {
     return 'critical'
@@ -76,7 +78,7 @@ function inferOverall(mailbox: Omit<MailboxHealth, 'overall'>, now: Date): Mailb
 
   if (mailbox.lastNotificationAt !== null && isBusinessHours(now)) {
     const notificationMinutes = minutesSince(mailbox.lastNotificationAt, nowMs)
-    if (notificationMinutes > 30) {
+    if (notificationMinutes > NOTIFICATION_CRITICAL_MINUTES) {
       return 'critical'
     }
   }
@@ -90,6 +92,13 @@ function inferOverall(mailbox: Omit<MailboxHealth, 'overall'>, now: Date): Mailb
 
   if (mailbox.parseFailureRate > 0.1) {
     return 'warning'
+  }
+
+  if (mailbox.lastNotificationAt !== null && isBusinessHours(now)) {
+    const notificationMinutes = minutesSince(mailbox.lastNotificationAt, nowMs)
+    if (notificationMinutes > NOTIFICATION_WARNING_MINUTES) {
+      return 'warning'
+    }
   }
 
   return 'ok'
