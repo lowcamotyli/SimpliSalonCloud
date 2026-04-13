@@ -123,7 +123,7 @@ async function createBookingFromParsedData(
         salon_id: salonId,
         client_code: clientCode,
         full_name: clientName,
-        phone: parsed.clientPhone || '',
+        phone: parsed.clientPhone || null,
         email: parsed.clientEmail || null,
         visit_count: 0,
       })
@@ -144,7 +144,7 @@ async function createBookingFromParsedData(
           salon_id: salonId,
           client_code: fallbackClientCode,
           full_name: clientName,
-          phone: parsed.clientPhone || '',
+          phone: parsed.clientPhone || null,
           email: parsed.clientEmail || null,
           visit_count: 0,
         })
