@@ -40,6 +40,24 @@ type GmailMessageSummary = {
   rawSha256: string
 }
 
+const BOOKSY_BOOKING_SUBJECT_PATTERNS: RegExp[] = [
+  /nowa rezerwacja/i,
+  /odwołał[aeę]?\s+wizytę/i,
+  /zmienił\s+rezerwację/i,
+  /zmiany w rezerwacji/i,
+]
+
+function isBooksyBookingEmail(summary: Pick<GmailMessageSummary, 'subject' | 'fromAddress'>): boolean {
+  const from = (summary.fromAddress ?? '').toLowerCase()
+  const subject = summary.subject ?? ''
+
+  if (!from.includes('booksy')) {
+    return false
+  }
+
+  return BOOKSY_BOOKING_SUBJECT_PATTERNS.some((pattern) => pattern.test(subject))
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim()
 
@@ -552,6 +570,19 @@ async function processMailbox(
 
     for (const gmailMessageId of messageIds) {
       const summary = await fetchMessageSummary(oauth2Client, mailbox.salonId, mailbox.accountId, gmailMessageId)
+
+      if (!isBooksyBookingEmail(summary)) {
+        logger.info('Booksy notification worker: skipped non-Booksy booking email', {
+          action: 'booksy_notification_skip_non_booksy',
+          salonId: mailbox.salonId,
+          accountId: mailbox.accountId,
+          gmailMessageId,
+          fromAddress: summary.fromAddress,
+          subjectPreview: summary.subject?.slice(0, 160) ?? null,
+        })
+        continue
+      }
+
       await persistRawMime(supabase, summary)
       await insertRawEmail(supabase, mailbox, summary)
     }

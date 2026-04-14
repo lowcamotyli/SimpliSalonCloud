@@ -683,12 +683,25 @@ async function reconcileMailbox(
     try {
       const { data: failedLedgerRows } = await supabase
         .from('booksy_apply_ledger')
-        .select('id, booksy_parsed_event_id')
+        .select('id, booksy_parsed_event_id, error_message')
         .eq('salon_id', mailbox.salon_id)
         .eq('operation', 'failed')
 
       if (failedLedgerRows && failedLedgerRows.length > 0) {
-        const failedEventIds = failedLedgerRows
+        const PERMANENT_APPLY_ERROR_PATTERNS = [
+          'Client phone is required',
+          'Booking to cancel not found',
+          'Booking to reschedule not found',
+          'Employee not found',
+          'Invalid client name',
+        ]
+
+        const retryableRows = failedLedgerRows.filter((row) => {
+          const msg = row.error_message ?? ''
+          return !PERMANENT_APPLY_ERROR_PATTERNS.some((pattern) => msg.includes(pattern))
+        })
+
+        const failedEventIds = retryableRows
           .map((row) => row.booksy_parsed_event_id)
           .filter((id): id is string => typeof id === 'string')
 
@@ -712,6 +725,16 @@ async function reconcileMailbox(
             accountId: mailbox.id,
             failedEventCount: failedEventIds.length,
           })
+
+          const permanentCount = failedLedgerRows.length - retryableRows.length
+          if (permanentCount > 0) {
+            logger.info('Booksy reconciliation: skipped permanent apply failures (manual_review)', {
+              action: 'booksy_reconcile_skip_permanent_failures',
+              salonId: mailbox.salon_id,
+              accountId: mailbox.id,
+              permanentCount,
+            })
+          }
         }
       }
     } catch (error) {

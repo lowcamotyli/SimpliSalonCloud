@@ -403,23 +403,29 @@ export class BooksyProcessor {
    * Handle booking cancellation
    */
   private async handleCancellation(parsed: ParsedBooking) {
-    // Find existing booking by salon + date + time, then match by client name
+    // Find existing booking by salon + date, then match by normalized time and client name.
+    // This avoids false negatives caused by DB time formatting differences (HH:mm vs HH:mm:ss).
+    // Include 'completed' — cancellation emails may arrive after the appointment date
+    // (e.g. Booksy processes the cancel retroactively or the email is delayed).
     const { data: bookings, error: findError } = await this.supabase
       .from('bookings')
       .select('*, clients!inner(full_name)')
       .eq('salon_id', this.salonId)
       .eq('booking_date', parsed.bookingDate)
-      .eq('booking_time', parsed.bookingTime)
-      .in('status', ['scheduled', 'confirmed'])
+      .in('status', ['scheduled', 'confirmed', 'completed'])
 
     if (findError) throw findError
 
     const normalize = (s: string) =>
       s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+    const normalizeTime = (t: string | null | undefined) => (t || '').slice(0, 5)
 
     const booking = bookings?.find((b) =>
-      normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-      normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+      normalizeTime(String(b.booking_time)) === parsed.bookingTime &&
+      (
+        normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
+        normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+      )
     )
 
     if (!booking) {
@@ -429,12 +435,14 @@ export class BooksyProcessor {
         .select('*, clients!inner(full_name)')
         .eq('salon_id', this.salonId)
         .eq('booking_date', parsed.bookingDate)
-        .eq('booking_time', parsed.bookingTime)
         .eq('status', 'cancelled')
 
       const alreadyCancelled = cancelledBookings?.find((b) =>
-        normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-        normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+        normalizeTime(String(b.booking_time)) === parsed.bookingTime &&
+        (
+          normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
+          normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+        )
       )
 
       if (alreadyCancelled) {
