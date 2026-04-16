@@ -691,7 +691,12 @@ export class BooksyProcessor {
 
         const isOtherTermin = /na\s+inny\s+termin/i.test(cleanBody)
 
-        if (!oldMatch) {
+        // Fallback: "Zmiany w rezerwacji czwartek, 30 kwietnia 2026 o 09:00" — old date is in subject
+        const subjectOldMatch = !oldMatch && /Zmiany w rezerwacji/i.test(subject)
+          ? subject.match(/(\d{1,2})\s+([a-ząćęłńóśźż]+)\s+(\d{4})\s+o\s+(\d{2}):(\d{2})/i)
+          : null
+
+        if (!oldMatch && !subjectOldMatch) {
           logger.warn('[Booksy] Could not extract OLD date/time from reschedule email — proceeding with unknown')
         }
 
@@ -699,8 +704,16 @@ export class BooksyProcessor {
           logger.warn('[Booksy] Could not extract NEW date/time from reschedule email — proceeding with unknown')
         }
 
-        const oldDate = oldMatch ? this.buildDate(oldMatch[1], oldMatch[2], oldMatch[3]) : 'unknown'
-        const oldTime = oldMatch ? `${oldMatch[4]}:${oldMatch[5]}` : 'unknown'
+        const oldDate = oldMatch
+          ? this.buildDate(oldMatch[1], oldMatch[2], oldMatch[3])
+          : subjectOldMatch
+            ? this.buildDate(subjectOldMatch[1], subjectOldMatch[2], subjectOldMatch[3])
+            : 'unknown'
+        const oldTime = oldMatch
+          ? `${oldMatch[4]}:${oldMatch[5]}`
+          : subjectOldMatch
+            ? `${subjectOldMatch[4]}:${subjectOldMatch[5]}`
+            : 'unknown'
 
         // Try to extract service name and price from the appointment detail block.
         let rescheduleServiceName = ''
