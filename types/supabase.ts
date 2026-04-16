@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
   }
   graphql_public: {
     Tables: {
@@ -1207,7 +1207,7 @@ export type Database = {
           last_visit_at: string | null
           no_show_count: number
           notes: string | null
-          phone: string
+          phone: string | null
           salon_id: string
           sms_opt_in: boolean | null
           tags: string[] | null
@@ -1232,7 +1232,7 @@ export type Database = {
           last_visit_at?: string | null
           no_show_count?: number
           notes?: string | null
-          phone: string
+          phone?: string | null
           salon_id: string
           sms_opt_in?: boolean | null
           tags?: string[] | null
@@ -1257,7 +1257,7 @@ export type Database = {
           last_visit_at?: string | null
           no_show_count?: number
           notes?: string | null
-          phone?: string
+          phone?: string | null
           salon_id?: string
           sms_opt_in?: boolean | null
           tags?: string[] | null
@@ -2783,7 +2783,6 @@ export type Database = {
           booksy_notify_on_cancel: boolean | null
           booksy_notify_on_new: boolean | null
           booksy_sender_filter: string | null
-          booksy_sync_from_date: string | null
           booksy_sync_interval_minutes: number | null
           booksy_sync_stats: Json | null
           bulkgate_app_id: string | null
@@ -2841,7 +2840,6 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
-          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null
@@ -2899,7 +2897,6 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
-          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null

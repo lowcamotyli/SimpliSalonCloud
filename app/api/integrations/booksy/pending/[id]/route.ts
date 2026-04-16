@@ -300,6 +300,13 @@ export const POST = withErrorHandling(async (
     )
   }
 
+  if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
+    return NextResponse.json(
+      { success: false, error: 'Brak nowej daty wizyty w e-mailu — nie można zastosować automatycznie. Uzupełnij wizytę ręcznie w kalendarzu.' },
+      { status: 422 }
+    )
+  }
+
   try {
     const booking = await createBookingFromParsedData(
       admin,
