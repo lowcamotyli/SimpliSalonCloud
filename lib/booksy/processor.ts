@@ -472,7 +472,74 @@ export class BooksyProcessor {
    * Handle booking reschedule
    */
   private async handleReschedule(parsed: ParsedBooking) {
-    if (!parsed.oldDate || !parsed.oldTime) {
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+
+    if (!parsed.oldDate || parsed.oldDate === 'unknown') {
+      const today = new Date().toISOString().split('T')[0]
+
+      const { data: futureBookings, error: futureFindError } = await this.supabase
+        .from('bookings')
+        .select('*, clients!inner(full_name)')
+        .eq('salon_id', this.salonId)
+        .gte('booking_date', today)
+        .in('status', ['scheduled', 'confirmed'])
+
+      if (futureFindError) throw futureFindError
+
+      const matches = futureBookings?.filter((b) =>
+        normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
+        normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+      ) || []
+
+      if (matches.length === 0) {
+        if (parsed.bookingDate !== 'unknown' && parsed.bookingTime !== 'unknown') {
+          const { data: rescheduledBookings } = await this.supabase
+            .from('bookings')
+            .select('*, clients!inner(full_name)')
+            .eq('salon_id', this.salonId)
+            .eq('booking_date', parsed.bookingDate)
+            .eq('booking_time', parsed.bookingTime)
+            .in('status', ['scheduled', 'confirmed'])
+
+          const alreadyRescheduled = rescheduledBookings?.find((b) =>
+            normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
+            normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+          )
+
+          if (alreadyRescheduled) {
+            logger.info('[Booksy] Booking already rescheduled (forwarded email deduplication)', { bookingId: alreadyRescheduled.id })
+            return { success: true, deduplicated: true, type: 'reschedule', booking: alreadyRescheduled }
+          }
+        }
+
+        throw new Error('Zmiana terminu — brak aktywnej rezerwacji dla: ' + parsed.clientName)
+      }
+
+      if (matches.length > 1) {
+        throw new Error('Zmiana terminu — znaleziono ' + matches.length + ' rezerwacje dla ' + parsed.clientName + ', wymagana reczna weryfikacja')
+      }
+
+      const booking = matches[0]
+
+      const { data: updated, error: updateError } = await this.supabase
+        .from('bookings')
+        .update({
+          booking_date: parsed.bookingDate,
+          booking_time: parsed.bookingTime,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', booking.id)
+        .select()
+        .single()
+
+      if (updateError) throw updateError
+
+      logger.info('[Booksy] Booking rescheduled via fuzzy match (no old date in email)', { bookingId: booking.id, newDate: parsed.bookingDate, newTime: parsed.bookingTime })
+      return { success: true, type: 'reschedule', booking: updated }
+    }
+
+    if (!parsed.oldTime) {
       throw new Error('Missing old date/time for rescheduling')
     }
 
@@ -486,9 +553,6 @@ export class BooksyProcessor {
       .in('status', ['scheduled', 'confirmed'])
 
     if (findError) throw findError
-
-    const normalize = (s: string) =>
-      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 
     const booking = bookings?.find((b) =>
       normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
