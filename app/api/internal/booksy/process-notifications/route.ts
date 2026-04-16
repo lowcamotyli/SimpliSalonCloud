@@ -47,9 +47,46 @@ const BOOKSY_BOOKING_SUBJECT_PATTERNS: RegExp[] = [
   /zmiany w rezerwacji/i,
 ]
 
+function decodeMimeEncodedWord(match: string, charset: string, encoding: string, text: string): string {
+  try {
+    let buffer: Buffer
+    if (String(encoding).toLowerCase() === 'b') {
+      buffer = Buffer.from(text, 'base64')
+    } else {
+      buffer = Buffer.from(
+        String(text).replace(/_/g, ' ').replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16))),
+        'binary'
+      )
+    }
+    return new TextDecoder(String(charset).toLowerCase()).decode(buffer)
+  } catch {
+    return match
+  }
+}
+
+function decodeMimeHeader(value: string): string {
+  const encodedWordPattern = /=\?([^?]+)\?([bBqQ])\?([^?]*)\?=/g
+  if (!encodedWordPattern.test(value)) return value
+  encodedWordPattern.lastIndex = 0
+  let result = ''
+  let cursor = 0
+  let previousWasEncoded = false
+  let match: RegExpExecArray | null
+  while ((match = encodedWordPattern.exec(value)) !== null) {
+    const between = value.slice(cursor, match.index)
+    if (!(previousWasEncoded && /^\s*$/.test(between))) result += between
+    result += decodeMimeEncodedWord(match[0], match[1], match[2], match[3])
+    cursor = match.index + match[0].length
+    previousWasEncoded = true
+  }
+  result += value.slice(cursor)
+  return result
+}
+
 function isBooksyBookingEmail(summary: Pick<GmailMessageSummary, 'subject' | 'fromAddress'>): boolean {
   const from = (summary.fromAddress ?? '').toLowerCase()
-  const subject = summary.subject ?? ''
+  // Subject in raw MIME may be RFC 2047 encoded; decode before matching.
+  const subject = decodeMimeHeader(summary.subject ?? '')
 
   if (!from.includes('booksy')) {
     return false
