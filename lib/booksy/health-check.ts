@@ -10,6 +10,8 @@ export interface MailboxHealth {
   rawBacklog: number
   parseFailureRate: number
   manualQueueDepth: number
+  failedNotifications: number
+  oldestFailedNotificationAt: string | null
   applyFailures: number
   lastReconciliationMissing: number | null
   overall: 'ok' | 'warning' | 'critical'
@@ -76,6 +78,10 @@ function inferOverall(mailbox: Omit<MailboxHealth, 'overall'>, now: Date): Mailb
     }
   }
 
+  if (mailbox.failedNotifications > 0) {
+    return 'critical'
+  }
+
   if (mailbox.lastNotificationAt !== null && isBusinessHours(now)) {
     const notificationMinutes = minutesSince(mailbox.lastNotificationAt, nowMs)
     if (notificationMinutes > NOTIFICATION_CRITICAL_MINUTES) {
@@ -91,6 +97,10 @@ function inferOverall(mailbox: Omit<MailboxHealth, 'overall'>, now: Date): Mailb
   }
 
   if (mailbox.parseFailureRate > 0.1) {
+    return 'warning'
+  }
+
+  if (mailbox.manualQueueDepth > 0) {
     return 'warning'
   }
 
@@ -226,7 +236,7 @@ export async function getMailboxHealth(
   const now = new Date()
   const sinceIso = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
 
-  const [rawBacklogCount, parseRowsResult, rawEmailIds, reconciliationResult] = await Promise.all([
+  const [rawBacklogCount, parseRowsResult, rawEmailIds, reconciliationResult, failedNotificationsResult] = await Promise.all([
     supabase
       .from('booksy_raw_emails')
       .select('id', { count: 'exact', head: true })
@@ -245,6 +255,13 @@ export async function getMailboxHealth(
       .order('started_at', { ascending: false })
       .limit(1)
       .maybeSingle<{ emails_missing: number | null }>(),
+    supabase
+      .from('booksy_gmail_notifications')
+      .select('received_at', { count: 'exact' })
+      .eq('booksy_gmail_account_id', accountId)
+      .eq('processing_status', 'failed')
+      .order('received_at', { ascending: true })
+      .limit(1),
   ])
 
   if (rawBacklogCount.error) {
@@ -257,6 +274,10 @@ export async function getMailboxHealth(
 
   if (reconciliationResult.error) {
     throw new Error(`Failed to load reconciliation stats: ${reconciliationResult.error.message}`)
+  }
+
+  if (failedNotificationsResult.error) {
+    throw new Error(`Failed to load failed notification stats: ${failedNotificationsResult.error.message}`)
   }
 
   let parsedCount = 0
@@ -323,6 +344,8 @@ export async function getMailboxHealth(
     rawBacklog: toCount(rawBacklogCount.count),
     parseFailureRate,
     manualQueueDepth: toCount(manualQueueResult.count),
+    failedNotifications: toCount(failedNotificationsResult.count),
+    oldestFailedNotificationAt: failedNotificationsResult.data?.[0]?.received_at ?? null,
     applyFailures: toCount(applyFailuresResult.count),
     lastReconciliationMissing: reconciliationResult.data?.emails_missing ?? null,
   }

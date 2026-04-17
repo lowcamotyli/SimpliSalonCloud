@@ -2,6 +2,11 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import {
+  BooksyManualReviewError,
+  findCancellationMatch,
+  findRescheduleMatch,
+} from '@/lib/booksy/booking-match'
 
 interface ParsedBooking {
   type: 'new' | 'cancel' | 'reschedule'
@@ -403,68 +408,40 @@ export class BooksyProcessor {
    * Handle booking cancellation
    */
   private async handleCancellation(parsed: ParsedBooking) {
-    // Find existing booking by salon + date, then match by normalized time and client name.
-    // This avoids false negatives caused by DB time formatting differences (HH:mm vs HH:mm:ss).
-    // Include 'completed' — cancellation emails may arrive after the appointment date
-    // (e.g. Booksy processes the cancel retroactively or the email is delayed).
-    const { data: bookings, error: findError } = await this.supabase
-      .from('bookings')
-      .select('*, clients!inner(full_name)')
-      .eq('salon_id', this.salonId)
-      .eq('booking_date', parsed.bookingDate)
-      .in('status', ['scheduled', 'confirmed', 'completed'])
+    const match = await findCancellationMatch(this.supabase, this.salonId, parsed)
 
-    if (findError) throw findError
+    if (match.kind === 'already_applied') {
+      logger.info('[Booksy] Booking already cancelled (forwarded email deduplication)', { bookingId: match.booking.id })
+      return { success: true, deduplicated: true, type: 'cancel', booking: match.booking }
+    }
 
-    const normalize = (s: string) =>
-      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
-    const normalizeTime = (t: string | null | undefined) => (t || '').slice(0, 5)
-
-    const booking = bookings?.find((b) =>
-      normalizeTime(String(b.booking_time)) === parsed.bookingTime &&
-      (
-        normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-        normalize(parsed.clientName).includes(normalize(b.clients.full_name))
+    if (match.kind === 'ambiguous') {
+      throw new BooksyManualReviewError(
+        'ambiguous_match',
+        `Cancellation match ambiguous for ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`,
+        match.candidates
       )
-    )
+    }
 
-    if (!booking) {
-      // deduplicate forwarded emails: check if there is an ALREADY cancelled booking for this client at this time
-      const { data: cancelledBookings } = await this.supabase
-        .from('bookings')
-        .select('*, clients!inner(full_name)')
-        .eq('salon_id', this.salonId)
-        .eq('booking_date', parsed.bookingDate)
-        .eq('status', 'cancelled')
-
-      const alreadyCancelled = cancelledBookings?.find((b) =>
-        normalizeTime(String(b.booking_time)) === parsed.bookingTime &&
-        (
-          normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-          normalize(parsed.clientName).includes(normalize(b.clients.full_name))
-        )
-      )
-
-      if (alreadyCancelled) {
-        logger.info('[Booksy] Booking already cancelled (forwarded email deduplication)', { bookingId: alreadyCancelled.id })
-        return { success: true, deduplicated: true, type: 'cancel', booking: alreadyCancelled }
-      }
-
-      throw new Error(
-        `Booking to cancel not found: ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`
+    if (match.kind === 'none') {
+      throw new BooksyManualReviewError(
+        'cancel_not_found',
+        `Booking to cancel not found: ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`,
+        match.candidates
       )
     }
 
     const { data: updated, error: updateError } = await this.supabase
       .from('bookings')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-      .eq('id', booking.id)
+      .eq('id', match.booking.id)
+      .eq('salon_id', this.salonId)
       .select()
       .single()
 
     if (updateError) throw updateError
 
-    logger.info('[Booksy] Booking cancelled', { bookingId: booking.id })
+    logger.info('[Booksy] Booking cancelled', { bookingId: match.booking.id })
     return { success: true, type: 'cancel', booking: updated }
   }
 
@@ -472,117 +449,33 @@ export class BooksyProcessor {
    * Handle booking reschedule
    */
   private async handleReschedule(parsed: ParsedBooking) {
-    const normalize = (s: string) =>
-      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
-
-    if (!parsed.oldDate || parsed.oldDate === 'unknown') {
-      const today = new Date().toISOString().split('T')[0]
-
-      const { data: futureBookings, error: futureFindError } = await this.supabase
-        .from('bookings')
-        .select('*, clients!inner(full_name)')
-        .eq('salon_id', this.salonId)
-        .gte('booking_date', today)
-        .in('status', ['scheduled', 'confirmed'])
-
-      if (futureFindError) throw futureFindError
-
-      const matches = futureBookings?.filter((b) =>
-        normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-        normalize(parsed.clientName).includes(normalize(b.clients.full_name))
-      ) || []
-
-      if (matches.length === 0) {
-        if (parsed.bookingDate !== 'unknown' && parsed.bookingTime !== 'unknown') {
-          const { data: rescheduledBookings } = await this.supabase
-            .from('bookings')
-            .select('*, clients!inner(full_name)')
-            .eq('salon_id', this.salonId)
-            .eq('booking_date', parsed.bookingDate)
-            .eq('booking_time', parsed.bookingTime)
-            .in('status', ['scheduled', 'confirmed'])
-
-          const alreadyRescheduled = rescheduledBookings?.find((b) =>
-            normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-            normalize(parsed.clientName).includes(normalize(b.clients.full_name))
-          )
-
-          if (alreadyRescheduled) {
-            logger.info('[Booksy] Booking already rescheduled (forwarded email deduplication)', { bookingId: alreadyRescheduled.id })
-            return { success: true, deduplicated: true, type: 'reschedule', booking: alreadyRescheduled }
-          }
-        }
-
-        throw new Error('Zmiana terminu — brak aktywnej rezerwacji dla: ' + parsed.clientName)
-      }
-
-      if (matches.length > 1) {
-        throw new Error('Zmiana terminu — znaleziono ' + matches.length + ' rezerwacje dla ' + parsed.clientName + ', wymagana reczna weryfikacja')
-      }
-
-      const booking = matches[0]
-
-      const { data: updated, error: updateError } = await this.supabase
-        .from('bookings')
-        .update({
-          booking_date: parsed.bookingDate,
-          booking_time: parsed.bookingTime,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id)
-        .select()
-        .single()
-
-      if (updateError) throw updateError
-
-      logger.info('[Booksy] Booking rescheduled via fuzzy match (no old date in email)', { bookingId: booking.id, newDate: parsed.bookingDate, newTime: parsed.bookingTime })
-      return { success: true, type: 'reschedule', booking: updated }
+    if (parsed.oldDate && parsed.oldDate !== 'unknown' && !parsed.oldTime) {
+      throw new BooksyManualReviewError(
+        'missing_old_date',
+        'Missing old date/time for rescheduling'
+      )
     }
 
-    if (!parsed.oldTime) {
-      throw new Error('Missing old date/time for rescheduling')
+    const match = await findRescheduleMatch(this.supabase, this.salonId, parsed)
+
+    if (match.kind === 'already_applied') {
+      logger.info('[Booksy] Booking already rescheduled (forwarded email deduplication)', { bookingId: match.booking.id })
+      return { success: true, deduplicated: true, type: 'reschedule', booking: match.booking }
     }
 
-    // Find existing booking at OLD date/time
-    const { data: bookings, error: findError } = await this.supabase
-      .from('bookings')
-      .select('*, clients!inner(full_name)')
-      .eq('salon_id', this.salonId)
-      .eq('booking_date', parsed.oldDate)
-      .eq('booking_time', parsed.oldTime)
-      .in('status', ['scheduled', 'confirmed'])
+    if (match.kind === 'ambiguous') {
+      throw new BooksyManualReviewError(
+        'ambiguous_match',
+        `Reschedule match ambiguous for ${parsed.clientName}`,
+        match.candidates
+      )
+    }
 
-    if (findError) throw findError
-
-    const booking = bookings?.find((b) =>
-      normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-      normalize(parsed.clientName).includes(normalize(b.clients.full_name))
-    )
-
-    if (!booking) {
-      // deduplicate forwarded emails: check if there is an ALREADY rescheduled booking for this client at the NEW time
-      if (parsed.bookingDate !== 'unknown' && parsed.bookingTime !== 'unknown') {
-        const { data: rescheduledBookings } = await this.supabase
-          .from('bookings')
-          .select('*, clients!inner(full_name)')
-          .eq('salon_id', this.salonId)
-          .eq('booking_date', parsed.bookingDate)
-          .eq('booking_time', parsed.bookingTime)
-          .in('status', ['scheduled', 'confirmed'])
-
-        const alreadyRescheduled = rescheduledBookings?.find((b) =>
-          normalize(b.clients.full_name).includes(normalize(parsed.clientName)) ||
-          normalize(parsed.clientName).includes(normalize(b.clients.full_name))
-        )
-
-        if (alreadyRescheduled) {
-          logger.info('[Booksy] Booking already rescheduled (forwarded email deduplication)', { bookingId: alreadyRescheduled.id })
-          return { success: true, deduplicated: true, type: 'reschedule', booking: alreadyRescheduled }
-        }
-      }
-
-      throw new Error(
-        `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate} ${parsed.oldTime}`
+    if (match.kind === 'none') {
+      throw new BooksyManualReviewError(
+        'reschedule_not_found',
+        `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate ?? 'unknown'} ${parsed.oldTime ?? 'unknown'}`,
+        match.candidates
       )
     }
 
@@ -593,13 +486,14 @@ export class BooksyProcessor {
         booking_time: parsed.bookingTime,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', booking.id)
+      .eq('id', match.booking.id)
+      .eq('salon_id', this.salonId)
       .select()
       .single()
 
     if (updateError) throw updateError
 
-    logger.info('[Booksy] Booking rescheduled', { bookingId: booking.id, newDate: parsed.bookingDate, newTime: parsed.bookingTime })
+    logger.info('[Booksy] Booking rescheduled', { bookingId: match.booking.id, newDate: parsed.bookingDate, newTime: parsed.bookingTime })
     return { success: true, type: 'reschedule', booking: updated }
   }
 
@@ -890,20 +784,30 @@ export class BooksyProcessor {
     if (!parsed.clientName || parsed.clientName.trim().length < 2) {
       throw new Error(`Invalid client name: "${parsed.clientName}"`)
     }
-    if (!parsed.clientPhone) {
-      throw new Error('Client phone is required for Booksy bookings')
-    }
+    // Try to find existing client by phone (or by name if phone missing)
+    if (parsed.clientPhone) {
+      const { data: existingClient } = await this.supabase
+        .from('clients')
+        .select('*')
+        .eq('salon_id', this.salonId)
+        .eq('phone', parsed.clientPhone)
+        .maybeSingle()
 
-    // Try to find existing client by phone
-    const { data: existingClient } = await this.supabase
-      .from('clients')
-      .select('*')
-      .eq('salon_id', this.salonId)
-      .eq('phone', parsed.clientPhone)
-      .maybeSingle()
+      if (existingClient) {
+        return existingClient
+      }
+    } else {
+      // No phone in email — try name-based lookup
+      const { data: existingByName } = await this.supabase
+        .from('clients')
+        .select('*')
+        .eq('salon_id', this.salonId)
+        .ilike('full_name', parsed.clientName.trim())
+        .maybeSingle()
 
-    if (existingClient) {
-      return existingClient
+      if (existingByName) {
+        return existingByName
+      }
     }
 
     const settings = await this.getAutomationSettings()
@@ -919,14 +823,14 @@ export class BooksyProcessor {
     const fallbackCode = `BK${Date.now().toString(36).toUpperCase().slice(-6)}`
     const clientCode = generatedCode || fallbackCode
 
-    // Create new client
+    // Create new client (phone may be null if not provided in email)
     const { data: newClient, error } = await this.supabase
       .from('clients')
       .insert({
         salon_id: this.salonId,
         client_code: clientCode,
         full_name: parsed.clientName,
-        phone: parsed.clientPhone,
+        phone: parsed.clientPhone || null,
         email: parsed.clientEmail || null,
       })
       .select()
@@ -946,7 +850,7 @@ export class BooksyProcessor {
           salon_id: this.salonId,
           client_code: fallbackClientCode,
           full_name: parsed.clientName,
-          phone: parsed.clientPhone,
+          phone: parsed.clientPhone || null,
           email: parsed.clientEmail || null,
         })
         .select()

@@ -76,7 +76,7 @@ async function shouldRunDailyReconciliation(
 
 async function runWatchPipeline(request: NextRequest) {
   const supabase = createAdminClient()
-  const threshold = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+  const threshold = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
 
   const processNotifications = await postCronEndpoint(request, '/api/internal/booksy/process-notifications')
   logger.info('Booksy cron watch: process-notifications done', {

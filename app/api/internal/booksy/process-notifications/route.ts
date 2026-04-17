@@ -8,6 +8,8 @@ import { getBooksyGmailRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import { logger } from '@/lib/logger'
 import { validateCronSecret } from '@/lib/middleware/cron-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isRetryableBooksyFailure } from '@/lib/booksy/retry-policy'
+import { parseBooksyWorkerScope, type BooksyWorkerScope } from '@/lib/booksy/worker-scope'
 import type { Database, Tables } from '@/types/supabase'
 
 type AdminSupabaseClient = SupabaseClient<Database>
@@ -25,6 +27,11 @@ type PendingMailbox = {
   accountId: string
   salonId: string
   notifications: NotificationRow[]
+}
+
+type ProcessNotificationsConfig = {
+  scope: BooksyWorkerScope
+  includeRetryableFailed: boolean
 }
 
 type GmailMessageSummary = {
@@ -103,6 +110,24 @@ function requireEnv(name: string): string {
   }
 
   return value
+}
+
+async function parseRequestConfig(request: NextRequest): Promise<ProcessNotificationsConfig> {
+  const body = await request.json().catch(() => ({}))
+
+  return {
+    scope: parseBooksyWorkerScope(body),
+    includeRetryableFailed: typeof body === 'object' && body !== null && (body as Record<string, unknown>).includeRetryableFailed !== false,
+  }
+}
+
+function isRetryableFailedNotification(notification: Pick<NotificationRow, 'processing_status' | 'error_message'>): boolean {
+  if (notification.processing_status !== 'failed') {
+    return false
+  }
+
+  const message = notification.error_message ?? ''
+  return isRetryableBooksyFailure(message)
 }
 
 function parseHistoryId(value: unknown): number | null {
@@ -193,13 +218,26 @@ async function createOAuthClient(
   return oauth2Client
 }
 
-async function loadPendingMailboxes(supabase: AdminSupabaseClient): Promise<PendingMailbox[]> {
-  const { data, error } = await supabase
+async function loadPendingMailboxes(
+  supabase: AdminSupabaseClient,
+  config: ProcessNotificationsConfig
+): Promise<PendingMailbox[]> {
+  let query = supabase
     .from('booksy_gmail_notifications')
     .select('*')
-    .eq('processing_status', 'pending')
+    .in('processing_status', config.includeRetryableFailed ? ['pending', 'failed'] : ['pending'])
     .order('received_at', { ascending: true })
     .limit(MAILBOX_BATCH_LIMIT * 10)
+
+  if (config.scope.salonIds) {
+    query = query.in('salon_id', config.scope.salonIds)
+  }
+
+  if (config.scope.accountIds) {
+    query = query.in('booksy_gmail_account_id', config.scope.accountIds)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Failed to load pending Booksy Gmail notifications: ${error.message}`)
@@ -208,6 +246,13 @@ async function loadPendingMailboxes(supabase: AdminSupabaseClient): Promise<Pend
   const grouped = new Map<string, PendingMailbox>()
 
   for (const notification of data ?? []) {
+    if (
+      notification.processing_status !== 'pending' &&
+      !isRetryableFailedNotification(notification)
+    ) {
+      continue
+    }
+
     const existing = grouped.get(notification.booksy_gmail_account_id)
 
     if (!existing) {
@@ -554,6 +599,20 @@ async function markNeedsFullSync(
     .eq('id', watch.id)
 
   if (error) {
+    if (error.message.includes('needs_full_sync')) {
+      const { error: legacyError } = await supabase
+        .from('booksy_gmail_watches')
+        .update({
+          last_error: message,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', watch.id)
+
+      if (!legacyError) {
+        return
+      }
+    }
+
     throw new Error(`Failed to mark Booksy Gmail watch for full sync: ${error.message}`)
   }
 }
@@ -667,7 +726,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createAdminClient()
-    const pendingMailboxes = await loadPendingMailboxes(supabase)
+    const config = await parseRequestConfig(request)
+    const pendingMailboxes = await loadPendingMailboxes(supabase, config)
 
     if (pendingMailboxes.length === 0) {
       return NextResponse.json({
@@ -675,6 +735,7 @@ export async function POST(request: NextRequest) {
         processedMailboxes: 0,
         processedNotifications: 0,
         rawEmailsDiscovered: 0,
+        retriedFailedNotifications: 0,
       })
     }
 
@@ -685,9 +746,14 @@ export async function POST(request: NextRequest) {
       rawEmailsDiscovered: number
       fullSyncRequired: boolean
       error?: string
+      retriedFailedNotifications: number
     }> = []
 
     for (const mailbox of pendingMailboxes) {
+      const retriedFailedNotifications = mailbox.notifications
+        .filter((notification) => notification.processing_status === 'failed')
+        .length
+
       try {
         const result = await processMailbox(supabase, mailbox)
         results.push({
@@ -696,6 +762,7 @@ export async function POST(request: NextRequest) {
           notificationCount: mailbox.notifications.length,
           rawEmailsDiscovered: result.messageCount,
           fullSyncRequired: result.fullSyncRequired,
+          retriedFailedNotifications,
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown mailbox processing error'
@@ -714,6 +781,7 @@ export async function POST(request: NextRequest) {
           rawEmailsDiscovered: 0,
           fullSyncRequired: false,
           error: message,
+          retriedFailedNotifications,
         })
       }
     }
@@ -725,6 +793,7 @@ export async function POST(request: NextRequest) {
         .filter((result) => result.processed)
         .reduce((sum, result) => sum + result.notificationCount, 0),
       rawEmailsDiscovered: results.reduce((sum, result) => sum + result.rawEmailsDiscovered, 0),
+      retriedFailedNotifications: results.reduce((sum, result) => sum + result.retriedFailedNotifications, 0),
       results,
     })
   } catch (error) {

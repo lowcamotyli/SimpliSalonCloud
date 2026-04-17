@@ -7,6 +7,7 @@ import { encrypt, getDecryptedTokens } from '@/lib/booksy/gmail-auth'
 import { getBooksyGmailRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import { logger } from '@/lib/logger'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { classifyBooksyFailure } from '@/lib/booksy/retry-policy'
 import type { Database, Tables } from '@/types/supabase'
 
 type AdminSupabaseClient = SupabaseClient<Database>
@@ -688,17 +689,9 @@ async function reconcileMailbox(
         .eq('operation', 'failed')
 
       if (failedLedgerRows && failedLedgerRows.length > 0) {
-        const PERMANENT_APPLY_ERROR_PATTERNS = [
-          'Client phone is required',
-          'Booking to cancel not found',
-          'Booking to reschedule not found',
-          'Employee not found',
-          'Invalid client name',
-        ]
-
         const retryableRows = failedLedgerRows.filter((row) => {
           const msg = row.error_message ?? ''
-          return !PERMANENT_APPLY_ERROR_PATTERNS.some((pattern) => msg.includes(pattern))
+          return classifyBooksyFailure(msg).retryable
         })
 
         const failedEventIds = retryableRows
