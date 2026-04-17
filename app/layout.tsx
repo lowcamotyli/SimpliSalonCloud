@@ -63,6 +63,7 @@ export default function RootLayout({
           </TooltipProvider>
         </QueryProvider>
         <Toaster position="top-right" richColors />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')` }} />
       </body>
     </html>
   )
