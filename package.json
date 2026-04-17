@@ -19,6 +19,7 @@
     "types:generate": "npx supabase gen types typescript --project-id ubkueiwelarplnbhqmoa --schema public > types/database.ts"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-checkbox": "^1.0.4",

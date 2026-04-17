@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Cormorant_Garamond, Inter, Manrope } from "next/font/google"
 import { Toaster } from "sonner"
 import { validateEnv } from "@/lib/config/validate-env"
@@ -27,9 +27,24 @@ const previewDisplay = Cormorant_Garamond({
   variable: '--font-preview-display',
 })
 
+export const viewport: Viewport = {
+  themeColor: '#1C2340',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata: Metadata = {
   title: "SimpliSalon - System zarządzania salonem",
   description: "Kompleksowy system do zarządzania salonem piękności",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SimpliSalon',
+  },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
 }
 
 import { TooltipProvider } from "@/components/ui/tooltip"
