@@ -318,29 +318,38 @@ export async function findRescheduleMatch(
   if (!parsed.oldDate || parsed.oldDate === 'unknown' || parsed.oldTime === 'unknown') {
     const now = new Date()
     const end = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+    const nowDate = now.toISOString().slice(0, 10)
+    const endDate = end.toISOString().slice(0, 10)
     const { data, error } = await (supabase
-      .from('appointments') as any)
-      .select('id, start_time, status, clients(full_name), services(name)')
+      .from('bookings') as any)
+      .select('id, booking_date, booking_time, status, clients(full_name), services(name)')
       .eq('salon_id', salonId)
       .in('status', appointmentStatuses)
-      .gte('start_time', now.toISOString())
-      .lte('start_time', end.toISOString())
+      .gte('booking_date', nowDate)
+      .lte('booking_date', endDate)
 
     if (error) {
       throw error
     }
 
     const matchingCandidates: FutureBookingCandidate[] = []
-    for (const [, appointment] of ((data ?? []) as AppointmentRow[]).entries()) {
-      const clientName = appointment.clients?.full_name
-      const serviceName = appointment.services?.name
+    for (const [, booking] of ((data ?? []) as BookingRow[]).entries()) {
+      const clientName = booking.clients?.full_name ?? null
+      const serviceName = booking.services?.name ?? null
       if (!namesMatch(clientName, parsed.clientName)) {
         continue
       }
       if (!serviceMatches(serviceName, parsed.serviceName)) {
         continue
       }
-      matchingCandidates.push(toFutureCandidate(appointment, parsed))
+      matchingCandidates.push({
+        id: booking.id,
+        appointmentDate: booking.booking_date,
+        startTime: normalizeTime(booking.booking_time),
+        clientName,
+        serviceName,
+        score: futureCandidateScore(clientName, serviceName, parsed),
+      })
     }
 
     const top5ByScore = [...matchingCandidates]
