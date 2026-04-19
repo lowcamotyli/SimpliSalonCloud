@@ -317,6 +317,59 @@ describe('Booksy parse worker route', () => {
     })
   })
 
+  it('extracts employee name for reschedule when worker is in a multiline "pracownik:" block', async () => {
+    const rawEmails: RawEmailRow[] = [
+      {
+        id: 'raw-3b',
+        salon_id: 'salon-3b',
+        subject: 'Izabela Łazorko: zmienił rezerwację i czeka na potwierdzenie',
+        from_address: '"Izabela Łazorko" <no-reply@booksy.com>',
+        storage_path: 'mail-3b.eml',
+        parse_status: 'pending',
+      },
+    ]
+    const supabase = createSupabaseStub({
+      rawEmails,
+      storageBodies: {
+        'mail-3b.eml': [
+          'Content-Type: text/plain; charset="utf-8"',
+          'Content-Transfer-Encoding: quoted-printable',
+          '',
+          'Izabela Łazorko zmienił rezerwację i czeka na potwierdzenie',
+          '',
+          'czwartek, 28 maja 2026, 10:15 - 11:30',
+          '',
+          'Manicure KSENIA: Uzupełnienie stylizacji żelowej/korekta',
+          '',
+          '180,00 zł+,',
+          '',
+          '                        10:15 - 11:30',
+          '',
+          'pracownik:',
+          '                        Ksenia',
+        ].join('\n'),
+      },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase.client)
+
+    const response = await POST(makeRequest(process.env.CRON_SECRET))
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toEqual({ processed: 1, skipped: 0, failed: 0 })
+    expect(rawEmails[0].parse_status).toBe('parsed')
+    expect(supabase.insertedParsedEvents[0].payload).toMatchObject({
+      event_type: 'rescheduled',
+      parsed: {
+        type: 'reschedule',
+        clientName: 'Izabela Łazorko',
+        employeeName: 'Ksenia',
+        bookingDate: '2026-05-28',
+        bookingTime: '10:15',
+      },
+    })
+  })
+
   it('counts duplicates as skipped when parsed event upsert hits an existing fingerprint', async () => {
     const rawEmails: RawEmailRow[] = [
       {

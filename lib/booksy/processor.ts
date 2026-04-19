@@ -880,12 +880,15 @@ export class BooksyProcessor {
           }
         }
 
+        const rescheduleEmployeeName = this.extractEmployeeName(cleanBody, { includeRolePrefix: true })
+
         return {
           type: 'reschedule',
           clientName,
           clientPhone: '',
           clientEmail: undefined,
           serviceName: rescheduleServiceName,
+          employeeName: rescheduleEmployeeName,
           price: reschedulePrice,
           bookingDate: newResult ? newResult.date : 'unknown',
           bookingTime: newResult ? newResult.time : 'unknown',
@@ -994,10 +997,7 @@ export class BooksyProcessor {
       const endMins = parseInt(endHour) * 60 + parseInt(endMinute)
       const duration = endMins - startMins
 
-      // Extract employee name
-      // Format: "Pracownik:\nKasia"
-      const employeeMatch = cleanBody.match(/(?:Pracownik|Specjalista)\s*:\s*(.+?)(?:\n|$)/im)
-      const employeeName = employeeMatch ? employeeMatch[1].trim() : undefined
+      const employeeName = this.extractEmployeeName(cleanBody)
 
       if (!employeeName) {
         logger.warn('[Booksy] Could not extract employee name - fallback resolution will be used')
@@ -1029,6 +1029,38 @@ export class BooksyProcessor {
       logger.error('[Booksy] Parse error', error as Error)
       return null
     }
+  }
+
+  private extractEmployeeName(body: string, options?: { includeRolePrefix?: boolean }): string | undefined {
+    const sanitize = (value: string | undefined): string | undefined => {
+      if (!value) return undefined
+      const cleaned = value.replace(/\s+/g, ' ').trim()
+      if (!cleaned) return undefined
+      return cleaned
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => {
+          if (part.length <= 1) return part.toUpperCase()
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+        })
+        .join(' ')
+    }
+
+    // "Pracownik: Ksenia"
+    const inlineName = sanitize(body.match(/(?:Pracownik|Specjalista)\s*:\s*([^\r\n]+)/im)?.[1])
+    if (inlineName) return inlineName
+
+    // "pracownik:\n  Ksenia"
+    const multilineName = sanitize(body.match(/(?:Pracownik|Specjalista)\s*:\s*(?:\r?\n)+\s*([^\r\n]+)/im)?.[1])
+    if (multilineName) return multilineName
+
+    if (options?.includeRolePrefix) {
+      // "Manicure KSENIA: Uzupełnienie ..."
+      const rolePrefixName = sanitize(body.match(/\b(?:Manicure|Pedicure)\s+([\p{L}\-]+(?:\s+[\p{L}\-]+)?)\s*:/iu)?.[1])
+      if (rolePrefixName) return rolePrefixName
+    }
+
+    return undefined
   }
 
   /**
