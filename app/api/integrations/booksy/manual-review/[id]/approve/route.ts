@@ -13,6 +13,7 @@ type RouteContext = {
 
 type ApproveRequestBody = {
   bookingId?: string
+  employeeId?: string
 }
 
 export const POST = withErrorHandling(async (request: NextRequest, context: RouteContext) => {
@@ -24,6 +25,9 @@ export const POST = withErrorHandling(async (request: NextRequest, context: Rout
   const body = await request.json().catch(() => ({})) as ApproveRequestBody
   const bookingId = typeof body.bookingId === 'string' && body.bookingId.trim().length > 0
     ? body.bookingId.trim()
+    : undefined
+  const employeeId = typeof body.employeeId === 'string' && body.employeeId.trim().length > 0
+    ? body.employeeId.trim()
     : undefined
 
   const { supabase, salonId } = await getAuthContext()
@@ -47,7 +51,7 @@ export const POST = withErrorHandling(async (request: NextRequest, context: Rout
     .eq('salon_id', salonId)
     .eq('operation', 'skipped')
 
-  const result = await applyParsedEvent(id, { bookingId })
+  const result = await applyParsedEvent(id, { bookingId, employeeId })
 
   // If processor still returns manual_review (ambiguous match without bookingId override),
   // force-mark the event as applied so it leaves the queue — user explicitly approved.

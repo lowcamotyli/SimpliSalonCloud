@@ -73,6 +73,7 @@ interface ManualReviewCandidate {
 interface ManualReviewParsedPayload {
   clientName?: string
   serviceName?: string
+  employeeName?: string
   bookingDate?: string
   bookingTime?: string
 }
@@ -97,6 +98,7 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   const [targetServiceId, setTargetServiceId] = useState<string>('')
   const [targetEmployeeId, setTargetEmployeeId] = useState<string>('')
   const [selectedCandidates, setSelectedCandidates] = useState<Record<string, string>>({})
+  const [selectedManualEmployees, setSelectedManualEmployees] = useState<Record<string, string>>({})
 
   const { data: pendingData, isLoading: isLoadingPending } = useQuery({
     queryKey: ['booksy-pending', salonId],
@@ -197,11 +199,21 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   })
 
   const approveManualReviewMutation = useMutation({
-    mutationFn: async ({ parsedEventId, bookingId, eventType }: { parsedEventId: string; bookingId?: string; eventType?: string }) => {
+    mutationFn: async ({
+      parsedEventId,
+      bookingId,
+      employeeId,
+      eventType,
+    }: {
+      parsedEventId: string
+      bookingId?: string
+      employeeId?: string
+      eventType?: string
+    }) => {
       const res = await fetch(`/api/integrations/booksy/manual-review/${encodeURIComponent(parsedEventId)}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId }),
+        body: JSON.stringify({ bookingId, employeeId }),
       })
       if (!res.ok) {
         const errorPayload = await res.json().catch(() => ({}))
@@ -480,6 +492,8 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                 const parsed = item.payload?.parsed ?? item.parsed ?? null
                 const candidates = item.candidate_bookings ?? []
                 const selectedBookingId = selectedCandidates[item.id] ?? ''
+                const selectedEmployeeId = selectedManualEmployees[item.id] ?? ''
+                const needsEmployeeSelection = candidates.length === 0 && !parsed?.employeeName && (item.event_type === 'created' || item.event_type === 'rescheduled')
                 const isBusy = discardManualReviewMutation.isPending || approveManualReviewMutation.isPending
 
                 return (
@@ -508,8 +522,13 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                         <Button
                           size="sm"
                           className="h-7 px-2.5 text-xs"
-                          disabled={isBusy || (candidates.length > 0 && !selectedBookingId)}
-                          onClick={() => approveManualReviewMutation.mutate({ parsedEventId: item.id, bookingId: selectedBookingId || undefined, eventType: item.event_type })}
+                          disabled={isBusy || (candidates.length > 0 && !selectedBookingId) || (needsEmployeeSelection && !selectedEmployeeId)}
+                          onClick={() => approveManualReviewMutation.mutate({
+                            parsedEventId: item.id,
+                            bookingId: selectedBookingId || undefined,
+                            employeeId: selectedEmployeeId || undefined,
+                            eventType: item.event_type,
+                          })}
                         >
                           {approveManualReviewMutation.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
                           Zatwierdź
@@ -530,6 +549,26 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                           </label>
                         ))}
                       </RadioGroup>
+                    ) : null}
+                    {needsEmployeeSelection ? (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium">Wybierz pracownika do utworzenia wizyty</label>
+                        <Select
+                          value={selectedEmployeeId}
+                          onValueChange={(value) => setSelectedManualEmployees((prev) => ({ ...prev, [item.id]: value }))}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Wybierz pracownika..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(employees ?? []).map((employee) => (
+                              <SelectItem key={employee.id} value={employee.id}>
+                                {employee.first_name} {employee.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     ) : null}
                   </div>
                 )

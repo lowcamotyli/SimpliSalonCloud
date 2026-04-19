@@ -41,6 +41,7 @@ interface ProcessEmailOptions {
 
 type ApplyParsedEventOptions = {
   bookingId?: string
+  employeeId?: string
 }
 
 interface BooksyAutomationSettings {
@@ -483,20 +484,24 @@ export class BooksyProcessor {
       if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
         throw new ValidationError('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
       }
-      return this.handleReschedule(parsed, options?.bookingId, eventMarker)
+      return this.handleReschedule(parsed, options?.bookingId, eventMarker, options?.employeeId)
     }
 
-    const booking = await this.createBookingFromParsed(parsed, eventMarker)
+    const booking = await this.createBookingFromParsed(parsed, eventMarker, options?.employeeId)
     return { success: true, booking, parsed }
   }
 
-  private async createBookingFromParsed(parsed: ParsedBooking, eventMarker: string | null) {
+  private async createBookingFromParsed(
+    parsed: ParsedBooking,
+    eventMarker: string | null,
+    forcedEmployeeId?: string
+  ) {
     logger.info('[Booksy] Step 2: Finding/creating client')
     const client = await this.findOrCreateClient(parsed)
     logger.info('[Booksy] Step 2: Client found/created', { clientId: client.id })
 
     logger.info('[Booksy] Step 3: Finding employee')
-    const employee = await this.resolveEmployee(parsed.employeeName)
+    const employee = await this.resolveEmployee(parsed.employeeName, forcedEmployeeId)
     if (!employee) {
       throw new EmployeeNotFoundError(`Employee not found${parsed.employeeName ? `: ${parsed.employeeName}` : ''}`)
     }
@@ -646,7 +651,12 @@ export class BooksyProcessor {
   /**
    * Handle booking reschedule
    */
-  private async handleReschedule(parsed: ParsedBooking, forcedBookingId?: string, eventMarker: string | null = null) {
+  private async handleReschedule(
+    parsed: ParsedBooking,
+    forcedBookingId?: string,
+    eventMarker: string | null = null,
+    forcedEmployeeId?: string
+  ) {
     if (parsed.oldDate && parsed.oldDate !== 'unknown' && !parsed.oldTime) {
       throw new BooksyManualReviewError(
         'missing_old_date',
@@ -715,7 +725,7 @@ export class BooksyProcessor {
           clientName: parsed.clientName,
           oldDate: parsed.oldDate,
         })
-        const booking = await this.createBookingFromParsed(parsed, eventMarker)
+        const booking = await this.createBookingFromParsed(parsed, eventMarker, forcedEmployeeId)
         return { success: true, type: 'reschedule', createdFromReschedule: true, booking }
       }
       throw new AmbiguousMatchError(
@@ -1202,7 +1212,27 @@ export class BooksyProcessor {
   /**
    * Resolve employee by name, fallback to the only active employee.
    */
-  private async resolveEmployee(name?: string) {
+  private async resolveEmployee(name?: string, forcedEmployeeId?: string) {
+    if (forcedEmployeeId) {
+      const { data: forcedEmployee, error: forcedEmployeeError } = await this.supabase
+        .from('employees')
+        .select('*')
+        .eq('id', forcedEmployeeId)
+        .eq('salon_id', this.salonId)
+        .is('deleted_at', null)
+        .maybeSingle()
+
+      if (forcedEmployeeError) {
+        throw forcedEmployeeError
+      }
+
+      if (forcedEmployee) {
+        return forcedEmployee
+      }
+
+      throw new EmployeeNotFoundError(`Employee not found: ${forcedEmployeeId}`)
+    }
+
     if (name?.trim()) {
       const byName = await this.findEmployeeByName(name)
       if (byName) {

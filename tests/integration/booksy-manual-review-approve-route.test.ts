@@ -78,7 +78,7 @@ describe('Booksy manual review approve route', () => {
     vi.clearAllMocks()
   })
 
-  it('forwards bookingId override to applyParsedEvent', async () => {
+  it('forwards bookingId and employeeId overrides to applyParsedEvent', async () => {
     const eventId = 'evt-123'
     const salonId = 'salon-123'
     const supabase = createSupabaseStub(eventId, salonId)
@@ -91,7 +91,7 @@ describe('Booksy manual review approve route', () => {
     const request = new NextRequest(`http://localhost/api/integrations/booksy/manual-review/${eventId}/approve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ bookingId: ' booking-77 ' }),
+      body: JSON.stringify({ bookingId: ' booking-77 ', employeeId: ' emp-22 ' }),
     })
 
     const response = await POST(request, { params: Promise.resolve({ id: eventId }) })
@@ -99,7 +99,6 @@ describe('Booksy manual review approve route', () => {
 
     expect(response.status).toBe(200)
     expect(payload).toEqual({ success: true, result: { success: true, type: 'reschedule' } })
-    expect(applyParsedEventMock).toHaveBeenCalledWith(eventId, { bookingId: 'booking-77' })
+    expect(applyParsedEventMock).toHaveBeenCalledWith(eventId, { bookingId: 'booking-77', employeeId: 'emp-22' })
   })
 })
-
