@@ -483,9 +483,14 @@ export class BooksyProcessor {
       if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
         throw new ValidationError('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
       }
-      return this.handleReschedule(parsed, options?.bookingId)
+      return this.handleReschedule(parsed, options?.bookingId, eventMarker)
     }
 
+    const booking = await this.createBookingFromParsed(parsed, eventMarker)
+    return { success: true, booking, parsed }
+  }
+
+  private async createBookingFromParsed(parsed: ParsedBooking, eventMarker: string | null) {
     logger.info('[Booksy] Step 2: Finding/creating client')
     const client = await this.findOrCreateClient(parsed)
     logger.info('[Booksy] Step 2: Client found/created', { clientId: client.id })
@@ -521,8 +526,7 @@ export class BooksyProcessor {
       notes: eventMarker,
     })
     logger.info('[Booksy] Step 5: Booking created', { bookingId: booking.id })
-
-    return { success: true, booking, parsed }
+    return booking
   }
 
   private async resolveRawEmailId(messageId?: string): Promise<string | null> {
@@ -642,7 +646,7 @@ export class BooksyProcessor {
   /**
    * Handle booking reschedule
    */
-  private async handleReschedule(parsed: ParsedBooking, forcedBookingId?: string) {
+  private async handleReschedule(parsed: ParsedBooking, forcedBookingId?: string, eventMarker: string | null = null) {
     if (parsed.oldDate && parsed.oldDate !== 'unknown' && !parsed.oldTime) {
       throw new BooksyManualReviewError(
         'missing_old_date',
@@ -707,11 +711,12 @@ export class BooksyProcessor {
     if (match.kind === 'none') {
       if (match.candidates.length === 0) {
         // No booking at old or new date, no candidates — pre-integration booking. Auto-resolve.
-        logger.info('[Booksy] Reschedule target not found with no candidates — auto-resolving (pre-integration booking)', {
+        logger.info('[Booksy] Reschedule target not found with no candidates - creating new booking fallback', {
           clientName: parsed.clientName,
           oldDate: parsed.oldDate,
         })
-        return { success: true, type: 'reschedule', autoResolved: true, reason: 'not_found_pre_integration' }
+        const booking = await this.createBookingFromParsed(parsed, eventMarker)
+        return { success: true, type: 'reschedule', createdFromReschedule: true, booking }
       }
       throw new AmbiguousMatchError(
         `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate ?? 'unknown'} ${parsed.oldTime ?? 'unknown'}`,
