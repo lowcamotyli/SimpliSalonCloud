@@ -155,17 +155,29 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   })
 
   const ignoreMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/integrations/booksy/pending/${id}`, {
+    mutationFn: async ({ id, source }: { id: string; source?: 'pending_email' | 'manual_review' }) => {
+      const isManualReviewSource = source === 'manual_review'
+      const endpoint = isManualReviewSource
+        ? '/api/internal/booksy/manual-review'
+        : `/api/integrations/booksy/pending/${id}`
+      const body = isManualReviewSource
+        ? { parsedEventId: id, action: 'discard' as const }
+        : { status: 'ignored' as const }
+
+      const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'ignored' }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error('Blad podczas ignorowania')
+      return { source }
     },
-    onSuccess: () => {
+    onSuccess: ({ source }) => {
       toast.success('Wpis zignorowany — nie będzie już widoczny w kolejce')
       queryClient.invalidateQueries({ queryKey: ['booksy-pending', salonId] })
+      if (source === 'manual_review') {
+        queryClient.invalidateQueries({ queryKey: ['booksy-manual-review', salonId] })
+      }
     },
     onError: () => toast.error('Nie udało się zignorować wpisu'),
   })
@@ -480,7 +492,7 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                             {tooltipText ? <TooltipContent><p>{tooltipText}</p></TooltipContent> : null}
                           </Tooltip>
                         </TooltipProvider>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => ignoreMutation.mutate(item.id)} disabled={ignoreMutation.isPending}>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => ignoreMutation.mutate({ id: item.id, source: item.source })} disabled={ignoreMutation.isPending}>
                           <Trash2 className="h-3.5 w-3.5" />
                           <span className="sr-only">Ignoruj</span>
                         </Button>

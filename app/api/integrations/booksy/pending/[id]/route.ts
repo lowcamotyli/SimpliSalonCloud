@@ -220,9 +220,9 @@ export const PATCH = withErrorHandling(async (
   if (!row) throw new NotFoundError('Pending email')
 
   if (row.source === 'pending_email') {
-    const updateData: Record<string, unknown> = { status }
-    if (status === 'resolved') {
-      updateData.resolved_at = new Date().toISOString()
+    const updateData: Record<string, unknown> = {
+      status,
+      resolved_at: new Date().toISOString(),
     }
 
     const { data: updatedRow, error } = await (supabase as any).from('booksy_pending_emails')
@@ -239,12 +239,15 @@ export const PATCH = withErrorHandling(async (
   }
 
   const targetStatus = status === 'ignored' ? 'discarded' : 'applied'
-  const { error } = await (supabase as any).from('booksy_parsed_events')
+  const { data: updatedManualRow, error } = await (supabase as any).from('booksy_parsed_events')
     .update({ status: targetStatus })
     .eq('id', id)
     .eq('salon_id', profile.salon_id)
+    .select('id')
+    .maybeSingle()
 
   if (error) throw error
+  if (!updatedManualRow?.id) throw new NotFoundError('Pending email')
 
   return NextResponse.json({ success: true, pending: { id, status: targetStatus, source: 'manual_review' } })
 })
