@@ -554,11 +554,11 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
                         className="space-y-1"
                       >
                         {candidates.map((candidate) => (
-                          <label key={candidate.id} htmlFor={`mr-${item.id}-${candidate.id}`} className="flex cursor-pointer items-center gap-2 rounded border bg-muted/30 px-2 py-1.5 text-xs hover:bg-muted/60">
-                            <RadioGroupItem id={`mr-${item.id}-${candidate.id}`} value={candidate.id} />
+                          <button key={candidate.id} type="button" onClick={() => setSelectedCandidates((prev) => ({ ...prev, [item.id]: candidate.id }))} className="flex w-full cursor-pointer items-center gap-2 rounded border bg-muted/30 px-2 py-1.5 text-left text-xs hover:bg-muted/60" aria-pressed={selectedBookingId === candidate.id}>
+                            <RadioGroupItem id={`mr-${item.id}-${candidate.id}`} value={candidate.id} onClick={(event) => event.stopPropagation()} />
                             <span className="font-medium">{formatDate(candidate.appointmentDate, candidate.startTime)}</span>
                             <span className="text-muted-foreground">{candidate.clientName ?? '-'} · {candidate.serviceName ?? '-'}</span>
-                          </label>
+                          </button>
                         ))}
                       </RadioGroup>
                     ) : null}

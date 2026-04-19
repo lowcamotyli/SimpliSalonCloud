@@ -53,14 +53,40 @@ export const POST = withErrorHandling(async (request: NextRequest, context: Rout
 
   const result = await applyParsedEvent(id, { bookingId, employeeId })
 
-  // If processor still returns manual_review (ambiguous match without bookingId override),
-  // force-mark the event as applied so it leaves the queue — user explicitly approved.
-  const stillManualReview = result && typeof result === 'object' && 'manualReview' in result && result.manualReview
+  // Never force-close manual review rows as applied. If apply still needs manual intervention,
+  // return a non-2xx response so UI keeps the item in queue and user can correct inputs.
+  const stillManualReview = Boolean(
+    result &&
+    typeof result === 'object' &&
+    'manualReview' in result &&
+    (result as { manualReview?: boolean }).manualReview
+  )
   if (stillManualReview) {
-    await (adminSupabase.from('booksy_parsed_events') as any)
-      .update({ status: 'applied' })
-      .eq('id', id)
-      .eq('salon_id', salonId)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Wpis nadal wymaga ręcznej decyzji. Wybierz właściwą wizytę lub pracownika.',
+        result,
+      },
+      { status: 409 }
+    )
+  }
+
+  const { data: refreshedEvent } = await (adminSupabase.from('booksy_parsed_events') as any)
+    .select('status')
+    .eq('id', id)
+    .eq('salon_id', salonId)
+    .maybeSingle()
+
+  if (refreshedEvent?.status !== 'applied') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Nie udało się zastosować zmian do kalendarza. Wpis pozostał w kolejce ręcznej.',
+        result,
+      },
+      { status: 409 }
+    )
   }
 
   return NextResponse.json({ success: true, result })
