@@ -8,6 +8,14 @@ import {
   findRescheduleMatch,
 } from '@/lib/booksy/booking-match'
 import { classifyBooksyFailure } from '@/lib/booksy/retry-policy'
+import {
+  AmbiguousMatchError,
+  BookingAlreadyAppliedError,
+  BookingNotFoundError,
+  EmployeeNotFoundError,
+  ServiceNotFoundError,
+  ValidationError,
+} from './errors'
 
 interface ParsedBooking {
   type: 'new' | 'cancel' | 'reschedule'
@@ -336,6 +344,22 @@ export class BooksyProcessor {
       }
     }
 
+    if (error instanceof BookingNotFoundError) {
+      return {
+        reviewReason: 'cancel_not_found',
+        reviewDetail: message,
+        candidateBookings: [],
+      }
+    }
+
+    if (error instanceof AmbiguousMatchError) {
+      return {
+        reviewReason: 'ambiguous_match',
+        reviewDetail: message,
+        candidateBookings: error.candidates ?? [],
+      }
+    }
+
     const classification = classifyBooksyFailure(message)
     if (classification.code === 'validation' || classification.code === 'unknown') {
       return {
@@ -431,7 +455,7 @@ export class BooksyProcessor {
 
       if (existingEventError) throw existingEventError
       if (!existingEvent?.id) {
-        throw new Error('Parsed event already exists but could not be fetched')
+        throw new BookingAlreadyAppliedError('Parsed event already exists but could not be fetched')
       }
 
       return existingEvent.id
@@ -449,7 +473,7 @@ export class BooksyProcessor {
     if (parsed.type === 'reschedule') {
       logger.info('[Booksy] Handling reschedule for:', { clientName: parsed.clientName })
       if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
-        throw new Error('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
+        throw new ValidationError('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
       }
       return this.handleReschedule(parsed)
     }
@@ -461,7 +485,7 @@ export class BooksyProcessor {
     logger.info('[Booksy] Step 3: Finding employee')
     const employee = await this.resolveEmployee(parsed.employeeName)
     if (!employee) {
-      throw new Error(`Employee not found${parsed.employeeName ? `: ${parsed.employeeName}` : ''}`)
+      throw new EmployeeNotFoundError(`Employee not found${parsed.employeeName ? `: ${parsed.employeeName}` : ''}`)
     }
     logger.info('[Booksy] Step 3: Employee found', { employeeId: employee.id })
 
@@ -470,7 +494,7 @@ export class BooksyProcessor {
     if (!service) {
       const settings = await this.getAutomationSettings()
       if (!settings.autoCreateServices) {
-        throw new Error(`Service not found: ${parsed.serviceName}`)
+        throw new ServiceNotFoundError(`Service not found: ${parsed.serviceName}`)
       }
 
       service = await this.createServiceFromParsedBooking(parsed)
@@ -550,22 +574,14 @@ export class BooksyProcessor {
     }
 
     if (match.kind === 'ambiguous') {
-      throw new BooksyManualReviewError(
-        'ambiguous_match',
+      throw new AmbiguousMatchError(
         `Cancellation match ambiguous for ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`,
         match.candidates
       )
     }
 
     if (match.kind === 'none') {
-      return {
-        success: false,
-        manualReview: true,
-        type: 'cancel',
-        reviewReason: 'cancel_not_found' as const,
-        reviewDetail: 'Wizyta nie znaleziona w systemie (prawdopodobnie sprzed integracji)',
-        candidateBookings: [],
-      }
+      throw new BookingNotFoundError('cancel_not_found: Wizyta nie znaleziona w systemie (prawdopodobnie sprzed integracji)')
     }
 
     const { data: updated, error: updateError } = await this.supabase
@@ -606,16 +622,14 @@ export class BooksyProcessor {
     }
 
     if (match.kind === 'ambiguous') {
-      throw new BooksyManualReviewError(
-        'ambiguous_match',
+      throw new AmbiguousMatchError(
         `Reschedule match ambiguous for ${parsed.clientName}`,
         match.candidates
       )
     }
 
     if (match.kind === 'none') {
-      throw new BooksyManualReviewError(
-        'ambiguous_match',
+      throw new AmbiguousMatchError(
         `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate ?? 'unknown'} ${parsed.oldTime ?? 'unknown'}`,
         match.candidates
       )
@@ -1200,7 +1214,7 @@ export class BooksyProcessor {
     const serviceName = this.sanitizeServiceNameForAutoCreate(parsed.serviceName)
 
     if (!serviceName) {
-      throw new Error(`Service not found: ${parsed.serviceName}`)
+      throw new ServiceNotFoundError(`Service not found: ${parsed.serviceName}`)
     }
 
     const { data: service, error } = await this.supabase

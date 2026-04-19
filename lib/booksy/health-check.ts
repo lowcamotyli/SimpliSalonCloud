@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 export interface MailboxHealth {
   accountId: string
@@ -20,6 +21,8 @@ export interface MailboxHealth {
 type SalonHealth = {
   overall: 'ok' | 'warning' | 'critical'
   mailboxes: MailboxHealth[]
+  manualReviewCount: number
+  manualReviewStale: number
 }
 
 type GmailAccountRow = {
@@ -360,14 +363,47 @@ export async function getSalonHealth(
   salonId: string,
   supabase: SupabaseClient
 ): Promise<SalonHealth> {
-  const { data, error } = await supabase
-    .from('booksy_gmail_accounts')
-    .select('id')
-    .eq('salon_id', salonId)
-    .eq('is_active', true)
+  const staleSinceIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const [{ data, error }, manualReviewCountResult, manualReviewStaleResult] = await Promise.all([
+    supabase
+      .from('booksy_gmail_accounts')
+      .select('id')
+      .eq('salon_id', salonId)
+      .eq('is_active', true),
+    supabase
+      .from('booksy_parsed_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('salon_id', salonId)
+      .eq('status', 'manual_review'),
+    supabase
+      .from('booksy_parsed_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('salon_id', salonId)
+      .eq('status', 'manual_review')
+      .lt('created_at', staleSinceIso),
+  ])
 
   if (error) {
     throw new Error(`Failed to load salon Booksy Gmail accounts: ${error.message}`)
+  }
+
+  if (manualReviewCountResult.error) {
+    throw new Error(`Failed to load manual review count: ${manualReviewCountResult.error.message}`)
+  }
+
+  if (manualReviewStaleResult.error) {
+    throw new Error(`Failed to load stale manual review count: ${manualReviewStaleResult.error.message}`)
+  }
+
+  const manualReviewCount = toCount(manualReviewCountResult.count)
+  const manualReviewStale = toCount(manualReviewStaleResult.count)
+
+  if (manualReviewStale > 3) {
+    logger.warn('Booksy manual_review stale backlog', {
+      salonId,
+      staleCount: manualReviewStale,
+    })
   }
 
   const mailboxes = await Promise.all(
@@ -393,5 +429,7 @@ export async function getSalonHealth(
   return {
     overall,
     mailboxes,
+    manualReviewCount,
+    manualReviewStale,
   }
 }

@@ -1,3 +1,12 @@
+import {
+  AmbiguousMatchError,
+  BookingAlreadyAppliedError,
+  BookingNotFoundError,
+  EmployeeNotFoundError,
+  ServiceNotFoundError,
+  ValidationError,
+} from './errors'
+
 export type BooksyFailureCode =
   | 'schema_drift'
   | 'timeout'
@@ -5,8 +14,11 @@ export type BooksyFailureCode =
   | 'cancel_not_found'
   | 'reschedule_not_found'
   | 'ambiguous_match'
+  | 'service_not_found'
+  | 'employee_not_found'
   | 'missing_old_date'
   | 'validation'
+  | 'already_applied'
   | 'unknown'
 
 export type BooksyFailureClassification = {
@@ -36,8 +48,34 @@ const PERMANENT_PATTERNS: Array<{ code: BooksyFailureCode; pattern: RegExp }> = 
   { code: 'validation', pattern: /client phone is required|employee not found|invalid client name/i },
 ]
 
-export function classifyBooksyFailure(message: string | null | undefined): BooksyFailureClassification {
-  const normalized = message ?? ''
+export function classifyBooksyFailure(message: string | null | undefined): BooksyFailureClassification
+export function classifyBooksyFailure(error: unknown): BooksyFailureClassification
+export function classifyBooksyFailure(input: unknown): BooksyFailureClassification {
+  if (input instanceof BookingNotFoundError) {
+    return { code: 'cancel_not_found', retryable: false }
+  }
+
+  if (input instanceof AmbiguousMatchError) {
+    return { code: 'ambiguous_match', retryable: false }
+  }
+
+  if (input instanceof ServiceNotFoundError) {
+    return { code: 'service_not_found', retryable: false }
+  }
+
+  if (input instanceof EmployeeNotFoundError) {
+    return { code: 'employee_not_found', retryable: false }
+  }
+
+  if (input instanceof ValidationError) {
+    return { code: 'validation', retryable: false }
+  }
+
+  if (input instanceof BookingAlreadyAppliedError) {
+    return { code: 'already_applied', retryable: false }
+  }
+
+  const normalized = typeof input === 'string' ? input : input instanceof Error ? input.message : ''
 
   if (/gmail history cursor expired/i.test(normalized)) {
     return { code: 'gmail_cursor_expired', retryable: false }
@@ -56,9 +94,11 @@ export function classifyBooksyFailure(message: string | null | undefined): Books
     return { code: permanent.code, retryable: false }
   }
 
-  return { code: 'unknown', retryable: false }
+  return { code: 'unknown', retryable: true }
 }
 
-export function isRetryableBooksyFailure(message: string | null | undefined): boolean {
-  return classifyBooksyFailure(message).retryable
+export function isRetryableBooksyFailure(message: string | null | undefined): boolean
+export function isRetryableBooksyFailure(error: unknown): boolean
+export function isRetryableBooksyFailure(input: unknown): boolean {
+  return classifyBooksyFailure(input).retryable
 }
