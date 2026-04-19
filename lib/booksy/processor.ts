@@ -39,6 +39,10 @@ interface ProcessEmailOptions {
   messageId?: string  // Gmail message ID — used to save failed emails for manual review
 }
 
+type ApplyParsedEventOptions = {
+  bookingId?: string
+}
+
 interface BooksyAutomationSettings {
   autoCreateClients: boolean
   autoCreateServices: boolean
@@ -131,7 +135,7 @@ export class BooksyProcessor {
     }
   }
 
-  async applyParsedEvent(parsedEventId: string): Promise<any> {
+  async applyParsedEvent(parsedEventId: string, options?: ApplyParsedEventOptions): Promise<any> {
     const { data: parsedEvent, error: parsedEventError } = await this.supabase
       .from('booksy_parsed_events')
       .select('*')
@@ -202,7 +206,7 @@ export class BooksyProcessor {
         throw new Error('Parsed event payload is missing parsed booking data')
       }
 
-      const applyResult = await this.applyParsedPayload(parsed, payload?.eventMarker ?? null)
+      const applyResult = await this.applyParsedPayload(parsed, payload?.eventMarker ?? null, options)
       if (this.isManualReviewApplyResult(applyResult)) {
         const { error: updateLedgerError } = await this.supabase
           .from('booksy_apply_ledger')
@@ -464,10 +468,14 @@ export class BooksyProcessor {
     throw createdEventError
   }
 
-  private async applyParsedPayload(parsed: ParsedBooking, eventMarker: string | null): Promise<any> {
+  private async applyParsedPayload(
+    parsed: ParsedBooking,
+    eventMarker: string | null,
+    options?: ApplyParsedEventOptions
+  ): Promise<any> {
     if (parsed.type === 'cancel') {
       logger.info('[Booksy] Handling cancellation for:', { clientName: parsed.clientName })
-      return this.handleCancellation(parsed)
+      return this.handleCancellation(parsed, options?.bookingId)
     }
 
     if (parsed.type === 'reschedule') {
@@ -475,7 +483,7 @@ export class BooksyProcessor {
       if (parsed.bookingDate === 'unknown' || parsed.bookingTime === 'unknown') {
         throw new ValidationError('Zmiana na inny termin (brak podanej nowej daty w e-mailu)')
       }
-      return this.handleReschedule(parsed)
+      return this.handleReschedule(parsed, options?.bookingId)
     }
 
     logger.info('[Booksy] Step 2: Finding/creating client')
@@ -564,7 +572,34 @@ export class BooksyProcessor {
   /**
    * Handle booking cancellation
    */
-  private async handleCancellation(parsed: ParsedBooking) {
+  private async handleCancellation(parsed: ParsedBooking, forcedBookingId?: string) {
+    if (forcedBookingId) {
+      const { data: forcedBooking, error: forcedBookingError } = await this.supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', forcedBookingId)
+        .eq('salon_id', this.salonId)
+        .maybeSingle()
+
+      if (forcedBookingError) throw forcedBookingError
+      if (!forcedBooking) {
+        throw new BookingNotFoundError(`Booking to cancel not found: ${forcedBookingId}`)
+      }
+
+      const { data: updatedForced, error: updateForcedError } = await this.supabase
+        .from('bookings')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', forcedBooking.id)
+        .eq('salon_id', this.salonId)
+        .select()
+        .single()
+
+      if (updateForcedError) throw updateForcedError
+
+      logger.info('[Booksy] Booking cancelled (manual override)', { bookingId: forcedBooking.id })
+      return { success: true, type: 'cancel', booking: updatedForced }
+    }
+
     const isForwarded = parsed.source === 'forwarded'
     const match = await findCancellationMatch(this.supabase, this.salonId, parsed, isForwarded)
 
@@ -607,12 +642,47 @@ export class BooksyProcessor {
   /**
    * Handle booking reschedule
    */
-  private async handleReschedule(parsed: ParsedBooking) {
+  private async handleReschedule(parsed: ParsedBooking, forcedBookingId?: string) {
     if (parsed.oldDate && parsed.oldDate !== 'unknown' && !parsed.oldTime) {
       throw new BooksyManualReviewError(
         'missing_old_date',
         'Missing old date/time for rescheduling'
       )
+    }
+
+    if (forcedBookingId) {
+      const { data: forcedBooking, error: forcedBookingError } = await this.supabase
+        .from('bookings')
+        .select('id')
+        .eq('id', forcedBookingId)
+        .eq('salon_id', this.salonId)
+        .maybeSingle()
+
+      if (forcedBookingError) throw forcedBookingError
+      if (!forcedBooking) {
+        throw new BookingNotFoundError(`Booking to reschedule not found: ${forcedBookingId}`)
+      }
+
+      const { data: updatedForced, error: updateForcedError } = await this.supabase
+        .from('bookings')
+        .update({
+          booking_date: parsed.bookingDate,
+          booking_time: parsed.bookingTime,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', forcedBooking.id)
+        .eq('salon_id', this.salonId)
+        .select()
+        .single()
+
+      if (updateForcedError) throw updateForcedError
+
+      logger.info('[Booksy] Booking rescheduled (manual override)', {
+        bookingId: forcedBooking.id,
+        newDate: parsed.bookingDate,
+        newTime: parsed.bookingTime,
+      })
+      return { success: true, type: 'reschedule', booking: updatedForced }
     }
 
     const isForwarded = parsed.source === 'forwarded'
@@ -1399,7 +1469,7 @@ export class BooksyProcessor {
   }
 }
 
-export async function applyParsedEvent(parsedEventId: string): Promise<any> {
+export async function applyParsedEvent(parsedEventId: string, options?: ApplyParsedEventOptions): Promise<any> {
   const supabase = createAdminSupabaseClient()
   const { data: parsedEvent, error: parsedEventError } = await supabase
     .from('booksy_parsed_events')
@@ -1412,5 +1482,5 @@ export async function applyParsedEvent(parsedEventId: string): Promise<any> {
   }
 
   const processor = new BooksyProcessor(supabase as unknown as SupabaseClient, parsedEvent.salon_id)
-  return processor.applyParsedEvent(parsedEventId)
+  return processor.applyParsedEvent(parsedEventId, options)
 }

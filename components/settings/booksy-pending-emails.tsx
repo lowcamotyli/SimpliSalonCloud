@@ -197,10 +197,11 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   })
 
   const approveManualReviewMutation = useMutation({
-    mutationFn: async ({ parsedEventId, eventType }: { parsedEventId: string; bookingId?: string; eventType?: string }) => {
+    mutationFn: async ({ parsedEventId, bookingId, eventType }: { parsedEventId: string; bookingId?: string; eventType?: string }) => {
       const res = await fetch(`/api/integrations/booksy/manual-review/${encodeURIComponent(parsedEventId)}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
       })
       if (!res.ok) {
         const errorPayload = await res.json().catch(() => ({}))
