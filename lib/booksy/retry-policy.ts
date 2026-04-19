@@ -29,7 +29,7 @@ const TIMEOUT_PATTERNS = [
 ]
 
 const PERMANENT_PATTERNS: Array<{ code: BooksyFailureCode; pattern: RegExp }> = [
-  { code: 'cancel_not_found', pattern: /booking to cancel not found|cancel_not_found/i },
+  { code: 'cancel_not_found', pattern: /booking to cancel not found|cancel_not_found|wizyta nie znaleziona w systemie|prawdopodobnie sprzed integracji/i },
   { code: 'reschedule_not_found', pattern: /booking to reschedule not found|brak aktywnej rezerwacji|reschedule_not_found/i },
   { code: 'ambiguous_match', pattern: /wymagana reczna weryfikacja|ambiguous/i },
   { code: 'missing_old_date', pattern: /missing old date|brak podanej nowej daty/i },

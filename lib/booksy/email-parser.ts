@@ -5,6 +5,7 @@
 
 interface BooksyEmailData {
   type: 'new' | 'change' | 'cancel'
+  source?: 'forwarded'
   clientName: string
   clientPhone: string
   serviceName: string
@@ -26,10 +27,14 @@ const MONTH_PL_TO_MM: Record<string, string> = {
   'listopada': '11', 'grudnia': '12'
 }
 
-export function parseBooksyEmail(subject: string, body: string): BooksyEmailData | null {
+export function parseBooksyEmail(subject: string, body: string, fromAddress?: string): BooksyEmailData | null {
   try {
     const lcSubj = subject.toLowerCase()
     const lcBody = body.toLowerCase()
+    const lcFromAddress = fromAddress?.toLowerCase() ?? ''
+    const isForwarded =
+      /^(fwd?|fw):/i.test(subject) ||
+      (fromAddress ? !lcFromAddress.includes('booksy.com') : false)
 
     // Detect type
     let type: 'new' | 'change' | 'cancel' = 'new'
@@ -165,6 +170,7 @@ export function parseBooksyEmail(subject: string, body: string): BooksyEmailData
 
     return {
       type,
+      source: isForwarded ? 'forwarded' : undefined,
       clientName,
       clientPhone,
       serviceName: serviceName || 'Usługa z Booksy',

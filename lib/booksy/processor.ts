@@ -7,9 +7,11 @@ import {
   findCancellationMatch,
   findRescheduleMatch,
 } from '@/lib/booksy/booking-match'
+import { classifyBooksyFailure } from '@/lib/booksy/retry-policy'
 
 interface ParsedBooking {
   type: 'new' | 'cancel' | 'reschedule'
+  source?: string
   clientName: string
   clientPhone: string
   clientEmail?: string
@@ -35,6 +37,7 @@ interface BooksyAutomationSettings {
 }
 
 type ParsedEventType = 'created' | 'cancelled' | 'rescheduled' | 'unknown'
+type ParsedEventReviewReason = 'ambiguous_match' | 'cancel_not_found' | 'validation' | 'unknown'
 
 export class BooksyProcessor {
   private automationSettingsPromise: Promise<BooksyAutomationSettings> | null = null
@@ -192,6 +195,33 @@ export class BooksyProcessor {
       }
 
       const applyResult = await this.applyParsedPayload(parsed, payload?.eventMarker ?? null)
+      if (this.isManualReviewApplyResult(applyResult)) {
+        const { error: updateLedgerError } = await this.supabase
+          .from('booksy_apply_ledger')
+          .update({
+            operation: 'skipped',
+            target_table: null,
+            target_id: null,
+            error_message: applyResult.reviewDetail,
+            applied_at: new Date().toISOString(),
+          } as any)
+          .eq('id', createdLedger.id)
+          .eq('salon_id', this.salonId)
+
+        if (updateLedgerError) {
+          logger.error('[Booksy] Failed to update apply ledger record for manual review', updateLedgerError)
+        }
+
+        await this.markParsedEventManualReview(
+          parsedEvent.id,
+          applyResult.reviewReason,
+          applyResult.reviewDetail,
+          applyResult.candidateBookings
+        )
+
+        return applyResult
+      }
+
       const operation = this.resolveLedgerOperation(parsed, applyResult)
       const targetBookingId = applyResult?.booking?.id ?? null
 
@@ -223,6 +253,39 @@ export class BooksyProcessor {
 
       return applyResult
     } catch (error: any) {
+      const manualReview = this.resolveManualReviewTransition(error)
+      if (manualReview) {
+        const { error: updateLedgerError } = await this.supabase
+          .from('booksy_apply_ledger')
+          .update({
+            operation: 'skipped',
+            target_table: null,
+            target_id: null,
+            error_message: manualReview.reviewDetail,
+            applied_at: new Date().toISOString(),
+          } as any)
+          .eq('id', createdLedger.id)
+          .eq('salon_id', this.salonId)
+
+        if (updateLedgerError) {
+          logger.error('[Booksy] Failed to update apply ledger record for manual review', updateLedgerError)
+        }
+
+        await this.markParsedEventManualReview(
+          parsedEvent.id,
+          manualReview.reviewReason,
+          manualReview.reviewDetail,
+          manualReview.candidateBookings
+        )
+
+        return {
+          success: false,
+          manualReview: true,
+          type: 'manual_review',
+          ...manualReview,
+        }
+      }
+
       await this.supabase
         .from('booksy_apply_ledger')
         .update({
@@ -234,6 +297,76 @@ export class BooksyProcessor {
         .eq('salon_id', this.salonId)
 
       throw error
+    }
+  }
+
+  private isManualReviewApplyResult(result: any): result is {
+    success: false
+    manualReview: true
+    type: 'cancel'
+    reviewReason: ParsedEventReviewReason
+    reviewDetail: string
+    candidateBookings: unknown[]
+  } {
+    return Boolean(
+      result &&
+      result.manualReview === true &&
+      typeof result.reviewReason === 'string' &&
+      typeof result.reviewDetail === 'string' &&
+      Array.isArray(result.candidateBookings)
+    )
+  }
+
+  private resolveManualReviewTransition(error: unknown): {
+    reviewReason: ParsedEventReviewReason
+    reviewDetail: string
+    candidateBookings: unknown[]
+  } | null {
+    const message = error instanceof Error ? error.message : 'Unknown apply error'
+
+    if (error instanceof BooksyManualReviewError) {
+      if (error.reviewReason !== 'cancel_not_found' && error.reviewReason !== 'ambiguous_match' && error.reviewReason !== 'reschedule_not_found') {
+        return null
+      }
+      const mappedReason = error.reviewReason === 'cancel_not_found' ? 'cancel_not_found' : 'ambiguous_match'
+      return {
+        reviewReason: mappedReason,
+        reviewDetail: message,
+        candidateBookings: error.candidates ?? [],
+      }
+    }
+
+    const classification = classifyBooksyFailure(message)
+    if (classification.code === 'validation' || classification.code === 'unknown') {
+      return {
+        reviewReason: classification.code,
+        reviewDetail: message,
+        candidateBookings: [],
+      }
+    }
+
+    return null
+  }
+
+  private async markParsedEventManualReview(
+    parsedEventId: string,
+    reviewReason: ParsedEventReviewReason,
+    reviewDetail: string,
+    candidateBookings: unknown[]
+  ): Promise<void> {
+    const { error: updateEventError } = await this.supabase
+      .from('booksy_parsed_events')
+      .update({
+        status: 'manual_review',
+        review_reason: reviewReason,
+        review_detail: reviewDetail,
+        candidate_bookings: candidateBookings,
+      } as any)
+      .eq('id', parsedEventId)
+      .eq('salon_id', this.salonId)
+
+    if (updateEventError) {
+      logger.error('[Booksy] Failed to update parsed event manual review details', updateEventError)
     }
   }
 
@@ -408,7 +541,8 @@ export class BooksyProcessor {
    * Handle booking cancellation
    */
   private async handleCancellation(parsed: ParsedBooking) {
-    const match = await findCancellationMatch(this.supabase, this.salonId, parsed)
+    const isForwarded = parsed.source === 'forwarded'
+    const match = await findCancellationMatch(this.supabase, this.salonId, parsed, isForwarded)
 
     if (match.kind === 'already_applied') {
       logger.info('[Booksy] Booking already cancelled (forwarded email deduplication)', { bookingId: match.booking.id })
@@ -424,11 +558,14 @@ export class BooksyProcessor {
     }
 
     if (match.kind === 'none') {
-      throw new BooksyManualReviewError(
-        'cancel_not_found',
-        `Booking to cancel not found: ${parsed.clientName} at ${parsed.bookingDate} ${parsed.bookingTime}`,
-        match.candidates
-      )
+      return {
+        success: false,
+        manualReview: true,
+        type: 'cancel',
+        reviewReason: 'cancel_not_found' as const,
+        reviewDetail: 'Wizyta nie znaleziona w systemie (prawdopodobnie sprzed integracji)',
+        candidateBookings: [],
+      }
     }
 
     const { data: updated, error: updateError } = await this.supabase
@@ -456,7 +593,12 @@ export class BooksyProcessor {
       )
     }
 
-    const match = await findRescheduleMatch(this.supabase, this.salonId, parsed)
+    const isForwarded = parsed.source === 'forwarded'
+    const match = await findRescheduleMatch(this.supabase, this.salonId, parsed, isForwarded) as Awaited<ReturnType<typeof findRescheduleMatch>> | {
+      kind: 'single_future'
+      booking: { id: string }
+      candidates: unknown[]
+    }
 
     if (match.kind === 'already_applied') {
       logger.info('[Booksy] Booking already rescheduled (forwarded email deduplication)', { bookingId: match.booking.id })
@@ -473,7 +615,7 @@ export class BooksyProcessor {
 
     if (match.kind === 'none') {
       throw new BooksyManualReviewError(
-        'reschedule_not_found',
+        'ambiguous_match',
         `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate ?? 'unknown'} ${parsed.oldTime ?? 'unknown'}`,
         match.candidates
       )

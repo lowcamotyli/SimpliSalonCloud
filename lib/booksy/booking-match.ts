@@ -18,6 +18,23 @@ type BookingRow = {
   services?: { name?: string | null } | null
 }
 
+type AppointmentRow = {
+  id: string
+  start_time: string
+  status: string
+  clients?: { full_name?: string | null } | null
+  services?: { name?: string | null } | null
+}
+
+type FutureBookingCandidate = {
+  id: string
+  appointmentDate: string
+  startTime: string
+  clientName: string | null
+  serviceName: string | null
+  score: number
+}
+
 export type BooksyBookingCandidate = {
   bookingId: string
   bookingDate: string
@@ -91,6 +108,74 @@ function serviceMatches(left: string | null | undefined, right: string | null | 
     normalizedRight &&
     (normalizedLeft === normalizedRight || normalizedLeft.includes(normalizedRight) || normalizedRight.includes(normalizedLeft))
   )
+}
+
+function appointmentDate(value: string | null | undefined): string {
+  const source = value ?? ''
+  const withDate = source.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (withDate) {
+    return withDate[1]
+  }
+
+  const parsed = new Date(source)
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10)
+  }
+
+  return ''
+}
+
+function appointmentTime(value: string | null | undefined): string {
+  const source = value ?? ''
+  const withTime = source.match(/[T\s](\d{2}:\d{2})/)
+  if (withTime) {
+    return withTime[1]
+  }
+
+  return normalizeTime(source)
+}
+
+function futureCandidateScore(clientName: string | null, serviceName: string | null, parsed: ParsedBookingLike): number {
+  let score = 70
+  const normalizedClient = normalize(clientName)
+  const normalizedExpectedClient = normalize(parsed.clientName)
+  const normalizedService = normalize(serviceName)
+  const normalizedExpectedService = normalize(parsed.serviceName)
+
+  if (normalizedClient && normalizedExpectedClient && normalizedClient === normalizedExpectedClient) {
+    score += 15
+  }
+
+  if (normalizedService && normalizedExpectedService && normalizedService === normalizedExpectedService) {
+    score += 15
+  }
+
+  return score
+}
+
+function toFutureCandidate(appointment: AppointmentRow, parsed: ParsedBookingLike): FutureBookingCandidate {
+  const clientName = appointment.clients?.full_name ?? null
+  const serviceName = appointment.services?.name ?? null
+
+  return {
+    id: appointment.id,
+    appointmentDate: appointmentDate(appointment.start_time),
+    startTime: appointmentTime(appointment.start_time),
+    clientName,
+    serviceName,
+    score: futureCandidateScore(clientName, serviceName, parsed),
+  }
+}
+
+function futureCandidateToBooking(candidate: FutureBookingCandidate, status: string): BookingRow {
+  return {
+    id: candidate.id,
+    booking_date: candidate.appointmentDate,
+    booking_time: candidate.startTime,
+    status,
+    clients: { full_name: candidate.clientName },
+    services: { name: candidate.serviceName },
+  }
 }
 
 function toCandidate(booking: BookingRow, parsed: ParsedBookingLike, expectedDate: string, expectedTime: string): BooksyBookingCandidate {
@@ -180,13 +265,21 @@ function findExact(bookings: BookingRow[], parsed: ParsedBookingLike, expectedTi
 export async function findCancellationMatch(
   supabase: SupabaseClient,
   salonId: string,
-  parsed: ParsedBookingLike
+  parsed: ParsedBookingLike,
+  isForwarded?: boolean
 ): Promise<BooksyBookingMatchResult> {
-  const activeBookings = await loadBookings(supabase, salonId, parsed.bookingDate, ['scheduled', 'confirmed', 'completed'])
+  const activeStatuses = isForwarded
+    ? ['cancelled', 'completed', 'scheduled', 'confirmed']
+    : ['scheduled', 'confirmed', 'completed']
+  const activeBookings = await loadBookings(supabase, salonId, parsed.bookingDate, activeStatuses)
   const activeCandidates = topCandidates(activeBookings, parsed, parsed.bookingDate, parsed.bookingTime)
   const exact = findExact(activeBookings, parsed, parsed.bookingTime)
 
   if (exact) {
+    if (exact.status === 'cancelled') {
+      return { kind: 'already_applied', booking: exact, candidates: activeCandidates }
+    }
+
     return { kind: 'exact', booking: exact, candidates: activeCandidates }
   }
 
@@ -201,7 +294,8 @@ export async function findCancellationMatch(
     }
   }
 
-  const strongCandidates = activeCandidates.filter((candidate) => candidate.score >= 0.75)
+  const minConfidence = isForwarded ? 0.4 : 0.6
+  const strongCandidates = activeCandidates.filter((candidate) => candidate.score >= minConfidence)
   if (strongCandidates.length > 1) {
     return { kind: 'ambiguous', candidates: strongCandidates }
   }
@@ -212,37 +306,74 @@ export async function findCancellationMatch(
 export async function findRescheduleMatch(
   supabase: SupabaseClient,
   salonId: string,
-  parsed: ParsedBookingLike
+  parsed: ParsedBookingLike,
+  isForwarded?: boolean
 ): Promise<BooksyBookingMatchResult> {
+  const appointmentStatuses = isForwarded
+    ? ['cancelled', 'completed', 'scheduled', 'confirmed']
+    : ['scheduled', 'confirmed']
   const targetDate = parsed.oldDate && parsed.oldDate !== 'unknown' ? parsed.oldDate : parsed.bookingDate
   const targetTime = parsed.oldTime && parsed.oldTime !== 'unknown' ? parsed.oldTime : parsed.bookingTime
 
-  if (!parsed.oldDate || parsed.oldDate === 'unknown') {
-    const today = new Date().toISOString().split('T')[0]
+  if (!parsed.oldDate || parsed.oldDate === 'unknown' || parsed.oldTime === 'unknown') {
+    const now = new Date()
+    const end = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
     const { data, error } = await (supabase
-      .from('bookings') as any)
-      .select('id, booking_date, booking_time, status, clients(full_name), services(name)')
+      .from('appointments') as any)
+      .select('id, start_time, status, clients(full_name), services(name)')
       .eq('salon_id', salonId)
-      .gte('booking_date', today)
-      .in('status', ['scheduled', 'confirmed'])
+      .in('status', appointmentStatuses)
+      .gte('start_time', now.toISOString())
+      .lte('start_time', end.toISOString())
 
     if (error) {
       throw error
     }
 
-    const clientMatches = (data ?? []).filter((booking: BookingRow) => namesMatch(booking.clients?.full_name, parsed.clientName))
-    const candidates = topCandidates(clientMatches, parsed, targetDate, targetTime)
-
-    if (clientMatches.length === 1) {
-      return { kind: 'exact', booking: clientMatches[0], candidates }
+    const matchingCandidates: FutureBookingCandidate[] = []
+    for (const [, appointment] of ((data ?? []) as AppointmentRow[]).entries()) {
+      const clientName = appointment.clients?.full_name
+      const serviceName = appointment.services?.name
+      if (!namesMatch(clientName, parsed.clientName)) {
+        continue
+      }
+      if (!serviceMatches(serviceName, parsed.serviceName)) {
+        continue
+      }
+      matchingCandidates.push(toFutureCandidate(appointment, parsed))
     }
 
-    if (clientMatches.length > 1) {
-      return { kind: 'ambiguous', candidates }
+    const top5ByScore = [...matchingCandidates]
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 5)
+
+    if (top5ByScore.length === 0) {
+      return { kind: 'none', candidates: [] } as BooksyBookingMatchResult
+    }
+
+    if (top5ByScore.length === 1) {
+      let match: FutureBookingCandidate | null = null
+      for (const [, candidate] of top5ByScore.entries()) {
+        match = candidate
+      }
+
+      if (match) {
+        return {
+          kind: 'single_future',
+          match,
+          score: 70,
+          candidates: [match],
+          booking: futureCandidateToBooking(match, 'scheduled'),
+        } as unknown as BooksyBookingMatchResult
+      }
+    }
+
+    if (top5ByScore.length > 1) {
+      return { kind: 'ambiguous', candidates: top5ByScore } as unknown as BooksyBookingMatchResult
     }
   }
 
-  const oldBookings = await loadBookings(supabase, salonId, targetDate, ['scheduled', 'confirmed'])
+  const oldBookings = await loadBookings(supabase, salonId, targetDate, appointmentStatuses)
   const candidates = topCandidates(oldBookings, parsed, targetDate, targetTime)
   const exact = findExact(oldBookings, parsed, targetTime)
 
@@ -250,7 +381,7 @@ export async function findRescheduleMatch(
     return { kind: 'exact', booking: exact, candidates }
   }
 
-  const newBookings = await loadBookings(supabase, salonId, parsed.bookingDate, ['scheduled', 'confirmed'])
+  const newBookings = await loadBookings(supabase, salonId, parsed.bookingDate, appointmentStatuses)
   const alreadyRescheduled = findExact(newBookings, parsed, parsed.bookingTime)
 
   if (alreadyRescheduled) {
