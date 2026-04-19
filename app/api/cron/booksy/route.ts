@@ -74,9 +74,82 @@ async function shouldRunDailyReconciliation(
   return (data ?? []).length === 0
 }
 
+type DailyDigestCounts = {
+  applied: number
+  manual_review: number
+  discarded: number
+}
+
+async function maybeLogDailyDigest(
+  supabase: ReturnType<typeof createAdminClient>,
+  salonIds: string[],
+  runDigestDateKeys: Set<string>
+): Promise<void> {
+  const now = new Date()
+  const dateKey = now.toISOString().slice(0, 10)
+
+  if (now.getUTCHours() !== 23 || runDigestDateKeys.has(dateKey) || salonIds.length === 0) {
+    return
+  }
+
+  runDigestDateKeys.add(dateKey)
+  const dayStartUtc = new Date(`${dateKey}T00:00:00.000Z`).toISOString()
+
+  try {
+    const { data, error } = await supabase
+      .from('booksy_parsed_events')
+      .select('salon_id, status')
+      .in('salon_id', salonIds)
+      .gte('created_at', dayStartUtc)
+
+    if (error) {
+      throw error
+    }
+
+    const countsBySalon = new Map<string, DailyDigestCounts>()
+
+    for (const [, salonId] of salonIds.entries()) {
+      countsBySalon.set(salonId, {
+        applied: 0,
+        manual_review: 0,
+        discarded: 0,
+      })
+    }
+
+    for (const [, row] of (data ?? []).entries()) {
+      if (typeof row.salon_id !== 'string') {
+        continue
+      }
+
+      const counts = countsBySalon.get(row.salon_id)
+      if (!counts) {
+        continue
+      }
+
+      if (row.status === 'applied' || row.status === 'manual_review' || row.status === 'discarded') {
+        counts[row.status] += 1
+      }
+    }
+
+    for (const [, salonId] of salonIds.entries()) {
+      logger.info('Booksy daily digest', {
+        event: 'booksy_daily_digest',
+        salonId,
+        counts: countsBySalon.get(salonId) ?? { applied: 0, manual_review: 0, discarded: 0 },
+        date: dateKey,
+      })
+    }
+  } catch (error: any) {
+    logger.error('Booksy daily digest failed', error, {
+      action: 'booksy_daily_digest_failed',
+      date: dateKey,
+    })
+  }
+}
+
 async function runWatchPipeline(request: NextRequest) {
   const supabase = createAdminClient()
-  const threshold = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+  const threshold = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
 
   const processNotifications = await postCronEndpoint(request, '/api/internal/booksy/process-notifications')
   logger.info('Booksy cron watch: process-notifications done', {
@@ -304,6 +377,7 @@ async function checkAndAlertSalonHealth(
  */
 export async function GET(request: NextRequest) {
   try {
+    const runDigestDateKeys = new Set<string>()
     const authError = validateCronSecret(request)
     if (authError) return authError
 
@@ -329,6 +403,8 @@ export async function GET(request: NextRequest) {
         for (const salonId of salonIds) {
           await checkAndAlertSalonHealth(salonId, supabase)
         }
+
+        await maybeLogDailyDigest(supabase, salonIds, runDigestDateKeys)
       } catch (alertError: any) {
         logger.error('Booksy cron watch mode: health alerting failed', alertError, {
           action: 'booksy_cron_watch_health_alert_failed',
@@ -368,6 +444,12 @@ export async function GET(request: NextRequest) {
         message: 'No active salons with Booksy enabled',
       })
     }
+
+    const activeSalonIds = Array.from(new Set(
+      salons
+        .map((salon): string | null => (typeof salon.id === 'string' && salon.id.length > 0 ? salon.id : null))
+        .filter((id): id is string => id !== null)
+    ))
 
     logger.info('Booksy cron started', { action: 'booksy_cron_start', salons: salons.length })
     const results = []
@@ -465,6 +547,8 @@ export async function GET(request: NextRequest) {
         action: 'booksy_cron_polling_health_alert_failed',
       })
     }
+
+    await maybeLogDailyDigest(supabase, activeSalonIds, runDigestDateKeys)
 
     logger.info('Booksy cron completed', { action: 'booksy_cron_end', processed: results.length })
     return NextResponse.json({

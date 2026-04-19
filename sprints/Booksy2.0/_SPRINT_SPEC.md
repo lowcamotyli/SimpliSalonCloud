@@ -12,6 +12,9 @@ Wave 5 │ B2-07  catchup-worker             ‖  B2-08  parse-apply-workers
 Wave 6 │ B2-09  cron-refactor
 Wave 7 │ B2-10  reconciliation             ‖  B2-11  health-alerting
 Wave 8 │ B2-12  multi-mailbox-ui
+Wave 9 │ B2-13  match-repair (reschedule fuzzy + cancel→manual_review)
+Wave 10│ B2-14  manual-review-ui + forwarded-email-detection
+Wave 11│ B2-15  quality (structured errors) + monitoring (health + daily digest)
 ```
 
 Arch doc: `docs/architecture/booksy-option-b-implementation.md`

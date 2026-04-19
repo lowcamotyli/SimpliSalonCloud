@@ -5,6 +5,7 @@ import { BooksyProcessor } from '@/lib/booksy/processor'
 import { computeFingerprint } from '@/lib/booksy/fingerprint'
 import { logger } from '@/lib/logger'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { readBooksyWorkerScope } from '@/lib/booksy/worker-scope'
 import type { Database, Tables, TablesInsert, TablesUpdate } from '@/types/supabase'
 
 export const runtime = 'nodejs'
@@ -485,16 +486,28 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminSupabaseClient()
+  const scope = await readBooksyWorkerScope(request)
   logger.info('Booksy parse worker: run started', {
     action: 'booksy_parse_start',
     batchLimit: PARSE_BATCH_LIMIT,
+    scope,
   })
 
-  const { data: rawEmails, error } = await supabase
+  let rawEmailQuery = supabase
     .from('booksy_raw_emails')
     .select('*')
     .eq('parse_status', 'pending')
     .limit(PARSE_BATCH_LIMIT)
+
+  if (scope.salonIds) {
+    rawEmailQuery = rawEmailQuery.in('salon_id', scope.salonIds)
+  }
+
+  if (scope.accountIds) {
+    rawEmailQuery = rawEmailQuery.in('booksy_gmail_account_id', scope.accountIds)
+  }
+
+  const { data: rawEmails, error } = await rawEmailQuery
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

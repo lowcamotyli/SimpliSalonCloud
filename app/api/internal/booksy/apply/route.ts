@@ -2,11 +2,23 @@ import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { applyParsedEvent } from '@/lib/booksy/processor'
+import { isBooksyManualReviewError } from '@/lib/booksy/booking-match'
+import { classifyBooksyFailure } from '@/lib/booksy/retry-policy'
+import { readBooksyWorkerScope, type BooksyWorkerScope } from '@/lib/booksy/worker-scope'
 import { logger } from '@/lib/logger'
 
 export const runtime = 'nodejs'
 
 const APPLY_BATCH_LIMIT = 100
+
+type PendingParsedEvent = {
+  id: string
+  salon_id: string
+  event_type: string
+  confidence_score: number
+  booksy_raw_email_id?: string | null
+  apply_attempts?: number | null
+}
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
@@ -28,6 +40,54 @@ function resolveThreshold(eventType: string): number {
   return eventType === 'cancelled' || eventType === 'rescheduled' ? 0.92 : 0.85
 }
 
+async function loadScopedRawEmailIds(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  scope: BooksyWorkerScope
+): Promise<string[] | null> {
+  if (!scope.accountIds) {
+    return null
+  }
+
+  let query = supabase
+    .from('booksy_raw_emails')
+    .select('id')
+    .in('booksy_gmail_account_id', scope.accountIds)
+
+  if (scope.salonIds) {
+    query = query.in('salon_id', scope.salonIds)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(`Failed to load scoped raw emails for apply worker: ${error.message}`)
+  }
+
+  return (data ?? [])
+    .map((row) => row.id)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+}
+
+function buildManualReviewPatch(event: PendingParsedEvent, error: unknown): Record<string, unknown> {
+  const message = error instanceof Error ? error.message : 'Unknown apply error'
+  const classification = classifyBooksyFailure(message)
+  const nowIso = new Date().toISOString()
+  const patch: Record<string, unknown> = {
+    status: 'manual_review',
+    review_reason: isBooksyManualReviewError(error) ? error.reviewReason : classification.code,
+    review_detail: message,
+    last_apply_error: message,
+    last_apply_attempt_at: nowIso,
+    apply_attempts: (event.apply_attempts ?? 0) + 1,
+  }
+
+  if (isBooksyManualReviewError(error)) {
+    patch.candidate_bookings = error.candidates
+  }
+
+  return patch
+}
+
 export async function POST(request: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -39,16 +99,47 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminSupabaseClient()
+  const scope = await readBooksyWorkerScope(request)
   logger.info('Booksy apply worker: run started', {
     action: 'booksy_apply_start',
     batchLimit: APPLY_BATCH_LIMIT,
+    scope,
   })
 
-  const { data: pendingEvents, error } = await supabase
+  let scopedRawEmailIds: string[] | null = null
+  try {
+    scopedRawEmailIds = await loadScopedRawEmailIds(supabase, scope)
+  } catch (scopeError) {
+    const message = scopeError instanceof Error ? scopeError.message : 'Failed to resolve apply scope'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+
+  if (scopedRawEmailIds && scopedRawEmailIds.length === 0) {
+    return NextResponse.json({
+      applied: 0,
+      manual_review: 0,
+      discarded: 0,
+      skipped: 0,
+      failures: [],
+      scopedOut: true,
+    })
+  }
+
+  let pendingEventsQuery = (supabase
     .from('booksy_parsed_events')
-    .select('id, salon_id, event_type, confidence_score')
+    .select('id, salon_id, event_type, confidence_score, booksy_raw_email_id, apply_attempts') as any)
     .eq('status', 'pending')
     .limit(APPLY_BATCH_LIMIT)
+
+  if (scope.salonIds) {
+    pendingEventsQuery = pendingEventsQuery.in('salon_id', scope.salonIds)
+  }
+
+  if (scopedRawEmailIds) {
+    pendingEventsQuery = pendingEventsQuery.in('booksy_raw_email_id', scopedRawEmailIds)
+  }
+
+  const { data: pendingEvents, error } = await pendingEventsQuery
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -57,7 +148,7 @@ export async function POST(request: NextRequest) {
   logger.info('Booksy apply worker: pending parsed events loaded', {
     action: 'booksy_apply_loaded_pending',
     pendingCount: pendingEvents?.length ?? 0,
-    eventIds: (pendingEvents ?? []).map((event) => event.id),
+    eventIds: ((pendingEvents ?? []) as PendingParsedEvent[]).map((event) => event.id),
   })
 
   let applied = 0
@@ -73,7 +164,7 @@ export async function POST(request: NextRequest) {
     return salonStats.get(salonId)!
   }
 
-  for (const event of pendingEvents ?? []) {
+  for (const event of (pendingEvents ?? []) as PendingParsedEvent[]) {
     getSalonStats(event.salon_id).found += 1
     const threshold = resolveThreshold(event.event_type)
     logger.info('Booksy apply worker: processing parsed event', {
@@ -122,9 +213,9 @@ export async function POST(request: NextRequest) {
           error: message,
         })
         // Move to manual_review so the operator can handle it instead of leaving it stuck.
-        await supabase
-          .from('booksy_parsed_events')
-          .update({ status: 'manual_review' })
+        await (supabase
+          .from('booksy_parsed_events') as any)
+          .update(buildManualReviewPatch(event, applyError))
           .eq('id', event.id)
           .eq('salon_id', event.salon_id)
       }
@@ -135,7 +226,11 @@ export async function POST(request: NextRequest) {
     if (event.confidence_score >= 0.5) {
       const { error: updateError } = await supabase
         .from('booksy_parsed_events')
-        .update({ status: 'manual_review' })
+        .update({
+          status: 'manual_review',
+          review_reason: 'low_confidence',
+          review_detail: `Confidence ${event.confidence_score} below threshold ${threshold}`,
+        } as any)
         .eq('id', event.id)
         .eq('salon_id', event.salon_id)
 

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.1"
   }
   graphql_public: {
     Tables: {
@@ -723,40 +723,58 @@ export type Database = {
       }
       booksy_parsed_events: {
         Row: {
+          apply_attempts: number
           booksy_raw_email_id: string
+          candidate_bookings: Json | null
           confidence_score: number
           created_at: string
           event_fingerprint: string
           event_type: string
           id: string
+          last_apply_attempt_at: string | null
+          last_apply_error: string | null
           parser_version: string
           payload: Json
+          review_detail: string | null
+          review_reason: string | null
           salon_id: string
           status: string
           trust_score: number | null
         }
         Insert: {
+          apply_attempts?: number
           booksy_raw_email_id: string
+          candidate_bookings?: Json | null
           confidence_score: number
           created_at?: string
           event_fingerprint: string
           event_type: string
           id?: string
+          last_apply_attempt_at?: string | null
+          last_apply_error?: string | null
           parser_version?: string
           payload: Json
+          review_detail?: string | null
+          review_reason?: string | null
           salon_id: string
           status?: string
           trust_score?: number | null
         }
         Update: {
+          apply_attempts?: number
           booksy_raw_email_id?: string
+          candidate_bookings?: Json | null
           confidence_score?: number
           created_at?: string
           event_fingerprint?: string
           event_type?: string
           id?: string
+          last_apply_attempt_at?: string | null
+          last_apply_error?: string | null
           parser_version?: string
           payload?: Json
+          review_detail?: string | null
+          review_reason?: string | null
           salon_id?: string
           status?: string
           trust_score?: number | null
@@ -2783,6 +2801,7 @@ export type Database = {
           booksy_notify_on_cancel: boolean | null
           booksy_notify_on_new: boolean | null
           booksy_sender_filter: string | null
+          booksy_sync_from_date: string | null
           booksy_sync_interval_minutes: number | null
           booksy_sync_stats: Json | null
           bulkgate_app_id: string | null
@@ -2840,6 +2859,7 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
+          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null
@@ -2897,6 +2917,7 @@ export type Database = {
           booksy_notify_on_cancel?: boolean | null
           booksy_notify_on_new?: boolean | null
           booksy_sender_filter?: string | null
+          booksy_sync_from_date?: string | null
           booksy_sync_interval_minutes?: number | null
           booksy_sync_stats?: Json | null
           bulkgate_app_id?: string | null

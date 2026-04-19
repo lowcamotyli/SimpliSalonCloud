@@ -9,11 +9,18 @@ export default async function LegacyBooksySettingsPage({
   searchParams,
 }: {
   params: Promise<Params>
-  searchParams?: Promise<{ error?: string }>
+  searchParams?: Promise<{ error?: string; tab?: string }>
 }): Promise<never> {
   const { slug } = await params
   const resolvedSearchParams = searchParams ? await searchParams : undefined
-  const query = resolvedSearchParams?.error ? `?error=${encodeURIComponent(resolvedSearchParams.error)}` : ''
+  const query = new URLSearchParams()
+  if (resolvedSearchParams?.error) {
+    query.set('error', resolvedSearchParams.error)
+  }
+  if (resolvedSearchParams?.tab) {
+    query.set('tab', resolvedSearchParams.tab)
+  }
+  const queryString = query.toString()
 
-  redirect(`/${slug}/booksy${query}`)
+  redirect(`/${slug}/booksy${queryString ? `?${queryString}` : ''}`)
 }
