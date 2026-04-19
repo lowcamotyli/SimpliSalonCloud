@@ -34,7 +34,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
   const adminSupabase = createAdminSupabaseClient()
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  const [activeCountResult, lastSyncResult, todayBookingsResult, manualReviewCountResult] = await Promise.all([
+  const [activeCountResult, lastSyncResult, todayBookingsResult, manualReviewCountResult, pendingEmailCountResult] = await Promise.all([
     (adminSupabase.from('booksy_gmail_accounts' as any) as any)
       .select('id', { count: 'exact', head: true })
       .eq('salon_id', salonId)
@@ -56,13 +56,18 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
       .select('id', { count: 'exact', head: true })
       .eq('salon_id', salonId)
       .eq('status', 'manual_review'),
+    (adminSupabase.from('booksy_pending_emails' as any) as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('salon_id', salonId)
+      .eq('status', 'pending'),
   ])
 
   const activeCount = activeCountResult.error ? 0 : activeCountResult.count ?? 0
   const lastSyncRow = lastSyncResult.error ? null : ((lastSyncResult.data as LastSyncRow | null) ?? null)
   const syncSource = lastSyncRow?.triggered_by === 'cron' ? 'auto' : lastSyncRow?.triggered_by === 'manual' ? 'ręczna' : lastSyncRow?.triggered_by === 'webhook' ? 'webhook' : null
   const todayBookingsCount = todayBookingsResult.error ? 0 : todayBookingsResult.count ?? 0
-  const manualReviewCount = manualReviewCountResult.error ? 0 : manualReviewCountResult.count ?? 0
+  const manualReviewCount = (manualReviewCountResult.error ? 0 : manualReviewCountResult.count ?? 0)
+    + (pendingEmailCountResult.error ? 0 : pendingEmailCountResult.count ?? 0)
   const dotClass = activeCount > 0 ? 'bg-emerald-500' : 'bg-red-500'
 
   return (
@@ -84,14 +89,14 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
           <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-900">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <span className="text-xs font-medium">{manualReviewCount} rezerwacji wymaga przejrzenia</span>
+              <span className="text-xs font-medium">{manualReviewCount} {manualReviewCount === 1 ? 'rezerwacja wymaga' : 'rezerwacji wymaga'} obsługi</span>
             </div>
             <div className="mt-1">
               <Link
-                href={`/${salonSlug}/settings/integrations/booksy?tab=review`}
+                href={`/${salonSlug}/booksy#kolejka`}
                 className="text-xs font-medium text-amber-800 hover:text-amber-900"
               >
-                Przejdź do weryfikacji →
+                Przejdź do kolejki →
               </Link>
             </div>
           </div>

@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { AddMailboxButton } from '@/components/integrations/booksy/AddMailboxButton'
-import { ManualReviewQueue } from '@/components/integrations/booksy/ManualReviewQueue'
 import { BooksySyncOptions, type BooksySyncOptionsValue } from '@/components/integrations/booksy/BooksySyncOptions'
 import { BooksyRecentBookingsTable } from '@/components/integrations/booksy/BooksyRecentBookingsTable'
 import { MailboxList } from '@/components/integrations/booksy/MailboxList'
@@ -283,13 +282,7 @@ export default async function BooksyDashboardPage({
     booksy_auto_create_services: settingsRow?.booksy_auto_create_services ?? false,
   }
   const activeAccounts = accounts.filter((account) => account.is_active).length
-  const { count: manualReviewCountResult, error: manualReviewCountError } = await (adminSupabase
-    .from('booksy_parsed_events' as any) as any)
-    .select('id', { count: 'exact', head: true })
-    .eq('salon_id', salonId)
-    .eq('status', 'manual_review')
-  const manualReviewCount = manualReviewCountError ? 0 : (manualReviewCountResult ?? 0)
-  const accordionDefaultValue = manualReviewCount > 0 ? ['mailboxes', 'bookings', 'review'] : ['mailboxes', 'bookings']
+  const accordionDefaultValue = ['mailboxes', 'bookings', 'queue']
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-8 sm:px-0">
@@ -387,25 +380,13 @@ export default async function BooksyDashboardPage({
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="queue" className="rounded-xl border bg-card px-4">
+        <AccordionItem value="queue" id="kolejka" className="rounded-xl border bg-card px-4">
           <AccordionTrigger className="py-3">
-            <div className="flex items-center gap-2 text-base font-semibold">Kolejka i aktywnosc maili</div>
+            <div className="flex items-center gap-2 text-base font-semibold">Kolejka obsługi i aktywność maili</div>
           </AccordionTrigger>
           <AccordionContent className="space-y-6 pb-4">
             <BooksyPendingEmails salonId={salonId} />
             <MailboxEmailActivity salonId={salonId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="review" className="rounded-xl border bg-card px-4">
-          <AccordionTrigger className="py-3">
-            <div className="flex items-center gap-2 text-base font-semibold">
-              Do przejrzenia
-              {manualReviewCount > 0 ? <Badge variant="destructive">{manualReviewCount}</Badge> : null}
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4">
-            <ManualReviewQueue salonId={salonId} salonSlug={slug} />
           </AccordionContent>
         </AccordionItem>
 

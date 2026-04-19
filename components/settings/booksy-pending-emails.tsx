@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Calendar, CheckCircle2, Loader2, Scissors, Trash2, User, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -23,10 +23,6 @@ import { SelectContent } from '@/components/ui/select'
 import { SelectItem } from '@/components/ui/select'
 import { SelectTrigger } from '@/components/ui/select'
 import { SelectValue } from '@/components/ui/select'
-import { Tabs } from '@/components/ui/tabs'
-import { TabsContent } from '@/components/ui/tabs'
-import { TabsList } from '@/components/ui/tabs'
-import { TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip } from '@/components/ui/tooltip'
 import { TooltipContent } from '@/components/ui/tooltip'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -83,6 +79,7 @@ interface ManualReviewParsedPayload {
 
 interface ManualReviewEvent {
   id: string
+  created_at?: string
   event_type: 'created' | 'cancelled' | 'rescheduled' | string
   review_reason: string | null
   candidate_bookings: ManualReviewCandidate[] | null
@@ -90,9 +87,12 @@ interface ManualReviewEvent {
   parsed?: ManualReviewParsedPayload | null
 }
 
+type UnifiedQueueItem =
+  | ({ itemType: 'pending_email' } & PendingEmail)
+  | ({ itemType: 'manual_review' } & ManualReviewEvent)
+
 export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   const queryClient = useQueryClient()
-  const [selectedTab, setSelectedTab] = useState<'pending' | 'manual_review'>('pending')
   const [selectedEmail, setSelectedEmail] = useState<PendingEmail | null>(null)
   const [targetServiceId, setTargetServiceId] = useState<string>('')
   const [targetEmployeeId, setTargetEmployeeId] = useState<string>('')
@@ -111,15 +111,13 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   const { data: manualReviewData, isLoading: isLoadingManualReview } = useQuery({
     queryKey: ['booksy-manual-review', salonId],
     queryFn: async () => {
-      const res = await fetch(`/api/internal/booksy/manual-review?salonId=${encodeURIComponent(salonId)}`)
-      if (!res.ok) throw new Error('Failed to fetch manual review events')
-      const payload = await res.json() as {
-        events?: ManualReviewEvent[]
-        manualReview?: ManualReviewEvent[]
-        count?: number
-      }
-      const events = payload.events ?? payload.manualReview ?? []
-      return { events, count: payload.count ?? events.length }
+      const res = await fetch('/api/internal/booksy/manual-review')
+      if (!res.ok) throw new Error('Nie udało się pobrać zdarzeń do przejrzenia')
+      const payload = await res.json() as ManualReviewEvent[] | { events?: ManualReviewEvent[]; manualReview?: ManualReviewEvent[] }
+      const events = Array.isArray(payload)
+        ? payload
+        : payload.events ?? payload.manualReview ?? []
+      return { events, count: events.length }
     },
     enabled: !!salonId,
   })
@@ -164,10 +162,10 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
       if (!res.ok) throw new Error('Blad podczas ignorowania')
     },
     onSuccess: () => {
-      toast.success('Email zostal zignorowany')
+      toast.success('Wpis zignorowany — nie będzie już widoczny w kolejce')
       queryClient.invalidateQueries({ queryKey: ['booksy-pending', salonId] })
     },
-    onError: () => toast.error('Nie udalo sie zignorowac emaila'),
+    onError: () => toast.error('Nie udało się zignorować wpisu'),
   })
 
   const assignMutation = useMutation({
@@ -187,11 +185,11 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
       })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Blad podczas tworzenia rezerwacji')
+        throw new Error((err as { error?: string }).error ?? 'Nie udało się utworzyć rezerwacji')
       }
     },
     onSuccess: () => {
-      toast.success('Rezerwacja zostala utworzona pomyslnie')
+      toast.success('Rezerwacja została dodana do grafiku')
       queryClient.invalidateQueries({ queryKey: ['booksy-pending', salonId] })
       setSelectedEmail(null)
     },
@@ -199,19 +197,24 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
   })
 
   const approveManualReviewMutation = useMutation({
-    mutationFn: async ({ parsedEventId, bookingId }: { parsedEventId: string; bookingId?: string }) => {
-      const res = await fetch('/api/internal/booksy/repair', {
+    mutationFn: async ({ parsedEventId, eventType }: { parsedEventId: string; bookingId?: string; eventType?: string }) => {
+      const res = await fetch(`/api/integrations/booksy/manual-review/${encodeURIComponent(parsedEventId)}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parsedEventId, bookingId }),
       })
       if (!res.ok) {
         const errorPayload = await res.json().catch(() => ({}))
-        throw new Error((errorPayload as { error?: string }).error ?? 'Nie udalo sie zatwierdzic dopasowania')
+        throw new Error((errorPayload as { error?: string }).error ?? 'Nie udało się przetworzyć zdarzenia')
       }
+      return { eventType }
     },
-    onSuccess: () => {
-      toast.success('Zatwierdzono dopasowanie')
+    onSuccess: ({ eventType }) => {
+      const msg = eventType === 'cancelled'
+        ? 'Wizyta została anulowana w grafiku'
+        : eventType === 'rescheduled'
+          ? 'Termin wizyty został zaktualizowany w grafiku'
+          : 'Wizyta została dodana do grafiku'
+      toast.success(msg)
       queryClient.invalidateQueries({ queryKey: ['booksy-manual-review', salonId] })
     },
     onError: (error: Error) => toast.error(error.message),
@@ -320,15 +323,76 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
     return reason ?? 'Nieznany powod'
   }
 
-  const manualReviewEventTypeLabel = (eventType: string) => {
-    if (eventType === 'created') return 'created'
-    if (eventType === 'cancelled') return 'cancelled'
-    if (eventType === 'rescheduled') return 'rescheduled'
-    return eventType || 'unknown'
+  const cleanServiceName = (name: string | null | undefined): string | null => {
+    if (!name) return null
+    if (name.startsWith('[image:') || name.startsWith('http')) return null
+    const withoutUrls = name.replace(/<https?:\/\/[^>]+>/g, '').replace(/https?:\/\/\S+/g, '').trim()
+    return withoutUrls.length > 0 ? withoutUrls : null
   }
 
-  const pendingCount = pendingData?.count ?? 0
-  const manualReviewCount = manualReviewData?.count ?? 0
+  const translateDetail = (detail: string | null): string | null => {
+    if (!detail) return null
+    return detail
+      .replace(/Employee not found:\s*/i, 'Pracownik nie znaleziony: ')
+      .replace(/Service not found:\s*/i, 'Usługa nie znaleziona: ')
+      .replace(/Client phone is required for Booksy bookings/i, 'Numer telefonu klienta jest wymagany dla rezerwacji Booksy')
+      .replace(/Could not parse/i, 'Nie udało się przetworzyć wiadomości')
+      .replace(/Booking to cancel not found/i, 'Nie znaleziono wizyty do anulowania')
+      .replace(/Booking to reschedule not found/i, 'Nie znaleziono wizyty do przełożenia')
+      .replace(/Wymaga recznej weryfikacji \(confidence ([\d.]+)\)/i, (_m, score) => `Wymaga ręcznej weryfikacji (pewność: ${score})`)
+  }
+
+  const manualReviewEventTypeLabel = (eventType: string) => {
+    if (eventType === 'created') return 'Nowa wizyta'
+    if (eventType === 'cancelled') return 'Anulowanie'
+    if (eventType === 'rescheduled') return 'Zmiana terminu'
+    return eventType || 'Nieznany typ'
+  }
+
+  const isQueueLoading = isLoadingPending || isLoadingManualReview
+
+  const getUnifiedSortTimestamp = (item: UnifiedQueueItem) => {
+    if (item.itemType === 'pending_email') {
+      const bookingDate = item.parsed_data?.bookingDate
+      const bookingTime = item.parsed_data?.bookingTime
+      if (bookingDate) {
+        const parsed = Date.parse(bookingTime ? `${bookingDate}T${bookingTime}` : bookingDate)
+        if (!Number.isNaN(parsed)) return parsed
+      }
+      const fallback = Date.parse(item.created_at)
+      return Number.isNaN(fallback) ? 0 : fallback
+    }
+
+    const parsedPayload = item.payload?.parsed ?? item.parsed ?? null
+    const bookingDate = parsedPayload?.bookingDate
+    const bookingTime = parsedPayload?.bookingTime
+    if (bookingDate) {
+      const parsed = Date.parse(bookingTime ? `${bookingDate}T${bookingTime}` : bookingDate)
+      if (!Number.isNaN(parsed)) return parsed
+    }
+    const fallback = item.created_at ? Date.parse(item.created_at) : Number.NaN
+    return Number.isNaN(fallback) ? 0 : fallback
+  }
+
+  const deduplicatedPending = useMemo(() => {
+    const reviewKeys = new Set(
+      (manualReviewData?.events ?? []).map((e) => {
+        const p = e.payload?.parsed ?? e.parsed ?? null
+        return `${p?.clientName ?? ''}|${p?.bookingDate ?? ''}|${p?.bookingTime ?? ''}`
+      })
+    )
+    return (pendingData?.pending ?? []).filter((email) => {
+      const key = `${email.parsed_data?.clientName ?? ''}|${email.parsed_data?.bookingDate ?? ''}|${email.parsed_data?.bookingTime ?? ''}`
+      return !reviewKeys.has(key)
+    })
+  }, [pendingData, manualReviewData])
+
+  const unifiedQueue: UnifiedQueueItem[] = [
+    ...deduplicatedPending.map((email) => ({ ...email, itemType: 'pending_email' as const })),
+    ...(manualReviewData?.events ?? []).map((event) => ({ ...event, itemType: 'manual_review' as const })),
+  ].sort((a, b) => getUnifiedSortTimestamp(b) - getUnifiedSortTimestamp(a))
+
+  const totalCount = unifiedQueue.length
 
   return (
     <>
@@ -337,219 +401,139 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Emaile do zaakceptowania
+              Wymagają obsługi
             </CardTitle>
+            <Badge variant={totalCount > 0 ? 'destructive' : 'secondary'} className="text-[10px]">
+              {totalCount}
+            </Badge>
           </div>
           <CardDescription className="text-xs">
             Wiadomosci z Booksy, ktorych nie udalo sie automatycznie przypisac do grafiku.
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as 'pending' | 'manual_review')}>
-            <TabsList>
-              <TabsTrigger value="pending" className="gap-2">
-                Do akceptacji
-                {pendingCount > 0 ? (
-                  <Badge variant="destructive" className="text-[10px]">
-                    {pendingCount}
-                  </Badge>
-                ) : null}
-              </TabsTrigger>
-              <TabsTrigger value="manual_review" className="gap-2">
-                Do przejrzenia
-                {manualReviewCount > 0 ? (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {manualReviewCount}
-                  </Badge>
-                ) : null}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="pending">
-              {isLoadingPending ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : !pendingData?.pending.length ? (
-                <div className="rounded-lg border-2 border-dashed bg-muted/20 py-8 text-center">
-                  <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground opacity-30" />
-                  <p className="text-sm text-muted-foreground">Brak emaili oczekujacych na akcje</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs text-gray-500">
-                        <th className="pb-2 pr-3 text-left font-medium">Data</th>
-                        <th className="pb-2 pr-3 text-left font-medium">Klient</th>
-                        <th className="pb-2 pr-3 text-left font-medium">Usluga (email)</th>
-                        <th className="pb-2 pr-3 text-left font-medium">Pracownik (email)</th>
-                        <th className="pb-2 pr-3 text-left font-medium">Powod bledu</th>
-                        <th className="pb-2 text-right font-medium">Akcje</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {pendingData.pending.map((email) => (
-                        <tr key={email.id} className="transition-colors hover:bg-gray-50">
-                          <td className="whitespace-nowrap py-2 pr-3 text-xs text-gray-600">
-                            {formatDate(email.parsed_data?.bookingDate, email.parsed_data?.bookingTime)}
-                          </td>
-                          <td className="py-2 pr-3">
-                            <p className="text-xs font-medium text-gray-900">{email.parsed_data?.clientName ?? '-'}</p>
-                            {email.parsed_data?.clientPhone ? (
-                              <p className="text-xs text-gray-400">{email.parsed_data.clientPhone}</p>
-                            ) : null}
-                          </td>
-                          <td className="max-w-[150px] truncate py-2 pr-3 text-xs italic text-gray-500">
-                            {email.parsed_data?.serviceName ?? '-'}
-                          </td>
-                          <td className="max-w-[130px] truncate py-2 pr-3 text-xs italic text-gray-500">
-                            {email.parsed_data?.employeeName ?? '-'}
-                          </td>
-                          <td className="py-2 pr-3">
-                            <div className="space-y-1">
-                              {getReasonBadge(email.failure_reason)}
-                              {email.failure_detail ? (
-                                <p className="max-w-[220px] truncate text-[11px] text-muted-foreground" title={email.failure_detail}>
-                                  {email.failure_detail}
-                                </p>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td className="space-x-1.5 whitespace-nowrap py-2 text-right">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span>
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      className="h-7 gap-1 px-2.5 text-xs"
-                                      disabled={['parse_failed', 'cancel_not_found', 'reschedule_not_found'].includes(email.failure_reason)}
-                                      onClick={() => handleOpenAssign(email)}
-                                    >
-                                      <UserPlus className="h-3.5 w-3.5" />
-                                      Przypisz
-                                    </Button>
-                                  </span>
-                                </TooltipTrigger>
-                                {email.failure_reason === 'parse_failed' ? (
-                                  <TooltipContent>
-                                    <p>Email nie mogl byc sparsowany</p>
-                                  </TooltipContent>
-                                ) : null}
-                                {(email.failure_reason === 'cancel_not_found' || email.failure_reason === 'reschedule_not_found') ? (
-                                  <TooltipContent>
-                                    <p>Wizyta nie istnieje w systemie - zignoruj ten wpis</p>
-                                  </TooltipContent>
-                                ) : null}
-                              </Tooltip>
-                            </TooltipProvider>
-
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => ignoreMutation.mutate(email.id)}
-                              disabled={ignoreMutation.isPending}
-                            >
-                              <Trash2 className="mr-1 h-3.5 w-3.5" />
-                              Ignoruj
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="manual_review" className="space-y-3">
-              {isLoadingManualReview ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : !manualReviewData?.events.length ? (
-                <div className="rounded-lg border-2 border-dashed bg-muted/20 py-8 text-center">
-                  <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground opacity-30" />
-                  <p className="text-sm text-muted-foreground">Brak zdarzen do przejrzenia</p>
-                </div>
-              ) : (
-                manualReviewData.events.map((event) => {
-                  const parsed = event.payload?.parsed ?? event.parsed ?? null
-                  const candidates = event.candidate_bookings ?? []
-                  const selectedBookingId = selectedCandidates[event.id] ?? ''
+        <CardContent className="space-y-3">
+          {isQueueLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !unifiedQueue.length ? (
+            <div className="rounded-lg border-2 border-dashed bg-muted/20 py-8 text-center">
+              <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground opacity-30" />
+              <p className="text-sm text-muted-foreground">Brak elementów do obsługi</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {unifiedQueue.map((item) => {
+                if (item.itemType === 'pending_email') {
+                  const canAssign = !['parse_failed', 'cancel_not_found', 'reschedule_not_found'].includes(item.failure_reason)
+                  const tooltipText = item.failure_reason === 'parse_failed'
+                    ? 'Email nie mógł być sparsowany — brak możliwości przypisania'
+                    : (item.failure_reason === 'cancel_not_found' || item.failure_reason === 'reschedule_not_found')
+                      ? 'Wizyta nie istnieje w systemie — zignoruj ten wpis'
+                      : null
+                  const actionHint = item.failure_reason === 'parse_failed'
+                    ? 'Wiadomość nie mogła być odczytana automatycznie. Zignoruj jeśli nie dotyczy żadnej wizyty.'
+                    : (item.failure_reason === 'cancel_not_found' || item.failure_reason === 'reschedule_not_found')
+                      ? 'Wizyta do anulowania/przełożenia nie istnieje w systemie. Możesz zignorować ten wpis.'
+                      : 'System nie rozpoznał usługi lub pracownika. Kliknij Przypisz, wybierz właściwe dane i zatwierdź.'
 
                   return (
-                    <Card key={event.id}>
-                      <CardHeader className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline">{manualReviewEventTypeLabel(event.event_type)}</Badge>
-                          <Badge variant="secondary">{manualReviewReasonLabel(event.review_reason)}</Badge>
+                    <div key={`pe-${item.id}`} className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {getReasonBadge(item.failure_reason)}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p><span className="font-medium text-foreground">Klient:</span> {parsed?.clientName ?? '-'}</p>
-                          <p><span className="font-medium text-foreground">Usluga:</span> {parsed?.serviceName ?? '-'}</p>
-                          <p><span className="font-medium text-foreground">Nowy termin:</span> {formatDate(parsed?.bookingDate, parsed?.bookingTime)}</p>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="space-y-4">
-                        {candidates.length > 0 ? (
-                          <RadioGroup
-                            value={selectedBookingId}
-                            onValueChange={(value) => setSelectedCandidates((previous) => ({ ...previous, [event.id]: value }))}
-                            className="space-y-2"
-                          >
-                            {candidates.map((candidate) => (
-                              <label
-                                key={candidate.id}
-                                htmlFor={`manual-review-${event.id}-${candidate.id}`}
-                                className="flex cursor-pointer items-start gap-2 rounded-md border p-2 hover:bg-muted/40"
-                              >
-                                <RadioGroupItem id={`manual-review-${event.id}-${candidate.id}`} value={candidate.id} />
-                                <div className="text-sm">
-                                  <p className="font-medium">{formatDate(candidate.appointmentDate, candidate.startTime)}</p>
-                                  <p className="text-muted-foreground">{candidate.clientName ?? '-'} • {candidate.serviceName ?? '-'}</p>
-                                </div>
-                              </label>
-                            ))}
-                          </RadioGroup>
-                        ) : null}
-
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => discardManualReviewMutation.mutate(event.id)}
-                            disabled={discardManualReviewMutation.isPending || approveManualReviewMutation.isPending}
-                          >
-                            Odrzuc
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              approveManualReviewMutation.mutate({
-                                parsedEventId: event.id,
-                                bookingId: selectedBookingId || undefined,
-                              })
-                            }
-                            disabled={
-                              discardManualReviewMutation.isPending ||
-                              approveManualReviewMutation.isPending ||
-                              (candidates.length > 0 && !selectedBookingId)
-                            }
-                          >
-                            Zatwierdz
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        <p className="text-sm font-medium">{item.parsed_data?.clientName ?? '-'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(item.parsed_data?.bookingDate, item.parsed_data?.bookingTime)}
+                          {cleanServiceName(item.parsed_data?.serviceName) ? <> · <span className="italic">{cleanServiceName(item.parsed_data?.serviceName)}</span></> : null}
+                          {item.parsed_data?.employeeName ? <> · {item.parsed_data.employeeName}</> : null}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground/80 mt-0.5">{actionHint}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button size="sm" variant="default" className="h-7 gap-1 px-2.5 text-xs" disabled={!canAssign} onClick={() => handleOpenAssign(item)}>
+                                  <UserPlus className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Przypisz</span>
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {tooltipText ? <TooltipContent><p>{tooltipText}</p></TooltipContent> : null}
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => ignoreMutation.mutate(item.id)} disabled={ignoreMutation.isPending}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Ignoruj</span>
+                        </Button>
+                      </div>
+                    </div>
                   )
-                })
-              )}
-            </TabsContent>
-          </Tabs>
+                }
+
+                const parsed = item.payload?.parsed ?? item.parsed ?? null
+                const candidates = item.candidate_bookings ?? []
+                const selectedBookingId = selectedCandidates[item.id] ?? ''
+                const isBusy = discardManualReviewMutation.isPending || approveManualReviewMutation.isPending
+
+                return (
+                  <div key={`mr-${item.id}`} className="space-y-2 py-3 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <Badge variant="outline" className="text-[10px]">{manualReviewEventTypeLabel(item.event_type)}</Badge>
+                        <p className="text-sm font-medium">{parsed?.clientName ?? '-'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(parsed?.bookingDate, parsed?.bookingTime)}
+                          {cleanServiceName(parsed?.serviceName) ? <> · <span className="italic">{cleanServiceName(parsed?.serviceName)}</span></> : null}
+                        </p>
+                        {candidates.length > 0 ? (
+                          <p className="text-[11px] text-amber-700 mt-0.5">Wybierz poniżej która wizyta pasuje, a następnie kliknij Zatwierdź.</p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                            {item.event_type === 'cancelled' ? 'Kliknij Zatwierdź aby anulować tę wizytę w grafiku.' : item.event_type === 'rescheduled' ? 'Kliknij Zatwierdź aby zaktualizować termin wizyty w grafiku.' : 'Kliknij Zatwierdź aby dodać tę wizytę do grafiku.'}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => discardManualReviewMutation.mutate(item.id)} disabled={isBusy}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Odrzuć</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-7 px-2.5 text-xs"
+                          disabled={isBusy || (candidates.length > 0 && !selectedBookingId)}
+                          onClick={() => approveManualReviewMutation.mutate({ parsedEventId: item.id, bookingId: selectedBookingId || undefined, eventType: item.event_type })}
+                        >
+                          {approveManualReviewMutation.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                          Zatwierdź
+                        </Button>
+                      </div>
+                    </div>
+                    {candidates.length > 0 ? (
+                      <RadioGroup
+                        value={selectedBookingId}
+                        onValueChange={(value) => setSelectedCandidates((prev) => ({ ...prev, [item.id]: value }))}
+                        className="space-y-1"
+                      >
+                        {candidates.map((candidate) => (
+                          <label key={candidate.id} htmlFor={`mr-${item.id}-${candidate.id}`} className="flex cursor-pointer items-center gap-2 rounded border bg-muted/30 px-2 py-1.5 text-xs hover:bg-muted/60">
+                            <RadioGroupItem id={`mr-${item.id}-${candidate.id}`} value={candidate.id} />
+                            <span className="font-medium">{formatDate(candidate.appointmentDate, candidate.startTime)}</span>
+                            <span className="text-muted-foreground">{candidate.clientName ?? '-'} · {candidate.serviceName ?? '-'}</span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

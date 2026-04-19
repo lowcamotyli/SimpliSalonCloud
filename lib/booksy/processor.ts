@@ -581,7 +581,13 @@ export class BooksyProcessor {
     }
 
     if (match.kind === 'none') {
-      throw new BookingNotFoundError('cancel_not_found: Wizyta nie znaleziona w systemie (prawdopodobnie sprzed integracji)')
+      // Booking not found = already not active in our system (pre-integration or already cancelled).
+      // Auto-resolve: treat as applied so it doesn't land in manual review queue.
+      logger.info('[Booksy] Cancellation target not found — auto-resolving (pre-integration booking)', {
+        clientName: parsed.clientName,
+        bookingDate: parsed.bookingDate,
+      })
+      return { success: true, type: 'cancel', autoResolved: true, reason: 'not_found_pre_integration' }
     }
 
     const { data: updated, error: updateError } = await this.supabase
@@ -629,6 +635,14 @@ export class BooksyProcessor {
     }
 
     if (match.kind === 'none') {
+      if (match.candidates.length === 0) {
+        // No booking at old or new date, no candidates — pre-integration booking. Auto-resolve.
+        logger.info('[Booksy] Reschedule target not found with no candidates — auto-resolving (pre-integration booking)', {
+          clientName: parsed.clientName,
+          oldDate: parsed.oldDate,
+        })
+        return { success: true, type: 'reschedule', autoResolved: true, reason: 'not_found_pre_integration' }
+      }
       throw new AmbiguousMatchError(
         `Booking to reschedule not found: ${parsed.clientName} at ${parsed.oldDate ?? 'unknown'} ${parsed.oldTime ?? 'unknown'}`,
         match.candidates
