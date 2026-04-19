@@ -216,6 +216,7 @@ export function BooksyPendingEmails({ salonId }: { salonId: string }) {
           : 'Wizyta została dodana do grafiku'
       toast.success(msg)
       queryClient.invalidateQueries({ queryKey: ['booksy-manual-review', salonId] })
+      queryClient.invalidateQueries({ queryKey: ['booksy-pending', salonId] })
     },
     onError: (error: Error) => toast.error(error.message),
   })
