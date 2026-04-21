@@ -143,6 +143,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [selectedClient, setSelectedClient] = useState<ClientOption | null>(null)
   const [newClientName, setNewClientName] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [noPhone, setNoPhone] = useState(false)
   const [cartItems, setCartItems] = useState<CartItemState[]>([getInitialCartItem(prefilledSlot)])
   const [categoryFilters, setCategoryFilters] = useState<Map<number, string>>(new Map())
   const [remoteValidationResults, setRemoteValidationResults] = useState<DraftValidationResult[]>([])
@@ -204,6 +205,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     setClientSearch('')
     setNewClientName('')
     setNewClientPhone('')
+    setNoPhone(false)
     setCartItems([getInitialCartItem(prefilledSlot)])
     setCategoryFilters(new Map())
     setRemoteValidationResults([])
@@ -530,21 +532,41 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const hasDraftWarnings = combinedValidationResults.some((result) => result.warnings.length > 0)
 
   const canContinueToCart =
-    selectedClient !== null || (newClientName.trim().length >= 2 && newClientPhone.trim().length >= 3)
+    selectedClient !== null ||
+    (newClientName.trim().length >= 2 && (noPhone || newClientPhone.trim().length >= 3))
+
+  const generateNoPhone = async (): Promise<string> => {
+    const supabaseClient = createClient()
+    const { data } = await supabaseClient
+      .from('clients')
+      .select('phone')
+      .like('phone', '000000%')
+      .order('phone', { ascending: false })
+      .limit(1)
+    const last = data?.[0]?.phone ?? '000000000'
+    const lastNum = parseInt(last.replace(/\D/g, ''), 10) || 0
+    const next = lastNum + 1
+    return String(next).padStart(9, '0')
+  }
 
   const resolveClientId = async () => {
     if (selectedClient) {
       return selectedClient.id
     }
 
-    const rawPhone = newClientPhone.trim()
-    const normalizedPhone = rawPhone.replace(/[\s\-\(\)]/g, '')
-    const isValidPhone = /^\+?[0-9]{9,15}$/.test(normalizedPhone)
-    let phoneToSave = rawPhone
-    if (!isValidPhone) {
-      toast.warning('Numer telefonu jest niepoprawny — wizyta zostanie zapisana')
-      const digitsOnly = rawPhone.replace(/\D/g, '')
-      phoneToSave = digitsOnly.length >= 9 ? digitsOnly : `000${Date.now().toString().slice(-9)}`
+    let phoneToSave: string
+    if (noPhone) {
+      phoneToSave = await generateNoPhone()
+    } else {
+      const rawPhone = newClientPhone.trim()
+      const normalizedPhone = rawPhone.replace(/[\s\-\(\)]/g, '')
+      const isValidPhone = /^\+?[0-9]{9,15}$/.test(normalizedPhone)
+      phoneToSave = rawPhone
+      if (!isValidPhone) {
+        toast.warning('Numer telefonu jest niepoprawny — wizyta zostanie zapisana')
+        const digitsOnly = rawPhone.replace(/\D/g, '')
+        phoneToSave = digitsOnly.length >= 9 ? digitsOnly : `000${Date.now().toString().slice(-9)}`
+      }
     }
 
     const createdClient = await createClientMutation.mutateAsync({
@@ -1354,6 +1376,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                           setSelectedClient(client)
                           setNewClientName('')
                           setNewClientPhone('')
+                          setNoPhone(false)
                         }}
                         className={`w-full rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                           isSelected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
@@ -1384,15 +1407,32 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-client-phone">Telefon</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="new-client-phone">Telefon</Label>
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none text-xs text-muted-foreground">
+                    <Checkbox
+                      id="no-phone"
+                      checked={noPhone}
+                      onCheckedChange={(checked) => {
+                        setNoPhone(!!checked)
+                        if (checked) {
+                          setSelectedClient(null)
+                          setNewClientPhone('')
+                        }
+                      }}
+                    />
+                    Brak telefonu
+                  </label>
+                </div>
                 <Input
                   id="new-client-phone"
                   value={newClientPhone}
+                  disabled={noPhone}
                   onChange={(event) => {
                     setSelectedClient(null)
                     setNewClientPhone(event.target.value)
                   }}
-                  placeholder="Telefon klienta"
+                  placeholder={noPhone ? 'Zostanie przypisany auto-numer' : 'Telefon klienta'}
                 />
               </div>
             </div>

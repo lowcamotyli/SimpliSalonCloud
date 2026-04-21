@@ -127,25 +127,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const validatedData = createClientSchema.parse(mappedBody)
 
-  // Generate client code with fallback
-  const { data: codeData, error: codeError } = await (supabase as any)
+  const { data: codeData } = await (supabase as any)
     .rpc('generate_client_code', { salon_uuid: validatedData.salon_id })
 
-  const clientCode = codeData || `C${Date.now().toString().slice(-6)}`
+  const insertClient = async (clientCode: string) =>
+    (supabase as any)
+      .from('clients')
+      .insert({
+        salon_id: validatedData.salon_id,
+        client_code: clientCode,
+        full_name: `${validatedData.first_name} ${validatedData.last_name}`,
+        phone: validatedData.phone,
+        email: validatedData.email || null,
+        notes: validatedData.notes || null,
+        visit_count: 0,
+      })
+      .select()
+      .single()
 
-  const { data: client, error } = await (supabase as any)
-    .from('clients')
-    .insert({
-      salon_id: validatedData.salon_id,
-      client_code: clientCode,
-      full_name: `${validatedData.first_name} ${validatedData.last_name}`,
-      phone: validatedData.phone,
-      email: validatedData.email || null,
-      notes: validatedData.notes || null,
-      visit_count: 0
-    })
-    .select()
-    .single()
+  let { data: client, error } = await insertClient(codeData || `C${Date.now().toString().slice(-6)}`)
+
+  // Retry once with a guaranteed-unique code on duplicate client_code
+  if (error?.code === '23505' && error?.message?.includes('client_code')) {
+    const retryCode = `C${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    ({ data: client, error } = await insertClient(retryCode))
+  }
 
   if (error) {
     throw error
