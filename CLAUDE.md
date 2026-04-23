@@ -37,7 +37,8 @@ Read .workflow/skills/[nazwa].md and follow it.
 | SQL / migracje | `sql-migration-safe` |
 | Naprawa TS errors | `typescript-repair` |
 | Review diff | `review-ready-diff` |
-| Duży kontekst przed planowaniem | `large-context-analysis` |
+| Odczyt/streszczenie pliku > 50 linii (znana ścieżka) | `targeted-file-read` |
+| Duży kontekst przed planowaniem (nieznane ścieżki) | `large-context-analysis` |
 | Security / auth / billing | `safe-sensitive-change` |
 | Sprint planning, multi-worker | `parallel-work-split` |
 

@@ -22,7 +22,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   let query = supabase
     .from("equipment")
-    .select("*")
+    .select("*, service_equipment(equipment_id)")
     .eq("salon_id", salonProfile.salon_id)
     .order("name");
 
@@ -33,7 +33,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const { data: equipment, error } = await query;
   if (error) throw error;
 
-  return NextResponse.json({ equipment: equipment ?? [] });
+  const normalizedEquipment = (equipment ?? []).map((item: any) => ({
+    ...item,
+    assigned_services_count: Array.isArray(item.service_equipment)
+      ? item.service_equipment.length
+      : 0,
+  }));
+
+  return NextResponse.json({ equipment: normalizedEquipment });
 });
 
 // POST /api/equipment - add new equipment (owner/manager only)

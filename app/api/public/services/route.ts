@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { handleCorsPreflightRequest, setCorsHeaders } from '@/lib/middleware/cors'
+import { normalizeServicePriceType, resolvePublicServicePrice } from '@/lib/services/price-types'
 
 export async function OPTIONS(request: NextRequest) {
     return handleCorsPreflightRequest(request) || new NextResponse(null, { status: 200 })
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
         .from('services')
         .select(
-            'id, name, category, subcategory, duration, price, description, service_media(id, public_url, alt_text, sort_order)',
+            'id, name, category, subcategory, duration, price, price_type, description, service_media(id, public_url, alt_text, sort_order)',
         )
         .eq('salon_id', salonId)
         .eq('active', true)
@@ -35,6 +36,8 @@ export async function GET(request: NextRequest) {
 
     const services = (data ?? []).map(({ service_media, ...service }) => ({
         ...service,
+        price_type: normalizeServicePriceType(service.price_type),
+        price: resolvePublicServicePrice(service.price, service.price_type),
         images: service_media ?? [],
     }))
 

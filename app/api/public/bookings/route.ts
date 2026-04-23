@@ -6,6 +6,7 @@ import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limi
 import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
+import { resolveBookingBasePrice } from '@/lib/services/price-types'
 
 function jsonWithCors(
     request: NextRequest,
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
         logger.info('[PUBLIC_BOOKINGS] fetch service start')
         const { data: service, error: serviceError } = await supabase
             .from('services')
-            .select('duration, price')
+            .select('duration, price, price_type')
             .eq('id', serviceId)
             .eq('salon_id', salonId)
             .single()
@@ -315,7 +316,7 @@ export async function POST(request: NextRequest) {
                 booking_date: date,
                 booking_time: time,
                 duration: service.duration,
-                base_price: service.price,
+                base_price: resolveBookingBasePrice(service.price, service.price_type),
                 status: 'scheduled',
                 source: 'website',
                 ...(terms_accepted ? { terms_accepted_at: new Date().toISOString() } : {}),

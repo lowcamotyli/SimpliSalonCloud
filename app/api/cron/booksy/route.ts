@@ -193,17 +193,33 @@ async function runWatchPipeline(request: NextRequest) {
   }
 
   const renewedWatches = []
+  const renewalErrors = []
 
   for (const watch of expiringWatches ?? []) {
-    const renewal = await postCronEndpoint(request, '/api/integrations/booksy/watch', {
-      accountId: watch.booksy_gmail_account_id,
-    })
+    try {
+      const renewal = await postCronEndpoint(request, '/api/integrations/booksy/watch', {
+        accountId: watch.booksy_gmail_account_id,
+      })
 
-    renewedWatches.push({
-      accountId: watch.booksy_gmail_account_id,
-      previousExpiration: watch.watch_expiration,
-      result: renewal,
-    })
+      renewedWatches.push({
+        accountId: watch.booksy_gmail_account_id,
+        previousExpiration: watch.watch_expiration,
+        result: renewal,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      renewalErrors.push({
+        accountId: watch.booksy_gmail_account_id,
+        previousExpiration: watch.watch_expiration,
+        error: message,
+      })
+      logger.warn('Booksy cron watch: renewal failed for account', {
+        action: 'booksy_cron_watch_renewal_failed',
+        accountId: watch.booksy_gmail_account_id,
+        previousExpiration: watch.watch_expiration,
+        error: message,
+      })
+    }
   }
 
   return {
@@ -215,6 +231,7 @@ async function runWatchPipeline(request: NextRequest) {
       reconcile,
     },
     renewedWatches,
+    renewalErrors,
   }
 }
 

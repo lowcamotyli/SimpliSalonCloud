@@ -1,0 +1,4 @@
+# Machine-readable run records — gitignored, local observability only
+# Format: ai/runs/<run-id>.json
+# Fields: packages, commands, pass/fail, diff SHAs
+*.json

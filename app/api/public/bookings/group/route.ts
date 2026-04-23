@@ -5,6 +5,7 @@ import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limi
 import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
+import { resolveBookingBasePrice } from '@/lib/services/price-types'
 
 interface PublicGroupBookingRequest {
     name: string
@@ -17,6 +18,7 @@ interface ResolvedGroupBookingItem {
     service: {
         duration: number
         price: number
+        price_type?: string
     }
     employee: {
         id: string
@@ -189,7 +191,7 @@ export async function POST(request: NextRequest) {
         for (const [i, item] of items.entries()) {
             const { data: service } = await supabase
                 .from('services')
-                .select('duration, price')
+                .select('duration, price, price_type')
                 .eq('id', item.serviceId)
                 .eq('salon_id', salonId)
                 .single()
@@ -262,7 +264,10 @@ export async function POST(request: NextRequest) {
             booking_date: item.date,
             booking_time: item.time,
             duration: resolvedItems[i].service.duration,
-            base_price: resolvedItems[i].service.price,
+            base_price: resolveBookingBasePrice(
+                resolvedItems[i].service.price,
+                resolvedItems[i].service.price_type
+            ),
         }))
 
         const { data: rpcResult, error: rpcError } = await (supabase as any).rpc(

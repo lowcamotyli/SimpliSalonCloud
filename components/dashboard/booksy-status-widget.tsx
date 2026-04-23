@@ -34,7 +34,7 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
   const adminSupabase = createAdminSupabaseClient()
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  const [activeCountResult, lastSyncResult, todayBookingsResult, manualReviewCountResult, pendingEmailCountResult] = await Promise.all([
+  const [activeCountResult, lastSyncResult, todayBookingsResult, manualReviewCountResult, pendingEmailCountResult, activeWatchCountResult] = await Promise.all([
     (adminSupabase.from('booksy_gmail_accounts' as any) as any)
       .select('id', { count: 'exact', head: true })
       .eq('salon_id', salonId)
@@ -60,6 +60,11 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
       .select('id', { count: 'exact', head: true })
       .eq('salon_id', salonId)
       .eq('status', 'pending'),
+    (adminSupabase.from('booksy_gmail_accounts' as any) as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('salon_id', salonId)
+      .eq('is_active', true)
+      .eq('watch_status', 'active'),
   ])
 
   const activeCount = activeCountResult.error ? 0 : activeCountResult.count ?? 0
@@ -68,7 +73,8 @@ export async function BooksyStatusWidget({ salonId, salonSlug }: BooksyStatusWid
   const todayBookingsCount = todayBookingsResult.error ? 0 : todayBookingsResult.count ?? 0
   const manualReviewCount = (manualReviewCountResult.error ? 0 : manualReviewCountResult.count ?? 0)
     + (pendingEmailCountResult.error ? 0 : pendingEmailCountResult.count ?? 0)
-  const dotClass = activeCount > 0 ? 'bg-emerald-500' : 'bg-red-500'
+  const activeWatchCount = activeWatchCountResult.error ? 0 : activeWatchCountResult.count ?? 0
+  const dotClass = activeCount > 0 && activeWatchCount > 0 ? 'bg-emerald-500' : 'bg-red-500'
 
   return (
     <Card>

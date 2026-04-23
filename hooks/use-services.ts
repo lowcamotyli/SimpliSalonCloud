@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ServicePriceType } from '@/lib/services/price-types'
 
 type Service = {
   id: string
   name: string
   price: number
+  price_type: ServicePriceType
   duration: number
   surchargeAllowed: boolean
 }
@@ -23,6 +25,7 @@ interface CreateServiceData {
   subcategory: string
   name: string
   price: number
+  price_type?: ServicePriceType
   duration: number
   active?: boolean
 }
@@ -33,6 +36,7 @@ interface UpdateServiceData {
   subcategory?: string
   name?: string
   price?: number
+  price_type?: ServicePriceType
   duration?: number
   active?: boolean
 }

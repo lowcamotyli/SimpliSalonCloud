@@ -834,7 +834,7 @@ export class BooksyProcessor {
       // ── Early return for reschedule ─────────────────────────────────────────
       if (type === 'reschedule') {
         // "z dnia 27 października 2024 10:00" or "z dnia czwartek, 23 października 2025 10:45"
-        const oldMatch = cleanBody.match(/z dnia\s+(?:[a-ząćęłńóśźż]+\s*,\s*)?(\d{1,2})\s+(.+?)\s+(\d{4})\s+(?:o\s+)?(\d{2}):(\d{2})/i)
+        const oldMatch = cleanBody.match(/z dnia\s+(?:[a-ząćęłńóśźż]+\s*,\s*)?(\d{1,2})\s+(.+?)\s+(\d{4})(?:\s*,?\s*)?(?:o\s*)?(\d{2}):(\d{2})/i)
         // "na 28 października 2024, 14:00 — 15:00"
         const newResult = this.extractDateAndTime(cleanBody)
 

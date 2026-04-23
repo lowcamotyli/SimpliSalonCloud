@@ -1,6 +1,7 @@
 import { google } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { AppError } from '@/lib/errors'
 import { encrypt, getDecryptedTokens } from '@/lib/booksy/gmail-auth'
 import { getBooksyGmailRedirectUri } from '@/lib/google/get-google-redirect-uri'
 import type { Database, Tables } from '@/types/supabase'
@@ -71,6 +72,18 @@ function parseExpiration(expiration: unknown): string | null {
   }
 
   return new Date(parsed).toISOString()
+}
+
+function isInvalidGrantError(error: unknown): boolean {
+  const details = JSON.stringify({
+    message: error instanceof Error ? error.message : String(error),
+    code: (error as { code?: unknown } | null | undefined)?.code,
+    status: (error as { status?: unknown } | null | undefined)?.status,
+    response: (error as { response?: { data?: unknown } } | null | undefined)?.response?.data,
+    errors: (error as { errors?: unknown } | null | undefined)?.errors,
+  })
+
+  return /invalid_grant/i.test(details)
 }
 
 async function resolveSalonAccount(
@@ -209,6 +222,20 @@ async function persistWatchSuccess(
     throw new Error(`Failed to persist Booksy Gmail watch: ${error.message}`)
   }
 
+  const { error: accountError } = await supabase
+    .from('booksy_gmail_accounts')
+    .update({
+      auth_status: 'active',
+      last_auth_at: now,
+      last_error: null,
+      updated_at: now,
+    })
+    .eq('id', account.id)
+
+  if (accountError) {
+    throw new Error(`Failed to persist Booksy Gmail auth status: ${accountError.message}`)
+  }
+
   return {
     accountId: account.id,
     emailAddress: account.gmail_email,
@@ -234,6 +261,21 @@ async function persistWatchError(
     }, { onConflict: 'booksy_gmail_account_id' })
 }
 
+async function persistAccountAuthError(
+  supabase: AdminSupabaseClient,
+  account: GmailAccountRow,
+  message: string
+): Promise<void> {
+  await supabase
+    .from('booksy_gmail_accounts')
+    .update({
+      auth_status: 'revoked',
+      last_error: message,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', account.id)
+}
+
 export async function startWatch(
   salonId: string,
   supabase: AdminSupabaseClient,
@@ -249,8 +291,18 @@ export async function startWatch(
     const result = await callWatch(account.id, supabase)
     return await persistWatchSuccess(supabase, account, result, 0)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown Gmail watch start error'
+    const invalidGrant = isInvalidGrantError(error)
+    const message = invalidGrant
+      ? 'Gmail authorization expired. Reconnect Gmail account.'
+      : error instanceof Error ? error.message : 'Unknown Gmail watch start error'
     await persistWatchError(supabase, account, message)
+    if (invalidGrant) {
+      await persistAccountAuthError(supabase, account, message)
+      throw new AppError(message, 'GMAIL_REAUTH_REQUIRED', 401, {
+        salonId: account.salon_id,
+        accountId: account.id,
+      })
+    }
     throw error
   }
 }
@@ -280,8 +332,18 @@ export async function renewWatch(
     const renewalCount = (existingWatch?.renewal_count ?? 0) + 1
     return await persistWatchSuccess(supabase, account, result, renewalCount)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown Gmail watch renewal error'
+    const invalidGrant = isInvalidGrantError(error)
+    const message = invalidGrant
+      ? 'Gmail authorization expired. Reconnect Gmail account.'
+      : error instanceof Error ? error.message : 'Unknown Gmail watch renewal error'
     await persistWatchError(supabase, account, message)
+    if (invalidGrant) {
+      await persistAccountAuthError(supabase, account, message)
+      throw new AppError(message, 'GMAIL_REAUTH_REQUIRED', 401, {
+        salonId: account.salon_id,
+        accountId: account.id,
+      })
+    }
     throw error
   }
 }

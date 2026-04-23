@@ -7,12 +7,15 @@ import { useEmployees } from '@/hooks/use-employees'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { formatDate, generateWeekDays } from '@/lib/utils/date'
 import { addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
+import { AbsenceDialog } from '@/components/calendar/absence-dialog'
+import { TimeReservationDialog } from '@/components/calendar/time-reservation-dialog'
 import { BUSINESS_HOURS } from '@/lib/constants'
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
@@ -100,10 +103,13 @@ export default function CalendarPage() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [selectedGroupBookings, setSelectedGroupBookings] = useState<any[] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isTimeReservationDialogOpen, setIsTimeReservationDialogOpen] = useState(false)
+  const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
   const [isInitialized, setIsInitialized] = useState(false)
   const [previewDurations, setPreviewDurations] = useState<Record<string, number>>({})
+  const [timeReservations, setTimeReservations] = useState<any[]>([])
 
   const { data: employees } = useEmployees()
 
@@ -250,6 +256,9 @@ export default function CalendarPage() {
     setIsDialogOpen(true)
   }
 
+  const handleAddTimeReservation = () => setIsTimeReservationDialogOpen(true)
+  const handleAddAbsence = () => setIsAbsenceDialogOpen(true)
+
   useEffect(() => {
     const action = searchParams.get('action')
     if (action !== 'new-booking') {
@@ -262,6 +271,43 @@ export default function CalendarPage() {
     const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname
     router.replace(nextUrl, { scroll: false })
   }, [pathname, router, searchParams])
+
+  useEffect(() => {
+    if (viewType !== 'day' && viewType !== 'week') {
+      setTimeReservations([])
+      return
+    }
+
+    const controller = new AbortController()
+    const params = new URLSearchParams()
+
+    if (viewType === 'day') {
+      params.set('date', formatDate(currentDate))
+    } else {
+      const weekDays = generateWeekDays(currentDate)
+      params.set('from', formatDate(weekDays[0]))
+      params.set('to', formatDate(weekDays[6]))
+    }
+
+    const fetchTimeReservations = async () => {
+      try {
+        const response = await fetch(`/api/time-reservations?${params.toString()}`, { signal: controller.signal })
+        if (!response.ok) {
+          setTimeReservations([])
+          return
+        }
+        const payload = await response.json() as { reservations?: any[] }
+        setTimeReservations(Array.isArray(payload.reservations) ? payload.reservations : [])
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setTimeReservations([])
+        }
+      }
+    }
+
+    void fetchTimeReservations()
+    return () => controller.abort()
+  }, [currentDate, viewType, isTimeReservationDialogOpen])
 
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
@@ -372,10 +418,20 @@ export default function CalendarPage() {
             </div>
           </SheetContent>
         </Sheet>
-        <Button onClick={handleAddBooking} className="h-11 min-h-[44px] min-w-[44px] rounded-lg shadow-lg px-4">
-          <Plus className="mr-2 h-4 w-4" />
-          Nowa wizyta
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="h-11 min-h-[44px] min-w-[44px] rounded-lg shadow-lg px-4">
+              <Plus className="mr-2 h-4 w-4" />
+              Nowa wizyta
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleAddBooking}>Nowa wizyta</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddTimeReservation}>Rezerwacja czasu</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddAbsence}>Nieobecność</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex gap-4 items-start">
@@ -423,6 +479,7 @@ export default function CalendarPage() {
             onResizeBooking={resizeBooking}
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
+            timeReservations={timeReservations}
           />
         )}
         {viewType === 'week' && (
@@ -439,6 +496,7 @@ export default function CalendarPage() {
             onResizeBooking={resizeBooking}
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
+            timeReservations={timeReservations}
           />
         )}
         {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} onBookingClick={handleBookingClick} employees={employees} getEmployeeColor={getEmployeeColor} />}
@@ -457,11 +515,21 @@ export default function CalendarPage() {
           prefilledSlot={selectedSlot}
         />
       )}
+      <TimeReservationDialog
+        isOpen={isTimeReservationDialogOpen}
+        onClose={() => setIsTimeReservationDialogOpen(false)}
+        prefilledSlot={selectedSlot}
+      />
+      <AbsenceDialog
+        isOpen={isAbsenceDialogOpen}
+        onClose={() => setIsAbsenceDialogOpen(false)}
+        prefilledRange={dateRange}
+      />
     </div>
   )
 }
 
-function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations }: any) {
+function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations }: any) {
   const dateStr = formatDate(currentDate)
   const now = new Date()
   const isToday = isSameDay(currentDate, now)
@@ -565,6 +633,35 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   )
                 })}
 
+                {(timeReservations || [])
+                  .filter((reservation: any) => {
+                    if (reservation.employee_id !== employee.id) return false
+                    const start = new Date(reservation.start_at)
+                    return !Number.isNaN(start.getTime()) && formatDate(start) === dateStr
+                  })
+                  .map((reservation: any) => {
+                    const start = new Date(reservation.start_at)
+                    const end = new Date(reservation.end_at)
+                    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+                    const startMinutes = start.getHours() * 60 + start.getMinutes() - BUSINESS_HOURS.START * 60
+                    const duration = (end.getTime() - start.getTime()) / (1000 * 60)
+                    if (duration <= 0) return null
+                    const top = (startMinutes / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
+                    const height = (duration / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
+                    return (
+                      <div
+                        key={reservation.id}
+                        className="absolute p-[1px] z-[8] cursor-default"
+                        style={{ top: `${top}%`, height: `${height}%`, minHeight: '44px', left: '0%', width: '96%' }}
+                        title={reservation.title || 'Zarezerwowane'}
+                      >
+                        <div className="h-full w-full rounded-md border border-slate-600/40 bg-slate-500 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden">
+                          <div className="truncate">{reservation.title || 'Zarezerwowane'}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
                 {buildCalendarEntries(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || [], previewDurations).map((entry, index, allEntries) => {
                   const booking = entry.booking
                   const timeStr = booking.booking_time
@@ -640,7 +737,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   )
 }
 
-function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations }: any) {
+function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations }: any) {
   const weekDays = generateWeekDays(currentDate)
   const now = new Date()
   const [isDragging, setIsDragging] = useState(false)
@@ -746,65 +843,97 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                 {employees?.map((employee: any) => {
                   if (!visibleEmployees.has(employee.id)) return null
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
-
-                  return buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
-                    const booking = entry.booking
-                    const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
-                    const duration = entry.displayDuration
-
-                    const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
-                      const otherBooking = otherEntry.booking
-                      if (idx === index || otherBooking.id === booking.id) return false
-                      const otherDuration = otherEntry.displayDuration
-                      const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
-                      const oEnd = oStart + otherDuration
-                      return (startMinutes < oEnd && (startMinutes + duration) > oStart)
-                    })
-
-                    const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
-                      const prevDuration = prevEntry.displayDuration
-                      const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
-                      const pEnd = pStart + prevDuration
-                      return (startMinutes < pEnd && (startMinutes + duration) > pStart)
-                    })
-
-                    const top = (startMinutes / 60) * 80
-                    const height = (duration / 60) * 80
-                    const hasOverlap = overlappingBookings.length > 0
-                    const width = hasOverlap ? 65 : 96
-                    const offset = previousOverlaps.length * 30
-
-                    return (
-                      <div
-                        key={booking.id}
-                        draggable
-                        className={`absolute transition-all hover:!z-50 hover:scale-[1.02] p-[1px] ${isDragging ? 'opacity-70' : 'cursor-pointer'}`}
-                        style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('text/plain', booking.id)
-                          suppressClicks()
-                          console.debug('[Calendar][WeekView] drag:start', { bookingId: booking.id })
-                          setIsDragging(true)
-                        }}
-                        onDragEnd={() => {
-                          suppressClicks()
-                          console.debug('[Calendar][WeekView] drag:end', { bookingId: booking.id })
-                          setIsDragging(false)
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (shouldSuppressClick()) {
-                            console.debug('[Calendar][WeekView] booking-click:suppressed', { bookingId: booking.id })
-                            return
-                          }
-                          onBookingClick(booking)
-                        }}
-                      >
-                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
-                        <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
-                      </div>
-                    )
+                  const dayTimeReservations = (timeReservations || []).filter((reservation: any) => {
+                    if (reservation.employee_id !== employee.id) return false
+                    const start = new Date(reservation.start_at)
+                    return !Number.isNaN(start.getTime()) && formatDate(start) === dateStr
                   })
+
+                  return (
+                    <div key={employee.id} className="contents">
+                      {dayTimeReservations.map((reservation: any) => {
+                        const start = new Date(reservation.start_at)
+                        const end = new Date(reservation.end_at)
+                        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+                        const startMinutes = start.getHours() * 60 + start.getMinutes() - BUSINESS_HOURS.START * 60
+                        const duration = (end.getTime() - start.getTime()) / (1000 * 60)
+                        if (duration <= 0) return null
+                        const top = (startMinutes / 60) * 80
+                        const height = (duration / 60) * 80
+                        return (
+                          <div
+                            key={reservation.id}
+                            className="absolute p-[1px] z-[8] cursor-default"
+                            style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: '0%', width: '96%' }}
+                            title={reservation.title || 'Zarezerwowane'}
+                          >
+                            <div className="h-full w-full rounded-md border border-slate-600/40 bg-slate-500 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden">
+                              <div className="truncate">{reservation.title || 'Zarezerwowane'}</div>
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
+                        const booking = entry.booking
+                        const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
+                        const duration = entry.displayDuration
+
+                        const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
+                          const otherBooking = otherEntry.booking
+                          if (idx === index || otherBooking.id === booking.id) return false
+                          const otherDuration = otherEntry.displayDuration
+                          const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
+                          const oEnd = oStart + otherDuration
+                          return (startMinutes < oEnd && (startMinutes + duration) > oStart)
+                        })
+
+                        const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                          const prevDuration = prevEntry.displayDuration
+                          const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
+                          const pEnd = pStart + prevDuration
+                          return (startMinutes < pEnd && (startMinutes + duration) > pStart)
+                        })
+
+                        const top = (startMinutes / 60) * 80
+                        const height = (duration / 60) * 80
+                        const hasOverlap = overlappingBookings.length > 0
+                        const width = hasOverlap ? 65 : 96
+                        const offset = previousOverlaps.length * 30
+
+                        return (
+                          <div
+                            key={booking.id}
+                            draggable
+                            className={`absolute transition-all hover:!z-50 hover:scale-[1.02] p-[1px] ${isDragging ? 'opacity-70' : 'cursor-pointer'}`}
+                            style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/plain', booking.id)
+                              suppressClicks()
+                              console.debug('[Calendar][WeekView] drag:start', { bookingId: booking.id })
+                              setIsDragging(true)
+                            }}
+                            onDragEnd={() => {
+                              suppressClicks()
+                              console.debug('[Calendar][WeekView] drag:end', { bookingId: booking.id })
+                              setIsDragging(false)
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (shouldSuppressClick()) {
+                                console.debug('[Calendar][WeekView] booking-click:suppressed', { bookingId: booking.id })
+                                return
+                              }
+                              onBookingClick(booking)
+                            }}
+                          >
+                            <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
+                            <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
                 })}
               </div>
             )

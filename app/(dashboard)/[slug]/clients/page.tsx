@@ -36,7 +36,9 @@ import {
   AlertTriangle,
   Ban,
   ShieldCheck,
-  Loader2
+  Loader2,
+  LayoutGrid,
+  List
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -48,6 +50,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ListLoadingState } from '@/components/ui/list-loading-state'
+import { ClientsListView } from '@/components/clients/clients-list-view'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 
@@ -95,6 +98,24 @@ const clientFormSchema = z.object({
 
 type ClientFormData = z.infer<typeof clientFormSchema>
 
+const ALLOWED_CLIENT_SORT_COLUMNS = ['full_name', 'last_visit_at', 'visit_count', 'created_at'] as const
+type ClientSortColumn = (typeof ALLOWED_CLIENT_SORT_COLUMNS)[number]
+type ClientSortOrder = 'asc' | 'desc'
+const DEFAULT_CLIENT_SORT: ClientSortColumn = 'created_at'
+const DEFAULT_CLIENT_ORDER: ClientSortOrder = 'desc'
+
+function isClientSortColumn(value: string | null): value is ClientSortColumn {
+  return ALLOWED_CLIENT_SORT_COLUMNS.includes(value as ClientSortColumn)
+}
+
+function normalizeClientSort(value: string | null): ClientSortColumn {
+  return isClientSortColumn(value) ? value : DEFAULT_CLIENT_SORT
+}
+
+function normalizeClientOrder(value: string | null): ClientSortOrder {
+  return value === 'asc' || value === 'desc' ? value : DEFAULT_CLIENT_ORDER
+}
+
 export default function ClientsPage() {
   const params = useParams()
   const router = useRouter()
@@ -116,13 +137,34 @@ export default function ClientsPage() {
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([])
   const [isBulkDeletingClients, setIsBulkDeletingClients] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [sort, setSort] = useState<ClientSortColumn>(() => normalizeClientSort(searchParams.get('sort')))
+  const [order, setOrder] = useState<ClientSortOrder>(() => normalizeClientOrder(searchParams.get('order')))
 
   const debouncedSearch = useDebounce(search, 300)
-  const { data: clients, isLoading, refetch } = useClients(debouncedSearch)
+  const { data: clients, isLoading, refetch } = useClients(debouncedSearch, [], sort, order)
   const createMutation = useCreateClient()
 
   useEffect(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('clients-view-mode') : null
+    if (stored === 'list') {
+      setViewMode('list')
+    }
+  }, [])
+
+  useEffect(() => {
     const action = searchParams.get('action')
+    const nextSort = normalizeClientSort(searchParams.get('sort'))
+    const nextOrder = normalizeClientOrder(searchParams.get('order'))
+
+    if (nextSort !== sort) {
+      setSort(nextSort)
+    }
+
+    if (nextOrder !== order) {
+      setOrder(nextOrder)
+    }
+
     if (action !== 'new-client') {
       return
     }
@@ -132,7 +174,7 @@ export default function ClientsPage() {
     nextParams.delete('action')
     const nextUrl = nextParams.toString() ? `/${slug}/clients?${nextParams.toString()}` : `/${slug}/clients`
     router.replace(nextUrl, { scroll: false })
-  }, [router, searchParams, slug])
+  }, [order, router, searchParams, slug, sort])
 
   const { data: salon } = useQuery<{ id: string; slug: string } | null>({
     queryKey: ['salon', slug],
@@ -532,6 +574,19 @@ export default function ClientsPage() {
     visible: { y: 0, opacity: 1 }
   }
 
+  function handleSort(col: string) {
+    const nextSort = normalizeClientSort(col)
+    const nextOrder: ClientSortOrder = sort === nextSort ? (order === 'desc' ? 'asc' : 'desc') : 'desc'
+
+    setSort(nextSort)
+    setOrder(nextOrder)
+
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.set('sort', nextSort)
+    nextParams.set('order', nextOrder)
+    router.replace(`/${slug}/clients?${nextParams.toString()}`, { scroll: false })
+  }
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
       {/* Header & Main Actions */}
@@ -543,6 +598,32 @@ export default function ClientsPage() {
           <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
         <div className="flex gap-2">
+          <div className="flex gap-2">
+            <Button
+              size="icon"
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              className="h-12 w-12 rounded-xl"
+              onClick={() => {
+                setViewMode('grid')
+                localStorage.setItem('clients-view-mode', 'grid')
+              }}
+              aria-label="Widok kafelków"
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              className="h-12 w-12 rounded-xl"
+              onClick={() => {
+                setViewMode('list')
+                localStorage.setItem('clients-view-mode', 'list')
+              }}
+              aria-label="Widok listy"
+            >
+              <List className="h-5 w-5" />
+            </Button>
+          </div>
           <Link href={`/${slug}/clients/templates`}>
             <Button size="lg" variant="outline" className="h-12 px-6 rounded-xl font-bold">
               Szablony
@@ -641,157 +722,173 @@ export default function ClientsPage() {
       {isLoading ? (
         <ListLoadingState rows={6} />
       ) : clients && clients.length > 0 ? (
-        <motion.div
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <AnimatePresence mode="popLayout">
-            {clients.map((client: any) => (
-              <motion.div
-                key={client.id}
-                layout
-                variants={itemVariants}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card
-                  className="group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
-                  onClick={() => handleEditClient(client)}
+        viewMode === 'list' ? (
+          <ClientsListView
+            clients={clients}
+            slug={slug}
+            sort={sort}
+            order={order}
+            onSort={handleSort}
+            onEditClient={handleEditClient}
+            deletingClientId={deletingClientId}
+            onDeleteClient={handleDeleteClient}
+            isBulkDeletingClients={isBulkDeletingClients}
+            selectedClientIds={selectedClientIds}
+            onToggleClientSelection={toggleClientSelection}
+          />
+        ) : (
+          <motion.div
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <AnimatePresence mode="popLayout">
+              {clients.map((client: any) => (
+                <motion.div
+                  key={client.id}
+                  layout
+                  variants={itemVariants}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div className="absolute right-4 top-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedClientIds.includes(client.id)}
-                      onChange={(e) => {
-                        e.stopPropagation()
-                        toggleClientSelection(client.id)
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4 rounded accent-primary"
-                      aria-label={`Zaznacz klienta ${client.full_name}`}
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary">
-                          <User className="h-6 w-6" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center">
-                            <Link href={`/${slug}/clients/${client.id}`} onClick={(e) => e.stopPropagation()}>
-                              <h3 className="font-bold text-foreground hover:text-primary transition-colors truncate">
-                                {client.full_name}
-                              </h3>
-                            </Link>
-                            {getBlacklistBadge((client.blacklist_status || 'clean') as BlacklistStatus)}
+                  <Card
+                    className="group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
+                    onClick={() => handleEditClient(client)}
+                  >
+                    <div className="absolute right-4 top-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedClientIds.includes(client.id)}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          toggleClientSelection(client.id)
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-4 w-4 rounded accent-primary"
+                        aria-label={`Zaznacz klienta ${client.full_name}`}
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary">
+                            <User className="h-6 w-6" />
                           </div>
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            ID: {client.id.slice(0, 8)}
+                          <div className="min-w-0">
+                            <div className="flex items-center">
+                              <Link href={`/${slug}/clients/${client.id}`} onClick={(e) => e.stopPropagation()}>
+                                <h3 className="font-bold text-foreground hover:text-primary transition-colors truncate">
+                                  {client.full_name}
+                                </h3>
+                              </Link>
+                              {getBlacklistBadge((client.blacklist_status || 'clean') as BlacklistStatus)}
+                            </div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              ID: {client.id.slice(0, 8)}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-11 w-11 min-h-[44px] min-w-[44px] text-slate-300 hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+                          disabled={deletingClientId === client.id || isBulkDeletingClients}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void handleDeleteClient(client.id, client.full_name)
+                          }}
+                        >
+                          {deletingClientId === client.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {client.phone && (
+                          <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                            <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                              <Phone className="h-4 w-4" />
+                            </div>
+                            <a
+                              href={`tel:${client.phone}`}
+                              className="hover:text-primary transition-colors truncate"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {formatPhoneNumber(client.phone)}
+                            </a>
+                          </div>
+                        )}
+                        {client.email && (
+                          <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                            <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                              <Mail className="h-4 w-4" />
+                            </div>
+                            <a
+                              href={`mailto:${client.email}`}
+                              className="hover:text-primary transition-colors truncate"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {client.email}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Wizyty
+                          </span>
+                          <span className="text-lg font-black text-gray-900 leading-none mt-1">
+                            {client.visit_count || 0}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Ostatnio
+                          </span>
+                          <span className="text-xs font-bold text-gray-600 mt-1">
+                            {client.created_at ? getRelativeTime(client.created_at) : '---'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
+                          onClick={(e) => openQuickSend(client, e)}
+                        >
+                          Wyślij wiadomość
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
+                          onClick={(e) => openClientHistory(client, e)}
+                        >
+                          Historia
+                        </Button>
+                      </div>
+
+                      {client.notes && (
+                        <div className="p-3 bg-slate-50 rounded-xl relative">
+                          <MessageSquare className="absolute -top-1 -left-1 h-3 w-3 text-slate-200" />
+                          <p className="text-xs text-gray-500 italic line-clamp-2 pl-2">
+                            {client.notes}
                           </p>
                         </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-11 w-11 min-h-[44px] min-w-[44px] text-slate-300 hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
-                        disabled={deletingClientId === client.id || isBulkDeletingClients}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          void handleDeleteClient(client.id, client.full_name)
-                        }}
-                      >
-                        {deletingClientId === client.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      {client.phone && (
-                        <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                          <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <Phone className="h-4 w-4" />
-                          </div>
-                          <a
-                            href={`tel:${client.phone}`}
-                            className="hover:text-primary transition-colors truncate"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {formatPhoneNumber(client.phone)}
-                          </a>
-                        </div>
-                      )}
-                      {client.email && (
-                        <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                          <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <Mail className="h-4 w-4" />
-                          </div>
-                          <a
-                            href={`mailto:${client.email}`}
-                            className="hover:text-primary transition-colors truncate"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {client.email}
-                          </a>
-                        </div>
                       )}
                     </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                          Wizyty
-                        </span>
-                        <span className="text-lg font-black text-gray-900 leading-none mt-1">
-                          {client.visit_count || 0}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                          Ostatnio
-                        </span>
-                        <span className="text-xs font-bold text-gray-600 mt-1">
-                          {client.created_at ? getRelativeTime(client.created_at) : '---'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
-                        onClick={(e) => openQuickSend(client, e)}
-                      >
-                        Wyślij wiadomość
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-11 px-3 min-h-[44px] min-w-[44px]"
-                        onClick={(e) => openClientHistory(client, e)}
-                      >
-                        Historia
-                      </Button>
-                    </div>
-
-                    {client.notes && (
-                      <div className="p-3 bg-slate-50 rounded-xl relative">
-                        <MessageSquare className="absolute -top-1 -left-1 h-3 w-3 text-slate-200" />
-                        <p className="text-xs text-gray-500 italic line-clamp-2 pl-2">
-                          {client.notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )
       ) : (
         <EmptyState
           icon={search ? Search : Sparkles}

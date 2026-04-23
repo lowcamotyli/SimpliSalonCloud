@@ -114,7 +114,7 @@ function getSelectedDays(daysOfWeek: Record<number, boolean>): number[] {
 }
 
 function getRuleTypeLabel(ruleType: RuleType): string {
-  return ruleType === 'fixed' ? 'Sta\ła' : 'Naprzemienna'
+  return ruleType === 'fixed' ? 'Stała' : 'Naprzemienna'
 }
 
 function getWeekInputValue(dateValue: string | null): string {

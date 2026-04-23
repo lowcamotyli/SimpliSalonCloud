@@ -5,8 +5,12 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useSalon } from '@/hooks/use-salon'
+import { useEmployees } from '@/hooks/use-employees'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import type { Payload } from 'recharts/types/component/DefaultTooltipContent'
 
 // Charts components
 import RevenueChart from '@/components/dashboard/revenue-chart'
@@ -55,6 +59,32 @@ interface ApiResponse<T> {
   error: string | null
 }
 
+interface PaymentMethodsResponse {
+  rows: Array<{
+    method: string
+    count: number
+    total_value: number
+  }>
+  total_count: number
+  total_value: number
+}
+
+interface HoursWorkedRow {
+  employee_id: string
+  employee_name: string
+  total_minutes: number
+  appointments_count: number
+  avg_minutes: number
+}
+
+interface EmployeeFilterOption {
+  id: string
+  name: string
+}
+
+type HoursWorkedSortKey = 'employee_name' | 'total_minutes' | 'appointments_count' | 'avg_minutes'
+type SortDirection = 'asc' | 'desc'
+
 export default function ReportsPage(): JSX.Element {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -63,15 +93,25 @@ export default function ReportsPage(): JSX.Element {
   const tabParam = searchParams.get('tab') || 'overview'
 
   const { data: salonData } = useSalon(slug)
+  const { data: employeesData } = useEmployees()
   const salon = salonData?.salon
   const [days, setDays] = useState<number>(30)
   const [loading, setLoading] = useState<boolean>(true)
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('all')
 
   const [npsData, setNpsData] = useState<NpsStats | null>(null)
   const [npsComments, setNpsComments] = useState<NpsComment[]>([])
   const [revenueData, setRevenueData] = useState<RevenueRow[]>([])
   const [topServices, setTopServices] = useState<TopService[]>([])
   const [topEmployees, setTopEmployees] = useState<TopEmployee[]>([])
+  const [paymentMethodsData, setPaymentMethodsData] = useState<PaymentMethodsResponse>({
+    rows: [],
+    total_count: 0,
+    total_value: 0
+  })
+  const [hoursWorkedData, setHoursWorkedData] = useState<HoursWorkedRow[]>([])
+  const [hoursWorkedSortBy, setHoursWorkedSortBy] = useState<HoursWorkedSortKey>('total_minutes')
+  const [hoursWorkedSortDir, setHoursWorkedSortDir] = useState<SortDirection>('desc')
 
   const fetchData = useCallback(async (range: number): Promise<void> => {
     setLoading(true)
@@ -81,20 +121,31 @@ export default function ReportsPage(): JSX.Element {
 
     const fromStr = from.toISOString().split('T')[0]
     const toStr = to.toISOString().split('T')[0]
+    const hoursWorkedParams = new URLSearchParams({
+      from: fromStr,
+      to: toStr,
+    })
+    if (selectedEmployeeId !== 'all') {
+      hoursWorkedParams.set('employeeId', selectedEmployeeId)
+    }
 
     try {
-      const [npsRes, revRes, topRes, empRes] = await Promise.all([
+      const [npsRes, revRes, topRes, empRes, paymentMethodsRes, hoursWorkedRes] = await Promise.all([
         fetch(`/api/reports/nps?from=${fromStr}&to=${toStr}`),
         fetch(`/api/reports/revenue?from=${fromStr}&to=${toStr}`),
         fetch(`/api/reports/top-services?from=${fromStr}&to=${toStr}`),
-        fetch(`/api/reports/top-employees?from=${fromStr}&to=${toStr}`)
+        fetch(`/api/reports/top-employees?from=${fromStr}&to=${toStr}`),
+        fetch(`/api/reports/payment-methods?from=${fromStr}&to=${toStr}`),
+        fetch(`/api/reports/hours-worked?${hoursWorkedParams.toString()}`)
       ])
 
-      const [nps, rev, top, emp] = await Promise.all([
+      const [nps, rev, top, emp, paymentMethods, hoursWorked] = await Promise.all([
         npsRes.json(),
         revRes.json(),
         topRes.json(),
-        empRes.json()
+        empRes.json(),
+        paymentMethodsRes.json(),
+        hoursWorkedRes.json()
       ])
 
       setNpsData(nps.stats || null)
@@ -102,12 +153,18 @@ export default function ReportsPage(): JSX.Element {
       setRevenueData(rev.rows || [])
       setTopServices(top.rows || [])
       setTopEmployees(emp.data || [])
+      setPaymentMethodsData({
+        rows: paymentMethods.rows || [],
+        total_count: paymentMethods.total_count || 0,
+        total_value: paymentMethods.total_value || 0
+      })
+      setHoursWorkedData(hoursWorked.rows || [])
     } catch (error) {
       console.error('Failed to fetch reports:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [selectedEmployeeId])
 
   useEffect(() => {
     fetchData(days)
@@ -121,6 +178,22 @@ export default function ReportsPage(): JSX.Element {
 
   const formatPLN = (amount: number): string => {
     return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(amount)
+  }
+
+  const formatMinutes = (mins: number): string => {
+    const safeMinutes = Number.isFinite(mins) ? Math.max(0, Math.round(mins)) : 0
+    const hours = Math.floor(safeMinutes / 60)
+    const minutes = safeMinutes % 60
+    return `${hours}h ${minutes}m`
+  }
+
+  const handleHoursWorkedSort = (key: HoursWorkedSortKey): void => {
+    if (hoursWorkedSortBy === key) {
+      setHoursWorkedSortDir(hoursWorkedSortDir === 'asc' ? 'desc' : 'asc')
+      return
+    }
+    setHoursWorkedSortBy(key)
+    setHoursWorkedSortDir('asc')
   }
 
   const renderStars = (rating: number): JSX.Element => {
@@ -151,6 +224,49 @@ export default function ReportsPage(): JSX.Element {
     name: emp.employee_name,
     amount: emp.revenue
   }))
+
+  const paymentMethodLabels: Record<string, string> = {
+    cash: 'Gotowka',
+    card: 'Karta',
+    transfer: 'Przelew',
+    other: 'Inne',
+    voucher: 'Voucher',
+  }
+
+  const paymentMethodsChartData = paymentMethodsData.rows.map((row) => ({
+    method: paymentMethodLabels[row.method] ?? paymentMethodLabels.other,
+    count: row.count,
+    total_value: row.total_value
+  }))
+
+  const hoursWorkedEmployeeOptions: EmployeeFilterOption[] = (employeesData || [])
+    .map((employee) => {
+      const fullName = `${employee.first_name || ''} ${employee.last_name || ''}`.trim()
+      return {
+        id: employee.id,
+        name: fullName || 'Bez nazwy',
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'pl'))
+
+  const sortedHoursWorkedData = [...hoursWorkedData].sort((a, b) => {
+    if (hoursWorkedSortBy === 'employee_name') {
+      const comparison = a.employee_name.localeCompare(b.employee_name, 'pl')
+      return hoursWorkedSortDir === 'asc' ? comparison : -comparison
+    }
+
+    const aValue = a[hoursWorkedSortBy]
+    const bValue = b[hoursWorkedSortBy]
+    const numericComparison = aValue - bValue
+    return hoursWorkedSortDir === 'asc' ? numericComparison : -numericComparison
+  })
+
+  const sortIndicator = (key: HoursWorkedSortKey): string => {
+    if (hoursWorkedSortBy !== key) {
+      return '↕'
+    }
+    return hoursWorkedSortDir === 'asc' ? '↑' : '↓'
+  }
 
   const toDate = new Date().toISOString().split('T')[0]
   const fromDate = new Date(new Date().setDate(new Date().getDate() - days)).toISOString().split('T')[0]
@@ -279,6 +395,50 @@ export default function ReportsPage(): JSX.Element {
           <RevenueChart data={chartData} title={`Zarobki (ostatnie ${days} dni)`} />
 
           <Card className="glass border-none shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Metody platnosci</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-[320px] w-full">
+                {paymentMethodsChartData.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">Brak danych w wybranym okresie</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={paymentMethodsChartData} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                      <XAxis dataKey="method" tick={{ fontSize: 12 }} interval={0} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        content={(props: any) => {
+                          if (!props?.active || !props?.payload?.length) {
+                            return null
+                          }
+                          const row = props.payload[0]?.payload as { method?: string; count?: number; total_value?: number } | undefined
+                          const method = row?.method || 'Nie podano'
+                          const count = typeof row?.count === 'number' ? row.count : 0
+                          const totalValue = typeof row?.total_value === 'number' ? row.total_value : 0
+                          return (
+                            <div className="rounded-md border bg-background p-2 text-sm shadow-sm">
+                              <div className="mb-1 font-medium">{`Metoda: ${method}`}</div>
+                              <div>{`Liczba transakcji: ${count}`}</div>
+                              <div>{`Suma wartosci: ${formatPLN(totalValue)}`}</div>
+                            </div>
+                          )
+                        }}
+                      />
+                      <Bar dataKey="count" name="count" fill="#16a34a" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4 text-sm">
+                <span className="text-muted-foreground">Liczba transakcji: <span className="font-semibold text-foreground">{paymentMethodsData.total_count}</span></span>
+                <span className="text-muted-foreground">Suma wartosci: <span className="font-semibold text-foreground">{formatPLN(paymentMethodsData.total_value)}</span></span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/50">
               <CardTitle className="text-lg">Szczegółowe dane</CardTitle>
               <a
@@ -372,7 +532,7 @@ export default function ReportsPage(): JSX.Element {
         {/* ======================= EMPLOYEES TAB ======================= */}
         <TabsContent value="employees" className="space-y-6 animate-in fade-in-50 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <EmployeeRevenueChart data={employeesChartData} />
+            <EmployeeRevenueChart data={employeesChartData} title={`Przychód wg pracowników (ostatnie ${days} dni)`} />
 
             <Card className="glass border-none">
               <CardHeader>
@@ -405,6 +565,72 @@ export default function ReportsPage(): JSX.Element {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="glass border-none shadow-sm">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-lg">Godziny przepracowane</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Pracownik:</span>
+                <select
+                  value={selectedEmployeeId}
+                  onChange={(event) => setSelectedEmployeeId(event.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  aria-label="Filtruj raport godzin wedlug pracownika"
+                >
+                  <option value="all">Wszyscy pracownicy</option>
+                  {hoursWorkedEmployeeOptions.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <button type="button" onClick={() => handleHoursWorkedSort('employee_name')} className="inline-flex items-center gap-1 font-semibold hover:text-foreground transition-colors">
+                        Pracownik <span className="text-xs">{sortIndicator('employee_name')}</span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button type="button" onClick={() => handleHoursWorkedSort('total_minutes')} className="inline-flex items-center gap-1 font-semibold hover:text-foreground transition-colors">
+                        Godziny <span className="text-xs">{sortIndicator('total_minutes')}</span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button type="button" onClick={() => handleHoursWorkedSort('appointments_count')} className="inline-flex items-center gap-1 font-semibold hover:text-foreground transition-colors">
+                        Liczba wizyt <span className="text-xs">{sortIndicator('appointments_count')}</span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button type="button" onClick={() => handleHoursWorkedSort('avg_minutes')} className="inline-flex items-center gap-1 font-semibold hover:text-foreground transition-colors">
+                        Sr. czas wizyty <span className="text-xs">{sortIndicator('avg_minutes')}</span>
+                      </button>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedHoursWorkedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Brak danych w wybranym okresie</TableCell>
+                    </TableRow>
+                  ) : (
+                    sortedHoursWorkedData.map((row) => (
+                      <TableRow key={row.employee_id}>
+                        <TableCell className="font-medium">{row.employee_name}</TableCell>
+                        <TableCell className="text-right">{formatMinutes(row.total_minutes)}</TableCell>
+                        <TableCell className="text-right">{row.appointments_count}</TableCell>
+                        <TableCell className="text-right">{formatMinutes(row.avg_minutes)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ======================= NPS TAB ======================= */}

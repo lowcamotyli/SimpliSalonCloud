@@ -6,6 +6,7 @@ import { useServices, useCreateService, useUpdateService, useDeleteService } fro
 import { useSalon } from '@/hooks/use-salon'
 import { AddonsEditor } from '@/components/services/addons-editor'
 import { BulkAddonDialog } from '@/components/services/bulk-addon-dialog'
+import { AssignEmployeesModal } from '@/components/services/assign-employees-modal'
 import { ServiceMediaGallery } from '@/components/services/service-media-gallery'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Accordion,
   AccordionContent,
@@ -59,14 +61,39 @@ import { cn } from '@/lib/utils/cn'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ListLoadingState } from '@/components/ui/list-loading-state'
 import { motion, AnimatePresence } from 'framer-motion'
+import { normalizeServicePriceType, ServicePriceType } from '@/lib/services/price-types'
 
 const serviceSchema = z.object({
   category: z.string().min(2, 'Minimum 2 znaki'),
   subcategory: z.string().min(2, 'Minimum 2 znaki'),
   name: z.string().min(2, 'Minimum 2 znaki'),
-  price: z.number().positive('Cena musi być większa od 0'),
+  price_type: z.enum(['fixed', 'variable', 'from', 'hidden', 'free']).default('fixed'),
+  price: z.number().nonnegative('Cena nie może być ujemna').optional(),
   duration: z.number().positive('Czas musi być większy od 0'),
   description: z.string().max(1000, 'Maksymalnie 1000 znaków').optional(),
+}).superRefine((data, ctx) => {
+  if (data.price_type === 'free') {
+    return
+  }
+
+  if (data.price_type === 'variable') {
+    if (data.price !== undefined && data.price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Cena musi być większa od 0',
+        path: ['price'],
+      })
+    }
+    return
+  }
+
+  if (!data.price || data.price <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Cena musi być większa od 0',
+      path: ['price'],
+    })
+  }
 })
 
 type ServiceFormData = z.infer<typeof serviceSchema>
@@ -75,6 +102,7 @@ interface Service {
   id: string
   name: string
   price: number
+  price_type: ServicePriceType
   duration: number
   surchargeAllowed: boolean
   category?: string
@@ -82,6 +110,9 @@ interface Service {
   active: boolean
   description?: string
 }
+
+const normalizePriceType = (value?: string): ServiceFormData['price_type'] =>
+  normalizeServicePriceType(value)
 
 export default function ServicesPage() {
   const params = useParams()
@@ -92,6 +123,8 @@ export default function ServicesPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
+  const [activeTab, setActiveTab] = useState('profil')
+  const [employeeModalService, setEmployeeModalService] = useState<{ id: string; name: string } | null>(null)
   const [availableEquipment, setAvailableEquipment] = useState<{ id: string; name: string; type: string }[]>([])
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([])
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
@@ -122,11 +155,22 @@ export default function ServicesPage() {
       category: '',
       subcategory: '',
       name: '',
+      price_type: 'fixed',
       price: 0,
       duration: 30,
     },
     mode: 'onChange',
   })
+  const selectedPriceType = form.watch('price_type')
+  const isFreePriceType = selectedPriceType === 'free'
+  const isVariablePriceType = selectedPriceType === 'variable'
+  const priceLabel = selectedPriceType === 'from' || selectedPriceType === 'variable' ? 'Cena od' : 'Cena'
+
+  useEffect(() => {
+    if (selectedPriceType === 'free') {
+      form.setValue('price', 0, { shouldDirty: true, shouldValidate: true })
+    }
+  }, [form, selectedPriceType])
 
   useEffect(() => {
     const action = searchParams.get('action')
@@ -146,7 +190,8 @@ export default function ServicesPage() {
     const list: Service[] = []
     const cats = new Set<string>()
     let totalServices = 0
-    let totalPrice = 0
+    let totalVisiblePrice = 0
+    let totalVisiblePriceCount = 0
     let totalDuration = 0
 
     if (servicesData) {
@@ -156,14 +201,18 @@ export default function ServicesPage() {
           subcategoryGroup.services.forEach((service: any) => {
             const flattened: Service = {
               ...service,
+              price_type: normalizePriceType(service.price_type),
               category: categoryGroup.category,
               subcategory: subcategoryGroup.name,
               active: service.active ?? true,
             }
             list.push(flattened)
             totalServices++
-            totalPrice += service.price
             totalDuration += service.duration
+            if (flattened.price_type !== 'free' && flattened.price_type !== 'hidden') {
+              totalVisiblePrice += flattened.price
+              totalVisiblePriceCount++
+            }
           })
         })
       })
@@ -174,7 +223,7 @@ export default function ServicesPage() {
       categories: Array.from(cats),
       stats: {
         total: totalServices,
-        avgPrice: totalServices > 0 ? totalPrice / totalServices : 0,
+        avgPrice: totalVisiblePriceCount > 0 ? totalVisiblePrice / totalVisiblePriceCount : 0,
         avgDuration: totalServices > 0 ? totalDuration / totalServices : 0
       }
     }
@@ -254,12 +303,14 @@ export default function ServicesPage() {
 
   const defaultExpandedCategory = groupedDisplay[0]?.[0]
   const handleOpenDialog = (service?: Service) => {
+    setActiveTab('profil')
     if (service) {
       setEditingService(service)
       form.reset({
         category: service.category || '',
         subcategory: service.subcategory || '',
         name: service.name,
+        price_type: normalizePriceType(service.price_type),
         price: service.price,
         duration: service.duration,
         description: service.description || '',
@@ -275,6 +326,7 @@ export default function ServicesPage() {
         category: activeCategory !== 'all' ? activeCategory : '',
         subcategory: '',
         name: '',
+        price_type: 'fixed',
         price: 0,
         duration: 30,
       })
@@ -285,6 +337,8 @@ export default function ServicesPage() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     setEditingService(null)
+    setActiveTab('profil')
+    setEmployeeModalService(null)
     setSelectedEquipmentIds([])
     form.reset()
   }
@@ -299,8 +353,15 @@ export default function ServicesPage() {
 
   const onSubmit = async (data: ServiceFormData) => {
     try {
+      const normalizedPriceType = normalizePriceType(data.price_type)
+      const normalizedPrice =
+        normalizedPriceType === 'free'
+          ? 0
+          : data.price ?? 0
       const serviceData = {
         ...data,
+        price_type: normalizedPriceType,
+        price: normalizedPrice,
         active: editingService ? editingService.active : true,
       }
 
@@ -311,6 +372,7 @@ export default function ServicesPage() {
         })
         await saveEquipmentAssignment(editingService.id)
         toast.success('Usługa zaktualizowana')
+        handleCloseDialog()
       } else {
         const result = await createService.mutateAsync(serviceData)
         const newServiceId = result?.service?.id
@@ -318,8 +380,10 @@ export default function ServicesPage() {
           await saveEquipmentAssignment(newServiceId)
         }
         toast.success('Usługa dodana')
+        setEditingService(result.service)
+        setActiveTab('dodatki')
+        setEmployeeModalService({ id: result.service.id, name: result.service.name })
       }
-      handleCloseDialog()
     } catch (error: any) {
       toast.error(error.message || 'Błąd podczas zapisywania')
     }
@@ -458,6 +522,32 @@ export default function ServicesPage() {
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 }
+  }
+
+  const getServicePriceDisplay = (service: Service): { text: string; showHiddenBadge: boolean } => {
+    const servicePriceType = normalizePriceType(service.price_type)
+    const hasPrice = typeof service.price === 'number' && service.price > 0
+
+    if (servicePriceType === 'free') {
+      return { text: 'Bezplatna', showHiddenBadge: false }
+    }
+
+    if (servicePriceType === 'variable') {
+      if (hasPrice) {
+        return { text: `od ${formatPrice(service.price)} (zmienna)`, showHiddenBadge: false }
+      }
+      return { text: 'Cena zmienna', showHiddenBadge: false }
+    }
+
+    if (servicePriceType === 'from') {
+      return { text: `od ${formatPrice(service.price)}`, showHiddenBadge: false }
+    }
+
+    if (servicePriceType === 'hidden') {
+      return { text: formatPrice(service.price), showHiddenBadge: true }
+    }
+
+    return { text: formatPrice(service.price), showHiddenBadge: false }
   }
 
   return (
@@ -719,7 +809,9 @@ export default function ServicesPage() {
                                   ? "grid grid-cols-1 xl:grid-cols-2 gap-4"
                                   : "space-y-2"
                               )}>
-                                {(services as Service[]).map((service) => (
+                                {(services as Service[]).map((service) => {
+                                  const priceDisplay = getServicePriceDisplay(service)
+                                  return (
                                   <Card
                                     key={service.id}
                                     className={cn(
@@ -751,7 +843,12 @@ export default function ServicesPage() {
                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-gray-500 font-medium">
                                           <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
                                             <DollarSign className="h-4 w-4" />
-                                            {formatPrice(service.price)}
+                                            {priceDisplay.text}
+                                            {priceDisplay.showHiddenBadge ? (
+                                              <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                                                Ukryta
+                                              </Badge>
+                                            ) : null}
                                           </span>
                                           <span className="flex items-center gap-1.5">
                                             <Clock className="h-4 w-4 text-gray-400" />
@@ -803,7 +900,8 @@ export default function ServicesPage() {
                                       </div>
                                     </div>
                                   </Card>
-                                ))}
+                                  )
+                                })}
                               </div>
                             </div>
                           ))}
@@ -842,7 +940,7 @@ export default function ServicesPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            <Tabs defaultValue="profil" className="pt-1">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="pt-1">
               <TabsList className="mb-4">
                 <TabsTrigger value="profil">Profil</TabsTrigger>
                 <TabsTrigger value="dodatki">Dodatki</TabsTrigger>
@@ -909,10 +1007,41 @@ export default function ServicesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="price_type" className="font-bold text-gray-700">Typ ceny *</Label>
+                    <Select
+                      value={selectedPriceType}
+                      onValueChange={(value) => form.setValue('price_type', value as ServiceFormData['price_type'], { shouldDirty: true, shouldValidate: true })}
+                    >
+                      <SelectTrigger id="price_type" className="glass h-11 py-3 rounded-xl focus:bg-white">
+                        <SelectValue placeholder="Wybierz typ ceny" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Stala</SelectItem>
+                        <SelectItem value="variable">Zmienna</SelectItem>
+                        <SelectItem value="from">Od kwoty</SelectItem>
+                        <SelectItem value="hidden">Ukryta</SelectItem>
+                        <SelectItem value="free">Bezplatna</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {!isFreePriceType ? (
                   <div className="space-y-2">
-                    <Label htmlFor="price" className="font-bold text-gray-700">Cena (zł) *</Label>
+                    <Label htmlFor="price" className="font-bold text-gray-700">
+                      {priceLabel} {isVariablePriceType ? '' : '*'}
+                    </Label>
                     <div className="relative">
-                      <Input id="price" type="number" step="0.01" placeholder="0.00" {...form.register('price', { valueAsNumber: true })} className="glass h-11 py-3 rounded-xl focus:bg-white pr-10" />
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...form.register('price', {
+                          setValueAs: (value) => value === '' ? undefined : Number(value),
+                        })}
+                        className="glass h-11 py-3 rounded-xl focus:bg-white pr-10"
+                      />
                       <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                     </div>
                     {form.formState.errors.price && (
@@ -922,6 +1051,7 @@ export default function ServicesPage() {
                       </p>
                     )}
                   </div>
+                  ) : null}
 
                   <div className="space-y-2">
                     <Label htmlFor="duration" className="font-bold text-gray-700">Czas (min) *</Label>
@@ -1054,6 +1184,12 @@ export default function ServicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AssignEmployeesModal
+        serviceId={employeeModalService?.id ?? ''}
+        serviceName={employeeModalService?.name ?? ''}
+        isOpen={employeeModalService !== null}
+        onClose={() => setEmployeeModalService(null)}
+      />
       <BulkAddonDialog
         serviceIds={selectedServiceIds}
         mode={bulkAddonDialog.mode}
@@ -1075,4 +1211,3 @@ export default function ServicesPage() {
     </div>
   )
 }
-

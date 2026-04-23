@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { addDaysToIsoDate, getZonedParts, resolveSalonTimeZone, zonedDateTimeToUtcIso } from '@/lib/utils/timezone'
 import { availabilityDatesQuerySchema } from '@/lib/validators/public-booking.validators'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -37,6 +38,24 @@ interface BookingRow {
 interface EquipmentBlockRow {
     starts_at: string
     ends_at: string
+}
+
+interface EmployeeAbsenceRow {
+    employee_id: string
+    start_date: string
+    end_date: string
+}
+
+interface TimeReservationRow {
+    employee_id: string
+    start_at: string
+    end_at: string
+}
+
+function toTimeString(minutes: number): string {
+    const hh = Math.floor(minutes / 60)
+    const mm = minutes % 60
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`
 }
 
 function parseTimeToMinutes(time: string): number {
@@ -135,11 +154,12 @@ export async function GET(request: NextRequest) {
     // 3. Pobierz godziny otwarcia
     const { data: settings } = await supabase
         .from('salon_settings')
-        .select('operating_hours')
+        .select('operating_hours, timezone')
         .eq('salon_id', salonId)
         .maybeSingle()
 
     const operatingHours = (settings?.operating_hours ?? null) as Record<string, DayHours> | null
+    const salonTimeZone = resolveSalonTimeZone(settings?.timezone ?? null)
 
     // 4. Inne potrzebne dane (grafiki, rezerwacje, sprzet) w przedziale dat
     const [{ data: allSchedules }, { data: allExceptions }, { data: bookings }] = await Promise.all([
@@ -176,8 +196,6 @@ export async function GET(request: NextRequest) {
         exceptionsByEmp.get(row.employee_id)!.push(row)
     }
 
-    console.log("DATES API FETCH:", { startDate, endDate, empIds, allExceptions, schedulesByEmp: Array.from(schedulesByEmp.keys()) })
-
     // Sprzet - optional optimization, moglibysmy tu sciagnac caly miesiac tak samo
     const { data: serviceEquipmentRows } = await supabase
         .from('service_equipment')
@@ -196,13 +214,68 @@ export async function GET(request: NextRequest) {
         allEquipmentBlocks = (eqBookings ?? []) as EquipmentBlockRow[]
     }
 
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    const rangeStart = zonedDateTimeToUtcIso(startDate, '00:00', salonTimeZone)
+    const rangeEndPlusOneIso = zonedDateTimeToUtcIso(addDaysToIsoDate(endDate, 1), '00:00', salonTimeZone)
+
+    const [{ data: employeeAbsences }, { data: timeReservations }] = await Promise.all([
+        supabase
+            .from('employee_absences')
+            .select('employee_id, start_date, end_date')
+            .eq('salon_id', salonId)
+            .in('employee_id', empIds)
+            .lte('start_date', endDate)
+            .gte('end_date', startDate),
+        supabase
+            .from('time_reservations')
+            .select('employee_id, start_at, end_at')
+            .eq('salon_id', salonId)
+            .in('employee_id', empIds)
+            .lt('start_at', rangeEndPlusOneIso)
+            .gt('end_at', rangeStart)
+    ])
+
+    const absencesByEmp = new Map<string, EmployeeAbsenceRow[]>()
+    for (const row of (employeeAbsences ?? []) as EmployeeAbsenceRow[]) {
+        if (!absencesByEmp.has(row.employee_id)) absencesByEmp.set(row.employee_id, [])
+        absencesByEmp.get(row.employee_id)!.push(row)
+    }
+
+    const reservationsByEmpAndDate = new Map<string, BookingRow[]>()
+    for (const row of (timeReservations ?? []) as TimeReservationRow[]) {
+        const reservationStart = new Date(row.start_at)
+        const reservationEnd = new Date(row.end_at)
+        if (Number.isNaN(reservationStart.getTime()) || Number.isNaN(reservationEnd.getTime()) || reservationEnd <= reservationStart) {
+            continue
+        }
+
+        const zonedStart = getZonedParts(reservationStart, salonTimeZone)
+        const zonedEnd = getZonedParts(reservationEnd, salonTimeZone)
+        let cursorDate = zonedStart.date
+
+        while (cursorDate <= zonedEnd.date) {
+            if (cursorDate >= startDate && cursorDate <= endDate) {
+                const startMinutes = cursorDate === zonedStart.date ? zonedStart.hour * 60 + zonedStart.minute : 0
+                const endMinutes = cursorDate === zonedEnd.date ? zonedEnd.hour * 60 + zonedEnd.minute : 24 * 60
+                const duration = endMinutes - startMinutes
+                if (duration > 0) {
+                    const key = `${row.employee_id}|${cursorDate}`
+                    if (!reservationsByEmpAndDate.has(key)) reservationsByEmpAndDate.set(key, [])
+                    reservationsByEmpAndDate.get(key)!.push({
+                        booking_date: cursorDate,
+                        booking_time: toTimeString(startMinutes),
+                        duration,
+                        employee_id: row.employee_id
+                    })
+                }
+            }
+            cursorDate = addDaysToIsoDate(cursorDate, 1)
+        }
+    }
+
     const availableDates: string[] = []
 
-    for (let current = new Date(start); current <= end; current.setUTCDate(current.getUTCDate() + 1)) {
-        const dateStr = current.toISOString().split('T')[0]
-        const dayOfWeek = current.getUTCDay()
+    for (let dateStr = startDate; dateStr <= endDate; dateStr = addDaysToIsoDate(dateStr, 1)) {
+        const dayOfWeek = new Date(`${dateStr}T00:00:00.000Z`).getUTCDay()
         const dayName = DAY_NAMES[dayOfWeek]
         const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }
 
@@ -230,6 +303,12 @@ export async function GET(request: NextRequest) {
         let isDayAvailable = false
 
         for (const empId of empIds) {
+            const employeeAbsencesForDay = absencesByEmp.get(empId) ?? []
+            const isEmployeeAbsent = employeeAbsencesForDay.some((absence) =>
+                absence.start_date <= dateStr && absence.end_date >= dateStr
+            )
+            if (isEmployeeAbsent) continue
+
             const window = resolveEmployeeWindow(
                 dayOfWeek,
                 dateStr,
@@ -243,11 +322,13 @@ export async function GET(request: NextRequest) {
             const effectiveEnd = Math.min(salonClose, empEnd)
             if (effectiveStart >= effectiveEnd) continue
 
+            const employeeReservationsForDay = reservationsByEmpAndDate.get(`${empId}|${dateStr}`) ?? []
+            const employeeDayBookings = dayBookings.concat(employeeReservationsForDay)
             const hasAnySlots = hasSlots(
                 effectiveStart,
                 effectiveEnd,
                 service.duration,
-                dayBookings,
+                employeeDayBookings,
                 empId,
                 eqBlocksForDay
             )
@@ -262,8 +343,6 @@ export async function GET(request: NextRequest) {
             availableDates.push(dateStr)
         }
     }
-
-    console.log("DATES API RESULT:", { availableDates })
 
     return NextResponse.json({ availableDates })
 }
