@@ -6,13 +6,7 @@ import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
 import { resolveBookingBasePrice } from '@/lib/services/price-types'
-
-interface PublicGroupBookingRequest {
-    name: string
-    phone: string
-    email?: string
-    items: Array<{ serviceId: string; employeeId: string; date: string; time: string }>
-}
+import { publicGroupBookingSchema } from '@/lib/validators/public-booking.validators'
 
 interface ResolvedGroupBookingItem {
     service: {
@@ -24,6 +18,12 @@ interface ResolvedGroupBookingItem {
         id: string
     }
     requiredEquipmentIds: string[]
+}
+
+function getSlotRange(date: string, time: string, durationMinutes: number): { startsAt: Date; endsAt: Date } {
+    const startsAt = new Date(`${date}T${time}:00Z`)
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000)
+    return { startsAt, endsAt }
 }
 
 export async function POST(request: NextRequest) {
@@ -58,35 +58,39 @@ export async function POST(request: NextRequest) {
         if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
         const { salonId } = authResult
 
-        let body: PublicGroupBookingRequest
+        const supabase = createAdminSupabaseClient()
+
+        const { data: salonSettings, error: salonSettingsError } = await supabase
+            .from('salon_settings')
+            .select('terms_text, terms_url')
+            .eq('salon_id', salonId)
+            .maybeSingle()
+
+        if (salonSettingsError) {
+            logger.error('[PUBLIC_GROUP_BOOKINGS] salon settings fetch error', salonSettingsError)
+            return NextResponse.json({ error: 'Salon settings fetch failed' }, { status: 500 })
+        }
+
+        let body: unknown
         try {
-            body = (await request.json()) as PublicGroupBookingRequest
+            body = await request.json()
         } catch (error) {
             logger.error('[PUBLIC_GROUP_BOOKINGS] invalid json body', error as Error)
             return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
         }
 
-        const { name, phone, email, items } = body
-
-        if (
-            !name ||
-            !phone ||
-            !Array.isArray(items) ||
-            items.length < 1 ||
-            items.some(
-                item =>
-                    !item ||
-                    !item.serviceId ||
-                    !item.employeeId ||
-                    !item.date ||
-                    !item.time
-            )
-        ) {
+        const parsed = publicGroupBookingSchema.safeParse(body)
+        if (!parsed.success) {
             logger.warn('[PUBLIC_GROUP_BOOKINGS] validation failed')
-            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+            return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
         }
 
-        const supabase = createAdminSupabaseClient()
+        const { name, phone, email, items, terms_accepted } = parsed.data
+        const termsAcceptedAt = terms_accepted ? new Date().toISOString() : null
+
+        if ((salonSettings?.terms_text || salonSettings?.terms_url) && !terms_accepted) {
+            return NextResponse.json({ error: 'terms_not_accepted' }, { status: 422 })
+        }
 
         logger.info('[PUBLIC_GROUP_BOOKINGS] payload', { itemsCount: items.length })
 
@@ -231,8 +235,7 @@ export async function POST(request: NextRequest) {
             const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((row: any) => row.equipment_id)
 
             if (requiredEquipmentIds.length > 0) {
-                const startsAt = new Date(`${item.date}T${item.time}:00Z`)
-                const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+                const { startsAt, endsAt } = getSlotRange(item.date, item.time, service.duration)
                 const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
                     p_equipment_ids: requiredEquipmentIds,
                     p_starts_at: startsAt.toISOString(),
@@ -278,6 +281,7 @@ export async function POST(request: NextRequest) {
                 p_payment_method: null,
                 p_notes: null,
                 p_items: rpcItems,
+                p_terms_accepted_at: termsAcceptedAt,
             }
         )
 
@@ -298,8 +302,7 @@ export async function POST(request: NextRequest) {
             if (resolved.requiredEquipmentIds.length > 0) {
                 const bookingId = rpcResult.bookings[i]?.id
                 if (bookingId) {
-                    const startsAt = new Date()
-                    const endsAt = new Date(startsAt.getTime() + resolved.service.duration * 60_000)
+                    const { startsAt, endsAt } = getSlotRange(item.date, item.time, resolved.service.duration)
                     await supabase.from('equipment_bookings').insert(
                         resolved.requiredEquipmentIds.map((eqId: string) => ({
                             booking_id: bookingId,

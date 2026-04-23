@@ -28,6 +28,9 @@ oraz rozbudowe sprzetu. Zawiera tez hotfixy zgloszone przez klientke.
 | 35 | Kalendarz i dostepnosc: timezone + RBAC + flow nieobecnosci | Scheduling Hardening | P0 | [ ] |
 | 36 | Klienci i raporty: domkniecie acceptance criteria | UX / Reports Hardening | P1 | [ ] |
 | 37 | Sprzet: security i domkniecie przypisan do uslug | Equipment Hardening | P1 | [ ] |
+| 38 | Publiczny booking grupowy: terms + sprzet + kontrakt | Booking Hardening | P0 | [ ] |
+| 39 | Availability i sprzet: domkniecie timezone end-to-end | Scheduling / Equipment Hardening | P0 | [ ] |
+| 40 | Kalendarz panelu: render rezerwacji czasu w timezone salonu | Calendar Hardening | P1 | [ ] |
 
 ---
 
@@ -73,3 +76,8 @@ Dodatkowe sprinty 34-37 domykaja luki wykryte podczas pelnego review SS2.4:
 | Raporty nie domykaja bucketingu / filtrow z acceptance criteria | 36 |
 | Endpoint przypisania sprzetu do uslug nie waliduje salon_id dla serviceIds | 37 |
 | Post-create / list view sprzetu wymaga domkniecia security i UX | 37 |
+| Group booking omija warunek `terms_accepted` obecny w single booking | 38 |
+| Group booking zapisuje `equipment_bookings` dla `now()` zamiast dla slotu wizyty | 38 |
+| Public availability nadal liczy blokady sprzetu przez UTC day bounds i `getUTCHours()` | 39 |
+| Public booking single/group sprawdza availability sprzetu przez `${date}T${time}:00Z` zamiast timezone salonu | 39 |
+| Kalendarz panelu renderuje `time_reservations` w timezone przegladarki zamiast salonu | 40 |
