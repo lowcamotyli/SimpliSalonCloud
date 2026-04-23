@@ -20,7 +20,7 @@ oraz rozbudowę sprzętu. Zawiera też hotfixy zgłoszone przez klientkę.
 | 27 | Tworzenie usługi: Dodatki, Galeria, Przypisanie pracownika | Services | P1 | [ ] |
 | 28 | Pracownik ↔ Usługi: multi-select + wysuwany panel | Employee UX | P1 | [ ] |
 | 29 | Nieobecności (zakresy dat) + Rezerwacja czasu | Scheduling | P1 | [ ] |
-| 30 | Wizyty: Conflict Override + SMS z widoku edycji | Booking | P1 | [ ] |
+| 30 | SMS z widoku edycji wizyty (Conflict Override → SS2.3-13 ✅) | Booking | P1 | [ ] |
 | 31 | Klienci: widok listy | Clients | P2 | [ ] |
 | 32 | Raporty: Metody płatności + Godziny przepracowane | Reports | P2 | [ ] |
 | 33 | Sprzęt: widok lista/kafelki + przypisanie do usługi | Equipment | P2 | [ ] |
@@ -44,7 +44,7 @@ Feedback klientki (kwiecień 2026). Oryginalne punkty zmapowane na sprinty:
 | Urlopy — zakresy od-do | 29 |
 | Rezerwacja czasu (usługa wewnętrzna) | 29 |
 | Kalendarz: 'Rezerwacja czasu', 'Nieobecność' | 29 |
-| Zapisz konfliktujące wizyty po potwierdzeniu | 30 |
+| Zapisz konfliktujące wizyty po potwierdzeniu | ~~30~~ SS2.3-13 ✅ |
 | Edycja wizyty — wysyłka SMS z szablonu | 30 |
 | Widok listy klientów | 31 |
 | Raport: Sposoby zakończenia transakcji | 32 |
