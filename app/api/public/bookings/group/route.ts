@@ -7,6 +7,8 @@ import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
 import { resolveBookingBasePrice } from '@/lib/services/price-types'
 import { publicGroupBookingSchema } from '@/lib/validators/public-booking.validators'
+import { resolveSalonTimeZone } from '@/lib/utils/timezone'
+import { buildSalonSlotUtcRange } from '@/lib/utils/equipment-timezone'
 
 interface ResolvedGroupBookingItem {
     service: {
@@ -20,10 +22,13 @@ interface ResolvedGroupBookingItem {
     requiredEquipmentIds: string[]
 }
 
-function getSlotRange(date: string, time: string, durationMinutes: number): { startsAt: Date; endsAt: Date } {
-    const startsAt = new Date(`${date}T${time}:00Z`)
-    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000)
-    return { startsAt, endsAt }
+function getSlotRange(
+    date: string,
+    time: string,
+    durationMinutes: number,
+    timeZone: string
+): { startsAtIso: string; endsAtIso: string } {
+    return buildSalonSlotUtcRange(date, time, durationMinutes, timeZone)
 }
 
 export async function POST(request: NextRequest) {
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
 
         const { data: salonSettings, error: salonSettingsError } = await supabase
             .from('salon_settings')
-            .select('terms_text, terms_url')
+            .select('terms_text, terms_url, timezone')
             .eq('salon_id', salonId)
             .maybeSingle()
 
@@ -91,6 +96,7 @@ export async function POST(request: NextRequest) {
         if ((salonSettings?.terms_text || salonSettings?.terms_url) && !terms_accepted) {
             return NextResponse.json({ error: 'terms_not_accepted' }, { status: 422 })
         }
+        const salonTimeZone = resolveSalonTimeZone(salonSettings?.timezone ?? null)
 
         logger.info('[PUBLIC_GROUP_BOOKINGS] payload', { itemsCount: items.length })
 
@@ -235,11 +241,11 @@ export async function POST(request: NextRequest) {
             const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((row: any) => row.equipment_id)
 
             if (requiredEquipmentIds.length > 0) {
-                const { startsAt, endsAt } = getSlotRange(item.date, item.time, service.duration)
+                const { startsAtIso, endsAtIso } = getSlotRange(item.date, item.time, service.duration, salonTimeZone)
                 const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
                     p_equipment_ids: requiredEquipmentIds,
-                    p_starts_at: startsAt.toISOString(),
-                    p_ends_at: endsAt.toISOString(),
+                    p_starts_at: startsAtIso,
+                    p_ends_at: endsAtIso,
                     p_exclude_booking_id: null,
                 } as any)
                 const equipmentConflicts = (equipmentAvailability ?? []).filter((a: any) => !a.is_available)
@@ -302,13 +308,18 @@ export async function POST(request: NextRequest) {
             if (resolved.requiredEquipmentIds.length > 0) {
                 const bookingId = rpcResult.bookings[i]?.id
                 if (bookingId) {
-                    const { startsAt, endsAt } = getSlotRange(item.date, item.time, resolved.service.duration)
+                    const { startsAtIso, endsAtIso } = getSlotRange(
+                        item.date,
+                        item.time,
+                        resolved.service.duration,
+                        salonTimeZone
+                    )
                     await supabase.from('equipment_bookings').insert(
                         resolved.requiredEquipmentIds.map((eqId: string) => ({
                             booking_id: bookingId,
                             equipment_id: eqId,
-                            starts_at: startsAt.toISOString(),
-                            ends_at: endsAt.toISOString(),
+                            starts_at: startsAtIso,
+                            ends_at: endsAtIso,
                         }))
                     )
                 }

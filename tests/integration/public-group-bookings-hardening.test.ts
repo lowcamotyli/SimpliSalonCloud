@@ -58,10 +58,12 @@ type GroupTestItem = {
 type SupabaseMockOptions = {
   termsText?: string | null
   termsUrl?: string | null
+  salonTimezone?: string | null
   servicesById?: Record<string, { duration: number; price: number; price_type?: string | null }>
   equipmentByServiceId?: Record<string, string[]>
   employees?: string[]
   rpcBookings?: Array<{ id: string }>
+  equipmentAvailabilityByStartIso?: Record<string, boolean>
 }
 
 function createGroupSupabaseMock(options: SupabaseMockOptions): {
@@ -89,6 +91,7 @@ function createGroupSupabaseMock(options: SupabaseMockOptions): {
                 data: {
                   terms_text: options.termsText ?? null,
                   terms_url: options.termsUrl ?? null,
+                  timezone: options.salonTimezone ?? null,
                 },
                 error: null,
               }),
@@ -191,10 +194,12 @@ function createGroupSupabaseMock(options: SupabaseMockOptions): {
 
       if (fnName === 'check_equipment_availability') {
         const ids = (args.p_equipment_ids as string[]) ?? []
+        const startsAt = typeof args.p_starts_at === 'string' ? args.p_starts_at : ''
+        const isAvailableForRange = options.equipmentAvailabilityByStartIso?.[startsAt]
         return {
           data: ids.map((equipmentId) => ({
             equipment_id: equipmentId,
-            is_available: true,
+            is_available: isAvailableForRange ?? true,
             conflict_booking_id: null,
           })),
           error: null,
@@ -401,5 +406,43 @@ describe('public group bookings hardening regressions', () => {
         ends_at: '2026-05-12T12:30:00.000Z',
       },
     ])
+  })
+
+  it('returns item conflict when local salon slot is occupied in non-UTC timezone', async () => {
+    const item: GroupTestItem = {
+      serviceId: '123e4567-e89b-42d3-a456-426614174020',
+      employeeId: '123e4567-e89b-42d3-a456-426614174120',
+      date: '2026-05-10',
+      time: '10:00',
+    }
+
+    const { supabase, rpcCalls } = createGroupSupabaseMock({
+      salonTimezone: 'Europe/Warsaw',
+      servicesById: {
+        [item.serviceId]: { duration: 30, price: 120 },
+      },
+      equipmentByServiceId: {
+        [item.serviceId]: ['eq-1'],
+      },
+      employees: [item.employeeId],
+      rpcBookings: [{ id: 'booking-conflict-1' }],
+      equipmentAvailabilityByStartIso: {
+        '2026-05-10T08:00:00.000Z': false,
+      },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+
+    const response = await POST(
+      createGroupBookingRequest([item], {
+        terms_accepted: true,
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(409)
+    expect(body).toEqual({ error: 'Time slot not available', conflictingItemIndex: 0 })
+    const equipmentCheckCall = rpcCalls.find(({ fnName }) => fnName === 'check_equipment_availability')
+    expect(equipmentCheckCall?.args.p_starts_at).toBe('2026-05-10T08:00:00.000Z')
+    expect(equipmentCheckCall?.args.p_ends_at).toBe('2026-05-10T08:30:00.000Z')
   })
 })

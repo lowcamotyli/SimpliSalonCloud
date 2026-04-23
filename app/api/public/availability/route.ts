@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { addDaysToIsoDate, getDayOfWeekFromIsoDate, getZonedParts, resolveSalonTimeZone, zonedDateTimeToUtcIso } from '@/lib/utils/timezone'
+import { buildSalonDayUtcRange, toSalonLocalMinuteBlock } from '@/lib/utils/equipment-timezone'
 import { availabilityQuerySchema } from '@/lib/validators/public-booking.validators'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -218,23 +219,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         .eq('service_id', serviceId)
     const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((r: { equipment_id: string }) => r.equipment_id)
 
-    let equipmentBlocks: [number, number][] = []
-    if (requiredEquipmentIds.length > 0) {
-        const dayStart = `${date}T00:00:00.000Z`
-        const dayEnd = `${date}T23:59:59.999Z`
-        const { data: eqBookings } = await supabase
-            .from('equipment_bookings')
-            .select('starts_at, ends_at')
-            .in('equipment_id', requiredEquipmentIds)
-            .lt('starts_at', dayEnd)
-            .gt('ends_at', dayStart)
-        equipmentBlocks = (eqBookings ?? [] as EquipmentBlockRow[]).map((eb: EquipmentBlockRow) => {
-            const s = new Date(eb.starts_at)
-            const e = new Date(eb.ends_at)
-            return [s.getUTCHours() * 60 + s.getUTCMinutes(), e.getUTCHours() * 60 + e.getUTCMinutes()]
-        })
-    }
-
     // Pobierz godziny otwarcia salonu
     const { data: settings } = await supabase
         .from('salon_settings')
@@ -244,6 +228,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const operatingHours = (settings?.operating_hours ?? null) as Record<string, DayHours> | null
     const salonTimeZone = resolveSalonTimeZone(settings?.timezone ?? null)
+
+    let equipmentBlocks: [number, number][] = []
+    if (requiredEquipmentIds.length > 0) {
+        const { startIso: dayStartIso, endIso: dayEndIso } = buildSalonDayUtcRange(date, salonTimeZone)
+        const { data: eqBookings } = await supabase
+            .from('equipment_bookings')
+            .select('starts_at, ends_at')
+            .in('equipment_id', requiredEquipmentIds)
+            .lt('starts_at', dayEndIso)
+            .gt('ends_at', dayStartIso)
+        equipmentBlocks = ((eqBookings ?? []) as EquipmentBlockRow[])
+            .map((eb) => toSalonLocalMinuteBlock(eb, salonTimeZone, date))
+            .filter((value): value is [number, number] => value !== null)
+    }
     const dayOfWeek = getDayOfWeekFromIsoDate(date)
     const dayName = DAY_NAMES[dayOfWeek]
     const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }

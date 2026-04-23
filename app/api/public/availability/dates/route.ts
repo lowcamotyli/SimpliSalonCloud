@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
-import { addDaysToIsoDate, getZonedParts, resolveSalonTimeZone, zonedDateTimeToUtcIso } from '@/lib/utils/timezone'
+import { addDaysToIsoDate, getDayOfWeekFromIsoDate, getZonedParts, resolveSalonTimeZone } from '@/lib/utils/timezone'
+import { buildSalonDateRangeUtc, toSalonLocalMinuteBlock } from '@/lib/utils/equipment-timezone'
 import { availabilityDatesQuerySchema } from '@/lib/validators/public-booking.validators'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -205,17 +206,22 @@ export async function GET(request: NextRequest) {
 
     let allEquipmentBlocks: EquipmentBlockRow[] = []
     if (requiredEquipmentIds.length > 0) {
+        const { startIso: equipmentRangeStartIso, endExclusiveIso: equipmentRangeEndExclusiveIso } =
+            buildSalonDateRangeUtc(startDate, endDate, salonTimeZone)
         const { data: eqBookings } = await supabase
             .from('equipment_bookings')
             .select('starts_at, ends_at')
             .in('equipment_id', requiredEquipmentIds)
-            .lt('starts_at', `${endDate}T23:59:59.999Z`)
-            .gt('ends_at', `${startDate}T00:00:00.000Z`)
+            .lt('starts_at', equipmentRangeEndExclusiveIso)
+            .gt('ends_at', equipmentRangeStartIso)
         allEquipmentBlocks = (eqBookings ?? []) as EquipmentBlockRow[]
     }
 
-    const rangeStart = zonedDateTimeToUtcIso(startDate, '00:00', salonTimeZone)
-    const rangeEndPlusOneIso = zonedDateTimeToUtcIso(addDaysToIsoDate(endDate, 1), '00:00', salonTimeZone)
+    const { startIso: rangeStart, endExclusiveIso: rangeEndPlusOneIso } = buildSalonDateRangeUtc(
+        startDate,
+        endDate,
+        salonTimeZone
+    )
 
     const [{ data: employeeAbsences }, { data: timeReservations }] = await Promise.all([
         supabase
@@ -275,7 +281,7 @@ export async function GET(request: NextRequest) {
     const availableDates: string[] = []
 
     for (let dateStr = startDate; dateStr <= endDate; dateStr = addDaysToIsoDate(dateStr, 1)) {
-        const dayOfWeek = new Date(`${dateStr}T00:00:00.000Z`).getUTCDay()
+        const dayOfWeek = getDayOfWeekFromIsoDate(dateStr)
         const dayName = DAY_NAMES[dayOfWeek]
         const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }
 
@@ -286,19 +292,9 @@ export async function GET(request: NextRequest) {
 
         const dayBookings = (bookings ?? []).filter(b => b.booking_date === dateStr) as BookingRow[]
 
-        let eqBlocksForDay: [number, number][] = []
-        if (allEquipmentBlocks.length > 0) {
-            const dayStart = new Date(`${dateStr}T00:00:00.000Z`)
-            const dayEnd = new Date(`${dateStr}T23:59:59.999Z`)
-            eqBlocksForDay = allEquipmentBlocks
-                .filter(eb => new Date(eb.starts_at) < dayEnd && new Date(eb.ends_at) > dayStart)
-                .map(eb => {
-                    const s = new Date(eb.starts_at)
-                    const e = new Date(eb.ends_at)
-                    // Convert UTCHours appropriately
-                    return [s.getUTCHours() * 60 + s.getUTCMinutes(), e.getUTCHours() * 60 + e.getUTCMinutes()]
-                })
-        }
+        const eqBlocksForDay: [number, number][] = allEquipmentBlocks
+            .map((block) => toSalonLocalMinuteBlock(block, salonTimeZone, dateStr))
+            .filter((value): value is [number, number] => value !== null)
 
         let isDayAvailable = false
 
