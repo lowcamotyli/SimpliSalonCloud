@@ -17,6 +17,7 @@ import { BookingCard } from '@/components/calendar/booking-card'
 import { AbsenceDialog } from '@/components/calendar/absence-dialog'
 import { TimeReservationDialog } from '@/components/calendar/time-reservation-dialog'
 import { BUSINESS_HOURS } from '@/lib/constants'
+import { DEFAULT_TIMEZONE, getZonedParts, resolveSalonTimeZone } from '@/lib/utils/timezone'
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -92,6 +93,36 @@ function buildCalendarEntries(dayBookings: any[], previewDurations: Record<strin
 
 const snapMinutes = (minutes: number) => Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES
 
+type CalendarTimeReservation = {
+  id: string
+  employee_id: string
+  title: string | null
+  localDate: string
+  localStartMinutes: number
+  durationMinutes: number
+}
+
+function mapReservationToCalendarLocal(reservation: any, salonTimeZone: string): CalendarTimeReservation | null {
+  if (!reservation?.id || !reservation?.employee_id) return null
+  const start = new Date(reservation.start_at)
+  const end = new Date(reservation.end_at)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+
+  const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60)
+  if (durationMinutes <= 0) return null
+
+  const zonedStart = getZonedParts(start, salonTimeZone)
+
+  return {
+    id: reservation.id,
+    employee_id: reservation.employee_id,
+    title: reservation.title ?? null,
+    localDate: zonedStart.date,
+    localStartMinutes: zonedStart.hour * 60 + zonedStart.minute,
+    durationMinutes,
+  }
+}
+
 export default function CalendarPage() {
   const router = useRouter()
   const pathname = usePathname()
@@ -110,6 +141,7 @@ export default function CalendarPage() {
   const [isInitialized, setIsInitialized] = useState(false)
   const [previewDurations, setPreviewDurations] = useState<Record<string, number>>({})
   const [timeReservations, setTimeReservations] = useState<any[]>([])
+  const [salonTimeZone, setSalonTimeZone] = useState<string>(DEFAULT_TIMEZONE)
 
   const { data: employees } = useEmployees()
 
@@ -296,10 +328,12 @@ export default function CalendarPage() {
           setTimeReservations([])
           return
         }
-        const payload = await response.json() as { reservations?: any[] }
+        const payload = await response.json() as { reservations?: any[]; salonTimeZone?: string }
+        setSalonTimeZone(resolveSalonTimeZone(payload.salonTimeZone))
         setTimeReservations(Array.isArray(payload.reservations) ? payload.reservations : [])
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
+          setSalonTimeZone(DEFAULT_TIMEZONE)
           setTimeReservations([])
         }
       }
@@ -480,6 +514,7 @@ export default function CalendarPage() {
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
             timeReservations={timeReservations}
+            salonTimeZone={salonTimeZone}
           />
         )}
         {viewType === 'week' && (
@@ -497,6 +532,7 @@ export default function CalendarPage() {
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
             timeReservations={timeReservations}
+            salonTimeZone={salonTimeZone}
           />
         )}
         {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} onBookingClick={handleBookingClick} employees={employees} getEmployeeColor={getEmployeeColor} />}
@@ -529,13 +565,18 @@ export default function CalendarPage() {
   )
 }
 
-function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations }: any) {
+function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, salonTimeZone }: any) {
   const dateStr = formatDate(currentDate)
   const now = new Date()
   const isToday = isSameDay(currentDate, now)
   const currentHour = now.getHours()
   const visibleEmployeesList = employees?.filter((emp: any) => visibleEmployees.has(emp.id)) || []
   const columnCount = visibleEmployeesList.length
+  const mappedTimeReservations = useMemo(() => {
+    return (timeReservations || [])
+      .map((reservation: any) => mapReservationToCalendarLocal(reservation, salonTimeZone))
+      .filter((reservation: CalendarTimeReservation | null): reservation is CalendarTimeReservation => reservation !== null)
+  }, [salonTimeZone, timeReservations])
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const suppressClickUntilRef = useRef(0)
@@ -633,19 +674,13 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   )
                 })}
 
-                {(timeReservations || [])
+                {mappedTimeReservations
                   .filter((reservation: any) => {
-                    if (reservation.employee_id !== employee.id) return false
-                    const start = new Date(reservation.start_at)
-                    return !Number.isNaN(start.getTime()) && formatDate(start) === dateStr
+                    return reservation.employee_id === employee.id && reservation.localDate === dateStr
                   })
                   .map((reservation: any) => {
-                    const start = new Date(reservation.start_at)
-                    const end = new Date(reservation.end_at)
-                    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
-                    const startMinutes = start.getHours() * 60 + start.getMinutes() - BUSINESS_HOURS.START * 60
-                    const duration = (end.getTime() - start.getTime()) / (1000 * 60)
-                    if (duration <= 0) return null
+                    const startMinutes = reservation.localStartMinutes - BUSINESS_HOURS.START * 60
+                    const duration = reservation.durationMinutes
                     const top = (startMinutes / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
                     const height = (duration / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
                     return (
@@ -737,9 +772,14 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   )
 }
 
-function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations }: any) {
+function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, salonTimeZone }: any) {
   const weekDays = generateWeekDays(currentDate)
   const now = new Date()
+  const mappedTimeReservations = useMemo(() => {
+    return (timeReservations || [])
+      .map((reservation: any) => mapReservationToCalendarLocal(reservation, salonTimeZone))
+      .filter((reservation: CalendarTimeReservation | null): reservation is CalendarTimeReservation => reservation !== null)
+  }, [salonTimeZone, timeReservations])
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const suppressClickUntilRef = useRef(0)
@@ -843,21 +883,15 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                 {employees?.map((employee: any) => {
                   if (!visibleEmployees.has(employee.id)) return null
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
-                  const dayTimeReservations = (timeReservations || []).filter((reservation: any) => {
-                    if (reservation.employee_id !== employee.id) return false
-                    const start = new Date(reservation.start_at)
-                    return !Number.isNaN(start.getTime()) && formatDate(start) === dateStr
+                  const dayTimeReservations = mappedTimeReservations.filter((reservation: any) => {
+                    return reservation.employee_id === employee.id && reservation.localDate === dateStr
                   })
 
                   return (
                     <div key={employee.id} className="contents">
                       {dayTimeReservations.map((reservation: any) => {
-                        const start = new Date(reservation.start_at)
-                        const end = new Date(reservation.end_at)
-                        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
-                        const startMinutes = start.getHours() * 60 + start.getMinutes() - BUSINESS_HOURS.START * 60
-                        const duration = (end.getTime() - start.getTime()) / (1000 * 60)
-                        if (duration <= 0) return null
+                        const startMinutes = reservation.localStartMinutes - BUSINESS_HOURS.START * 60
+                        const duration = reservation.durationMinutes
                         const top = (startMinutes / 60) * 80
                         const height = (duration / 60) * 80
                         return (

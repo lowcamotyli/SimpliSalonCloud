@@ -139,7 +139,7 @@ export const PATCH = withErrorHandling(async (
   const finalStart = startAtIso ?? existingReservation.start_at
   const finalEnd = endAtIso ?? existingReservation.end_at
   if (new Date(finalStart) >= new Date(finalEnd)) {
-    return NextResponse.json({ error: 'start_at must be before end_at' }, { status: 400 })
+    throw new ValidationError('start_at must be before end_at')
   }
 
   const { data: overlap, error: overlapError } = await supabase

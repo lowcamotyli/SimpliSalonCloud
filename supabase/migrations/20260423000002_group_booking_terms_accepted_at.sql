@@ -9,6 +9,7 @@ CREATE OR REPLACE FUNCTION create_group_booking_atomic(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_visit_group_id UUID;

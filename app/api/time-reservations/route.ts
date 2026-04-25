@@ -178,7 +178,10 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<NextR
   const { data, error } = await query
   if (error) throw error
 
-  return NextResponse.json({ reservations: (data ?? []) as TimeReservationRow[] })
+  return NextResponse.json({
+    reservations: (data ?? []) as TimeReservationRow[],
+    salonTimeZone,
+  })
 })
 
 export const POST = withErrorHandling(async (request: NextRequest): Promise<NextResponse> => {
