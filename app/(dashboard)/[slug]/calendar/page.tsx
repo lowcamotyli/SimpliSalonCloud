@@ -21,6 +21,8 @@ import { DEFAULT_TIMEZONE, getZonedParts, resolveSalonTimeZone } from '@/lib/uti
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { CalendarDays, CalendarClock, UserX } from 'lucide-react'
 
 const BookingDialog = dynamic(() => import('./booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
@@ -136,6 +138,7 @@ export default function CalendarPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isTimeReservationDialogOpen, setIsTimeReservationDialogOpen] = useState(false)
   const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false)
+  const [isSlotActionOpen, setIsSlotActionOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
   const [isInitialized, setIsInitialized] = useState(false)
@@ -358,7 +361,7 @@ export default function CalendarPage() {
   const handleTimeSlotClick = (date: string, time: string, employeeId?: string) => {
     setSelectedSlot({ date, time, employeeId })
     setSelectedBooking(null)
-    setIsDialogOpen(true)
+    setIsSlotActionOpen(true)
   }
 
   const handleDayClick = (day: Date) => {
@@ -551,6 +554,27 @@ export default function CalendarPage() {
           prefilledSlot={selectedSlot}
         />
       )}
+      <Dialog open={isSlotActionOpen} onOpenChange={(open) => !open && setIsSlotActionOpen(false)}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Co chcesz dodać?</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsDialogOpen(true) }}>
+              <CalendarDays className="h-4 w-4" />
+              Nowa wizyta
+            </Button>
+            <Button variant="outline" className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsTimeReservationDialogOpen(true) }}>
+              <CalendarClock className="h-4 w-4" />
+              Rezerwacja czasu
+            </Button>
+            <Button variant="outline" className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsAbsenceDialogOpen(true) }}>
+              <UserX className="h-4 w-4" />
+              Nieobecność
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <TimeReservationDialog
         isOpen={isTimeReservationDialogOpen}
         onClose={() => setIsTimeReservationDialogOpen(false)}
