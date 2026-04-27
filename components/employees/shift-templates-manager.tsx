@@ -235,11 +235,11 @@ export function ShiftTemplatesManager(): JSX.Element {
           )
         : null}
 
-      {isLoading ? <p className="text-sm text-muted-foreground">Ladowanie szablonow...</p> : null}
+      {isLoading ? <p className="text-sm text-muted-foreground">Ładowanie szablonów...</p> : null}
       {error ? <p className="text-sm text-destructive">{error.message}</p> : null}
 
       {!isLoading && activeTemplates.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Brak aktywnych szablonow zmian.</p>
+        <p className="text-sm text-muted-foreground">Brak aktywnych szablonów zmian.</p>
       ) : null}
 
       <div className="space-y-2">
@@ -287,7 +287,7 @@ export function ShiftTemplatesManager(): JSX.Element {
                       type="button"
                       size="icon"
                       variant="ghost"
-                      aria-label={`Usun szablon ${template.name}`}
+                      aria-label={`Usuń szablon ${template.name}`}
                       onClick={() => {
                         void handleDelete(template.id)
                       }}

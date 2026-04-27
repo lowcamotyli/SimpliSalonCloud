@@ -17,6 +17,21 @@ export const publicBookingSchema = z.object({
     terms_accepted: z.boolean().optional(),
 })
 
+export const publicGroupBookingSchema = z.object({
+    name: z.string().min(2).max(100),
+    phone: z.string().regex(/^\+?[0-9]{9,15}$/),
+    email: z.string().email().optional(),
+    terms_accepted: z.boolean().optional(),
+    items: z.array(
+        z.object({
+            serviceId: z.string().uuid(),
+            employeeId: z.string().uuid(),
+            date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+            time: z.string().regex(/^\d{2}:\d{2}$/),
+        })
+    ).min(1),
+})
+
 export const availabilityDatesQuerySchema = z.object({
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD'),
@@ -25,5 +40,6 @@ export const availabilityDatesQuerySchema = z.object({
 })
 
 export type PublicBookingInput = z.infer<typeof publicBookingSchema>
+export type PublicGroupBookingInput = z.infer<typeof publicGroupBookingSchema>
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
 export type AvailabilityDatesQuery = z.infer<typeof availabilityDatesQuerySchema>

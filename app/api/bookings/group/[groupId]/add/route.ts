@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthContext } from '@/lib/supabase/get-auth-context'
+import { canEmployeePerformService } from '@/lib/bookings/employee-service-authorization'
 import { recalculateGroupTotal } from '@/lib/bookings/recalculate-group-total'
+import { findTimeReservationConflict, formatTimeReservationConflictMessage } from '@/lib/bookings/time-reservation-conflicts'
 import type { TablesInsert } from '@/types/supabase'
 
 interface AddGroupBookingBody {
@@ -86,19 +88,14 @@ export async function POST(
       return NextResponse.json({ error: 'Service not found' }, { status: 404 })
     }
 
-    const { data: employeeService, error: employeeServiceError } = await supabase
-      .from('employee_services')
-      .select('id')
-      .eq('salon_id', authSalonId)
-      .eq('employee_id', employeeId)
-      .eq('service_id', serviceId)
-      .maybeSingle()
+    const canPerformService = await canEmployeePerformService(
+      supabase as any,
+      authSalonId,
+      employeeId,
+      serviceId
+    )
 
-    if (employeeServiceError) {
-      throw employeeServiceError
-    }
-
-    if (!employeeService) {
+    if (!canPerformService) {
       return NextResponse.json({ error: 'Employee is not authorized to perform this service' }, { status: 400 })
     }
 
@@ -145,6 +142,23 @@ export async function POST(
 
       if (hasEmployeeConflict) {
         return NextResponse.json({ error: 'conflict', conflictType: 'employee' }, { status: 409 })
+      }
+
+      const timeReservationConflict = await findTimeReservationConflict({
+        supabase: supabase as any,
+        salonId: authSalonId,
+        employeeId,
+        date: bookingDate,
+        startTime,
+        durationMinutes: duration,
+      })
+
+      if (timeReservationConflict) {
+        return NextResponse.json({
+          error: 'TIME_RESERVATION_CONFLICT',
+          message: formatTimeReservationConflictMessage(timeReservationConflict),
+          conflictType: 'time_reservation',
+        }, { status: 409 })
       }
 
       if (requiredEquipmentIds.length > 0) {

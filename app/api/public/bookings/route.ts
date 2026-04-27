@@ -6,6 +6,9 @@ import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limi
 import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
+import { resolveBookingBasePrice } from '@/lib/services/price-types'
+import { resolveSalonTimeZone } from '@/lib/utils/timezone'
+import { buildSalonSlotUtcRange } from '@/lib/utils/equipment-timezone'
 
 function jsonWithCors(
     request: NextRequest,
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
 
         const { data: salonSettings, error: salonSettingsError } = await supabase
             .from('salon_settings')
-            .select('terms_text, terms_url')
+            .select('terms_text, terms_url, timezone')
             .eq('salon_id', salonId)
             .maybeSingle()
 
@@ -79,6 +82,7 @@ export async function POST(request: NextRequest) {
         if ((salonSettings?.terms_text || salonSettings?.terms_url) && !terms_accepted) {
             return jsonWithCors(request, { error: 'terms_not_accepted' }, { status: 422 })
         }
+        const salonTimeZone = resolveSalonTimeZone(salonSettings?.timezone ?? null)
 
         logger.info('[PUBLIC_BOOKINGS] payload', { serviceId, date, time })
 
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
         logger.info('[PUBLIC_BOOKINGS] fetch service start')
         const { data: service, error: serviceError } = await supabase
             .from('services')
-            .select('duration, price')
+            .select('duration, price, price_type')
             .eq('id', serviceId)
             .eq('salon_id', salonId)
             .single()
@@ -288,12 +292,11 @@ export async function POST(request: NextRequest) {
 
         // sprawdź dostępność sprzętu
         if (requiredEquipmentIds.length > 0) {
-            const startsAt = new Date(`${date}T${time}:00Z`)
-            const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+            const { startsAtIso, endsAtIso } = buildSalonSlotUtcRange(date, time, service.duration, salonTimeZone)
             const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
                 p_equipment_ids: requiredEquipmentIds,
-                p_starts_at: startsAt.toISOString(),
-                p_ends_at: endsAt.toISOString(),
+                p_starts_at: startsAtIso,
+                p_ends_at: endsAtIso,
                 p_exclude_booking_id: null,
             } as any)
             const equipmentConflicts = (equipmentAvailability ?? []).filter((a: any) => !a.is_available)
@@ -315,7 +318,7 @@ export async function POST(request: NextRequest) {
                 booking_date: date,
                 booking_time: time,
                 duration: service.duration,
-                base_price: service.price,
+                base_price: resolveBookingBasePrice(service.price, service.price_type),
                 status: 'scheduled',
                 source: 'website',
                 ...(terms_accepted ? { terms_accepted_at: new Date().toISOString() } : {}),
@@ -336,14 +339,13 @@ export async function POST(request: NextRequest) {
 
         // zarezerwuj sprzęt
         if (requiredEquipmentIds.length > 0) {
-            const startsAt = new Date(`${date}T${time}:00Z`)
-            const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+            const { startsAtIso, endsAtIso } = buildSalonSlotUtcRange(date, time, service.duration, salonTimeZone)
             await supabase.from('equipment_bookings').insert(
                 requiredEquipmentIds.map((eqId: string) => ({
                     booking_id: booking.id,
                     equipment_id: eqId,
-                    starts_at: startsAt.toISOString(),
-                    ends_at: endsAt.toISOString(),
+                    starts_at: startsAtIso,
+                    ends_at: endsAtIso,
                 }))
             )
         }

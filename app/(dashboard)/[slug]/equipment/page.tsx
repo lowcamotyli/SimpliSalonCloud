@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Edit2, Power, PowerOff, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Power, PowerOff, Loader2, LayoutGrid, LayoutList } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -33,6 +34,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+import EquipmentListView from '@/components/equipment/equipment-list-view';
 
 interface Equipment {
   id: string;
@@ -42,6 +44,8 @@ interface Equipment {
   description?: string;
   is_active: boolean;
   created_at: string;
+  assigned_services_count?: number;
+  service_equipment?: { equipment_id: string }[];
 }
 
 interface ServiceOption {
@@ -85,6 +89,25 @@ const flattenServicesResponse = (data: any): ServiceOption[] => {
   return [];
 };
 
+const getAssignedServicesCount = (item: Equipment): number => {
+  if (typeof item.assigned_services_count === 'number') {
+    return item.assigned_services_count;
+  }
+
+  return item.service_equipment?.length ?? 0;
+};
+
+const parseApiErrorMessage = async (response: Response, fallback: string): Promise<string> => {
+  const data = await response.json().catch(() => null);
+  if (typeof data?.message === 'string' && data.message.length > 0) {
+    return data.message;
+  }
+  if (typeof data?.error === 'string' && data.error.length > 0) {
+    return data.error;
+  }
+  return fallback;
+};
+
 export default function EquipmentPage() {
   const { slug } = useParams();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -101,6 +124,17 @@ export default function EquipmentPage() {
   const [rightServiceIds, setRightServiceIds] = useState<string[]>([]);
   const [selectedLeftIds, setSelectedLeftIds] = useState<Set<string>>(new Set());
   const [selectedRightIds, setSelectedRightIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<'tiles' | 'list'>(() =>
+    typeof window !== 'undefined'
+      ? ((localStorage.getItem('equipment-view-mode') as 'tiles' | 'list') ?? 'tiles')
+      : 'tiles'
+  );
+  const [isPostCreateOpen, setIsPostCreateOpen] = useState(false);
+  const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null);
+  const [postCreateSelected, setPostCreateSelected] = useState<string[]>([]);
+  const [isPostCreateLoading, setIsPostCreateLoading] = useState(false);
+  const [postCreateLoadError, setPostCreateLoadError] = useState<string | null>(null);
+  const [isPostCreateSaving, setIsPostCreateSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -126,6 +160,10 @@ export default function EquipmentPage() {
     fetchEquipment();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('equipment-view-mode', viewMode);
+  }, [viewMode]);
+
   const handleOpenAddDialog = () => {
     setEditingItem(null);
     setFormData({ name: '', type: 'inne', description: '' });
@@ -140,6 +178,36 @@ export default function EquipmentPage() {
       description: item.description || '',
     });
     setIsDialogOpen(true);
+  };
+
+  const loadServiceOptions = async () => {
+    const allServicesResponse = await fetch('/api/services');
+    if (!allServicesResponse.ok) {
+      throw new Error('Failed to fetch services');
+    }
+    const allServicesData = await allServicesResponse.json();
+    const allServices = flattenServicesResponse(allServicesData);
+    setServiceOptions(allServices);
+  };
+
+  const openPostCreateDialog = async (equipmentId: string) => {
+    setNewlyCreatedId(equipmentId);
+    setPostCreateSelected([]);
+    setPostCreateLoadError(null);
+    setIsPostCreateOpen(true);
+
+    if (serviceOptions.length > 0) {
+      return;
+    }
+
+    try {
+      setIsPostCreateLoading(true);
+      await loadServiceOptions();
+    } catch {
+      setPostCreateLoadError('Nie udało się pobrać usług. Spróbuj ponownie.');
+    } finally {
+      setIsPostCreateLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,9 +229,16 @@ export default function EquipmentPage() {
       });
 
       if (!response.ok) throw new Error('Operation failed');
+      const data = await response.json().catch(() => null);
 
       toast.success(editingItem ? 'Sprzęt zaktualizowany' : 'Sprzęt dodany pomyślnie');
       setIsDialogOpen(false);
+      if (!editingItem) {
+        const createdId = data?.equipment?.id;
+        if (createdId) {
+          await openPostCreateDialog(createdId);
+        }
+      }
       fetchEquipment();
     } catch (error) {
       toast.error('Wystąpił błąd podczas zapisywania');
@@ -172,17 +247,17 @@ export default function EquipmentPage() {
     }
   };
 
-  const toggleStatus = async (item: Equipment) => {
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/equipment/${item.id}`, {
+      const response = await fetch(`/api/equipment/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !item.is_active }),
+        body: JSON.stringify({ is_active: !isActive }),
       });
 
       if (!response.ok) throw new Error('Failed to toggle status');
 
-      toast.success(item.is_active ? 'Sprzęt dezaktywowany' : 'Sprzęt aktywowany');
+      toast.success(isActive ? 'Sprzęt dezaktywowany' : 'Sprzęt aktywowany');
       fetchEquipment();
     } catch (error) {
       toast.error('Nie udało się zmienić statusu sprzętu');
@@ -302,7 +377,11 @@ export default function EquipmentPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save assignments');
+        const errorMessage = await parseApiErrorMessage(
+          response,
+          'Nie udalo sie zapisac przypisan uslug'
+        );
+        throw new Error(errorMessage);
       }
 
       toast.success('Przypisania usług zostały zapisane');
@@ -310,6 +389,7 @@ export default function EquipmentPage() {
       setSelectedEquipment(null);
       setSelectedLeftIds(new Set());
       setSelectedRightIds(new Set());
+      await fetchEquipment();
     } catch (error) {
       toast.error('Nie udało się zapisać przypisań usług');
     } finally {
@@ -317,13 +397,77 @@ export default function EquipmentPage() {
     }
   };
 
+  async function handlePostCreateSave() {
+    if (!newlyCreatedId || postCreateSelected.length === 0) return;
+    setIsPostCreateSaving(true);
+    try {
+      const res = await fetch(`/api/equipment/${newlyCreatedId}/services`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceIds: postCreateSelected }),
+      });
+      if (!res.ok) {
+        const errorMessage = await parseApiErrorMessage(res, 'Blad przypisania uslug');
+        throw new Error(errorMessage);
+      }
+      toast.success('Uslugi przypisane');
+      setIsPostCreateOpen(false);
+      setNewlyCreatedId(null);
+      setPostCreateSelected([]);
+      await fetchEquipment();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Blad przypisania uslug';
+      toast.error(message);
+    } finally {
+      setIsPostCreateSaving(false);
+    }
+  }
+
+  function handleSkipPostCreate() {
+    setIsPostCreateOpen(false);
+    setNewlyCreatedId(null);
+    setPostCreateSelected([]);
+    setPostCreateLoadError(null);
+  }
+
+  async function handleRetryPostCreateLoad() {
+    if (!newlyCreatedId) return;
+    try {
+      setPostCreateLoadError(null);
+      setIsPostCreateLoading(true);
+      await loadServiceOptions();
+    } catch {
+      setPostCreateLoadError('Nie udało się pobrać usług. Spróbuj ponownie.');
+    } finally {
+      setIsPostCreateLoading(false);
+    }
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Sprzet salonu</h1>
-        <Button onClick={handleOpenAddDialog}>
-          <Plus className="mr-2 h-4 w-4" /> Dodaj sprzet
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'tiles' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('tiles')}
+            title="Widok kafelki"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('list')}
+            title="Widok lista"
+          >
+            <LayoutList className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleOpenAddDialog}>
+            <Plus className="mr-2 h-4 w-4" /> Dodaj sprzet
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -337,6 +481,23 @@ export default function EquipmentPage() {
             Dodaj teraz
           </Button>
         </div>
+      ) : viewMode === 'list' ? (
+        <EquipmentListView
+          equipment={equipment}
+          onEdit={(item) => {
+            setEditingItem(item as Equipment);
+            setFormData({
+              name: item.name,
+              type: item.type as Equipment['type'],
+              description: item.description ?? '',
+            });
+            setIsDialogOpen(true);
+          }}
+          onToggleStatus={(id, is_active) => handleToggleStatus(id, is_active)}
+          onOpenServices={(item) => {
+            handleOpenServicesDialog(item as Equipment);
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {equipment.map((item) => (
@@ -357,6 +518,11 @@ export default function EquipmentPage() {
                 <div>
                   <Badge variant="outline" className="capitalize">
                     {getTypeLabel(item.type)}
+                  </Badge>
+                </div>
+                <div>
+                  <Badge variant={getAssignedServicesCount(item) === 0 ? 'secondary' : 'default'}>
+                    {getAssignedServicesCount(item)} uslug
                   </Badge>
                 </div>
                 {item.description && (
@@ -381,7 +547,7 @@ export default function EquipmentPage() {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleStatus(item);
+                    handleToggleStatus(item.id, item.is_active);
                   }}
                 >
                   {item.is_active ? (
@@ -549,6 +715,87 @@ export default function EquipmentPage() {
             <Button type="button" disabled={isServicesSaving || isServicesLoading} onClick={handleSaveServiceAssignments}>
               {isServicesSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Zapisz
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isPostCreateOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setIsPostCreateOpen(true);
+            return;
+          }
+          handleSkipPostCreate();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Przypisz do uslugi</DialogTitle>
+            <DialogDescription>
+              Opcjonalnie przypisz nowy sprzet do uslug salonu. Mozesz to zrobic pozniej.
+            </DialogDescription>
+          </DialogHeader>
+          {isPostCreateLoading ? (
+            <div className="flex h-40 items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ScrollArea className="max-h-[360px] pr-4">
+              <div className="space-y-3">
+                {postCreateLoadError && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                    <p>{postCreateLoadError}</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={handleRetryPostCreateLoad}
+                      disabled={isPostCreateLoading || !newlyCreatedId}
+                    >
+                      Sprobuj ponownie
+                    </Button>
+                  </div>
+                )}
+                {!postCreateLoadError && serviceOptions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Brak uslug do przypisania.</p>
+                )}
+                {!postCreateLoadError &&
+                  serviceOptions.map((service) => (
+                    <div key={service.id} className="flex items-center gap-3">
+                      <Checkbox
+                        id={`pc-svc-${service.id}`}
+                        checked={postCreateSelected.includes(service.id)}
+                        onCheckedChange={(checked) =>
+                          setPostCreateSelected((prev) =>
+                            checked ? [...prev, service.id] : prev.filter((id) => id !== service.id)
+                          )
+                        }
+                      />
+                      <Label htmlFor={`pc-svc-${service.id}`} className="cursor-pointer">
+                        {service.name}
+                      </Label>
+                    </div>
+                  ))}
+              </div>
+            </ScrollArea>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleSkipPostCreate}>
+              Pomin
+            </Button>
+            <Button
+              onClick={handlePostCreateSave}
+              disabled={
+                isPostCreateLoading ||
+                isPostCreateSaving ||
+                postCreateSelected.length === 0 ||
+                !!postCreateLoadError
+              }
+            >
+              {isPostCreateSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Przypisz'}
             </Button>
           </DialogFooter>
         </DialogContent>

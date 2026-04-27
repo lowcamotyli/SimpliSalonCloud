@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Plus, Settings, X } from 'lucide-react'
 import { addDays, addWeeks, format, isSameDay, startOfWeek } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -22,6 +22,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+
+import { ShiftSidePanel } from './shift-side-panel'
 
 type ShiftTemplate = {
   id: string
@@ -62,7 +64,7 @@ type EmployeeShiftsTabProps = {
   employeeId: string
 }
 
-const DAY_LABELS = ['Pon', 'Wt', 'Sr', 'Czw', 'Pt', 'Sob', 'Nie'] as const
+const DAY_LABELS = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'] as const
 const WEEK_APPLY_DAY_OPTIONS = [
   { label: 'Pon', index: 0, defaultChecked: true },
   { label: 'Wt', index: 1, defaultChecked: true },
@@ -143,7 +145,7 @@ function ShiftAssignDialog({
     }
 
     if (mode === 'manual' && (!startTime || !endTime)) {
-      toast.error('Podaj godzine rozpoczecia i zakonczenia.')
+      toast.error('Podaj godzinę rozpoczęcia i zakończenia.')
       return
     }
 
@@ -180,14 +182,14 @@ function ShiftAssignDialog({
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie przypisac zmiany.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się przypisać zmiany.'))
       }
 
-      toast.success('Zmiana zostala przypisana.')
+      toast.success('Zmiana została przypisana.')
       onOpenChange(false)
       await onAssigned()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie przypisac zmiany.'
+      const message = error instanceof Error ? error.message : 'Nie udało się przypisać zmiany.'
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -200,7 +202,7 @@ function ShiftAssignDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Przypisz zmiane</DialogTitle>
+          <DialogTitle>Przypisz zmianę</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -216,14 +218,14 @@ function ShiftAssignDialog({
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="template">Ze szablonu</TabsTrigger>
-              <TabsTrigger value="manual">Manual</TabsTrigger>
+              <TabsTrigger value="manual">Ręcznie</TabsTrigger>
             </TabsList>
 
             <TabsContent value="template" className="space-y-2">
               <Label htmlFor="shift-template">Szablon</Label>
               <Select value={templateId} onValueChange={setTemplateId}>
                 <SelectTrigger id="shift-template">
-                  <SelectValue placeholder={isTemplatesLoading ? 'Ladowanie...' : 'Wybierz szablon'} />
+                  <SelectValue placeholder={isTemplatesLoading ? 'Ładowanie...' : 'Wybierz szablon'} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((template) => (
@@ -234,7 +236,7 @@ function ShiftAssignDialog({
                 </SelectContent>
               </Select>
               {!isTemplatesLoading && templates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Brak aktywnych szablonow zmian.</p>
+                <p className="text-sm text-muted-foreground">Brak aktywnych szablonów zmian.</p>
               ) : null}
             </TabsContent>
 
@@ -302,6 +304,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
   const [weekApplyTemplateId, setWeekApplyTemplateId] = useState('')
   const [weekApplyDays, setWeekApplyDays] = useState<Record<number, boolean>>(() => getDefaultWeekApplyDays())
   const [isApplyingWeek, setIsApplyingWeek] = useState(false)
+  const [sidePanelMode, setSidePanelMode] = useState<'rules' | 'templates' | null>(null)
 
   const weekDays = useMemo(() => getWeekDays(currentWeekStart), [currentWeekStart])
   const weekLabel = useMemo(() => {
@@ -325,13 +328,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac zmian.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać zmian.'))
       }
 
       const data = (await response.json()) as EmployeeShiftsResponse
       setShifts(data.shifts ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać zmian.'
       toast.error(message)
       setShifts([])
     } finally {
@@ -349,13 +352,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac szablonow zmian.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać szablonów zmian.'))
       }
 
       const data = (await response.json()) as ShiftTemplatesResponse
       setTemplates(data.templates ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac szablonow zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać szablonów zmian.'
       toast.error(message)
       setTemplates([])
     } finally {
@@ -412,7 +415,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
     const selectedDays = weekDays.filter((_, index) => weekApplyDays[index])
 
     if (selectedDays.length === 0) {
-      toast.error('Wybierz przynajmniej jeden dzien.')
+      toast.error('Wybierz przynajmniej jeden dzień.')
       return
     }
 
@@ -435,16 +438,16 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
           })
 
           if (!response.ok) {
-            throw new Error(await getErrorMessage(response, 'Nie udalo sie przypisac zmiany.'))
+            throw new Error(await getErrorMessage(response, 'Nie udało się przypisać zmiany.'))
           }
         })
       )
 
-      toast.success('Zmiany zostaly przypisane.')
+      toast.success('Zmiany zostały przypisane.')
       setIsWeekApplyDialogOpen(false)
       await fetchShifts()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie przypisac zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się przypisać zmian.'
       toast.error(message)
     } finally {
       setIsApplyingWeek(false)
@@ -452,7 +455,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
   }
 
   const handleDeleteShift = async (shift: EmployeeShift): Promise<void> => {
-    const confirmDelete = window.confirm('Usunac te zmiane?')
+    const confirmDelete = window.confirm('Usunąć tę zmianę?')
 
     if (!confirmDelete) {
       return
@@ -466,13 +469,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie usunac zmiany.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się usunąć zmiany.'))
       }
 
-      toast.success('Zmiana zostala usunieta.')
+      toast.success('Zmiana została usunięta.')
       await fetchShifts()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie usunac zmiany.'
+      const message = error instanceof Error ? error.message : 'Nie udało się usunąć zmiany.'
       toast.error(message)
     } finally {
       setDeletingShiftId(null)
@@ -480,194 +483,228 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-5">
-        <div className="space-y-1">
-          <CardTitle className="text-lg">Zmiany pracownika</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Przegladaj i przypisuj zmiany w ukladzie tygodniowym.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-full"
-            onClick={() => setCurrentWeekStart((value) => addWeeks(value, -1))}
-            aria-label="Poprzedni tydzien"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="px-2 text-center text-sm font-semibold capitalize sm:text-base">{weekLabel}</div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-full"
-            onClick={() => setCurrentWeekStart((value) => addWeeks(value, 1))}
-            aria-label="Nastepny tydzien"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsWeekApplyDialogOpen(true)}
-          >
-            {'Zastosuj na tydzie\u0144'}
-          </Button>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {isLoadingShifts ? (
-          <p className="text-sm text-muted-foreground">Ladowanie zmian...</p>
-        ) : null}
-
-        <div className="grid grid-cols-7 gap-2">
-          {weekDays.map((day, index) => {
-            const dateKey = format(day, 'yyyy-MM-dd')
-            const shift = shiftsByDate.get(dateKey)
-            const isToday = isSameDay(day, new Date())
-
-            return (
-              <div
-                key={dateKey}
-                className={[
-                  'flex h-[100px] flex-col items-center justify-between rounded-xl border py-2',
-                  isToday ? 'ring-2 ring-primary ring-offset-2' : '',
-                ].join(' ')}
-              >
-                <div className="flex w-full items-start justify-between gap-2 px-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      {DAY_LABELS[index]}
-                    </p>
-                    <p className="text-2xl font-semibold leading-none">{format(day, 'd')}</p>
-                  </div>
-                  {isToday ? <Badge variant="secondary">Dzis</Badge> : null}
-                </div>
-
-                <div className="flex w-full flex-1 items-center justify-center px-2">
-                  {shift ? (
-                    <div
-                      className="relative w-full rounded-lg p-1.5 text-center text-xs text-white shadow-sm"
-                      style={{ backgroundColor: shift.template?.color ?? '#52525b' }}
-                    >
-                      <p className="truncate pr-4 text-[10px] leading-tight text-white/90">
-                        {shift.template?.name ?? 'Zmiana manualna'}
-                      </p>
-                      <p className="truncate text-xs font-medium leading-tight">
-                        {formatTime(shift.start_time)}
-                        {'\u2013'}
-                        {formatTime(shift.end_time)}
-                      </p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1 h-4 w-4 rounded-full bg-white/20 text-white hover:bg-white/30 hover:text-white"
-                        onClick={() => void handleDeleteShift(shift)}
-                        disabled={deletingShiftId === shift.id}
-                        aria-label="Usun zmiane"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-full"
-                      onClick={() => handleOpenAssignDialog(day)}
-                      aria-label={`Dodaj zmiane ${format(day, 'dd.MM.yyyy')}`}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </CardContent>
-
-      <ShiftAssignDialog
-        employeeId={employeeId}
-        isOpen={isDialogOpen}
-        selectedDate={selectedDate}
-        templates={templates}
-        isTemplatesLoading={isLoadingTemplates}
-        onOpenChange={setIsDialogOpen}
-        onAssigned={handleAssign}
-      />
-
-      <Dialog open={isWeekApplyDialogOpen} onOpenChange={setIsWeekApplyDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{'Zastosuj zmian\u0119 na ca\u0142y tydzie\u0144'}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="week-apply-template">Szablon</Label>
-              <Select value={weekApplyTemplateId} onValueChange={setWeekApplyTemplateId}>
-                <SelectTrigger id="week-apply-template">
-                  <SelectValue placeholder={isLoadingTemplates ? 'Ladowanie...' : 'Wybierz szablon'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name} ({formatTime(template.start_time)}-{formatTime(template.end_time)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!isLoadingTemplates && templates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Brak aktywnych szablonow zmian.</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Dni</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {WEEK_APPLY_DAY_OPTIONS.map((day) => (
-                  <label key={day.index} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={weekApplyDays[day.index] ?? false}
-                      onCheckedChange={(checked) =>
-                        setWeekApplyDays((current) => ({
-                          ...current,
-                          [day.index]: checked === true,
-                        }))
-                      }
-                    />
-                    <span>{day.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+    <div className="flex items-start gap-4">
+      <Card className="flex-1 min-w-0">
+        <CardHeader className="space-y-5">
+          <div className="space-y-1">
+            <CardTitle className="text-lg">Zmiany pracownika</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Przeglądaj i przypisuj zmiany w układzie tygodniowym.
+            </p>
           </div>
 
-          <DialogFooter>
+          <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsWeekApplyDialogOpen(false)}
-              disabled={isApplyingWeek}
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              onClick={() => setCurrentWeekStart((value) => addWeeks(value, -1))}
+              aria-label="Poprzedni tydzień"
             >
-              Anuluj
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button type="button" onClick={() => void handleApplyToWeek()} disabled={isApplyingWeek}>
-              {isApplyingWeek ? 'Zapisywanie...' : 'Zastosuj'}
+            <div className="px-2 text-center text-sm font-semibold capitalize sm:text-base">{weekLabel}</div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              onClick={() => setCurrentWeekStart((value) => addWeeks(value, 1))}
+              aria-label="Następny tydzień"
+            >
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </Card>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsWeekApplyDialogOpen(true)}
+            >
+              Zastosuj na tydzień
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {isLoadingShifts ? (
+            <p className="text-sm text-muted-foreground">Ładowanie zmian...</p>
+          ) : null}
+
+          <div className="grid grid-cols-7 gap-2">
+            {weekDays.map((day, index) => {
+              const dateKey = format(day, 'yyyy-MM-dd')
+              const shift = shiftsByDate.get(dateKey)
+              const isToday = isSameDay(day, new Date())
+
+              return (
+                <div
+                  key={dateKey}
+                  className={[
+                    'flex h-[100px] flex-col items-center justify-between rounded-xl border py-2',
+                    isToday ? 'ring-2 ring-primary ring-offset-2' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex w-full items-start justify-between gap-2 px-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        {DAY_LABELS[index]}
+                      </p>
+                      <p className="text-2xl font-semibold leading-none">{format(day, 'd')}</p>
+                    </div>
+                    {isToday ? <Badge variant="secondary">Dziś</Badge> : null}
+                  </div>
+
+                  <div className="flex w-full flex-1 items-center justify-center px-2">
+                    {shift ? (
+                      <div
+                        className="relative w-full rounded-lg p-1.5 text-center text-xs text-white shadow-sm"
+                        style={{ backgroundColor: shift.template?.color ?? '#52525b' }}
+                      >
+                        <p className="truncate pr-4 text-[10px] leading-tight text-white/90">
+                          {shift.template?.name ?? 'Zmiana manualna'}
+                        </p>
+                        <p className="truncate text-xs font-medium leading-tight">
+                          {formatTime(shift.start_time)}
+                          {'\u2013'}
+                          {formatTime(shift.end_time)}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1 h-4 w-4 rounded-full bg-white/20 text-white hover:bg-white/30 hover:text-white"
+                          onClick={() => void handleDeleteShift(shift)}
+                          disabled={deletingShiftId === shift.id}
+                          aria-label="Usuń zmianę"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 rounded-full"
+                        onClick={() => handleOpenAssignDialog(day)}
+                        aria-label={`Dodaj zmianę ${format(day, 'dd.MM.yyyy')}`}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="space-y-3 border-t pt-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold">Zasady i szablony</h3>
+              <p className="text-sm text-muted-foreground">
+                Otwórz panel boczny, aby zarządzać automatyzacjami i dostępnymi zmianami.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setSidePanelMode('rules')}>
+                <Settings className="mr-2 h-4 w-4" />
+                Zarządzaj zasadami
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSidePanelMode('templates')}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Zarządzaj szablonami
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+
+        <ShiftAssignDialog
+          employeeId={employeeId}
+          isOpen={isDialogOpen}
+          selectedDate={selectedDate}
+          templates={templates}
+          isTemplatesLoading={isLoadingTemplates}
+          onOpenChange={setIsDialogOpen}
+          onAssigned={handleAssign}
+        />
+
+        <Dialog open={isWeekApplyDialogOpen} onOpenChange={setIsWeekApplyDialogOpen}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{'Zastosuj zmian\u0119 na ca\u0142y tydzie\u0144'}</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="week-apply-template">Szablon</Label>
+                <Select value={weekApplyTemplateId} onValueChange={setWeekApplyTemplateId}>
+                  <SelectTrigger id="week-apply-template">
+                    <SelectValue placeholder={isLoadingTemplates ? 'Ładowanie...' : 'Wybierz szablon'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name} ({formatTime(template.start_time)}-{formatTime(template.end_time)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!isLoadingTemplates && templates.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Brak aktywnych szablonów zmian.</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dni</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {WEEK_APPLY_DAY_OPTIONS.map((day) => (
+                    <label key={day.index} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={weekApplyDays[day.index] ?? false}
+                        onCheckedChange={(checked) =>
+                          setWeekApplyDays((current) => ({
+                            ...current,
+                            [day.index]: checked === true,
+                          }))
+                        }
+                      />
+                      <span>{day.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsWeekApplyDialogOpen(false)}
+                disabled={isApplyingWeek}
+              >
+                Anuluj
+              </Button>
+              <Button type="button" onClick={() => void handleApplyToWeek()} disabled={isApplyingWeek}>
+                {isApplyingWeek ? 'Zapisywanie...' : 'Zastosuj'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Card>
+
+      <ShiftSidePanel
+        open={sidePanelMode !== null}
+        onClose={() => setSidePanelMode(null)}
+        mode={sidePanelMode ?? 'rules'}
+        employeeId={employeeId}
+      />
+    </div>
   )
 }

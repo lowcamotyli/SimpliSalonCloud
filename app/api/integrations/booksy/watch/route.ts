@@ -105,14 +105,30 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       throw existingWatchError
     }
 
-    const watchResult = existingWatch?.id
-      ? await renewWatch(account.salon_id, supabase, account.id)
-      : await startWatch(account.salon_id, supabase, account.id)
+    try {
+      const watchResult = existingWatch?.id
+        ? await renewWatch(account.salon_id, supabase, account.id)
+        : await startWatch(account.salon_id, supabase, account.id)
 
-    return NextResponse.json({
-      watch_status: watchResult.watchStatus,
-      watch_expiration: watchResult.watchExpiration,
-    })
+      return NextResponse.json({
+        watch_status: watchResult.watchStatus,
+        watch_expiration: watchResult.watchExpiration,
+      })
+    } catch (error) {
+      if (error instanceof AppError && error.code === 'GMAIL_REAUTH_REQUIRED') {
+        return NextResponse.json(
+          {
+            watch_status: 'error',
+            watch_expiration: null,
+            code: error.code,
+            message: error.message,
+          },
+          { status: 200 }
+        )
+      }
+
+      throw error
+    }
   }
 
   const { supabase, salonId } = await getAuthContext()
@@ -161,6 +177,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       watch_expiration: watchResult.watchExpiration,
     })
   } catch (error) {
+    if (error instanceof AppError && error.code === 'GMAIL_REAUTH_REQUIRED') {
+      console.warn('[watch/POST] Gmail reauth required', {
+        accountId: account.id,
+        salonId,
+        existingWatchId: existingWatch?.id ?? null,
+      })
+      return NextResponse.json(error.toJSON(), { status: error.statusCode })
+    }
+
     console.error('[watch/POST] renewWatch/startWatch failed', {
       accountId: account.id,
       salonId,

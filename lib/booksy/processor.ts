@@ -52,6 +52,9 @@ interface BooksyAutomationSettings {
 type ParsedEventType = 'created' | 'cancelled' | 'rescheduled' | 'unknown'
 type ParsedEventReviewReason = 'ambiguous_match' | 'cancel_not_found' | 'validation' | 'unknown'
 
+const MONTH_NAME_TOKEN = String.raw`[^\s,\r\n]+`
+const OPTIONAL_WEEKDAY_PREFIX = String.raw`(?:[^\d\r\n,]+,\s*)?`
+
 export class BooksyProcessor {
   private automationSettingsPromise: Promise<BooksyAutomationSettings> | null = null
 
@@ -834,7 +837,7 @@ export class BooksyProcessor {
       // ── Early return for reschedule ─────────────────────────────────────────
       if (type === 'reschedule') {
         // "z dnia 27 października 2024 10:00" or "z dnia czwartek, 23 października 2025 10:45"
-        const oldMatch = cleanBody.match(/z dnia\s+(?:[a-ząćęłńóśźż]+\s*,\s*)?(\d{1,2})\s+(.+?)\s+(\d{4})\s+(?:o\s+)?(\d{2}):(\d{2})/i)
+        const oldMatch = cleanBody.match(new RegExp(String.raw`z dnia\s+${OPTIONAL_WEEKDAY_PREFIX}(\d{1,2})\s+(${MONTH_NAME_TOKEN})\s+(\d{4})(?:\s*,?\s*)?(?:o\s*)?(\d{2}):(\d{2})`, 'i'))
         // "na 28 października 2024, 14:00 — 15:00"
         const newResult = this.extractDateAndTime(cleanBody)
 
@@ -842,7 +845,7 @@ export class BooksyProcessor {
 
         // Fallback: "Zmiany w rezerwacji czwartek, 30 kwietnia 2026 o 09:00" — old date is in subject
         const subjectOldMatch = !oldMatch && /Zmiany w rezerwacji/i.test(subject)
-          ? subject.match(/(\d{1,2})\s+([a-ząćęłńóśźż]+)\s+(\d{4})\s+o\s+(\d{2}):(\d{2})/i)
+          ? subject.match(new RegExp(String.raw`${OPTIONAL_WEEKDAY_PREFIX}(\d{1,2})\s+(${MONTH_NAME_TOKEN})\s+(\d{4})\s+o\s+(\d{2}):(\d{2})`, 'i'))
           : null
 
         if (!oldMatch && !subjectOldMatch) {
@@ -950,7 +953,7 @@ export class BooksyProcessor {
       // Extract date and time
       // Format: "27 paĹşdziernika 2024, 16:00 - 17:00" (after cleaning, it's a simple dash)
       // Use .+? instead of \w+ to match Polish characters (Ä…, Ä‡, Ä™, Ĺ‚, Ĺ„, Ăł, Ĺ›, Ĺş, ĹĽ)
-      const dateMatch = cleanBody.match(/(\d{1,2})\s+(.+?)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/m)
+      const dateMatch = cleanBody.match(new RegExp(String.raw`${OPTIONAL_WEEKDAY_PREFIX}(\d{1,2})\s+(${MONTH_NAME_TOKEN})\s+(\d{4}),\s+(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})`, 'm'))
 
       if (!dateMatch) {
         logger.warn('[Booksy] Could not extract date/time from body')
@@ -1506,7 +1509,7 @@ export class BooksyProcessor {
    * Matches: "22 października 2025, 18:30 - 19:30" or with em/en dashes
    */
   private extractDateAndTime(body: string): { date: string; time: string; duration: number } | null {
-    const m = body.match(/(\d{1,2})\s+(.+?)\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–—]\s*(\d{2}):(\d{2})/m)
+    const m = body.match(new RegExp(String.raw`${OPTIONAL_WEEKDAY_PREFIX}(\d{1,2})\s+(${MONTH_NAME_TOKEN})\s+(\d{4}),\s+(\d{2}):(\d{2})\s*[-–—]\s*(\d{2}):(\d{2})`, 'm'))
     if (!m) return null
 
     const date = this.buildDate(m[1], m[2], m[3])

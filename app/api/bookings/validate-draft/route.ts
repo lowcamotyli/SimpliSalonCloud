@@ -4,6 +4,7 @@ import { withErrorHandling } from '@/lib/error-handler'
 import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
 import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/lib/equipment/availability'
+import { findTimeReservationConflict, formatTimeReservationConflictMessage, getSalonTimeZoneForBookings } from '@/lib/bookings/time-reservation-conflicts'
 
 const validateDraftSchema = z.object({
   items: z.array(
@@ -38,6 +39,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const { supabase, salonId } = await getAuthContext()
   const body = validateDraftSchema.parse(await request.json())
+  const salonTimeZone = await getSalonTimeZoneForBookings(supabase as any, salonId)
 
   const serviceIds = body.items
     .map((item) => item.serviceId)
@@ -106,6 +108,20 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             ? `Pracownik jest zajety co najmniej do ${minutesToTime(occupiedUntil)}. Kolizja z wizyta klienta ${conflictingClient}.`
             : `Pracownik jest zajety co najmniej do ${minutesToTime(occupiedUntil)}.`
         )
+      }
+
+      const timeReservationConflict = await findTimeReservationConflict({
+        supabase: supabase as any,
+        salonId,
+        employeeId: item.employeeId,
+        date: item.bookingDate,
+        startTime: item.bookingTime,
+        durationMinutes: duration,
+        timeZone: salonTimeZone,
+      })
+
+      if (timeReservationConflict) {
+        warnings.push(formatTimeReservationConflictMessage(timeReservationConflict))
       }
 
       const { data: shift } = await supabase

@@ -8,15 +8,16 @@ interface EmployeeRevenueChartProps {
         name: string
         amount: number
     }[]
+    title?: string
 }
 
 const COLORS = ['#6320ee', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899']
 
-export default function EmployeeRevenueChart({ data }: EmployeeRevenueChartProps) {
+export default function EmployeeRevenueChart({ data, title = 'Przychód wg pracowników' }: EmployeeRevenueChartProps) {
     return (
         <Card className="theme-chart-card glass border-none overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold text-gray-900">Przychód wg pracowników (7 dni)</CardTitle>
+                <CardTitle className="text-lg font-bold text-gray-900">{title}</CardTitle>
             </CardHeader>
             <CardContent className="h-[220px] sm:h-[300px] w-full pt-4">
                 <ResponsiveContainer width="100%" height="100%">

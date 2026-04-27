@@ -1493,6 +1493,54 @@ export type Database = {
           },
         ]
       }
+      employee_absences: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          salon_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          salon_id: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          salon_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_absences_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_absences_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_schedule_exceptions: {
         Row: {
           created_at: string
@@ -3272,6 +3320,7 @@ export type Database = {
           id: string
           name: string
           price: number
+          price_type: string
           salon_id: string
           subcategory: string
           surcharge_allowed: boolean
@@ -3291,6 +3340,7 @@ export type Database = {
           id?: string
           name: string
           price: number
+          price_type?: string
           salon_id: string
           subcategory: string
           surcharge_allowed?: boolean
@@ -3310,6 +3360,7 @@ export type Database = {
           id?: string
           name?: string
           price?: number
+          price_type?: string
           salon_id?: string
           subcategory?: string
           surcharge_allowed?: boolean
@@ -3596,6 +3647,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "subscriptions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_reservations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          end_at: string
+          id: string
+          salon_id: string
+          start_at: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          end_at: string
+          id?: string
+          salon_id: string
+          start_at: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          end_at?: string
+          id?: string
+          salon_id?: string
+          start_at?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_reservations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_reservations_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"

@@ -4,6 +4,8 @@ import { updateServiceSchema } from '@/lib/validators/service.validators'
 import { withErrorHandling } from '@/lib/error-handler'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 
+const VALID_PRICE_TYPES = ['fixed', 'variable', 'from', 'hidden', 'free'] as const
+
 // GET /api/services/[id]
 export const GET = withErrorHandling(async (
   request: NextRequest,
@@ -14,7 +16,7 @@ export const GET = withErrorHandling(async (
 
   const { data: service, error } = await supabase
     .from('services')
-    .select('*')
+    .select('*, price_type')
     .eq('id', id)
     .single()
 
@@ -52,6 +54,11 @@ export const PATCH = withErrorHandling(async (
 
   const body = await request.json()
   const data = updateServiceSchema.parse(body)
+  const priceType = body.price_type
+
+  if (priceType !== undefined && !VALID_PRICE_TYPES.includes(priceType)) {
+    throw new ValidationError('Invalid price_type')
+  }
 
   const { data: service, error } = await supabase
     .from('services')
@@ -67,6 +74,7 @@ export const PATCH = withErrorHandling(async (
       ...(data.survey_enabled !== undefined && { survey_enabled: data.survey_enabled }),
       ...(data.survey_custom_message !== undefined && { survey_custom_message: data.survey_custom_message }),
       ...(data.description !== undefined && { description: data.description }),
+      ...(priceType !== undefined && { price_type: priceType }),
     })
     .eq('id', id)
     .select()

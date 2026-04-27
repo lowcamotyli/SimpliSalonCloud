@@ -5,23 +5,30 @@ import { checkPublicApiRateLimit, getClientIp } from '@/lib/middleware/rate-limi
 import { logger } from '@/lib/logger'
 import { validateClientCanBook } from '@/lib/booking/validation'
 import { setCorsHeaders } from '@/lib/middleware/cors'
-
-interface PublicGroupBookingRequest {
-    name: string
-    phone: string
-    email?: string
-    items: Array<{ serviceId: string; employeeId: string; date: string; time: string }>
-}
+import { resolveBookingBasePrice } from '@/lib/services/price-types'
+import { publicGroupBookingSchema } from '@/lib/validators/public-booking.validators'
+import { resolveSalonTimeZone } from '@/lib/utils/timezone'
+import { buildSalonSlotUtcRange } from '@/lib/utils/equipment-timezone'
 
 interface ResolvedGroupBookingItem {
     service: {
         duration: number
         price: number
+        price_type?: string
     }
     employee: {
         id: string
     }
     requiredEquipmentIds: string[]
+}
+
+function getSlotRange(
+    date: string,
+    time: string,
+    durationMinutes: number,
+    timeZone: string
+): { startsAtIso: string; endsAtIso: string } {
+    return buildSalonSlotUtcRange(date, time, durationMinutes, timeZone)
 }
 
 export async function POST(request: NextRequest) {
@@ -56,35 +63,40 @@ export async function POST(request: NextRequest) {
         if (authResult instanceof NextResponse) return setCorsHeaders(request, authResult)
         const { salonId } = authResult
 
-        let body: PublicGroupBookingRequest
+        const supabase = createAdminSupabaseClient()
+
+        const { data: salonSettings, error: salonSettingsError } = await supabase
+            .from('salon_settings')
+            .select('terms_text, terms_url, timezone')
+            .eq('salon_id', salonId)
+            .maybeSingle()
+
+        if (salonSettingsError) {
+            logger.error('[PUBLIC_GROUP_BOOKINGS] salon settings fetch error', salonSettingsError)
+            return NextResponse.json({ error: 'Salon settings fetch failed' }, { status: 500 })
+        }
+
+        let body: unknown
         try {
-            body = (await request.json()) as PublicGroupBookingRequest
+            body = await request.json()
         } catch (error) {
             logger.error('[PUBLIC_GROUP_BOOKINGS] invalid json body', error as Error)
             return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
         }
 
-        const { name, phone, email, items } = body
-
-        if (
-            !name ||
-            !phone ||
-            !Array.isArray(items) ||
-            items.length < 1 ||
-            items.some(
-                item =>
-                    !item ||
-                    !item.serviceId ||
-                    !item.employeeId ||
-                    !item.date ||
-                    !item.time
-            )
-        ) {
+        const parsed = publicGroupBookingSchema.safeParse(body)
+        if (!parsed.success) {
             logger.warn('[PUBLIC_GROUP_BOOKINGS] validation failed')
-            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+            return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
         }
 
-        const supabase = createAdminSupabaseClient()
+        const { name, phone, email, items, terms_accepted } = parsed.data
+        const termsAcceptedAt = terms_accepted ? new Date().toISOString() : null
+
+        if ((salonSettings?.terms_text || salonSettings?.terms_url) && !terms_accepted) {
+            return NextResponse.json({ error: 'terms_not_accepted' }, { status: 422 })
+        }
+        const salonTimeZone = resolveSalonTimeZone(salonSettings?.timezone ?? null)
 
         logger.info('[PUBLIC_GROUP_BOOKINGS] payload', { itemsCount: items.length })
 
@@ -189,7 +201,7 @@ export async function POST(request: NextRequest) {
         for (const [i, item] of items.entries()) {
             const { data: service } = await supabase
                 .from('services')
-                .select('duration, price')
+                .select('duration, price, price_type')
                 .eq('id', item.serviceId)
                 .eq('salon_id', salonId)
                 .single()
@@ -229,12 +241,11 @@ export async function POST(request: NextRequest) {
             const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((row: any) => row.equipment_id)
 
             if (requiredEquipmentIds.length > 0) {
-                const startsAt = new Date(`${item.date}T${item.time}:00Z`)
-                const endsAt = new Date(startsAt.getTime() + service.duration * 60_000)
+                const { startsAtIso, endsAtIso } = getSlotRange(item.date, item.time, service.duration, salonTimeZone)
                 const { data: equipmentAvailability } = await supabase.rpc('check_equipment_availability', {
                     p_equipment_ids: requiredEquipmentIds,
-                    p_starts_at: startsAt.toISOString(),
-                    p_ends_at: endsAt.toISOString(),
+                    p_starts_at: startsAtIso,
+                    p_ends_at: endsAtIso,
                     p_exclude_booking_id: null,
                 } as any)
                 const equipmentConflicts = (equipmentAvailability ?? []).filter((a: any) => !a.is_available)
@@ -262,7 +273,10 @@ export async function POST(request: NextRequest) {
             booking_date: item.date,
             booking_time: item.time,
             duration: resolvedItems[i].service.duration,
-            base_price: resolvedItems[i].service.price,
+            base_price: resolveBookingBasePrice(
+                resolvedItems[i].service.price,
+                resolvedItems[i].service.price_type
+            ),
         }))
 
         const { data: rpcResult, error: rpcError } = await (supabase as any).rpc(
@@ -273,6 +287,7 @@ export async function POST(request: NextRequest) {
                 p_payment_method: null,
                 p_notes: null,
                 p_items: rpcItems,
+                p_terms_accepted_at: termsAcceptedAt,
             }
         )
 
@@ -293,14 +308,18 @@ export async function POST(request: NextRequest) {
             if (resolved.requiredEquipmentIds.length > 0) {
                 const bookingId = rpcResult.bookings[i]?.id
                 if (bookingId) {
-                    const startsAt = new Date()
-                    const endsAt = new Date(startsAt.getTime() + resolved.service.duration * 60_000)
+                    const { startsAtIso, endsAtIso } = getSlotRange(
+                        item.date,
+                        item.time,
+                        resolved.service.duration,
+                        salonTimeZone
+                    )
                     await supabase.from('equipment_bookings').insert(
                         resolved.requiredEquipmentIds.map((eqId: string) => ({
                             booking_id: bookingId,
                             equipment_id: eqId,
-                            starts_at: startsAt.toISOString(),
-                            ends_at: endsAt.toISOString(),
+                            starts_at: startsAtIso,
+                            ends_at: endsAtIso,
                         }))
                     )
                 }

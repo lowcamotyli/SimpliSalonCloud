@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/lib/middleware/api-key-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
+import { addDaysToIsoDate, getDayOfWeekFromIsoDate, getZonedParts, resolveSalonTimeZone, zonedDateTimeToUtcIso } from '@/lib/utils/timezone'
+import { buildSalonDayUtcRange, toSalonLocalMinuteBlock } from '@/lib/utils/equipment-timezone'
 import { availabilityQuerySchema } from '@/lib/validators/public-booking.validators'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -34,6 +36,18 @@ interface BookingRow {
 interface EquipmentBlockRow {
     starts_at: string
     ends_at: string
+}
+
+interface EmployeeAbsenceRow {
+    employee_id: string
+    start_date: string
+    end_date: string
+}
+
+interface TimeReservationRow {
+    employee_id: string
+    start_at: string
+    end_at: string
 }
 
 interface PremiumSlotRow {
@@ -151,6 +165,29 @@ function buildPremiumMeta(
     return premiumMeta
 }
 
+function toReservationBlock(row: TimeReservationRow, timeZone: string, targetDate: string): [number, number] | null {
+    const start = new Date(row.start_at)
+    const end = new Date(row.end_at)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return null
+
+    const zonedStart = getZonedParts(start, timeZone)
+    const zonedEnd = getZonedParts(end, timeZone)
+
+    if (zonedEnd.date < targetDate || zonedStart.date > targetDate) return null
+
+    const blockStart = zonedStart.date < targetDate ? 0 : zonedStart.hour * 60 + zonedStart.minute
+    const blockEnd = zonedEnd.date > targetDate ? 24 * 60 : zonedEnd.hour * 60 + zonedEnd.minute
+
+    if (blockEnd <= blockStart) return null
+    return [blockStart, blockEnd]
+}
+
+function overlapsReservation(slotStart: number, slotEnd: number, reservationBlocks: [number, number][]): boolean {
+    return reservationBlocks.some(([reservationStart, reservationEnd]) =>
+        slotStart < reservationEnd && slotEnd > reservationStart
+    )
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
     const authResult = await resolveApiKey(request)
     if (authResult instanceof NextResponse) return authResult
@@ -182,32 +219,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         .eq('service_id', serviceId)
     const requiredEquipmentIds = (serviceEquipmentRows ?? []).map((r: { equipment_id: string }) => r.equipment_id)
 
-    let equipmentBlocks: [number, number][] = []
-    if (requiredEquipmentIds.length > 0) {
-        const dayStart = `${date}T00:00:00.000Z`
-        const dayEnd = `${date}T23:59:59.999Z`
-        const { data: eqBookings } = await supabase
-            .from('equipment_bookings')
-            .select('starts_at, ends_at')
-            .in('equipment_id', requiredEquipmentIds)
-            .lt('starts_at', dayEnd)
-            .gt('ends_at', dayStart)
-        equipmentBlocks = (eqBookings ?? [] as EquipmentBlockRow[]).map((eb: EquipmentBlockRow) => {
-            const s = new Date(eb.starts_at)
-            const e = new Date(eb.ends_at)
-            return [s.getUTCHours() * 60 + s.getUTCMinutes(), e.getUTCHours() * 60 + e.getUTCMinutes()]
-        })
-    }
-
     // Pobierz godziny otwarcia salonu
     const { data: settings } = await supabase
         .from('salon_settings')
-        .select('operating_hours')
+        .select('operating_hours, timezone')
         .eq('salon_id', salonId)
         .maybeSingle()
 
     const operatingHours = (settings?.operating_hours ?? null) as Record<string, DayHours> | null
-    const dayOfWeek = new Date(`${date}T00:00:00`).getDay()
+    const salonTimeZone = resolveSalonTimeZone(settings?.timezone ?? null)
+
+    let equipmentBlocks: [number, number][] = []
+    if (requiredEquipmentIds.length > 0) {
+        const { startIso: dayStartIso, endIso: dayEndIso } = buildSalonDayUtcRange(date, salonTimeZone)
+        const { data: eqBookings } = await supabase
+            .from('equipment_bookings')
+            .select('starts_at, ends_at')
+            .in('equipment_id', requiredEquipmentIds)
+            .lt('starts_at', dayEndIso)
+            .gt('ends_at', dayStartIso)
+        equipmentBlocks = ((eqBookings ?? []) as EquipmentBlockRow[])
+            .map((eb) => toSalonLocalMinuteBlock(eb, salonTimeZone, date))
+            .filter((value): value is [number, number] => value !== null)
+    }
+    const dayOfWeek = getDayOfWeekFromIsoDate(date)
     const dayName = DAY_NAMES[dayOfWeek]
     const dayHours: DayHours = operatingHours?.[dayName] ?? { open: '09:00', close: '17:00', closed: false }
 
@@ -233,10 +268,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const { data: bookings } = await bookingsQuery
     const bookingRows: BookingRow[] = (bookings ?? []) as BookingRow[]
+    const dayStartIso = zonedDateTimeToUtcIso(date, '00:00', salonTimeZone)
+    const dayEndIso = zonedDateTimeToUtcIso(addDaysToIsoDate(date, 1), '00:00', salonTimeZone)
 
     // --- Tryb z konkretnym pracownikiem ---
     if (employeeId) {
-        const [{ data: schedules }, { data: exceptions }] = await Promise.all([
+        const [{ data: schedules }, { data: exceptions }, { data: absences }, { data: reservations }] = await Promise.all([
             supabase
                 .from('employee_schedules')
                 .select('day_of_week, is_working, start_time, end_time')
@@ -246,6 +283,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 .select('exception_date, is_working, start_time, end_time')
                 .eq('employee_id', employeeId)
                 .eq('exception_date', date),
+            supabase
+                .from('employee_absences')
+                .select('employee_id, start_date, end_date')
+                .eq('salon_id', salonId)
+                .eq('employee_id', employeeId)
+                .lte('start_date', date)
+                .gte('end_date', date),
+            supabase
+                .from('time_reservations')
+                .select('employee_id, start_at, end_at')
+                .eq('salon_id', salonId)
+                .eq('employee_id', employeeId)
+                .lt('start_at', dayEndIso)
+                .gt('end_at', dayStartIso),
         ])
 
         const window = resolveEmployeeWindow(
@@ -256,6 +307,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         )
 
         if (!window) return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
+        if ((absences ?? []).length > 0) {
+            return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
+        }
 
         const [empStart, empEnd] = window
         const effectiveStart = Math.max(salonOpen, empStart)
@@ -265,7 +319,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             return NextResponse.json({ date, serviceId, slots: [], premiumMeta: {} })
         }
 
+        const reservationBlocks = ((reservations ?? []) as TimeReservationRow[])
+            .map((row) => toReservationBlock(row, salonTimeZone, date))
+            .filter((value): value is [number, number] => value !== null)
         const slots = generateSlots(effectiveStart, effectiveEnd, service.duration, bookingRows, employeeId, equipmentBlocks)
+            .filter((slot) => {
+                const slotStart = parseTimeToMinutes(slot)
+                const slotEnd = slotStart + service.duration
+                return !overlapsReservation(slotStart, slotEnd, reservationBlocks)
+            })
         const slotsSet = new Set<string>(slots)
         const { data: premiumSlotsData } = await supabase
             .from('premium_slots')
@@ -296,7 +358,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const empIds = (employees as { id: string }[]).map(e => e.id)
 
-    const [{ data: allSchedules }, { data: allExceptions }] = await Promise.all([
+    const [{ data: allSchedules }, { data: allExceptions }, { data: allAbsences }, { data: allReservations }] = await Promise.all([
         supabase
             .from('employee_schedules')
             .select('employee_id, day_of_week, is_working, start_time, end_time')
@@ -306,10 +368,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             .select('employee_id, exception_date, is_working, start_time, end_time')
             .in('employee_id', empIds)
             .eq('exception_date', date),
+        supabase
+            .from('employee_absences')
+            .select('employee_id, start_date, end_date')
+            .eq('salon_id', salonId)
+            .in('employee_id', empIds)
+            .lte('start_date', date)
+            .gte('end_date', date),
+        supabase
+            .from('time_reservations')
+            .select('employee_id, start_at, end_at')
+            .eq('salon_id', salonId)
+            .in('employee_id', empIds)
+            .lt('start_at', dayEndIso)
+            .gt('end_at', dayStartIso),
     ])
 
     const schedulesByEmp = new Map<string, EmployeeScheduleRow[]>()
     const exceptionsByEmp = new Map<string, EmployeeExceptionRow[]>()
+    const absencesByEmp = new Map<string, EmployeeAbsenceRow[]>()
+    const reservationBlocksByEmp = new Map<string, [number, number][]>()
 
     for (const row of (allSchedules ?? []) as (EmployeeScheduleRow & { employee_id: string })[]) {
         if (!schedulesByEmp.has(row.employee_id)) schedulesByEmp.set(row.employee_id, [])
@@ -319,10 +397,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         if (!exceptionsByEmp.has(row.employee_id)) exceptionsByEmp.set(row.employee_id, [])
         exceptionsByEmp.get(row.employee_id)!.push(row)
     }
+    for (const row of (allAbsences ?? []) as EmployeeAbsenceRow[]) {
+        if (!absencesByEmp.has(row.employee_id)) absencesByEmp.set(row.employee_id, [])
+        absencesByEmp.get(row.employee_id)!.push(row)
+    }
+    for (const row of (allReservations ?? []) as TimeReservationRow[]) {
+        const block = toReservationBlock(row, salonTimeZone, date)
+        if (!block) continue
+        if (!reservationBlocksByEmp.has(row.employee_id)) reservationBlocksByEmp.set(row.employee_id, [])
+        reservationBlocksByEmp.get(row.employee_id)!.push(block)
+    }
 
     const slotsSet = new Set<string>()
 
     for (const empId of empIds) {
+        if ((absencesByEmp.get(empId) ?? []).length > 0) continue
+
         const window = resolveEmployeeWindow(
             dayOfWeek,
             date,
@@ -337,7 +427,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         if (effectiveStart >= effectiveEnd) continue
 
         const empBookings = bookingRows.filter(b => b.employee_id === empId)
+        const reservationBlocks = reservationBlocksByEmp.get(empId) ?? []
         const empSlots = generateSlots(effectiveStart, effectiveEnd, service.duration, empBookings, empId, equipmentBlocks)
+            .filter((slot) => {
+                const slotStart = parseTimeToMinutes(slot)
+                const slotEnd = slotStart + service.duration
+                return !overlapsReservation(slotStart, slotEnd, reservationBlocks)
+            })
         for (const s of empSlots) slotsSet.add(s)
     }
 

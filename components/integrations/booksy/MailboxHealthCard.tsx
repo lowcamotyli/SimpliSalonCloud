@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,13 +32,14 @@ interface MailboxHealthCardProps {
   salonSlug: string
 }
 
-type PendingAction =
-  | "set_primary"
-  | "deactivate"
-  | "refresh_watch"
-  | "replay"
-  | "reconcile"
-  | null
+type PendingAction = "set_primary" | "deactivate" | "refresh_watch" | "replay" | "reconcile" | null
+const ACTION_LABELS: Record<Exclude<PendingAction, null>, string> = {
+  refresh_watch: "Odświeżanie subskrypcji",
+  replay: "Pobieranie maili",
+  reconcile: "Synchronizacja",
+  set_primary: "Ustawianie jako główna",
+  deactivate: "Rozłączanie",
+}
 
 function getAuthBadgeVariant(status: MailboxAuthStatus): "success" | "warning" | "destructive" {
   if (status === "connected") return "success"
@@ -86,8 +87,6 @@ function formatRelativeTime(iso: string): string {
 export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCardProps): JSX.Element {
   const router = useRouter()
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [progress, setProgress] = useState<{ label: string; value: number } | null>(null)
 
   const returnPath = useMemo<string>(
     (): string => `/${salonSlug}/booksy`,
@@ -100,22 +99,9 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
     body: Record<string, string>
   ): Promise<void> => {
     setPendingAction(action)
-    setErrorMessage(null)
-    setProgress({
-      label: action === "replay" || action === "reconcile" ? "Pobieranie maili..." : "Wykonywanie akcji...",
-      value: action === "replay" || action === "reconcile" ? 25 : 40,
-    })
+    const toastId = toast.loading(`${ACTION_LABELS[action]}...`)
 
     try {
-      if (action === "replay" || action === "reconcile") {
-        window.setTimeout(() => {
-          setProgress((current) => current ? { label: "Analiza i zapis maili...", value: Math.max(current.value, 55) } : current)
-        }, 700)
-        window.setTimeout(() => {
-          setProgress((current) => current ? { label: "Tworzenie rezerwacji...", value: Math.max(current.value, 78) } : current)
-        }, 1600)
-      }
-
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -125,33 +111,30 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
       })
 
       if (!response.ok) {
-        let message = `Request failed: ${response.status}`
+        let message = `Błąd ${response.status}`
 
         try {
-          const payload = (await response.json()) as { error?: string; message?: string; code?: string }
-          message = payload.error || payload.message || payload.code || message
+          const payload = (await response.json()) as { error?: string; message?: string }
+          message = payload.error || payload.message || message
         } catch {
           // Ignore invalid JSON payloads and keep the status-based fallback.
         }
 
-        if (response.status === 404 && (action === "replay" || action === "reconcile")) {
-          message = "Ta akcja nie ma jeszcze publicznego endpointu w aplikacji."
-        }
-
         if (response.status === 503 && action === "refresh_watch") {
-          message = "Booksy watch jest obecnie wylaczony lub niepelnie skonfigurowany."
+          message = "Subskrypcja Gmail jest chwilowo wyłączona. Spróbuj ponownie później."
         }
 
-        setErrorMessage(message)
+        toast.error(message, { id: toastId })
         return
       }
 
-      setProgress({ label: "Gotowe", value: 100 })
+      toast.success("Gotowe", { id: toastId })
       router.replace(returnPath)
       router.refresh()
+    } catch {
+      toast.error("Nie udało się wykonać akcji. Sprawdź połączenie i spróbuj ponownie.", { id: toastId })
     } finally {
       setPendingAction(null)
-      window.setTimeout(() => setProgress(null), 1200)
     }
   }
 
@@ -160,7 +143,7 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
     window.location.assign(url)
   }
 
-  const watchExpiry = watch?.watch_expiration_at ? formatWatchExpiry(watch.watch_expiration_at) : null
+  const watchExpiry = watch?.watch_status === "active" && watch.watch_expiration_at ? formatWatchExpiry(watch.watch_expiration_at) : null
   const lastNotif = watch?.last_notification_at ? formatRelativeTime(watch.last_notification_at) : null
 
   return (
@@ -195,25 +178,6 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
-        {errorMessage ? (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        ) : null}
-        {progress ? (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{progress.label}</span>
-              <span>{progress.value}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${progress.value}%` }}
-              />
-            </div>
-          </div>
-        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           {mailbox.auth_status === "reauth_required" ? (
             <Button disabled={pendingAction !== null} onClick={onReconnect} size="sm" type="button" variant="default">

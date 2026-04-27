@@ -7,16 +7,22 @@ import { useEmployees } from '@/hooks/use-employees'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { formatDate, generateWeekDays } from '@/lib/utils/date'
 import { addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { BookingCard } from '@/components/calendar/booking-card'
+import { AbsenceDialog } from '@/components/calendar/absence-dialog'
+import { TimeReservationDialog } from '@/components/calendar/time-reservation-dialog'
 import { BUSINESS_HOURS } from '@/lib/constants'
+import { DEFAULT_TIMEZONE, getZonedParts, resolveSalonTimeZone } from '@/lib/utils/timezone'
 import { toast } from 'sonner'
 import MiniCalendar from './mini-calendar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { CalendarDays, CalendarClock, UserX } from 'lucide-react'
 
 const BookingDialog = dynamic(() => import('./booking-dialog').then(mod => mod.BookingDialog), {
   ssr: false
@@ -89,6 +95,39 @@ function buildCalendarEntries(dayBookings: any[], previewDurations: Record<strin
 
 const snapMinutes = (minutes: number) => Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES
 
+type CalendarTimeReservation = {
+  id: string
+  employee_id: string
+  title: string | null
+  localDate: string
+  localStartMinutes: number
+  durationMinutes: number
+}
+
+const formatEmployeeDisplayName = (employee: any) =>
+  `${employee?.first_name ?? ''} ${employee?.last_name ?? ''}`.trim() || 'Nieznany pracownik'
+
+function mapReservationToCalendarLocal(reservation: any, salonTimeZone: string): CalendarTimeReservation | null {
+  if (!reservation?.id || !reservation?.employee_id) return null
+  const start = new Date(reservation.start_at)
+  const end = new Date(reservation.end_at)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+
+  const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60)
+  if (durationMinutes <= 0) return null
+
+  const zonedStart = getZonedParts(start, salonTimeZone)
+
+  return {
+    id: reservation.id,
+    employee_id: reservation.employee_id,
+    title: reservation.title ?? null,
+    localDate: zonedStart.date,
+    localStartMinutes: zonedStart.hour * 60 + zonedStart.minute,
+    durationMinutes,
+  }
+}
+
 export default function CalendarPage() {
   const router = useRouter()
   const pathname = usePathname()
@@ -100,10 +139,16 @@ export default function CalendarPage() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [selectedGroupBookings, setSelectedGroupBookings] = useState<any[] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isTimeReservationDialogOpen, setIsTimeReservationDialogOpen] = useState(false)
+  const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false)
+  const [isSlotActionOpen, setIsSlotActionOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; employeeId?: string } | null>(null)
   const [visibleEmployees, setVisibleEmployees] = useState<Set<string>>(new Set())
   const [isInitialized, setIsInitialized] = useState(false)
   const [previewDurations, setPreviewDurations] = useState<Record<string, number>>({})
+  const [timeReservations, setTimeReservations] = useState<any[]>([])
+  const [absences, setAbsences] = useState<any[]>([])
+  const [salonTimeZone, setSalonTimeZone] = useState<string>(DEFAULT_TIMEZONE)
 
   const { data: employees } = useEmployees()
 
@@ -250,6 +295,9 @@ export default function CalendarPage() {
     setIsDialogOpen(true)
   }
 
+  const handleAddTimeReservation = () => setIsTimeReservationDialogOpen(true)
+  const handleAddAbsence = () => setIsAbsenceDialogOpen(true)
+
   useEffect(() => {
     const action = searchParams.get('action')
     if (action !== 'new-booking') {
@@ -262,6 +310,57 @@ export default function CalendarPage() {
     const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname
     router.replace(nextUrl, { scroll: false })
   }, [pathname, router, searchParams])
+
+  useEffect(() => {
+    if (viewType !== 'day' && viewType !== 'week') {
+      setTimeReservations([])
+      return
+    }
+
+    const controller = new AbortController()
+    const params = new URLSearchParams()
+
+    if (viewType === 'day') {
+      params.set('date', formatDate(currentDate))
+    } else {
+      const weekDays = generateWeekDays(currentDate)
+      params.set('from', formatDate(weekDays[0]))
+      params.set('to', formatDate(weekDays[6]))
+    }
+
+    const fetchTimeReservations = async () => {
+      try {
+        const response = await fetch(`/api/time-reservations?${params.toString()}`, { signal: controller.signal })
+        if (!response.ok) {
+          setTimeReservations([])
+          return
+        }
+        const payload = await response.json() as { reservations?: any[]; salonTimeZone?: string }
+        setSalonTimeZone(resolveSalonTimeZone(payload.salonTimeZone))
+        setTimeReservations(Array.isArray(payload.reservations) ? payload.reservations : [])
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setSalonTimeZone(DEFAULT_TIMEZONE)
+          setTimeReservations([])
+        }
+      }
+    }
+
+    const fetchAbsences = async () => {
+      try {
+        const response = await fetch('/api/absences', { signal: controller.signal })
+        if (!response.ok) { setAbsences([]); return }
+        const payload = await response.json() as { absences?: any[] }
+        setAbsences(Array.isArray(payload.absences) ? payload.absences : [])
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') setAbsences([])
+      }
+    }
+
+    void fetchTimeReservations()
+    void fetchAbsences()
+    return () => controller.abort()
+  }, [currentDate, viewType, isTimeReservationDialogOpen, isAbsenceDialogOpen])
 
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
@@ -278,7 +377,7 @@ export default function CalendarPage() {
   const handleTimeSlotClick = (date: string, time: string, employeeId?: string) => {
     setSelectedSlot({ date, time, employeeId })
     setSelectedBooking(null)
-    setIsDialogOpen(true)
+    setIsSlotActionOpen(true)
   }
 
   const handleDayClick = (day: Date) => {
@@ -372,10 +471,20 @@ export default function CalendarPage() {
             </div>
           </SheetContent>
         </Sheet>
-        <Button onClick={handleAddBooking} className="h-11 min-h-[44px] min-w-[44px] rounded-lg shadow-lg px-4">
-          <Plus className="mr-2 h-4 w-4" />
-          Nowa wizyta
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="h-11 min-h-[44px] min-w-[44px] rounded-lg shadow-lg px-4">
+              <Plus className="mr-2 h-4 w-4" />
+              Nowa wizyta
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleAddBooking}>Nowa wizyta</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddTimeReservation}>Rezerwacja czasu</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddAbsence}>Nieobecność</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex gap-4 items-start">
@@ -423,6 +532,9 @@ export default function CalendarPage() {
             onResizeBooking={resizeBooking}
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
+            timeReservations={timeReservations}
+            absences={absences}
+            salonTimeZone={salonTimeZone}
           />
         )}
         {viewType === 'week' && (
@@ -439,6 +551,9 @@ export default function CalendarPage() {
             onResizeBooking={resizeBooking}
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
+            timeReservations={timeReservations}
+            absences={absences}
+            salonTimeZone={salonTimeZone}
           />
         )}
         {viewType === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onDayClick={handleDayClick} onBookingClick={handleBookingClick} employees={employees} getEmployeeColor={getEmployeeColor} />}
@@ -457,17 +572,53 @@ export default function CalendarPage() {
           prefilledSlot={selectedSlot}
         />
       )}
+      <Dialog open={isSlotActionOpen} onOpenChange={(open) => !open && setIsSlotActionOpen(false)}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Co chcesz dodać?</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsDialogOpen(true) }}>
+              <CalendarDays className="h-4 w-4" />
+              Nowa wizyta
+            </Button>
+            <Button variant="outline" className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsTimeReservationDialogOpen(true) }}>
+              <CalendarClock className="h-4 w-4" />
+              Rezerwacja czasu
+            </Button>
+            <Button variant="outline" className="justify-start gap-3" onClick={() => { setIsSlotActionOpen(false); setIsAbsenceDialogOpen(true) }}>
+              <UserX className="h-4 w-4" />
+              Nieobecność
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <TimeReservationDialog
+        isOpen={isTimeReservationDialogOpen}
+        onClose={() => setIsTimeReservationDialogOpen(false)}
+        prefilledSlot={selectedSlot}
+      />
+      <AbsenceDialog
+        isOpen={isAbsenceDialogOpen}
+        onClose={() => setIsAbsenceDialogOpen(false)}
+        prefilledRange={dateRange}
+      />
     </div>
   )
 }
 
-function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations }: any) {
+function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, absences, salonTimeZone }: any) {
   const dateStr = formatDate(currentDate)
   const now = new Date()
   const isToday = isSameDay(currentDate, now)
   const currentHour = now.getHours()
   const visibleEmployeesList = employees?.filter((emp: any) => visibleEmployees.has(emp.id)) || []
   const columnCount = visibleEmployeesList.length
+  const mappedTimeReservations = useMemo(() => {
+    return (timeReservations || [])
+      .map((reservation: any) => mapReservationToCalendarLocal(reservation, salonTimeZone))
+      .filter((reservation: CalendarTimeReservation | null): reservation is CalendarTimeReservation => reservation !== null)
+  }, [salonTimeZone, timeReservations])
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const suppressClickUntilRef = useRef(0)
@@ -565,6 +716,50 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                   )
                 })}
 
+                {mappedTimeReservations
+                  .filter((reservation: any) => {
+                    return reservation.employee_id === employee.id && reservation.localDate === dateStr
+                  })
+                  .map((reservation: any) => {
+                    const startMinutes = reservation.localStartMinutes - BUSINESS_HOURS.START * 60
+                    const duration = reservation.durationMinutes
+                    const top = (startMinutes / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
+                    const height = (duration / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
+                    const employeeName = formatEmployeeDisplayName(employee)
+                    return (
+                      <div
+                        key={reservation.id}
+                        className="absolute p-[1px] z-[8] cursor-default"
+                        style={{ top: `${top}%`, height: `${height}%`, minHeight: '44px', left: '0%', width: '96%' }}
+                        title={`${reservation.title || 'Zarezerwowane'} - ${employeeName}`}
+                      >
+                        <div className={`h-full w-full rounded-md border ${colors.border} bg-slate-600 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden`}>
+                          <div className="truncate font-bold">{reservation.title || 'Zarezerwowane'}</div>
+                          <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-white/90">
+                            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bgAccent}`} />
+                            <span className="truncate">{employeeName}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                {(absences || [])
+                  .filter((a: any) => a.employee_id === employee.id && dateStr >= a.start_date && dateStr <= a.end_date)
+                  .map((a: any) => (
+                    <div
+                      key={`absence-${a.id}`}
+                      className="absolute inset-x-0 z-[7] pointer-events-none"
+                      style={{ top: '0%', height: '100%' }}
+                      title={`Nieobecność${a.reason ? `: ${a.reason}` : ''} — ${a.start_date === a.end_date ? a.start_date : `${a.start_date} – ${a.end_date}`}`}
+                    >
+                      <div className="h-full w-full bg-red-500/10 border-l-4 border-red-400 flex flex-col items-start justify-start pt-2 pl-3 gap-0.5 overflow-hidden">
+                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">Nieobecność</span>
+                        {a.reason && <span className="text-[10px] text-red-500/80 truncate max-w-full">{a.reason}</span>}
+                      </div>
+                    </div>
+                  ))}
+
                 {buildCalendarEntries(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || [], previewDurations).map((entry, index, allEntries) => {
                   const booking = entry.booking
                   const timeStr = booking.booking_time
@@ -640,9 +835,14 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   )
 }
 
-function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations }: any) {
+function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, absences, salonTimeZone }: any) {
   const weekDays = generateWeekDays(currentDate)
   const now = new Date()
+  const mappedTimeReservations = useMemo(() => {
+    return (timeReservations || [])
+      .map((reservation: any) => mapReservationToCalendarLocal(reservation, salonTimeZone))
+      .filter((reservation: CalendarTimeReservation | null): reservation is CalendarTimeReservation => reservation !== null)
+  }, [salonTimeZone, timeReservations])
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const suppressClickUntilRef = useRef(0)
@@ -689,17 +889,51 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
   return (
     <div className="overflow-auto h-full">
       <div className="min-w-[700px]">
-      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50 sticky top-0 z-30">
-        <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
-        {weekDays.map((day) => {
-          const today = isSameDay(day, now)
-          return (
-            <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
-              <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
-              <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+      <div className="theme-calendar-week-header sticky top-0 z-30 bg-slate-50/50 border-b">
+        <div className="grid grid-cols-8">
+          <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
+          {weekDays.map((day) => {
+            const today = isSameDay(day, now)
+            return (
+              <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
+                <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
+                <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+              </div>
+            )
+          })}
+        </div>
+        {weekDays.some((day) => {
+          const dateStr = formatDate(day)
+          return (absences || []).some((a: any) => dateStr >= a.start_date && dateStr <= a.end_date)
+        }) && (
+          <div className="grid grid-cols-8 border-t border-red-100 bg-red-50/60">
+            <div className="border-r px-2 py-1 flex items-center justify-center">
+              <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide">Nieob.</span>
             </div>
-          )
-        })}
+            {weekDays.map((day) => {
+              const dateStr = formatDate(day)
+              const dayAbsences = (absences || []).filter((a: any) => dateStr >= a.start_date && dateStr <= a.end_date)
+              const today = isSameDay(day, now)
+              return (
+                <div key={dateStr} className={`border-r px-1.5 py-1 flex flex-wrap gap-1 min-h-[28px] ${today ? 'bg-primary/5' : ''}`}>
+                  {dayAbsences.map((a: any) => {
+                    const emp = (employees || []).find((e: any) => e.id === a.employee_id)
+                    const name = emp ? formatEmployeeDisplayName(emp) : '—'
+                    return (
+                      <span
+                        key={a.id}
+                        className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700 border border-red-200"
+                        title={a.reason ? `${name}: ${a.reason}` : name}
+                      >
+                        {name}
+                      </span>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
         <div className="grid grid-cols-8 min-w-[700px]">
@@ -745,66 +979,99 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
                 {employees?.map((employee: any) => {
                   if (!visibleEmployees.has(employee.id)) return null
+                  const employeeIndex = employees.findIndex((entry: any) => entry.id === employee.id)
+                  const colors = getEmployeeColor(employeeIndex)
+                  const employeeName = formatEmployeeDisplayName(employee)
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
-
-                  return buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
-                    const booking = entry.booking
-                    const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
-                    const duration = entry.displayDuration
-
-                    const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
-                      const otherBooking = otherEntry.booking
-                      if (idx === index || otherBooking.id === booking.id) return false
-                      const otherDuration = otherEntry.displayDuration
-                      const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
-                      const oEnd = oStart + otherDuration
-                      return (startMinutes < oEnd && (startMinutes + duration) > oStart)
-                    })
-
-                    const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
-                      const prevDuration = prevEntry.displayDuration
-                      const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
-                      const pEnd = pStart + prevDuration
-                      return (startMinutes < pEnd && (startMinutes + duration) > pStart)
-                    })
-
-                    const top = (startMinutes / 60) * 80
-                    const height = (duration / 60) * 80
-                    const hasOverlap = overlappingBookings.length > 0
-                    const width = hasOverlap ? 65 : 96
-                    const offset = previousOverlaps.length * 30
-
-                    return (
-                      <div
-                        key={booking.id}
-                        draggable
-                        className={`absolute transition-all hover:!z-50 hover:scale-[1.02] p-[1px] ${isDragging ? 'opacity-70' : 'cursor-pointer'}`}
-                        style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('text/plain', booking.id)
-                          suppressClicks()
-                          console.debug('[Calendar][WeekView] drag:start', { bookingId: booking.id })
-                          setIsDragging(true)
-                        }}
-                        onDragEnd={() => {
-                          suppressClicks()
-                          console.debug('[Calendar][WeekView] drag:end', { bookingId: booking.id })
-                          setIsDragging(false)
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (shouldSuppressClick()) {
-                            console.debug('[Calendar][WeekView] booking-click:suppressed', { bookingId: booking.id })
-                            return
-                          }
-                          onBookingClick(booking)
-                        }}
-                      >
-                        <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
-                        <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
-                      </div>
-                    )
+                  const dayTimeReservations = mappedTimeReservations.filter((reservation: any) => {
+                    return reservation.employee_id === employee.id && reservation.localDate === dateStr
                   })
+
+                  return (
+                    <div key={employee.id} className="contents">
+                      {dayTimeReservations.map((reservation: any) => {
+                        const startMinutes = reservation.localStartMinutes - BUSINESS_HOURS.START * 60
+                        const duration = reservation.durationMinutes
+                        const top = (startMinutes / 60) * 80
+                        const height = (duration / 60) * 80
+                        return (
+                          <div
+                            key={reservation.id}
+                            className="absolute p-[1px] z-[8] cursor-default"
+                            style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: '0%', width: '96%' }}
+                            title={`${reservation.title || 'Zarezerwowane'} - ${employeeName}`}
+                          >
+                            <div className={`h-full w-full rounded-md border ${colors.border} bg-slate-600 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden`}>
+                              <div className="truncate font-bold">{reservation.title || 'Zarezerwowane'}</div>
+                              <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-white/90">
+                                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bgAccent}`} />
+                                <span className="truncate">{employeeName}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {buildCalendarEntries(dayBookings, previewDurations).map((entry, index, allEntries) => {
+                        const booking = entry.booking
+                        const startMinutes = timeToMinutes(booking.booking_time) - BUSINESS_HOURS.START * 60
+                        const duration = entry.displayDuration
+
+                        const overlappingBookings = allEntries.filter((otherEntry: any, idx: number) => {
+                          const otherBooking = otherEntry.booking
+                          if (idx === index || otherBooking.id === booking.id) return false
+                          const otherDuration = otherEntry.displayDuration
+                          const oStart = timeToMinutes(otherBooking.booking_time) - BUSINESS_HOURS.START * 60
+                          const oEnd = oStart + otherDuration
+                          return (startMinutes < oEnd && (startMinutes + duration) > oStart)
+                        })
+
+                        const previousOverlaps = allEntries.slice(0, index).filter((prevEntry: any) => {
+                          const prevDuration = prevEntry.displayDuration
+                          const pStart = timeToMinutes(prevEntry.booking.booking_time) - BUSINESS_HOURS.START * 60
+                          const pEnd = pStart + prevDuration
+                          return (startMinutes < pEnd && (startMinutes + duration) > pStart)
+                        })
+
+                        const top = (startMinutes / 60) * 80
+                        const height = (duration / 60) * 80
+                        const hasOverlap = overlappingBookings.length > 0
+                        const width = hasOverlap ? 65 : 96
+                        const offset = previousOverlaps.length * 30
+
+                        return (
+                          <div
+                            key={booking.id}
+                            draggable
+                            className={`absolute transition-all hover:!z-50 hover:scale-[1.02] p-[1px] ${isDragging ? 'opacity-70' : 'cursor-pointer'}`}
+                            style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: `${offset}%`, width: `${width}%`, zIndex: 10 + previousOverlaps.length }}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/plain', booking.id)
+                              suppressClicks()
+                              console.debug('[Calendar][WeekView] drag:start', { bookingId: booking.id })
+                              setIsDragging(true)
+                            }}
+                            onDragEnd={() => {
+                              suppressClicks()
+                              console.debug('[Calendar][WeekView] drag:end', { bookingId: booking.id })
+                              setIsDragging(false)
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (shouldSuppressClick()) {
+                                console.debug('[Calendar][WeekView] booking-click:suppressed', { bookingId: booking.id })
+                                return
+                              }
+                              onBookingClick(booking)
+                            }}
+                          >
+                            <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
+                            <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
                 })}
               </div>
             )

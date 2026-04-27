@@ -1,0 +1,925 @@
+# SimpliSalon ulepszenia 01.04
+
+## Metadane
+- Source: `SimpliSalon ulepszenia 01.04.vtt`
+- Format: transcript converted from `WEBVTT` to Markdown
+- Generated: 2026-04-03 11:10:00
+
+## Transcript
+
+- [00:00:13] **Bartosz Rogala:** Cześć Tomasz.
+- [00:00:15] **Tomasz Rogala:** Ale cześć.
+- [00:00:16] **Bartosz Rogala:** Siemka, widzę, że też masz takie słuchawki aż w gamingowych siedzę.
+- [00:00:22] **Tomasz Rogala:** No ja też ja na to są jedynie moje córki, które mam tutaj. No nie tak to w domu to mam dobre. No nie jeszcze ta kamera, którą miałam w tym laptopie to jest jakiś kurde.
+- [00:00:31] **Bartosz Rogala:** Na jak z tego siemensa też 60.
+- [00:00:35] **Tomasz Rogala:** Dokładnie dokładnie to jest taka kamera.
+- [00:00:40] **Bartosz Rogala:** No dobrze, że cię w ogóle widać. Da się ciebie rozpoznać jakość, ale.
+- [00:00:45] **Tomasz Rogala:** Ale ledwo.
+- [00:00:50] **Bartosz Rogala:** Nie znasz się, to jest tyle tyle się z tymi słuchawkami. Męczyłem, że. Te zawsze działają już.
+- [00:00:56] **Tomasz Rogala:** Czekaj.
+- [00:01:01] **Bartosz Rogala:** Cześć ksenia.
+- [00:01:02] **Tomasz Rogala:** Halo cześć aniu.
+- [00:01:02] **Ksenia Golik:** Ee. Cześć.
+- [00:01:05] **Bartosz Rogala:** Jak tam żyjesz?
+- [00:01:06] **Ksenia Golik:** No dzisiaj mam tak wyczerpujący dzień, że pryma. Czyli zdało mi tak dzisiaj popalić, że dziękuję bardzo także no.
+- [00:01:14] **Bartosz Rogala:** Że jak nie nie klienci nie żartowali z obłożeniem mówisz?
+- [00:01:18] **Ksenia Golik:** Nie moje dziewczyny też nie więc zrobił.
+- [00:01:21] **Bartosz Rogala:** Nie byli.
+- [00:01:22] **Ksenia Golik:** Mi franka rano, że tak powiem takiego dołka konkretnego, więc do. Tak się za aktywowałam w ciągu 5 sekund, że nie wiedziałam gdzie Jestem, co mam zrobić i w ogóle nie, więc potem się zorientowałam, że fakty.
+- [00:01:37] **Bartosz Rogala:** Za jakieś jak jakiś świetny dowcip słyszę, opowiadaj.
+- [00:01:40] **Ksenia Golik:** Dobry dowcip bardzo.
+- [00:01:45] **Ksenia Golik:** Także siedziałam rano, byłam pełna w papierach, bo też mam swoje, że tak powiem w osp tam działania i siedziałam akurat papierologii do krsu i tego było mnóstwo i dodatkowo jeszcze mąż jeszcze wyjazd w trasę, wyjazd na święta wszystko musiałam ogarnąć to trzeba mi miała dzieci przyjąć i tak mówię do niego wzrasta w lepszy, ale mówię za dużo tego i dziewczyny piszą tak.
+- [00:02:07] **Ksenia Golik:** Można nazwać to było przegięcie. Ksenia jest problem dość spory, musisz przyjść, a ja mówię, a ja tak patrzę, wyświetla się zdjęcia i tak odpalam to zdjęcie i mówię tak i tak mąż przy telefonie w telefonie, ja tak nosz \*\*\*\*\* mówię, nie ma opcji, mówię, że coś takiego przed chwilą byłam w salonie mówię, a to ja byłam i taki filmik 5 sekund już widziałam hydraulike i już wiedziałam, bo montowałam widziałam dziś z kolanko i co mam zrobić \*\*\*\*\* już w ogóle? Wszystko po kolei, jak klientki przesunąć jest okres przed świętami? Co mam zrobić? A Las dziewczyny po prostu rzuciły zdjęcie salonowe z toalety z salonu no nie, a ja po prostu ja tam przez chwilę nie może być i tak wzięłam sobie zuma, Jestem źle, dziś ja to widziałam, ale nie wiem gdzie i dopiero zabiłam po chwili, że faktycznie to było, ale mało tego, że rzuciły to na grupę to nie tylko ja się nabrałam, ale wszystkie więc.
+- [00:03:06] **Bartosz Rogala:** Ale to co?
+- [00:03:06] **Ksenia Golik:** Także było.
+- [00:03:08] **Bartosz Rogala:** To był taki dip, fake, czy z jakiegoś zdjęcia ściągnęły które?
+- [00:03:13] **Ksenia Golik:** Zdjęcie zrobiły salonowego salonowej ta toalety i wrzuciły na na te tak aj no.
+- [00:03:17] **Tomasz Rogala:** I dały we jaju.
+- [00:03:19] **Bartosz Rogala:** Ee, czyli takie wysublimowane wysublimowane
+- [00:03:23] **Ksenia Golik:** No także.
+- [00:03:23] **Bartosz Rogala:** atak dosyć.
+- [00:03:25] **Ksenia Golik:** Więc wyglądało to realistycznie, nie więc dlatego mówię,
+- [00:03:29] **Bartosz Rogala:** No ale w sumie dobry.
+- [00:03:30] **Ksenia Golik:** chodzi o ten o to właśnie chodzi. Słuchajcie.
+- [00:03:33] **Bartosz Rogala:** Dobry pomysł, żeby ten, żeby żart zrobić.
+- [00:03:37] **Ksenia Golik:** No a bardzo dobre powiem szczerze, bo mamy mało czasu,
+- [00:03:37] **Bartosz Rogala:** No dawaj, dawaj chcenie co jak jak tam ci idzie opowiadaj.
+- [00:03:41] **Ksenia Golik:** bo mam kupę jeszcze roboty do zrobienia i teraz tak dużo siedziałam z moją
+- [00:03:44] **Bartosz Rogala:** Tam zapewnie dawaj mięcho.
+- [00:03:46] **Ksenia Golik:** asystentką. Chciałam, żeby już powoli zaczęła gdzieś tam,
+- [00:03:48] **Bartosz Rogala:** Na.
+- [00:03:50] **Ksenia Golik:** żeby to funkcjonowało poprzez salon, no nie na tej zasadzie i powiem tak,
+- [00:03:54] **Bartosz Rogala:** No o k no.
+- [00:03:56] **Ksenia Golik:** nie da się do końca tak współpracować z tego względu, że.
+- [00:04:02] **Ksenia Golik:** Pracujemy na boksie i widzimy, jakiej jak mamy przyzwyczajone jesteśmy. No ale próbujemy rozgryzać to bardziej. No i tutaj zdarzają jak ona siedziała,
+- [00:04:08] **Bartosz Rogala:** O k.
+- [00:04:10] **Ksenia Golik:** też starała się umawiać klientów. Niektóre przez vouchery próbowałyśmy w ogóle sprzedawać te w sensie nie sprzedawać, ale tak jakby żeby były te vouchery i realizować sprzedaż, próbować takie rzeczy, no sprzedaży nie da się zrealizować w voucherem. Na razie póki co nawet się to nie
+- [00:04:24] **Bartosz Rogala:** O k.
+- [00:04:26] **Ksenia Golik:** wyświetla tam do zrealizowania, ale to chyba jest w trakcie pracy chyba nie.
+- [00:04:30] **Bartosz Rogala:** Tak, tak, tak, tak, tak, tak, tak. No to jest w następ w następnej wersji
+- [00:04:32] **Ksenia Golik:** Tak właśnie też jej powiedziałam.
+- [00:04:34] **Bartosz Rogala:** już już jest w sumie gotowe, bo teraz nad płatnościami pracuje.
+- [00:04:40] **Ksenia Golik:** No wierzę, wierzę, bo bóg się teraz też wprowadziło coś takiego, że i właśnie tu się zaczynam nadziewać, że tak powiem i to porządnie wszystkie klientki przez bóstwie, które się umówiły na wizytę.
+- [00:04:53] **Bartosz Rogala:** Na.
+- [00:04:54] **Ksenia Golik:** I te, które mają aplikacje i ja ją umówiłam na wizytę. Przez telefon i ona ma apkę i jej przyjdzie informacja,
+- [00:05:00] **Bartosz Rogala:** K.
+- [00:05:03] **Ksenia Golik:** że jest umówiona na wizytę. Bóg wsi w dniu wizyty wysyła jej esemesa, że może już w tym momencie zapłacić za wizytę.
+- [00:05:13] **Ksenia Golik:** Pjona klika w link. I płaci.
+- [00:05:17] **Bartosz Rogala:** O k. Czyli jest.
+- [00:05:17] **Ksenia Golik:** Rozumieć o co chodzi? Nie mówię dla mnie, że to nie mówię,
+- [00:05:18] **Tomasz Rogala:** Wiem.
+- [00:05:20] **Ksenia Golik:** że dla mnie to jest dobre, bo jak on im więcej płacą, to więcej niż prowizji drą, no nie zbuk wsi, no więc pod tym względem.
+- [00:05:26] **Bartosz Rogala:** No a ile ci drą tej prowizji w ogóle z bussi?
+- [00:05:31] **Ksenia Golik:** Zaraz ci powiem, bo Jestem akurat tutaj na tym płatne. Gdzie słońce płatności?
+- [00:05:41] **Ksenia Golik:** Zaraz się upewnię. To zależy od transakcji, no nie?
+- [00:05:43] **Bartosz Rogala:** Wiesz co? No tak.
+- [00:05:48] **Ksenia Golik:** Zatem jeszcze mnie pobrało, ale na przykład wczoraj za klientkę, która mi zapłaciła, p. Tutaj czekaj.
+- [00:06:01] **Ksenia Golik:** Mało tego, tak z opłaciła 170 zł. No to 2 53 mi pobrało, no i nawet za zwrot. Jeżeli klientka zapłaci mi przedpłatę i na przykład zadzwoniła klientka, że ona jednak miesiąc wcześniej się
+- [00:06:10] **Bartosz Rogala:** Mhm.
+- [00:06:13] **Ksenia Golik:** umawiała, ale jednak ryzyku, no jest tej wizyty i musiałam jej zrobić zwrot na to 70 zł i mi pobrało złote 81.
+- [00:06:20] **Bartosz Rogala:** W drugą stronę też. Jeszcze.
+- [00:06:23] **Ksenia Golik:** Więc więc sumując takie transakcje, no to jest tego w cholerę.
+- [00:06:25] **Bartosz Rogala:** Na.
+- [00:06:32] **Ksenia Golik:** Patrz 3, 28.
+- [00:06:35] **Bartosz Rogala:** Czyli wprowadzili nową opcję, że wysyłają esemesa i może chce zapłacić smsem zamiast na stronie bóg się jak rezerwujesz tak.
+- [00:06:44] **Tomasz Rogala:** Nie wiem, myślę, że że możesz zapłacić, dostajesz linka,
+- [00:06:47] **Ksenia Golik:** Przekierowuje cię do bussi przekierowuje cię do buk wsi i tam masz wizyty i zapłać
+- [00:06:48] **Tomasz Rogala:** z którego możesz do płatności.
+- [00:06:53] **Ksenia Golik:** zapłać zapłać za wszystkie wizycie ci wyskakują i zapłać zapłać zapłać na tej
+- [00:06:55] **Bartosz Rogala:** O k.
+- [00:06:58] **Ksenia Golik:** zasadzie no to co?
+- [00:06:58] **Tomasz Rogala:** Po to, żeby po to, żeby położyli rękę na transferze tych
+- [00:06:58] **Bartosz Rogala:** O k dobra.
+- [00:07:01] **Tomasz Rogala:** pieniędzy do ciebie, czyli klient dostaje co ma do zapłacenia. Płaci temu a books tego doszli do wniosku okej, tych płatności z dużo to z każdej weźmy kilka procent.
+- [00:07:09] **Bartosz Rogala:** Te.
+- [00:07:11] **Ksenia Golik:** Dokładnie dokładnie. Oni chcą całkowicie to już wszystko to weryfikować, ale że tak powiem cały czas myślę tutaj o tym.
+- [00:07:21] **Ksenia Golik:** Powiem tak dziewczyny, bo rozmawiam też z instruktorami z stoiskami, one się po prostu boją kosztów, bo weszłabym w buk wsi, ale to wszystko jest wysyłane do skarbówki, no bo teoretycznie bóg się już to tak weszło, że to już jest weryfikacja tego wszystkiego. No nie tylko chodzi o to, żeby to obejść w takim kontekście, żeby to było tu miały tak, jakby ten kalendarz jako papier, czyli simple salon tak powiedzmy,
+- [00:07:46] **Tomasz Rogala:** Mhm.
+- [00:07:46] **Bartosz Rogala:** Na.
+- [00:07:48] **Ksenia Golik:** ale te transakcje były wykonywane w inną, tą inną możliwością na tej zasadzie,
+- [00:07:52] **Tomasz Rogala:** Mhm.
+- [00:07:53] **Ksenia Golik:** no nie i.
+- [00:07:53] **Bartosz Rogala:** No to tak będzie.
+- [00:07:54] **Ksenia Golik:** To jest jedna, no to właśnie o to chodzi. Ja im to tłumaczę, że to chcę, żeby też tak było i mówię chłopaki na pewno do tego, no bo żeby to nie było to mówią tak do czasu aż skarbówka siądzie. No nie, bo jeżeli to dobrze rozegrasz tak jak się należy, czyli z połączysz wszystkie punkty, to nie będzie miała prawa w to wejść. Tak naprawdę nie.
+- [00:08:12] **Bartosz Rogala:** Nie będzie miała, nie będziemy będą 3 tak naprawdę punkty, jeden to będziemy my jako sejm jako simple salon i Ta strona wejściowa. Druga to będzie przelewy 24. Trzecia to będzie wasza fills salon i tak
+- [00:08:23] **Ksenia Golik:** Mhm.
+- [00:08:27] **Bartosz Rogala:** naprawdę tutaj żadnej skarbówki znaczy, no wy się będziecie musieli. Oczywiście tam już jakoś, ale nasze z naszej perspektywy.
+- [00:08:34] **Ksenia Golik:** No to płatności, no ale to przelewy 24. Mam tak, to ja się z tego rozliczam.
+- [00:08:38] **Bartosz Rogala:** No dokładnie.
+- [00:08:38] **Tomasz Rogala:** Dokładnie dokładnie. No u nas.
+- [00:08:39] **Ksenia Golik:** No więc.
+- [00:08:39] **Bartosz Rogala:** Dokładnie to to.
+- [00:08:41] **Tomasz Rogala:** My nie my nie stoimy na drodze tych pieniędzy, tak jak buxy bobux i po prostu chce od każdej płatności ten procent wziąć, a my my tego nie chcemy robić. My chcemy, żeby te, żeby żeby klient mógł zapłacić bezpośrednio tobie i tylko tobie nam nam nic do tego, czy on ci zapłacił 200 zł czy 300 czy 500, to to nie jest nasza sprawa w ogóle.
+- [00:09:02] **Bartosz Rogala:** No kilka kibicujemy, żeby ich było jak najwięcej,
+- [00:09:05] **Ksenia Golik:** Tak.
+- [00:09:05] **Bartosz Rogala:** ale powiedz mi, bo zaciekawiłeś mi dlaczego się nie da z tego korzystać, jeżeli chodzi o takie tak asystentka ty jaki jest ograniczenie, bo to jest dla mnie, bo mówiłaś, że simple salon, że próbowałaś troll z tą swoją asystentką
+- [00:09:20] **Ksenia Golik:** Już ci mówię do czego, bo ja tutaj mam widzisz wszystko
+- [00:09:21] **Bartosz Rogala:** o k.
+- [00:09:24] **Ksenia Golik:** rozpisane, pięknie podpisane wszystko jest. Słuchaj,
+- [00:09:25] **Bartosz Rogala:** No to dawaj, dawaj.
+- [00:09:27] **Ksenia Golik:** więc po pierwsza kwestia, która jest i która mi nie leży i jej nie leży, gdy na przykład mamy edycję usługi. Już mówię Wstyd te już w tym co jesteśmy.
+- [00:09:35] **Bartosz Rogala:** Tak.
+- [00:09:40] **Ksenia Golik:** Przydałoby się zrobić dobrze kategorie tam jest podana Kategoria, ania, Kategoria ksenia i Kategoria, patologia, no nie.
+- [00:09:48] **Bartosz Rogala:** Tak no.
+- [00:09:49] **Ksenia Golik:** Ale przydałoby się do tych kategorii w ogóle przypisać pracowników.
+- [00:09:55] **Bartosz Rogala:** Do kategorii.
+- [00:09:55] **Ksenia Golik:** Już wam tłumaczę.
+- [00:09:56] **Bartosz Rogala:** Czy?
+- [00:09:57] **Ksenia Golik:** Już wam tłumaczę.
+- [00:09:58] **Tomasz Rogala:** Do usług, a my my ja myślę, że to jest chyba to co my.
+- [00:09:59] **Ksenia Golik:** Już już.
+- [00:10:03] **Tomasz Rogala:** No dobra mów cenie.
+- [00:10:04] **Bartosz Rogala:** No my pracujemy nad tym, żeby przypisywać usługi do pracowników, czyli konkretne usługi do konkretnych pracowników. Czy to jest to,
+- [00:10:12] **Tomasz Rogala:** To pokaż może kseni to co zrobiliśmy.
+- [00:10:13] **Bartosz Rogala:** o czym myślisz, czy.
+- [00:10:14] **Ksenia Golik:** Tak. Tak no znaczy, tak jakby weryfikujemy system ten, który jest w tym momencie tak na tej zasadzie, bo zaczęłyśmy to od nowa cały czas analizować i tak poczekaj, bo ona mi tutaj rozpisała, bo ja razem z nią siedziałam i ona mówię, róbcie zdjęcia, żebym wiedziała, znaczy miasto ję. Mówię do niej, bo się potem będę gubić. Już wam mówię.
+- [00:10:36] **Tomasz Rogala:** Znaczy, ja ja ja myślę, że my właśnie się dotknęliśmy tego tematu i i chyba to już ten to to mamy zrobione, może może pokaż ceni to co zrobiliśmy.
+- [00:10:44] **Ksenia Golik:** Dobra.
+- [00:10:46] **Ksenia Golik:** Myślę, że także się.
+- [00:10:51] **Ksenia Golik:** Bo jest coś takiego też, które co żeśmy sprawdzały, gdy chcemy, nie czekaj umówić i to było wizytę. Czekaj, bo ja już nie trybie dzisiaj po prostu.
+- [00:11:06] **Ksenia Golik:** A będziecie ustawiać godziny pracy sprzętu?
+- [00:11:10] **Bartosz Rogala:** Mm no a ten?
+- [00:11:11] **Ksenia Golik:** Albo sprzęt do pracownika.
+- [00:11:13] **Bartosz Rogala:** Na ten moment nie mamy połączenia między sprzętem a pracownikiem, sprzęt się z przypisywany tylko do usług.
+- [00:11:19] **Ksenia Golik:** Tylko do usług dobra k bo bo na przykład jest są pewne usługi, no to których?
+- [00:11:21] **Bartosz Rogala:** Tylko do usług.
+- [00:11:24] **Ksenia Golik:** No to właśnie przypisanie usług do pracownika. No to tak, bo wtedy wyłączam usługi na pracowniku, który nie będzie ich wykonywał. Na tej zasadzie nie, bo tam jest taka zakładka,
+- [00:11:33] **Bartosz Rogala:** Tak.
+- [00:11:34] **Ksenia Golik:** że jak szukamy danej. Wszystko trzeba odrębnie wpisać, poczekaj teraz to sobie zweryfikuję.
+- [00:11:41] **Bartosz Rogala:** A jakbyś jakbyśmy przypisali właśnie ten, jak już mam, jakbyśmy już mieli, to połączenie między usługą a pracownikiem, to automatycznie też byłby on przypisany do sprzętu. No bo mamy połączenie między usługą a sprzętem, więc jeżeli do tego dodamy jeszcze pracownika,
+- [00:11:57] **Ksenia Golik:** Tak, mhm.
+- [00:11:59] **Bartosz Rogala:** no to będziemy mieli też to połączenie. Yy, czekaj, to jest? Yy. Dop. Na pracownikach także znajdę.
+- [00:12:12] **Ksenia Golik:** No fajnie jest, Dodaj kolejną usługę.
+- [00:12:16] **Bartosz Rogala:** O ja ci pokażę, co mamy w tej chwili w tej nowej wersji. Trochę trochę antycypować. Z tego co słychać, czyli jest już.
+- [00:12:26] **Tomasz Rogala:** Mógłbyś, mógłbyś powiększyć to na ekranie, bo ja tak ze słabo widzę, może mały laptop może mam mało laptopa, teraz super.
+- [00:12:33] **Bartosz Rogala:** Tak jest lepiej.
+- [00:12:34] **Tomasz Rogala:** Tak jest super dla mnie no.
+- [00:12:35] **Bartosz Rogala:** Czyli mamy w edycji pracownika mamy usługi, które możemy mu przypisywać.
+- [00:12:40] **Ksenia Golik:** Super.
+- [00:12:41] **Bartosz Rogala:** I on wtedy już jak do dostępności jego je. Jest tylko i wyłącznie pokazywany on jak się znaczy, jeżeli ktoś wybiera usługę to sprawdza czy po prostu jest pracownik, który wykonuje tą usługę i na tej podstawie wylicza dostępność ill i
+- [00:13:00] **Ksenia Golik:** O k.
+- [00:13:01] **Bartosz Rogala:** pokazuje klientowi.
+- [00:13:02] **Ksenia Golik:** Mhm.
+- [00:13:05] **Bartosz Rogala:** Więc to już mamy tylko by tylko pytanie, czy to jest to co ty chcesz,
+- [00:13:05] **Ksenia Golik:** A.
+- [00:13:09] **Ksenia Golik:** Nie jeszcze coś innego.
+- [00:13:10] **Bartosz Rogala:** bo zaczynałaś mówić o o KM.
+- [00:13:12] **Ksenia Golik:** Chce wybrać, ustawiam nową usługę, możesz wejść w kalendarz i wpisać nową
+- [00:13:16] **Bartosz Rogala:** O k.
+- [00:13:18] **Ksenia Golik:** usługę. Przejdziemy do zobaczyć, czy. To jest po prostu czytam już coś, wymieniłeś czy nie?
+- [00:13:25] **Bartosz Rogala:** Dobra chce dodać nową usługę na.
+- [00:13:27] **Ksenia Golik:** Dobra, aha, ty masz tak albo wiesz co jeszcze inaczej? Weźmy. Dodajmy nową wizytę o na tej zasadzie.
+- [00:13:34] **Bartosz Rogala:** Nową wizytę, okej?
+- [00:13:36] **Ksenia Golik:** Mhm kalendarz.
+- [00:13:39] **Bartosz Rogala:** No powiedzmy, że stąd, no.
+- [00:13:41] **Ksenia Golik:** Dobra no i nie wiem wciśnij kogo tam kolwiek masz dalej dobra i teraz tak wciśnij na kategorie.
+- [00:13:50] **Bartosz Rogala:** Ja mam pewnie inne niż ty, ale.
+- [00:13:52] **Ksenia Golik:** Dobra, dawaj kosmetykę powiedzmy.
+- [00:13:55] **Ksenia Golik:** I teraz tak muszę wejść na usługę i to jest do tej kategorii jest przypisane. Wszystkie usługi do tej kategorii nie. A jak na no i no właśnie.
+- [00:14:05] **Bartosz Rogala:** Tak tu się tu się wyświetlą wszystkie usługi z tej kategorii z tej kategorii wszystkie usługi.
+- [00:14:10] **Ksenia Golik:** I teraz automatycznie jak będą przypisane usługi do danego pracownika, to automatycznie tu się coś zmieni, że będzie na przykład dany pracownik. Jeżeli ja wcisnę po kategorii tylko.
+- [00:14:22] **Bartosz Rogala:** Dokładnie tak, tak będzie będzie ci się wyświetlał tylko
+- [00:14:23] **Ksenia Golik:** Tak. Dobra ok no.
+- [00:14:26] **Bartosz Rogala:** pracownik, który może wykonywać da nam usługę tutaj już.
+- [00:14:30] **Ksenia Golik:** No właśnie o to chodzi. No no no.
+- [00:14:31] **Bartosz Rogala:** To już jest zrobione. Znaczy u mnie już jest zrobione i u ciebie też będzie niedługo.
+- [00:14:36] **Ksenia Golik:** No no no.
+- [00:14:40] **Ksenia Golik:** Dobra, bo jak tam właśnie mówiła, że jak nie mają jak aha, jak jest wybrany tylko pracownik a nie ma kategorii no to wszystkie usługi wszystkich się wyświetlają, no nie dlatego to trzeba przypisać te usługi dobra, czyli to mamy. Tą dobrze zaznaczyła, bo chciała na tym podziałać coś, no nie jest za każdym razem musiałyśmy coś szukać, nie.
+- [00:15:00] **Bartosz Rogala:** Ja ja ja tutaj dodałem w ogóle taką weryfikację już właśnie, że do każdej z tych wizyt na początku się sprawdza. To znaczy tak, żeby nie było, że dopiero jak klikasz zapisz wizytę.
+- [00:15:11] **Ksenia Golik:** Komunikat, że jest konflikt jakieś nie w zajęciu,
+- [00:15:13] **Bartosz Rogala:** Tak, tak, ten konflikt już się pojawia przed tym
+- [00:15:15] **Ksenia Golik:** no tego dobra.
+- [00:15:17] **Bartosz Rogala:** jak klikniesz. Znaczy, Nie możesz nawet już kliknąć. Zapisz wizytę, tylko konflikty sprawdzane na tym etapie i tutaj jest popraw oznaczone konflikty
+- [00:15:23] **Ksenia Golik:** No no no.
+- [00:15:27] **Bartosz Rogala:** przed zapisem.
+- [00:15:29] **Ksenia Golik:** No dobra, a powiedzmy usługa jest ustawiona
+- [00:15:29] **Bartosz Rogala:** Jeżdżę.
+- [00:15:32] **Ksenia Golik:** powiedzmy na Tomasz łącz.
+- [00:15:35] **Ksenia Golik:** Łączny czas 30 minut, a powiedzmy. Teoretycznie wiem, że się wyrobię.
+- [00:15:42] **Bartosz Rogala:** Mhm.
+- [00:15:42] **Ksenia Golik:** Nie, ale dobra wpiszę tą klientkę na ten czas. No i i tak muszę wyjść. Nie wiem skrócić ten nie wiem czy skracać usługę tej wizyty, no bo w boksie jest tak, że wyskakuje mi jest konflikt z wizytami jeżeli zarezerwuj tak jakby daje mi komunikat, że coś jest nie tak no nie tak jakby ja muszę się domyślać czy stoliki są dobrze ustawione czy nachodzą na siebie usługi, czy pracownicy na siebie nachodzą czy coś, czy coś tego rodzaju no i tutaj na przykład nie mam możliwości mimo wszystko zapisania wizyty. Może daj tylko komunikat, ale jakoś dałoby się zapisać i mimo wszystko tą wizytę no nie, ale.
+- [00:16:21] **Bartosz Rogala:** A że dałoby się zapisać, że że żeby żeby o to się dalej świeciło, tak.
+- [00:16:25] **Ksenia Golik:** Tak, bo na przykład ktoś stwierdzi dobra
+- [00:16:26] **Bartosz Rogala:** Okay?
+- [00:16:27] **Ksenia Golik:** zapisze na ten czas na tą usługę, ale jak przyjdzie klientka może akurat okazało się, że pójdzie szybciej, a między wpisałam tylko mniej więcej,
+- [00:16:34] **Tomasz Rogala:** Ale.
+- [00:16:35] **Ksenia Golik:** żeby wiedzieć o co chodzi w usłudze o na tej zasadzie.
+- [00:16:37] **Bartosz Rogala:** To zrobię to, to, to to zrobimy tak, że no.
+- [00:16:37] **Tomasz Rogala:** To ja bym to ja bym to ja bym dodał tutaj tikka takiego, że to, że się wyświetla na czerwono i ktoś musi kliknąć w to, że że zgadza się na to, żeby to zapisać, żeby wiesz, żeby docelowo to nie było możliwe zapisanie tego, ale tutaj masz napisane pracownik jest zajęty co najmniej do jedenastej kolizja z wizyt i i i na przykład tutaj dodajesz coś takiego, Akceptuję kolizję czy Akceptuję booking w
+- [00:17:04] **Bartosz Rogala:** Albo.
+- [00:17:04] **Tomasz Rogala:** tych samych godzinach zaznać i wtedy.
+- [00:17:06] **Bartosz Rogala:** Albo odblokowanie albo odblokować ten przycisk i po prostu wyświetlić wyświetlić okno dialogowe. Później, czy jesteś jest, jest konflikt ten i ten,
+- [00:17:14] **Ksenia Golik:** Tak.
+- [00:17:16] **Bartosz Rogala:** czy jesteś pewien, że chcesz?
+- [00:17:17] **Ksenia Golik:** Bo bóg i tak jest, że okno dialogowe się wyskakuje i jest wystąpił o konflikt mimo wszystko zapisać. Zapisz.
+- [00:17:23] **Bartosz Rogala:** O k. To jest do zrobienia jak najbardziej to nie nie, nie, nie duża zmiana.
+- [00:17:27] **Ksenia Golik:** No bo tu jest już dla mnie blokada, muszę się cofać szukać. Wiesz o co chodzi, coś zmieniać dalej szukam i lepiej komunikat wywalić i wtedy aha dobra okej czy jak jest konflikt to sobie wejdę już na kalendarz i sprawdzę nie no tu powinnam się wyrobić to jak coś to sobie kliknę tą wizytę i przesunę nie.
+- [00:17:44] **Bartosz Rogala:** Spoko, spoko, dobra to nie ma problemu to to zrobimy, a z tym tutaj też jest sprzęt się sprawdza także tu wszystkie konflikty, które teoretycznie mogą się zdarzyć. Są brane pod uwagę, więc jeżeli będzie sprzęt zajęty, to jest też wiadomość, że sprzęt ten i ten jest zajęty. Ee jak.
+- [00:18:04] **Ksenia Golik:** No bo czyli no jak to co zrobicie to już będę będzie wtedy wiadomo wszystko ze sprzętem nie. To sprzęt przypiszemy dokładnie do usług, ale i tak i tak myślę,
+- [00:18:11] **Bartosz Rogala:** Tak.
+- [00:18:14] **Ksenia Golik:** że jak będę przypisywała.
+- [00:18:19] **Ksenia Golik:** Ja też myślę, żeby mimo wszystko, bo tak u sprzęt będzie przypisany do usług.
+- [00:18:26] **Ksenia Golik:** Ale powiem wam, co mi utrudnia najbardziej,
+- [00:18:27] **Bartosz Rogala:** Tak.
+- [00:18:29] **Ksenia Golik:** chcę to dobrze doprecyzować, żebyście mnie zrozumieli jak pracuję na
+- [00:18:32] **Bartosz Rogala:** Mhm.
+- [00:18:34] **Ksenia Golik:** bussi i ja muszę utworzyć kilka tych. Stanowisk, żeby one były w danych godzinach. Pamiętasz? Tomek? Gadaliśmy kiedyś o tym, że musiałam kilka stanowisk utworzyć, żeby po prostu były te godziny też tak ustawionej w danych dniach i do tego były po przypinane usługi, ale dla mnie to był kogielmogiel, bo teoretycznie miałam przypisane stolik dodanej do danej osoby do danej usługi, no i że tak powiem ja sobie zaznaczałam przy wyborze usługi na jakiś stolik, ja mam rezerwację tak, bo tam też jest tutaj taka opcja, że mogę to zrobić nie.
+- [00:19:10] **Bartosz Rogala:** Mhm.
+- [00:19:10] **Ksenia Golik:** Takiego stolika przepisać mogę to zrobić.
+- [00:19:11] **Tomasz Rogala:** Czyli. Dodać wybór stolika do rezerwacji, czyli.
+- [00:19:15] **Ksenia Golik:** Nie. Jeszcze inaczej wybór tak do wybór stolika do danej rezerwacji.
+- [00:19:22] **Bartosz Rogala:** Na jakim etapie to by się miało dziać nie podczas tego jak wpisu już nową
+- [00:19:23] **Ksenia Golik:** Wycie dlaczego?
+- [00:19:27] **Bartosz Rogala:** rezerwację czy? Bo no, bo mamy też rezerwację od fills ze strony
+- [00:19:27] **Ksenia Golik:** Tak.
+- [00:19:31] **Bartosz Rogala:** internetowej, powiedzmy i wtedy, co klient miałby to wybierać, czy przychodzi do ciebie i ty wtedy decydujesz.
+- [00:19:40] **Ksenia Golik:** A no tak, bo tam ci się automatycznie rezerwuje.
+- [00:19:43] **Bartosz Rogala:** No jest jeszcze drugi kanał.
+- [00:19:43] **Ksenia Golik:** Ale właśnie, bo chodzi o to, że co innego jest z aplikacji, że się zapisuje, a co innego jest tutaj zdalnie, nie znaczy stacjonarnie, no to stacjonarnie przy zapisie klienta. Jeżeli mam nową wizytę to mam wybór sprzętu.
+- [00:19:58] **Bartosz Rogala:** O k.
+- [00:19:58] **Ksenia Golik:** I ma jeżeli nie wybiorę sprzętu, bo teraz tak.
+- [00:20:05] **Ksenia Golik:** Jak mam tu też jest tak troszeczkę inaczej. Dodam sobie nie klikam na godzinę i na datę, tylko kliknę sobie w buks i plusik dodaje wizytę. I mam pracownik dowolny, ale zaznaczę siebie no to mi wyskakuja. Że ja w tym czasie nie mam żadnych rezerwacji, w sensie nie posiadam innych czasów wolnego o na tej zasadzie, no nie daje mi komunikat, że mnie tu nie widać, no nie i coś tutaj jest nie tak.
+- [00:20:34] **Bartosz Rogala:** Mhm.
+- [00:20:35] **Ksenia Golik:** Powiedzmy wybiorę usługę.
+- [00:20:39] **Ksenia Golik:** I teraz tak wybrałam usługę, do której podpięty powinien być sprzęt uwaga. I wybierz sprzęt ręcznie każe mi wybrać sam sprzęt.
+- [00:20:50] **Ksenia Golik:** Nie wiem dlaczego i właśnie tu ja się z tym na przykład w bux i pieprze strasznie,
+- [00:20:51] **Bartosz Rogala:** Ty?
+- [00:20:55] **Ksenia Golik:** bo muszę całkowicie osobno ustawiać każdy sprzęt i każdy godziny i tak jak wam powiedziałam na samym początku jak żeśmy mieli rozmowę ustawiłam tylko godziny pracy i rozjeżdżały się nawet z godziny sprzętu, no nie i tam wszystko się mi krochmal miło to cały czas nie jest tam dopracowane tak jak należy, a tu przydałoby się żeby to fajnie
+- [00:21:12] **Bartosz Rogala:** Mhm.
+- [00:21:15] **Ksenia Golik:** dopracować, żeby to było widoczne. Nie wiem zrobić wam zrzut jak na to wygląda w tym momencie bóg wsi. A jak wygląda ta rezerwacja?
+- [00:21:22] **Bartosz Rogala:** Zrób. Zrób nam zrzut i powiedz nam dokładnie, jak ty byś widziała w idealnym świecie,
+- [00:21:26] **Ksenia Golik:** Mhm.
+- [00:21:29] **Bartosz Rogala:** jakby to wyglądało u ciebie.
+- [00:21:33] **Ksenia Golik:** Już.
+- [00:21:36] **Bartosz Rogala:** I my spróbujemy to zrobić jak najbliżej tego.
+- [00:21:40] **Ksenia Golik:** Dobra.
+- [00:21:44] **Ksenia Golik:** Już wam mówię, ja sobie też wejdę tutaj sobie wezmę, ale wezmę jeszcze na sprzęt w razie czego on mówi wizytę.
+- [00:21:56] **Ksenia Golik:** To mam też problem tam z przelewami 24 z tymi kluczami, no nie tam do podpięcia i w ogóle z tym sms api też więc to będę was.
+- [00:22:05] **Bartosz Rogala:** A co masz? A dobra to to to jeden ten ten temat po
+- [00:22:07] **Ksenia Golik:** No scen.
+- [00:22:09] **Bartosz Rogala:** po kolei na razie.
+- [00:22:10] **Ksenia Golik:** No. No to mówię tak, póki sobie przypominam. Poczekaj, gdzie są te sprzęty?
+- [00:22:21] **Ksenia Golik:** To nie są pracownicy i sprzęt to w jednej zakładce jest dobra i mam sprzęt tak i mam każdy sprzęt, że tak powiem ustaw jest, mam ich raz 234567 sprzętów wstawionych.
+- [00:22:36] **Bartosz Rogala:** Mhm.
+- [00:22:36] **Ksenia Golik:** I każdy jest ustawiony odrębnie godzinowo i matek jakby edycję godzinową, no nie.
+- [00:22:42] **Bartosz Rogala:** Czyli graf. Wynik dla sprzętów jest też tak, jakby kiedy są dostępne sprzęty,
+- [00:22:45] **Ksenia Golik:** Tak odrębnie.
+- [00:22:47] **Bartosz Rogala:** kiedy i on to jest jakoś dynamicznie się dzieje. Czy ty to wpisujesz, kiedy one są dostępne?
+- [00:22:53] **Ksenia Golik:** I ja wszystko wpisuję.
+- [00:22:54] **Bartosz Rogala:** Ty wpisujesz kiedy sprzęt jeden sprzęt, tu jeden stół i ty o k.
+- [00:22:57] **Ksenia Golik:** I teraz uwaga co się trafiało w buk wsi i to się trafia cały czas. Nagle klientka rezerwuje wizytę, bo coś nam się popieprzyło godzinowo ze sprzętem i z naszymi godzinami pracy i w pewnym momencie. Klientka umawia się przez bug wsi całkowicie nową name. W ogóle nie wiadomo na jaką usługę jakiś sprzęt w ogóle, ale widnieje ona się umówiła. Ona przyjeżdża, że ona ma dzisiaj wizytę na przykład, no nie?
+- [00:23:27] **Bartosz Rogala:** Nie wiadomo.
+- [00:23:28] **Ksenia Golik:** Ale umówiła się na sprzęt i okazuje się, że jak zadzwoniłam do buksy i powiedziała, że umówiła się na sprzęt, bo usługa była psyk te przypisana do sprzętu, rozumiecie? I to jest dla mnie osobiście godzin ustawienie godzin sprzętu jest totalną
+- [00:23:38] **Tomasz Rogala:** Tak.
+- [00:23:44] **Ksenia Golik:** paranoją. W ogóle dla mnie to jest dodatkowy
+- [00:23:45] **Bartosz Rogala:** No.
+- [00:23:48] **Ksenia Golik:** problem, który jest bez sensu. W ogóle nie może.
+- [00:23:51] **Bartosz Rogala:** To znaczy, no no, no bez sensu to jest, no bo no, bo masz godziny pracy salonu,
+- [00:23:54] **Ksenia Golik:** Może to jest?
+- [00:23:57] **Bartosz Rogala:** tak to już jest baza do tego, kiedy każdy sprzęt jest dostępny, a 2, który jeżeli jest usługa, która wymaga sprzętu, odejmuje z tej puli jak dla mnie. No tak na chłopski rozum odejmuje z tej
+- [00:24:09] **Ksenia Golik:** No dobra, ale zastanawiam się też Bartek do jakich
+- [00:24:10] **Bartosz Rogala:** puli, no.
+- [00:24:12] **Ksenia Golik:** celów jest są używane go tak jakby już jak mam patrzeć szerzej nie tylko na salony, do czego są potrzebne godzin ówki sprzętu?
+- [00:24:22] **Tomasz Rogala:** Żeby nie zrobić tabel booking.
+- [00:24:26] **Tomasz Rogala:** Sprzętu tylko.
+- [00:24:28] **Tomasz Rogala:** Czy to są tylko pod?
+- [00:24:29] **Bartosz Rogala:** No ale to wtedy ci wystarczy flaga, czy jest zajęty, czy nie, jest zajęty? O której godzinie?
+- [00:24:35] **Bartosz Rogala:** Do do do do takiego tego do takiego, czy żeby nie zrobić duble bookingu no to
+- [00:24:37] **Ksenia Golik:** No ale po co to?
+- [00:24:41] **Bartosz Rogala:** wystarczy, że masz kalendarz, w którym on będzie właśnie.
+- [00:24:45] **Ksenia Golik:** Ale usługa jak wpisujecie nową usługę wpisujecie czas pracy usługi.
+- [00:24:50] **Bartosz Rogala:** Tak.
+- [00:24:50] **Ksenia Golik:** To ten powinien być też czas pracy wtedy sprzętu, na którym on się znajduje. I ewidentnie jeżeli nawet dziewczyna sobie skraca, bo w boksie jest tak,
+- [00:24:54] **Bartosz Rogala:** Tak jest no.
+- [00:24:55] **Tomasz Rogala:** Jeśli jest przypisany do usługi.
+- [00:24:59] **Ksenia Golik:** że kliknę na usługę i mogę sobie ją wydłużać, skracać czy przenieść i w ogóle, no nie jednym kliknięciem, no nie, no to w tym momencie przenoszenia.
+- [00:25:06] **Bartosz Rogala:** Tak no.
+- [00:25:08] **Ksenia Golik:** No to chyba jasna sprawa jest to to jest najlepsze rozwiązanie.
+- [00:25:10] **Bartosz Rogala:** Tak, że się przenosi razem razem ze sprzętem się powinno przenosić. Usługa się powinna przenosić razem ze
+- [00:25:16] **Ksenia Golik:** Automatycznie.
+- [00:25:18] **Bartosz Rogala:** sprzętem. No i tak tak no i to to tak myślę, że to znaczy tak jest u nas według mojej najlepszej wiedzy, to jest ten sprzęt przypisany do usługi i jeżeli go przenosisz to to będzie będzie
+- [00:25:27] **Ksenia Golik:** No to jest, bo.
+- [00:25:31] **Bartosz Rogala:** się dostęp. I sprzętu będzie się też zmieniała razem z tym.
+- [00:25:34] **Ksenia Golik:** A powiedzmy jakbyście jeszcze mogli zrobić coś takiego, że jak macie na przykład daną wizytę ustawioną na kalendarzu jak klikam w tą wizytę i wyświetla mi się tam edycja wizyty i klient data jaka usługa jaki pracownik no i status no i tam jest status zaplanowana blebleble, a można by było jeszcze dodać faktycznie ten sprzęt jaki jest w razie był
+- [00:25:52] **Bartosz Rogala:** Mhm.
+- [00:25:54] **Ksenia Golik:** zaplanowany do tej tak, żeby wiedzieć na jakim to stanowisku jest.
+- [00:25:59] **Bartosz Rogala:** Oczywiście, że można to zrobić nie bez żadnego problemu jest ta informacja w bazie danych. Ta kwestia tylko wyświetlenia i.
+- [00:26:07] **Bartosz Rogala:** Także jeżeli to jest dla ciebie, wiesz już, jeżeli to ci pomoże, to jak najbardziej możemy to zrobić.
+- [00:26:13] **Ksenia Golik:** No bo wiesz, nie patrzę tylko też na siebie, ale patrzę też na większe salony, jeżeli miałyby brać w tym udział. No nie,
+- [00:26:19] **Bartosz Rogala:** O k.
+- [00:26:20] **Ksenia Golik:** bo to w jakimś stopniu. Jeżeli ktoś ma 7 8 pracownika pracowników, ułatwi to, że tak powiem tą sytuację, no nie, nawet wzrokowo się coś tam wiesz potwierdzić,
+- [00:26:27] **Bartosz Rogala:** Mhm.
+- [00:26:29] **Ksenia Golik:** czy coś jest nie tak i w ogóle, no nie to pod tym względem.
+- [00:26:33] **Bartosz Rogala:** Spoko, możemy to dodać do tego okna edycji, do tego do tej chmurki, która wyskakuje tam jak najedzie najeżdżasz na kalendarzu na wizytę to to jest taka chmurka to od razu też możemy tamto dodać.
+- [00:26:45] **Ksenia Golik:** Dobra, ok.
+- [00:26:46] **Bartosz Rogala:** Jaki sprzęt jest w tej wizycie?
+- [00:26:50] **Bartosz Rogala:** A czy jeżeli chodzi o to do to do to właśnie podejście do tego sprzętu? W tej chwili rezerwowanie tego sprzętu to ty chcesz coś zmieniać?
+- [00:27:00] **Ksenia Golik:** No jedynie do sprzętu to jedynie tam nie, bo jeżeli nie ma godzinowe jak to jest o k to mi się to na pewno podoba. Jedynie jest jeszcze jedna rzecz,
+- [00:27:06] **Bartosz Rogala:** Nie ma godzin nówek.
+- [00:27:09] **Ksenia Golik:** którą miałam wam powiedzieć i poczekajcie wymknęło mam nie wiem co z dzisiaj codziennie za dużo mam na głowie po prostu.
+- [00:27:21] **Ksenia Golik:** Dobra, to to jest, to się powiela to co dają mi napisała.
+- [00:27:29] **Ksenia Golik:** Aha macie opisy do tych usług.
+- [00:27:34] **Bartosz Rogala:** Opisy do usług. Już patrzę czy jest taka. Takie okienko.
+- [00:27:44] **Bartosz Rogala:** Dodatkowe cięcie.
+- [00:27:48] **Ksenia Golik:** Jest czy masz coś?
+- [00:27:48] **Bartosz Rogala:** Najfa.
+- [00:27:52] **Bartosz Rogala:** Linie ma jak widzisz tutaj są już dodatki. Zaimplementowane to już będzie w następnej wersji.
+- [00:27:58] **Ksenia Golik:** Dobra, dobra te dodatki, okej?
+- [00:27:59] **Bartosz Rogala:** Ale, ale ale, ale opisów nie mam na to tylko nazwa opcji to są opcje pod peru usługa będą opcje dodatkowe.
+- [00:28:09] **Ksenia Golik:** Wiem, widzę, bo ty to ja nie mam jeszcze tego.
+- [00:28:11] **Bartosz Rogala:** Tak no.
+- [00:28:12] **Ksenia Golik:** Ty tam widzę, że pracujesz na ten opis to danej usługi
+- [00:28:15] **Bartosz Rogala:** Opis do usługi.
+- [00:28:15] **Ksenia Golik:** jak wygląda usługa tak koniecznie, bo to ze względu nawet na to, że klientka,
+- [00:28:16] **Bartosz Rogala:** Mhm.
+- [00:28:20] **Ksenia Golik:** która się umawia ale pani tam pisało proszę panią, że rozszerzony podologiczny, no to jak jest rozszerzony, no to tam powiesz i mi wałkuje ta baba, bo się zauważyła, że coś tam jest i w ogóle tylko przeczytała słowo skalpel, tak naprawdę i ona już myśli, że już będzie taka patologia, że się w pale nie mieści i w ogóle. Jadę, są opisy na Boxing bardzo proszę, niech pani sobie to przeczyta, zobaczę jak to wygląda, jak każda usługa jest i każda klientka,
+- [00:28:45] **Bartosz Rogala:** O k.
+- [00:28:48] **Ksenia Golik:** która nawet wejdzie na to ma opisaną każdą usługę. Słuchajcie też zweryfikowałam ostatnio tą aplikację, która tam nowe nawet wysłali mi ofertę współpracy, żebym sprawdzała testowała, no nie nawet ta moja podolog też dostała ofertę od nich,
+- [00:29:00] **Bartosz Rogala:** Mhm.
+- [00:29:03] **Ksenia Golik:** żeby właśnie ona tam zweryfikowała też tą stronę. Ja na to weszłam wcześniej, bo już wiedziałam o co chodzi i w ogóle. Co właśnie mówiłam, nawet gizeli, że nie podoba mi się w ogóle Ta strona w ogóle jest tak prosta, że tam nie ma żadnego manewru. W ogóle nie ma manewru żadnego, więc to mi się nie podoba. Wiecie o czym jeszcze myślę.
+- [00:29:25] **Bartosz Rogala:** O czym jeszcze myślisz, damy?
+- [00:29:26] **Ksenia Golik:** Myślę o regulaminie salonu.
+- [00:29:28] **Bartosz Rogala:** O regulaminie salonu.
+- [00:29:30] **Ksenia Golik:** No.
+- [00:29:32] **Bartosz Rogala:** Gdzie on miałby się wyświetlać?
+- [00:29:32] **Ksenia Golik:** Ale w. Właśnie. Nie wiem jak to tam możemy utworzyć swoje wiadomości, prawda i każdy tam płacić za te swoje smski no nie,
+- [00:29:41] **Bartosz Rogala:** Tak.
+- [00:29:43] **Bartosz Rogala:** Tak no.
+- [00:29:43] **Ksenia Golik:** bo przecież wiem o co chodzi nie, ale tak jakby klientka, która będzie rezerwowała wizytę, bo też będzie apka od tego nie.
+- [00:29:52] **Bartosz Rogala:** Tak no.
+- [00:29:54] **Ksenia Golik:** To, żeby jej się wyświetlał regulamin naszego salonu i tak jakby nawet Link do niego czy coś tego rodzaju, żeby ona go zatwierdziła.
+- [00:30:06] **Bartosz Rogala:** Że regulamin, że przeczytała i zatwierdziła.
+- [00:30:08] **Ksenia Golik:** No bo teoretycznie salon. Tak, bo jest coś takiego, że jak tego nie zaakceptujesz, to nie przejdziesz dalej coś tego rodzaju. Wiesz o co mi chodzi, że musi zaakceptować ten regulamin na przykład no nie żeby przejść dalej i tak jakby moim regulaminem jest też mój salon, czyli jakie są tutaj zasady, jakie panują ja cały czas to powtarzam i mam to zapisane, bo nawet jeżeli prowadzimy Facebooka i tam udostępniamy swoje usługi w ogóle, no to powinna być gdzieś zakładka z regulaminem, prawda?
+- [00:30:36] **Bartosz Rogala:** Tak, tak, to do do do do nawet jak nikt tego nie
+- [00:30:37] **Ksenia Golik:** No.
+- [00:30:39] **Bartosz Rogala:** czyta to żeby zaznaczył, że przeczytał niby żeby się później można
+- [00:30:43] **Ksenia Golik:** No właśnie.
+- [00:30:43] **Bartosz Rogala:** było powiedzieć, ale to jest nasz regulamin, pani go zaakceptowała.
+- [00:30:48] **Ksenia Golik:** I to wszystko nie i ja wiem o co chodzi, ale tak jakby każdy kto przekracza próg Akceptuję regulamin nie dla mnie to jest jednoznaczne, no nie,
+- [00:30:55] **Bartosz Rogala:** Tech tech.
+- [00:30:58] **Ksenia Golik:** no ale są takie klientki i zdarzyło mi się już nie jednokrotnie, no że ona nie miała Regulaminu na boksie.
+- [00:31:07] **Ksenia Golik:** I nie ma tam regulaminy.
+- [00:31:07] **Bartosz Rogala:** O k.
+- [00:31:09] **Bartosz Rogala:** Dobra no to to fajny punkt. Jak najbardziej możemy dodać o tutaj
+- [00:31:12] **Ksenia Golik:** Nawet żeby ktoś, bo wersją było tak, że każdy mógł wpisać swój regulamin i on
+- [00:31:13] **Bartosz Rogala:** tutaj.
+- [00:31:17] **Ksenia Golik:** był dostępny i on był dostępny w aplikacji u klientów.
+- [00:31:18] **Bartosz Rogala:** No i tak myślę, żeby zrobić właśnie.
+- [00:31:21] **Ksenia Golik:** Jeżeli ktoś się umawia gdzieś tam mógł wejść w regulamin salonu, coś tam coś tam poszukać i to było w versum i tam mogłybyśmy napisać właśnie.
+- [00:31:28] **Bartosz Rogala:** Mhm.
+- [00:31:32] **Ksenia Golik:** Że jest regulamin czy nawet link czy coś tam nie jeden do Regulaminu.
+- [00:31:36] **Bartosz Rogala:** No to myślę, że tutaj by można było gdzieś wstawić w tym informacji o biznesie, tutaj dać jeszcze okienko jakieś do
+- [00:31:41] **Ksenia Golik:** Mhm.
+- [00:31:43] **Bartosz Rogala:** Regulaminu, żeby sobie może tam było wkleić,
+- [00:31:45] **Ksenia Golik:** Tak.
+- [00:31:46] **Bartosz Rogala:** a później by się ściągało to do do rezerwacji od razu stąd per salon.
+- [00:31:49] **Ksenia Golik:** Dobrze, a powiedzcie mi jeszcze taką ciekawostkę w godzinach otwarcia salonu, jeżeli powiedzmy to jest ósma, dziewiąta, osiemnasta to w tych samych godzinach jest sprzęt wszystko i w ogóle tak nic się tam nie będzie.
+- [00:31:59] **Bartosz Rogala:** Tak, to jest. To jest najważniejszy czynnik do rezerwacji, to są godziny otwarcia, jego sprawdza najpierw.
+- [00:32:08] **Ksenia Golik:** Dobra.
+- [00:32:08] **Bartosz Rogala:** Czyli najpierw czy salon jest w ogóle otwarty, a później sprawdza czy jest pracownik i sprzęt i.
+- [00:32:13] **Ksenia Golik:** A na przykład yy w taka oferta marketingowa, że są na przykład usługi premium poza godzinami pracy.
+- [00:32:22] **Bartosz Rogala:** I jak najbardziej można by było wysłać i wtedy byś musiała przestawić tutaj.
+- [00:32:29] **Ksenia Golik:** Mhm.
+- [00:32:30] **Bartosz Rogala:** Sobie godziny pracy na przykład czy czy chodzi ci o to, żeby to zrobić jakoś ad hoc owo bardziej.
+- [00:32:36] **Ksenia Golik:** Odrębnie znaczy odrębnie powiedzmy to są godziny pracy salonu, ale klientka chce się umówić na usługę premium i ty tak jakby w bogu jest tak w
+- [00:32:41] **Bartosz Rogala:** O k.
+- [00:32:45] **Ksenia Golik:** marketingu coś takiego, że ustawiam sobie dodatkową godzinę na przykład powiedzmy, nie wiem 2 razy w tygodniu od godziny
+- [00:32:52] **Bartosz Rogala:** K.
+- [00:32:52] **Ksenia Golik:** 19:00 do dwudziestej pierwszej mam 2 godzinki, że ktoś może się usługa tą usługę premium uwaga 100% płatną dodatkowo nie. No nie wiem, bo ona się nagle wystrzeliła, że ona chce paza o godzinie 18:00 nie
+- [00:33:01] **Bartosz Rogala:** Mhm.
+- [00:33:05] **Bartosz Rogala:** No.
+- [00:33:07] **Ksenia Golik:** więc dobra płacisz, ale 100% moje mój czas jest cenny tak i
+- [00:33:11] **Bartosz Rogala:** Czyli żeby jeszcze dodać taką opcję tutaj na tym na.
+- [00:33:11] **Ksenia Golik:** tyle.
+- [00:33:15] **Tomasz Rogala:** Wy ja bym powiedział, że musisz zrobić wyjątek. W godzinach otwarcia Dodaj wyjątek i wprowadzasz tą godzinę otwarcia.
+- [00:33:20] **Ksenia Golik:** Mhm.
+- [00:33:25] **Tomasz Rogala:** I wtedy by to miało możliwość rezerwacji.
+- [00:33:30] **Bartosz Rogala:** Albo albo po prostu dodać tutaj jakiś jakiś przycisk właśnie tym sensie godzina
+- [00:33:35] **Ksenia Golik:** Albo on drobną zakładkę marketingową, na przykład,
+- [00:33:36] **Bartosz Rogala:** promocyjna.
+- [00:33:39] **Ksenia Golik:** że marketing i masz tam godziny premium last \*\*\*\*\* takie rzeczy i w ogóle.
+- [00:33:46] **Bartosz Rogala:** O k.
+- [00:33:46] **Tomasz Rogala:** No ale to się muszą wtedy godzin.
+- [00:33:47] **Ksenia Golik:** Że i można by było dostać jeszcze takie podpięcie,
+- [00:33:49] **Bartosz Rogala:** Te godziny.
+- [00:33:50] **Ksenia Golik:** że mogę wysyłać wiadomości do wybranych tam klientów, bo klient niektórych klientów ustawiamy sobie kategoriami, że stały klient, klient vip, klient, nie wiem, wymagający coś tam, coś tam takie tagi pod nich ustawiamy.
+- [00:34:03] **Tomasz Rogala:** Możesz dodać też. Zobaczę to dla dla klientów do możliwość do ustawiania.
+- [00:34:09] **Bartosz Rogala:** A to a to, a to, a to jest dobry punkt, to te takie coś byście chciały tutaj,
+- [00:34:13] **Ksenia Golik:** No no no.
+- [00:34:13] **Bartosz Rogala:** żeby żeby była, żeby były właśnie o. No to dobra, bo na razie jest tylko czarna lista.
+- [00:34:18] **Tomasz Rogala:** To jest f.
+- [00:34:20] **Bartosz Rogala:** Ale można by było rzeczywiście kategorie dodać dla nich.
+- [00:34:20] **Ksenia Golik:** Tak no to czy? Kategorie ustawić i fajnie, bo by nam się segregował klientki i wtedy mogłybyśmy na przykład wysyłać im ofertę za jakąś promocją z czymś i w ogóle na
+- [00:34:29] **Bartosz Rogala:** Mhm.
+- [00:34:32] **Ksenia Golik:** zakładce marketing. I tak jak mówię godziny ustawić tego urodziny premium, czyli dodatkowo płatne po godzinach pracy dla jakieś last minut czy. No różne możliwości w tym w tej zakładce marketing na przykład no nie, bo jak macie tutaj na przykład ustawienia, to możecie dać też.
+- [00:34:47] **Bartosz Rogala:** I One i później.
+- [00:34:51] **Bartosz Rogala:** Później, jakbyś ty to ustawiła, że tak, żebym miał jasność,
+- [00:34:51] **Ksenia Golik:** No mów.
+- [00:34:54] **Bartosz Rogala:** jeżeli chodzi o logikę, czyli ty to ustawiasz, powiedzmy jest filler. Sobota od szesnastej do siedemnastej jest ta twoja godzina premium i wtedy
+- [00:35:04] **Ksenia Golik:** Tak.
+- [00:35:07] **Bartosz Rogala:** zmieniamy tutaj do siedemnastej, w oparciu o to czy. Bo.
+- [00:35:14] **Ksenia Golik:** Tak no bo to nie mogą się usługi premium, na przykład nachodzić na godziny pracy. Tak.
+- [00:35:19] **Tomasz Rogala:** Bo wtedy ludzie będą bukować w godzinach premium normalne usługi,
+- [00:35:20] **Ksenia Golik:** Usługi premium.
+- [00:35:23] **Tomasz Rogala:** jak będziesz miała to dostępny.
+- [00:35:26] **Ksenia Golik:** Dokładnie, bo.
+- [00:35:26] **Tomasz Rogala:** To musi być, to musi być, jako to musi być jako wyjątek.
+- [00:35:29] **Ksenia Golik:** Tak.
+- [00:35:31] **Bartosz Rogala:** O k.
+- [00:35:31] **Tomasz Rogala:** Że wtedy jest dodawany wyjątek. Tutaj Dodaj wyjątek,
+- [00:35:34] **Bartosz Rogala:** I na.
+- [00:35:35] **Tomasz Rogala:** tak jak mamy wyjątek z nieobecnościami.
+- [00:35:37] **Ksenia Golik:** No bo popatrzcie na nawet na logikę w sobotę nie pracuje w ogóle,
+- [00:35:39] **Bartosz Rogala:** Mhm.
+- [00:35:40] **Ksenia Golik:** ale dzisiaj pracuje, chodzi o tylko i wyłącznie nie o stałe klientki, tylko chodzi o klientki, które sobie cholera wchodzą w ten aplikacje i umawiają się jak zechcą. O to chodzi i chodzi o to,
+- [00:35:51] **Bartosz Rogala:** Mhm.
+- [00:35:52] **Ksenia Golik:** że jak coś kliknął to żeby mogłem przeczytać w końcu nauczyć się czytać to co jest w tej aplikacji w ogóle, bo ludzie nie czytają kompletnie na przeczytać i aha dobra w tym dniu ma usługi premium, czyli jak pójdę to za bóle 100% więcej nie no ale dobra muszę mieć te pasy. Więc się umówię i chodzi głównie o to, żeby powiedzmy sobotę mam wolną,
+- [00:36:13] **Bartosz Rogala:** Mhm.
+- [00:36:13] **Ksenia Golik:** ale odrębnie ustawie sobie tą usługę premium, że tak jakby.
+- [00:36:19] **Bartosz Rogala:** Także otworzysz, nawet jeżeli to będzie dobra okazja, to przyjdziesz i otworzysz ten salon. Tak jest taka możliwość.
+- [00:36:24] **Ksenia Golik:** Tak, tak i to będą te usługi premium, że to będzie ustawione tak jakby inaczej
+- [00:36:26] **Bartosz Rogala:** O k.
+- [00:36:28] **Ksenia Golik:** odrębnie. No nie powiedzmy, mam sobotę pracującą, no to ta usługa już nie będzie działa premium, no bo nie może wejść, skoro ja tutaj udostępniam jako salon godzinę otwarcia.
+- [00:36:36] **Tomasz Rogala:** To jest to, to jest. Chiny otwarcia, wyjątek ustawiasz dzień i godziny premium, czyli ustawiasz datę i godziny premium i to są wtedy godziny premium.
+- [00:36:46] **Ksenia Golik:** Mhm.
+- [00:36:49] **Bartosz Rogala:** No i wtedy by pasowało, że jeżeli jeżeli kończysz usługę w tej i
+- [00:36:50] **Ksenia Golik:** Albo.
+- [00:36:54] **Bartosz Rogala:** tej godzinie, to Dodaj 100% na przykład jeszcze dodać logikę do tego, czyli jeżeli usługa jest zarezerwowana w tej w tej godzinie, no to nie wiem. A na przykład plus 100% do wartości.
+- [00:37:04] **Ksenia Golik:** Jeżeli.
+- [00:37:08] **Bartosz Rogala:** Automatycznie no bo inaczej no.
+- [00:37:08] **Ksenia Golik:** Tak no to nam, żebym ja procent, bo niektóre wezmą 20, inny 31, 40,
+- [00:37:12] **Bartosz Rogala:** No.
+- [00:37:13] **Ksenia Golik:** inne 50. No nie, ja palę na okrągło mówię stonie.
+- [00:37:13] **Bartosz Rogala:** To już jest do.
+- [00:37:16] **Bartosz Rogala:** No no wiadomo, ja ja tam nie wnikam ile to będzie procent te ten procent byśmy ustawili po prostu jako zasady, czyli tam powiedzmy godzina premium ile premium,
+- [00:37:25] **Ksenia Golik:** Tak, żeby był tak?
+- [00:37:26] **Bartosz Rogala:** ile ile ile procent drożej jest i wtedy jakby miałoby to też wpływ na rezerwację, to znaczy, jeżeli rezerwacja jest dokonywana w tej godzinie premium, no to by ściągała z tego co sobie tam wpisałaś. Ile procent wyżej i od razu by się cena aktualizowała.
+- [00:37:42] **Ksenia Golik:** Tak, tak, tak, tak automatycznie.
+- [00:37:44] **Bartosz Rogala:** Automatycznie.
+- [00:37:46] **Ksenia Golik:** Ale na przykład jeżeli powiedzmy, bo to mówimy teraz ogólnie na tygodniu,
+- [00:37:46] **Bartosz Rogala:** No dobra.
+- [00:37:50] **Ksenia Golik:** więc jeżeli normalnie salon pracuje od dziewiątej do osiemnastej, ale na przykład dodatkowo odpalam sobie godziny pracy premium, czyli powiedzmy od tej osiemnastej do godziny 21:00, no nie?
+- [00:38:03] **Bartosz Rogala:** Mhm.
+- [00:38:03] **Ksenia Golik:** I to też tak jak powiedział Tomek wyjątek, że tego dnia na przykład mogę przyjmować i w ogóle, no nie tylko to nie może być w godzinach ogólnych otwarcia salonu, tutaj ustawiony tylko musi być w jakiejś odrębnej zakładce to zrobione, że to jest tak jakby dodatek, ale musiałby być komunikat na przykład się wyświetlać, że jeżeli ktoś by przyszło mu do głowy ustawić usługi premium, że będzie tak jakby blokada i hallow nie zablokujesz, no bo masz ustawione godziny otwarcia salonu nie w tym czasie.
+- [00:38:34] **Bartosz Rogala:** O k. Czy nie nie wiem w sumie czy tutaj, czy może po prostu zakładkę tutaj zrobić jakąś promocję.
+- [00:38:39] **Ksenia Golik:** Zakładkę zakładkę tak tak albo marketing.
+- [00:38:41] **Bartosz Rogala:** Zakładkę o tutaj jakąś taką albo marketing i tam dać jakieś właśnie promocje. Kiedy są te godziny premium? Ile wynosi procent większy?
+- [00:38:53] **Ksenia Golik:** Mhm.
+- [00:38:53] **Bartosz Rogala:** Yy w sumie no to na ten moment to chyba tyle, a później się będziemy dalej zastanawiać co ci tam jeszcze brakuje.
+- [00:38:58] **Ksenia Golik:** No co tam jakby na nawet coś tam skoczyło, no to wiesz, no bo tutaj ma booking ten boost ten promujący który pobierał 45% od pierwszego klienta.
+- [00:39:10] **Bartosz Rogala:** O k.
+- [00:39:10] **Ksenia Golik:** No 45% od pierwszego klienta.
+- [00:39:12] **Bartosz Rogala:** 45% no i.
+- [00:39:15] **Ksenia Golik:** No więc.
+- [00:39:16] **Bartosz Rogala:** Ale oprócz tego coś płacisz czy tylko to 45% od pierwszego klienta?
+- [00:39:21] **Ksenia Golik:** Nie 45% od pierwszego klienta, no to powiedzmy, przyszła pani kazia do mnie na paznokcie i pani kani. Kasiu, niech pani se założy to bóg i zarejestruje się na buzi, każda sobie zakłada buksy, która jest u mnie pierdyliard razy i nagle ona ma usługę za 180 zł i nagle ona umówiła się pierwszy raz i pobrało i 45% i zabiera mi buzi.
+- [00:39:42] **Bartosz Rogala:** No na piraci.
+- [00:39:43] **Ksenia Golik:** To jest na tej zasadzie nie? No nie mamy na to wpływu. No tak.
+- [00:39:49] **Bartosz Rogala:** Pieniądz nie śmierdzi.
+- [00:39:50] **Ksenia Golik:** Więc to jest na tej zasadzie? No tutaj też są ustawione znaczy tutaj.
+- [00:39:57] **Ksenia Golik:** Te smsy tak jakby pierwsze wrażenie powitaj nowego klienta, poinformuj nowego klienta o swoich usługach. Poinformuj nowego klienta o kartach podarunkowych też jest reaktywacja, czyli zaproś na kolejną wizytę, poproś ponownie i zaoferuj bezpłatną usługę, zaproś ponownie i zaoferuj zniżkę święta i okazja. No to tam jest do utworzenia. Jeżeli ktoś sobie to skopiuje to sobie utworzy te wiadomości te sms, no nie to jest git, jest o k no nie,
+- [00:40:25] **Bartosz Rogala:** Mhm.
+- [00:40:26] **Ksenia Golik:** nie mam tutaj to.
+- [00:40:39] **Bartosz Rogala:** To dogada.
+- [00:40:40] **Ksenia Golik:** Nie każdego pracownika dodanie każdego pracownika to jest 49 zł.
+- [00:40:47] **Bartosz Rogala:** Jednorazowo.
+- [00:40:48] **Ksenia Golik:** Jednorazowo, więc ja już wam mówię.
+- [00:40:50] **Bartosz Rogala:** 50 zł za zapro. No ale to niezłe stawki.
+- [00:40:53] **Tomasz Rogala:** No ale jest plus jeszcze za miesiąc płacisz za użytkowanie boks i za każdego
+- [00:40:57] **Ksenia Golik:** Tak już ci powiem, jak to wygląda. Tak już ci powiem jak to subskrypcja.
+- [00:40:57] **Tomasz Rogala:** pracownika jeszcze.
+- [00:41:02] **Ksenia Golik:** I płatności cena za miesiąc 264 45 mam teraz do zapłacenia każdy kolejny pracownik, Przepraszam, pomyliłam się 49, ale to Przepraszam. To jest netto 43 0 5. Ee no i mam też komunikat, że wiadomości testowe jakie są i w ogóle i teraz tak liczba darmowych, bo mam tam darmowe sms Ki liczba darmowych smsów, potwierdzenia i przypomnienia czyli filly mam darmowe bez limitu tutaj liczba darmowych smsów marketingowych. No to mam 100, ale nie używam, no bo no bo nie używam, bo to to to by zleciały jak ja mam 300 klientek w miesiącu, no to co to jest dla mnie test to.
+- [00:41:41] **Bartosz Rogala:** No tak no.
+- [00:41:42] **Ksenia Golik:** Yy cena każdego smsa marketingowego z że ponad ten limit na rozmowy który był no to jest tam. Ee 12. Grożą prawie 20 groszy. No i dostaje takie.
+- [00:41:53] **Bartosz Rogala:** 20 groszy za smsem aż tak.
+- [00:41:55] **Ksenia Golik:** Tak i jest tak i jest jeszcze ostrzeżenie o miesięcznej płatności za smsy jeżeli przepis.
+- [00:42:04] **Ksenia Golik:** Aha, ostrzeżenie, czekaj, to to jest ostrzeżenie o starszym, bo może cię kontrolować opłaty za smsy po wykorzystaniu limitu. Aha, jeżeli kwota przekroczy 10 zł, to mnie poinformują, że uwaga już twój limit przekroczył dychę i uważa jak wysyłasz smsy na tej zasadzie.
+- [00:42:19] **Bartosz Rogala:** KA, to które masz nielimitowane?
+- [00:42:21] **Ksenia Golik:** No. Naczy no właśnie tego nie rozumiem, a nie marketingowych Przepraszam
+- [00:42:27] **Bartosz Rogala:** Może jakieś?
+- [00:42:28] **Ksenia Golik:** marketingowych czy są marketingowe?
+- [00:42:31] **Bartosz Rogala:** Marketingowe masz nie.
+- [00:42:31] **Ksenia Golik:** Że jeżeli suma marketingowych przekroczy już te 10 zł, no to dostanę komunikat, nie.
+- [00:42:38] **Bartosz Rogala:** O k dobra, a masz w ogóle jakieś? Nielimitowane smsy.
+- [00:42:42] **Ksenia Golik:** Wszystko mam wyłączoną, mam linię limitowane tutaj.
+- [00:42:45] **Bartosz Rogala:** Jak jak tu, które możesz wysyłać nielimitowane?
+- [00:42:49] **Ksenia Golik:** Chyba to potwierdzenia i przypomnienia, czyli te pusz i i potwierdzenia wizycie
+- [00:42:52] **Bartosz Rogala:** Potwierdzi.
+- [00:42:54] **Ksenia Golik:** to jest darmowe.
+- [00:42:56] **Bartosz Rogala:** O k dobra, czyli to jest gdzieś tam w cenie jak tego. Yy tej subskrypcji już.
+- [00:43:02] **Ksenia Golik:** Mhm.
+- [00:43:05] **Bartosz Rogala:** No dobra, dobra, czyli a co? A co byś chciała zmienić w smsach?
+- [00:43:06] **Ksenia Golik:** Jezu.
+- [00:43:11] **Ksenia Golik:** Wiesz co? Poczekaj, bo już gubię się już nie wiem który ekran nam dotykać. Masakra.
+- [00:43:20] **Ksenia Golik:** Jeszcze czekaj jeszcze chodzi o usługi mi.
+- [00:43:24] **Bartosz Rogala:** O k dawaj no.
+- [00:43:26] **Ksenia Golik:** Jedyna rzecz, którą jest bardzo irytuje, ale to tak bardzo, że wam powiedzieć to to, że muszę cokolwiek zrobić z jedną usługą, tu muszę za każdym razem klikać każdą usługę i zrobić ją osobno. A tu przydałoby się taką taką takie kółeczko takie których możesz klik klik klik zaznaczyć kilka o i taka i wyskakuje taka tablica w której pisze przypisz no
+- [00:43:46] **Bartosz Rogala:** I co byś z nimi chciała wtedy robić?
+- [00:43:51] **Ksenia Golik:** nie wiem czy nawet przedpłaty przypisz nie wiem wyłącz tą usługę albo coś tam. Wiecie takie różne zakładki na tej poczekajcie chwilę, bo mój brat już 15 razy się dobija do mnie jak tylko odbiorę szybciutko co tam.
+- [00:44:07] **Bartosz Rogala:** Dobra, spoko.
+- [00:44:11] **Ksenia Golik:** Bo pracuję.
+- [00:44:14] **Ksenia Golik:** No. Nie leży tak jak tej nie pierdze w stołek to tam.
+- [00:44:23] **Ksenia Golik:** Ee no to za 15 minut, bo teraz mam rozmowę wideo.
+- [00:44:30] **Ksenia Golik:** Dobra.
+- [00:44:32] **Ksenia Golik:** No no to na razie pa pa.
+- [00:44:36] **Ksenia Golik:** Przepraszam, mam trzynastoletniego brata i muszę
+- [00:44:38] **Tomasz Rogala:** Nic. Ciężko.
+- [00:44:39] **Ksenia Golik:** trochę go ogarnąć czasami.
+- [00:44:40] **Bartosz Rogala:** Trzynastoletniego nieźle.
+- [00:44:43] **Ksenia Golik:** No 20.
+- [00:44:45] **Bartosz Rogala:** Wstępna imprezy będziesz miała na osiemnastki jeszcze pochodzić.
+- [00:44:50] **Ksenia Golik:** No myślę, że myślę, że tak nie. Także myślę, że będzie wesoło. No miałam 20 lat jak się urodził, jakby nie było nie.
+- [00:45:00] **Bartosz Rogala:** No.
+- [00:45:01] **Ksenia Golik:** No więc wszyscy na wsi myśleli, że to ja Jestem w ciąży.
+- [00:45:02] **Bartosz Rogala:** Powiedz mi jeszcze.
+- [00:45:06] **Bartosz Rogala:** Przybliż mi tą wizję tego tych usług, bo to nie do końca zrozumiałem co by miało dać się zmieniać w tym jak zaznaczysz wiele usług.
+- [00:45:17] **Ksenia Golik:** Na przykład już ci mówię?
+- [00:45:22] **Ksenia Golik:** Bóg wersją było tak, że jak chciałam wyłączyć jakieś.
+- [00:45:24] **Tomasz Rogala:** To weź może w te usługi? Start weź wejdź w usługi, pokaż na usługi, zobaczmy, jak to miałoby wyglądać.
+- [00:45:27] **Bartosz Rogala:** Że ja teraz mam wejść w usługi?
+- [00:45:27] **Ksenia Golik:** Chciałam wyłączyć tak typ.
+- [00:45:31] **Tomasz Rogala:** Będzie łatwiej to zwizualizować.
+- [00:45:34] **Bartosz Rogala:** Na dokładnie i co i tutaj byś chciała jak jak żeby to działało.
+- [00:45:40] **Ksenia Golik:** Na przykład, żeby one były tak, jakby pytałyśmy o to wcześniej, bo zapytałeś mnie to pytanie ostatnio jakbym chciała, żeby te usługi były ułożone, żeby to było w miarę tak poogarniam. Jest spoko, ale dla mnie jest to tak jakby on ja ich mam dużo tak, więc one są dla mnie wszędzie porozkładane jakby były w mniejszym formacie, no bo jest cena. Jest też czas jest o k no nie no wiem, że to jest tak wiem, sprawdzałam i byłoby okej, tylko na przykład jak masz tutaj tą kurteczkę, potem masz to edytuj i usuń to tak jakby
+- [00:46:14] **Bartosz Rogala:** Na.
+- [00:46:15] **Ksenia Golik:** jakby można by było zrobić to takiej formie, że jest kółeczko, że zaznaczam sobie na przykład 2 usługi i tutaj jak masz tam ten ten pakiecik 2 usługi wyżej żeby było tam napisane. Jakby wysuwają się z 3 kropeczek, na przykład wyłącz tą usługę albo naraz można, żeby można było edytować te usługi czy coś tego rodzaju na tej zasadzie.
+- [00:46:38] **Bartosz Rogala:** A k zastanawiam się jakbyśmy włączyli naraz edycję tych usług. To jakbyśmy to zmieścili w jakbyśmy mieli, powiedzmy, nie wiem 40 usług i byśmy kliknęli edytuj. Yy, to to jakie one mają wtedy cechy wspólne musiałyby się wyświetlić one tutaj jedno jedna koło drugiej do edycji czy.
+- [00:47:05] **Ksenia Golik:** Albo na przykład, że wyłącz dodatki do tych usług,
+- [00:47:08] **Bartosz Rogala:** Bo rozumiem.
+- [00:47:08] **Ksenia Golik:** albo na przykład jak utworzysz dodatki same dodatki odrębnie. No to musisz mieć utworzone, bo jeżeli my za każdym razem będziemy tworzyć dodatki do danych usług, no to będzie uciążliwe.
+- [00:47:18] **Bartosz Rogala:** No. Ok.
+- [00:47:20] **Ksenia Golik:** Rozumiesz o co chodzi, bo lepiej stworzyć osobno dodatek i
+- [00:47:21] **Bartosz Rogala:** Dobra, dobra.
+- [00:47:23] **Ksenia Golik:** dodawać. Zaznaczam bazę usług i do nich dodaje dodatki.
+- [00:47:30] **Bartosz Rogala:** Dobra dobra czyli.
+- [00:47:31] **Ksenia Golik:** Bo moim dodatkiem mam manikiur hybrydowy i na przykład a zdobienie soft i zdobienie hart no dobra, no to teraz muszę tak wejść w osobno w manikiur wcisnąć ten dodatek, potem wejść w ten do w w na przykład w przedłużanie też wcisnąć dodatek soft rozumiesz o co chodzi? Każde stricte muszę robić osobno, a tu jak sobie zaznaczę to Dodaj dodatki
+- [00:47:47] **Bartosz Rogala:** Tak.
+- [00:47:51] **Ksenia Golik:** na przykład, żeby to było, że te dodatki, bo dodatek w mogę sobie stworzyć tyle te dodatków, rozumiesz i żebym miała możliwość
+- [00:47:57] **Bartosz Rogala:** Roz.
+- [00:47:59] **Ksenia Golik:** bazowania, które dodatek do którego dodaje.
+- [00:48:02] **Bartosz Rogala:** Czyli masowe przypisywanie dodatków masowe. Aktywowanie usuwanie usług. Yy, w tym w tym w tym aktywowanie des
+- [00:48:10] **Tomasz Rogala:** I uaktywnia owanie daj też jeszcze.
+- [00:48:13] **Bartosz Rogala:** aktywowanie usług.
+- [00:48:14] **Ksenia Golik:** Yhm dokładnie.
+- [00:48:15] **Bartosz Rogala:** No bo edycja edycja taka masowa. To będzie ciężkie trochę.
+- [00:48:20] **Ksenia Golik:** Wiem, to będzie ciężkie, ale tak jakby masowe dodawanie czegoś to
+- [00:48:24] **Bartosz Rogala:** Masowe dodawanie usuwanie tego typu rzeczy jak najbardziej możemy zrobić
+- [00:48:24] **Ksenia Golik:** by było okej.
+- [00:48:28] **Bartosz Rogala:** tutaj w tym widoku.
+- [00:48:28] **Ksenia Golik:** No to to by było dobrym rozwiązaniem, tak powiedziałam,
+- [00:48:30] **Bartosz Rogala:** I co myślisz? Bo ja też tak patrzę.
+- [00:48:32] **Ksenia Golik:** bo nie wiedziałam jak to określić. Prostu wiedziałam, że odnajdziecie gdzieś tam ten, no to słowo.
+- [00:48:38] **Bartosz Rogala:** Spoko, wiesz z czym się jeszcze zastanawiam czy te czy by ich po prostu nie zmniejszyć tych kafelków, bo tutaj jest dużo wolnego miejsca.
+- [00:48:44] **Ksenia Golik:** Tak, tak, tak, o to to tak tak, zdecydowanie.
+- [00:48:48] **Bartosz Rogala:** Żeby żeby żeby je dać mniejsze.
+- [00:48:50] **Ksenia Golik:** Tak, bo muszę jeździć po całym ekranie, nie?
+- [00:48:52] **Bartosz Rogala:** No o dobra dobra, to znaczy możesz tu sobie wyszukać jak coś, ale to.
+- [00:48:57] **Ksenia Golik:** Mhm.
+- [00:48:59] **Bartosz Rogala:** Coś tam jak sobie stworzenie to.
+- [00:49:01] **Ksenia Golik:** Jeszcze jedna rzecz miała być poczekaj, Dodaj usługę, a Dodaj usługa i mamy kategorię i na przykład jest napisane, widzisz fryzjerstwo kliknij tam, a i tobie się już wyświetla,
+- [00:49:12] **Bartosz Rogala:** Mhm.
+- [00:49:12] **Ksenia Golik:** bo mi pani teraz też się wyświetla dobra, okej?
+- [00:49:14] **Bartosz Rogala:** Nie, to jest na przykład fryzjerstwo, tutaj jest free tekst,
+- [00:49:17] **Ksenia Golik:** Dobra, okej i dobra podkategorie też się już
+- [00:49:17] **Bartosz Rogala:** możesz wpisać co chcesz.
+- [00:49:21] **Ksenia Golik:** wyświetlają.
+- [00:49:25] **Bartosz Rogala:** No podkategoria się wyświetlają na.
+- [00:49:29] **Bartosz Rogala:** Kategoria się wyświetla. Podkategoria.
+- [00:49:33] **Ksenia Golik:** Mhm i wtedy nazwa usługi dobra ok, jest git.
+- [00:49:37] **Bartosz Rogala:** Nazwa usługi na i i sprzęt.
+- [00:49:39] **Ksenia Golik:** Dobra, bo coś mi tutaj. Tak i sprzęt i sprzęt no i to danie sprzętu no i ten opis usługi tutaj tu,
+- [00:49:47] **Bartosz Rogala:** Opis, usługi będę pamiętał, no.
+- [00:49:47] **Ksenia Golik:** żeby był.
+- [00:49:50] **Ksenia Golik:** Żeby go dodać.
+- [00:49:50] **Bartosz Rogala:** Czyli w Dodaj usługę, żeby żeby był opis usługi, no.
+- [00:49:53] **Ksenia Golik:** No poczekaj jeszcze daj mi sekundę. Coś jeszcze to było, poczekaj.
+- [00:50:00] **Ksenia Golik:** Daria mainy język niż ja.
+- [00:50:06] **Bartosz Rogala:** W takich opcji mailingowych to jeszcze dodajemy opcje, żeby wysyłać.
+- [00:50:10] **Ksenia Golik:** Wiecie co jeszcze bóg sima dodane?
+- [00:50:13] **Bartosz Rogala:** Na.
+- [00:50:13] **Ksenia Golik:** I tak właśnie myślę, bo jeżeli mamy coś robić dobrze, no tak myślę, bo buxy ma na przykład Dodaj.
+- [00:50:19] **Bartosz Rogala:** Zechcemy robić najlepiej.
+- [00:50:21] **Ksenia Golik:** No dobrze, Przepraszam, że ta Przepraszam, że to tak ujęłam. Tak masz rację,
+- [00:50:21] **Bartosz Rogala:** Nie tylko dobrze, tylko chcemy najlepiej.
+- [00:50:26] **Ksenia Golik:** ma coś takiego jak no i klienta oczywiście ustawiamy no i jest wizyta i powiedzmy na 2 kwietnia no i mam wizytę do zaznaczenia grupową lub cykliczną. No nie, że ta już mogę ustawić klientce do przodu, ale jej nigdy tego nie robię, bo nie mam miejsca po prostu na tej zasadzie więc ustawiam sobie usługę, no i do tego wskakuje mi ten dodatek. Tu, które dodatkowo ubieram sobie też do usługi tak jakby on jest przypisane, ale ja mogę go dopiero od swojej strony zdalnie dodać, teraz przypisując usługę.
+- [00:51:01] **Bartosz Rogala:** O k. Dobra a.
+- [00:51:03] **Ksenia Golik:** No że ja to robiąc zapisując sprzęt rozumiem.
+- [00:51:07] **Bartosz Rogala:** Ty czekaj, czyli klientka wybiera to multi usługę i ty dodajesz dodatki według swojego uznania w momencie, kiedy to już do ciebie trafi.
+- [00:51:18] **Ksenia Golik:** Tak i wtedy dodaje na przykład kolejną usługę i kolejne dodatek, bo znowu chce jakieś zdobienie na stopach.
+- [00:51:23] **Bartosz Rogala:** Ok, no i chcesz mieć możliwość dodawania do usług, której znaczy do wizyt, które już masz dodatkowych usług czy?
+- [00:51:33] **Ksenia Golik:** Też tak.
+- [00:51:33] **Tomasz Rogala:** Ja bym powiedział, że to są dodatki to powinien być chyba
+- [00:51:34] **Bartosz Rogala:** Oke.
+- [00:51:38] **Tomasz Rogala:** osobny, może usługi i dodatki.
+- [00:51:38] **Bartosz Rogala:** Znaczy.
+- [00:51:42] **Tomasz Rogala:** Tu byś miał usługi i dodatki i te dodatki mógłbyś dodawać do do ten.
+- [00:51:48] **Bartosz Rogala:** Dodatki z w tej nowej wersji już są, ale usługi.
+- [00:51:55] **Bartosz Rogala:** Usług jeszcze nie ma, a do tych nie wiem czy do tej w ogóle czy do strzyżenia damskiego mam jakiekolwiek dodatki w. Figurowa. Czyli żeby tutaj na przykład można było dodać jeszcze jedną wizytę podczas edycji?
+- [00:52:13] **Bartosz Rogala:** Czy w którym widoku?
+- [00:52:14] **Ksenia Golik:** Można.
+- [00:52:16] **Ksenia Golik:** Dzwonicie także to też jest dobra opcja, ale na przykład w tym w tej kwestii, że dodaje kolejną tą wizytę, bo na przykład przyszła nie wiem, kliknij tam, cokolwiek masz strzyżenie na przykład damskie no kliknij i na przykład no dobra, ale wyszła jeszcze dodatkowa jakaś usługa,
+- [00:52:30] **Bartosz Rogala:** No.
+- [00:52:32] **Ksenia Golik:** którą jednak muszę doliczyć, więc to ją sfinalizować i tutaj brakuje mi dodatku, bo na przykład jednak zrobiła sobie zdobienie.
+- [00:52:41] **Bartosz Rogala:** O k.
+- [00:52:41] **Ksenia Golik:** Soft, więc brakuje mi tu też dodatku.
+- [00:52:42] **Tomasz Rogala:** To mam.
+- [00:52:42] **Bartosz Rogala:** Dobra.
+- [00:52:44] **Bartosz Rogala:** Czyli eraz dodać kolejną wizytę i dodatek.
+- [00:52:49] **Ksenia Golik:** Mało tego można też by było zweryfikować dodanie pracownika, dlatego,
+- [00:52:51] **Bartosz Rogala:** Jeszcze.
+- [00:52:53] **Ksenia Golik:** że czasami mógłby inną inną usługę wykonać akurat pracownik, któremu też się naliczy prowizja. Tak?
+- [00:53:02] **Bartosz Rogala:** Czyli że no to to już bardziej skomplikowane logicznie.
+- [00:53:05] **Ksenia Golik:** Nie, nie, nie jest komplikowanie to jest proste.
+- [00:53:08] **Bartosz Rogala:** C na.
+- [00:53:08] **Ksenia Golik:** Posłuchaj mnie klikasz usługę, chce ją sfinalizować i w pewnym momencie
+- [00:53:13] **Bartosz Rogala:** Tutaj na przykład na tym okienku.
+- [00:53:13] **Ksenia Golik:** tak tak no i powiedzmy mamy koloryzacja pełna dobra, powiedzmy, że jeszcze dopięliśmy jakieś kolorowe warkoczyki i to jest dodatkowo płatne za 50 zł. No i brakuje mi tu tego, bo chcę to sfinalizować, tak?
+- [00:53:26] **Tomasz Rogala:** No no to jest dopłata jeszcze dopłata 50 zł dajesz?
+- [00:53:28] **Ksenia Golik:** No dobra. No dobra, ale ja chcę wiedzieć jakie usługi stricte wykonywała na przykład kasza, która to zrobiła, rozumiesz, o co chodzi?
+- [00:53:37] **Bartosz Rogala:** Czyli dodajemy tutaj tutaj, żeby dało się dodać pracownika.
+- [00:53:41] **Ksenia Golik:** No.
+- [00:53:42] **Bartosz Rogala:** Ewentualnie.
+- [00:53:43] **Tomasz Rogala:** Ale to inne pracownie, inny pracownik będzie wykonywał.
+- [00:53:43] **Ksenia Golik:** I dodatek.
+- [00:53:45] **Ksenia Golik:** Albo usługa, dodatek albo usługa.
+- [00:53:47] **Bartosz Rogala:** To znaczy najlepiej by było to najlepiej, by było zrobić po prostu, żeby tutaj była multi us, żeby była okienko do dodania usługi. Wtedy się nie bawimy zadawaniem pracownika osobno, tylko dodajemy usługa plus pracownik, który ją wykonuje i mamy oba i cena.
+- [00:54:03] **Ksenia Golik:** Tak, tak.
+- [00:54:05] **Bartosz Rogala:** I traktujemy to jako multi wizytę taką kilku.
+- [00:54:07] **Ksenia Golik:** I ono się automatycznie sumuje.
+- [00:54:10] **Bartosz Rogala:** Tak, bo no bo to już jest zaimplementowane,
+- [00:54:10] **Tomasz Rogala:** I automatycznie się wstrzymuję.
+- [00:54:12] **Bartosz Rogala:** to ona się automatycznie sumuje wtedy.
+- [00:54:14] **Ksenia Golik:** No i że na przykład jest to na odrębnego pracownika, więc jeżeli pracownik wykonał no to też wziął swoją dolę z tego tak.
+- [00:54:22] **Bartosz Rogala:** Do zrobienia rozumiem o co chodzi.
+- [00:54:23] **Tomasz Rogala:** Czyli to jest to jest multi usługa możliwe dodawania multi usługi do edycji
+- [00:54:28] **Ksenia Golik:** A.
+- [00:54:29] **Bartosz Rogala:** To w okienku edycji wizyty no bo na ten moment da się robić multi usługi, ale.
+- [00:54:29] **Tomasz Rogala:** usług.
+- [00:54:32] **Tomasz Rogala:** Tak.
+- [00:54:37] **Bartosz Rogala:** No multi usługi no nowa wizyta i można sobie dodać kilka ich.
+- [00:54:40] **Ksenia Golik:** Wy w ogóle, a mam takie pytanie. Wy w ogóle siedzieliście na boks? Widzieliście jak to wygląda od środka?
+- [00:54:46] **Bartosz Rogala:** Ja trochę siedziałem już no. Trochę się już do do do do do redukowałem, a co?
+- [00:54:49] **Ksenia Golik:** Aha.
+- [00:54:52] **Ksenia Golik:** Bo mogę ci dać login i hasło, możesz sobie jeszcze bardziej posiedzieć jak chcesz.
+- [00:54:55] **Bartosz Rogala:** No ja na razie na demku siedziałem, jakbyś mi podesłała to mogę,
+- [00:54:59] **Ksenia Golik:** To ci podeśle to sobie pogrzebiesz tam dobra.
+- [00:55:00] **Bartosz Rogala:** no mogę popatrzeć. No no dobra dobra no to jest fajny pomysł.
+- [00:55:04] **Ksenia Golik:** No zobaczysz co nowego weszło i może zrozumiesz mnie o co dokładnie chodziło,
+- [00:55:09] **Bartosz Rogala:** Na dobra dobra, spoko, to to to. To jest fajny pomysł,
+- [00:55:10] **Ksenia Golik:** dobra?
+- [00:55:14] **Bartosz Rogala:** tylko tak jak najbardziej posiedzę, tylko chcę. Wiesz zaadresować przede wszystkim te twoje takie jakieś blokujące ciebie czy mega irytujące rzeczy, żeby ci się dobrze z tego korzystało, co nie?
+- [00:55:31] **Ksenia Golik:** Poczekaj jeszcze coś było, poczekajmy mi wyleciało, a przed chwilą miałam to w głowie. Że to było aha, jeszcze to.
+- [00:55:42] **Ksenia Golik:** A na. A nie to już jest.
+- [00:55:53] **Ksenia Golik:** Aha, dobra, czekaj.
+- [00:56:01] **Ksenia Golik:** Brak możliwa, no to żeśmy mówili, że jeżeli będzie możliwość, to będziemy sobie edytować usługi, bo na przykład klientka przyszła na manikiur hybrydowy, ale okazuje się, że robimy przedłużenie.
+- [00:56:12] **Bartosz Rogala:** Mhm, tak, tak, tak, tak.
+- [00:56:12] **Ksenia Golik:** No to mamy możliwość zmiany usługi, nie.
+- [00:56:16] **Bartosz Rogala:** Zmianę usługi w rezerwacji.
+- [00:56:19] **Ksenia Golik:** Tak przy finalizacji.
+- [00:56:21] **Bartosz Rogala:** Przy finalizacji, czyli, powiedzmy, wchodzę tutaj, a ta pani jednak miała coś innego.
+- [00:56:26] **Ksenia Golik:** Tak, tak i zmieniam.
+- [00:56:27] **Bartosz Rogala:** Więc zmienia mu sługę tutaj, żeby była możliwy dobra,
+- [00:56:29] **Ksenia Golik:** Tak.
+- [00:56:30] **Bartosz Rogala:** bo to jest coś innego, czyli czy klikamy wtedy tutaj ewentualnie
+- [00:56:32] **Ksenia Golik:** No.
+- [00:56:35] **Bartosz Rogala:** przycisk edytuj?
+- [00:56:37] **Ksenia Golik:** Mhm.
+- [00:56:37] **Bartosz Rogala:** Na tym.
+- [00:56:37] **Tomasz Rogala:** Musisz dać jakiś taki czerwony przycisk duży.
+- [00:56:38] **Ksenia Golik:** Albo żeby wyskoczył dokładnie do opisanej do stricte do pracownika jej usługi, żeby wyskoczyły.
+- [00:56:46] **Bartosz Rogala:** O k. Żeby żeby były te te, które są przypisane do w tym wypadku,
+- [00:56:50] **Ksenia Golik:** Do pracownika, żeby nie szukać było w wachlarzu tych cen
+- [00:56:51] **Bartosz Rogala:** ale Alexa o k.
+- [00:56:54] **Bartosz Rogala:** Mhm.
+- [00:56:55] **Ksenia Golik:** tego cennika nie.
+- [00:56:55] **Bartosz Rogala:** Dobra.
+- [00:56:56] **Tomasz Rogala:** Ale tu musisz, to musi być takie wiesz, no musisz to zrobić taki na czerwono,
+- [00:56:57] **Bartosz Rogala:** Dobra, dobra.
+- [00:56:57] **Ksenia Golik:** O k.
+- [00:57:01] **Tomasz Rogala:** żeby ktoś przypadkiem tego nie kliknął przy zapisywaniu i żeby nie zmienił przypadkiem usługi.
+- [00:57:09] **Ksenia Golik:** No bo wykonujemy my stricte usługę sieci, asystentka i ja mówię do niej tak Daria
+- [00:57:09] **Bartosz Rogala:** No.
+- [00:57:15] **Ksenia Golik:** uzupełnienie żelowe. Już zupełnie nie tak uzupełnienie i ona patrzy, no jest manikiur hybrydowy, no to wciska i zmienia, no nie i tak jakby jak będą jej wyskakiwały komunikaty. No to też jest dobrze. No nie, że czy wszystko się zgadza tam przy tej finalizacji, no nie no i ta opcja,
+- [00:57:31] **Bartosz Rogala:** O k.
+- [00:57:31] **Ksenia Golik:** dopłaty czy innych kwestii czy nawet napiwków to też jest tam, bo też dają napiwki, czasami nie. No ale dla \*\*\*\*\* dziewczyną daje w odrębnej kwestii to już dziewczyny biorą
+- [00:57:37] **Bartosz Rogala:** O k.
+- [00:57:41] **Ksenia Golik:** sobie napiwki, ja ich z takich rzeczy nie rozliczam, więc uważam, że te napiwki.
+- [00:57:43] **Tomasz Rogala:** No to tutaj nam to nie ma co tego dodawać.
+- [00:57:44] **Bartosz Rogala:** I też do urzędu skarbowego też nie przekazujesz tych informacji.
+- [00:57:49] **Ksenia Golik:** No.
+- [00:57:51] **Bartosz Rogala:** I dobrze. Niech mają nieopodatkowane.
+- [00:57:58] **Bartosz Rogala:** Czyli to tutaj tutaj damy edycję i.
+- [00:58:04] **Bartosz Rogala:** Albo tutaj może po prostu przycisk edytuj i żeby w tym miejscu się wyświetlała ta
+- [00:58:09] **Ksenia Golik:** Albo albo na przykład jak masz edycję, yy nie no, klienta nie,
+- [00:58:10] **Bartosz Rogala:** lista lista usług.
+- [00:58:14] **Ksenia Golik:** bo to jest pracownik tylko usługę. No tak jakby żeby wyszła zmień usługę, może na tej zasadzie, no nie?
+- [00:58:22] **Bartosz Rogala:** A tutaj jakiś może tutaj jakiś przycisk taki zmienił suga tu.
+- [00:58:26] **Ksenia Golik:** No.
+- [00:58:28] **Bartosz Rogala:** Bo tu nie wiem, zastanowię się jakby jakby to najlepiej
+- [00:58:28] **Ksenia Golik:** Tak dokładnie.
+- [00:58:30] **Bartosz Rogala:** wyglądało.
+- [00:58:32] **Ksenia Golik:** No właśnie coś takiego no i dodatkowo jeszcze te dodatki nie w razie w.
+- [00:58:39] **Bartosz Rogala:** I dodatki do tego.
+- [00:58:39] **Ksenia Golik:** Żeby te dodatki były odrębną kwestią całkowicie odrębną, bo będzie wam się to mieszać w dla mnie to jest bardziej skomplikowane, jak to jest za każdym razem przypisywane do usług? Dla mnie to jest za dużo.
+- [00:58:49] **Bartosz Rogala:** One są. Od tej w w w. Strzyżeniu damskim są osobne, ale to będziemy ten, to powinny się tutaj.
+- [00:58:55] **Ksenia Golik:** Mhm.
+- [00:59:01] **Ksenia Golik:** No a Bartek jak masz tutaj ten kalendarz po lewej stronie nie uważa, że jest lepiej to.
+- [00:59:06] **Bartosz Rogala:** Nie no jest dużo, lepiej to zdecydowanie.
+- [00:59:07] **Ksenia Golik:** Dużo lepiej, nie jak to jest?
+- [00:59:09] **Bartosz Rogala:** Zdanie to wiesz, to to jest tutaj.
+- [00:59:10] **Ksenia Golik:** Już widzisz jaki dzień kliknąć wszystkie wyświetlają wszystko się wyświetla praktycznie nie.
+- [00:59:15] **Bartosz Rogala:** Amerykana nie nazwę przede wszystkim jest to miejsce tak zagospodarowane jakoś
+- [00:59:20] **Ksenia Golik:** No dokładnie.
+- [00:59:21] **Bartosz Rogala:** sensownie, bo było było puste, a w tej chwili można to ja. Funkcjonalność jakąś inną, więc jak najbardziej dobry dobry typ.
+- [00:59:30] **Ksenia Golik:** Myślę również o jakichś szybszych przyciskach, pod tym kalendarzem pod pracownikami.
+- [00:59:37] **Bartosz Rogala:** Szybszych przyciskach.
+- [00:59:39] **Ksenia Golik:** No takich żeby nie szukać, a na przykład przeskoczyć szybciej nie. Ale to myślę, że z czasem dojdziemy do tego,
+- [00:59:43] **Bartosz Rogala:** Tutaj.
+- [00:59:46] **Ksenia Golik:** no no tutaj albo niżej, no no no.
+- [00:59:48] **Bartosz Rogala:** Tutaj albo pod pracownikami, żeby przeskakiwać, gdzie na przykład.
+- [00:59:53] **Ksenia Golik:** No jakieś szybsze na przykład zakładki, na przykład na klientów, a nie klienci masz tutaj po tej stronie nie, ale.
+- [00:59:59] **Bartosz Rogala:** Klienci są tutaj też.
+- [01:00:01] **Ksenia Golik:** No i tu też jest wszystko widoczne. Tylko czekaj jeszcze chciałam coś sprawdzić.
+- [01:00:06] **Bartosz Rogala:** Nie chciałbym duplikować też.
+- [01:00:07] **Ksenia Golik:** Wiem, wiem, wiem o co chodzi.
+- [01:00:09] **Bartosz Rogala:** Tych przycisków.
+- [01:00:12] **Ksenia Golik:** Nie, bo wszystko jest widoczne, także nie jest o k.
+- [01:00:16] **Ksenia Golik:** Tak też chciałam wygrać zagospodarować Citroen dobra jest, jest o k. Nie, bo jest fajnie, przejrzyście nie jest nawalone, nie to jest dobre rozwiązanie, dobra.
+- [01:00:27] **Bartosz Rogala:** Tak właśnie tego też chcę unikać, żeby nie było po prostu nam zdr golone strasznie dużo tego zachować, prostotę.
+- [01:00:33] **Ksenia Golik:** No.
+- [01:00:33] **Tomasz Rogala:** Albo mam, mam mamy też nie wszyscy są tacy szybcy jak ty, no mamy też tak starsze. Osoby, które tego używają i to może im więcej informacji, tym będzie dla nich większym. Talentem.
+- [01:00:48] **Ksenia Golik:** To znaczy starsze to jakie?
+- [01:00:51] **Tomasz Rogala:** Nie wiem tak z. 55 lat.
+- [01:00:58] **Bartosz Rogala:** No też takie używają no.
+- [01:00:58] **Ksenia Golik:** Aha.
+- [01:01:01] **Ksenia Golik:** Mhm.
+- [01:01:04] **Ksenia Golik:** No to młode osoby nie starsze mogły się.
+- [01:01:08] **Tomasz Rogala:** Że c. To są młode osoby.
+- [01:01:09] **Ksenia Golik:** To młode osoby nie starsze.
+- [01:01:12] **Bartosz Rogala:** Kiedy się zaczynają starsze?
+- [01:01:15] **Ksenia Golik:** A po siedemdziesiątce?
+- [01:01:16] **Bartosz Rogala:** We siedemdziesiątce no dobra, no tego się trzymajmy,
+- [01:01:18] **Tomasz Rogala:** No to takie to takich nie mamy jeszcze.
+- [01:01:19] **Bartosz Rogala:** to jeszcze to jeszcze dużo czasu mamy.
+- [01:01:22] **Ksenia Golik:** Zobaczymy jak będziesz miał 55. Czy będą mówić do ciebie starych? Będziesz zadowolony. No oczywiście, że nie.
+- [01:01:29] **Ksenia Golik:** No ja się zastanawiam jak ja będę prowadzić salon wieku 50 lat. No i ja się w tym nie widzę. Nie teoretycznie chyba, że będę patologiem już zaawansowanym to może tak.
+- [01:01:39] **Bartosz Rogala:** Zawsze warto szukać jakiejś niszy.
+- [01:01:42] **Ksenia Golik:** No właśnie mam problem. Już wam mówię już odrębnej kwestii.
+- [01:01:51] **Ksenia Golik:** W ustawieniach te przelewy nie umiem tego przejść zbytnio w tych przelewach.
+- [01:02:01] **Bartosz Rogala:** Wiesz co przelewy na razie zostaw jeszcze, bo to jest working working progres.
+- [01:02:06] **Ksenia Golik:** Dobra.
+- [01:02:07] **Bartosz Rogala:** Ja nad tym intensywnie pracuję w tym tygodniu i przelewy na razie na razie
+- [01:02:11] **Ksenia Golik:** Mhm.
+- [01:02:12] **Bartosz Rogala:** zostaw one będą. Myślę, że no do końca tego tygodnia mi się uda zrobić tak, żeby żebyś sobie mogła to już skonfigurować i ta integracja będzie przebudowana.
+- [01:02:24] **Ksenia Golik:** O KOK.
+- [01:02:25] **Bartosz Rogala:** Z przelewami.
+- [01:02:27] **Ksenia Golik:** Tylko czy te smsy mi nie wiem czy mi się te smsy tu zweryfikowały czy też nie, nie mam bladego pojęcia czy to mi weszło w ogóle.
+- [01:02:34] **Bartosz Rogala:** A masz tam wyślij sms testowy to spróbuj sobie po prostu w tej zakładce z smsami masz wyślij sms testowy. Jak ci będą działały te te twoje dalsze te twoje krew? Tylko.
+- [01:02:52] **Bartosz Rogala:** Na zrywu dziecko uciekło mi słowo filler.
+- [01:02:54] **Ksenia Golik:** No dobra, dobrze, że ciebie zaraziłem.
+- [01:02:56] **Bartosz Rogala:** Na.
+- [01:03:00] **Bartosz Rogala:** No także, jak ci to przejdzie to ci powinien s testowy wyjść z bramki Tomasz przycisk do tego wyslij sms testowy.
+- [01:03:10] **Ksenia Golik:** Coś źle wpisałam.
+- [01:03:13] **Tomasz Rogala:** To może sterować screen swój.
+- [01:03:17] **Ksenia Golik:** Tomek, czemu tak trudno dzisiaj, żeby taka, że trzeba robić,
+- [01:03:21] **Tomasz Rogala:** To jest.
+- [01:03:21] **Ksenia Golik:** bo ja mam na laptopie wszystko czekaj.
+- [01:03:23] **Tomasz Rogala:** No tak, tak to jest w prawym górnym rogu obok opuścić spotkanie jest udostępni taki przycisk natim się.
+- [01:03:34] **Ksenia Golik:** Poczekaj. A ja sobie wejdę tutaj na ten.
+- [01:03:35] **Tomasz Rogala:** Yy, Bartosz, może swój przestać? Czy rower i spróbuje swój sterować
+- [01:03:39] **Bartosz Rogala:** Taka zatrzymam. Będzie łatwiej my w tym.
+- [01:03:42] **Tomasz Rogala:** pomiędzy mikrofon a opó? Jest przycisku dostępni.
+- [01:03:48] **Ksenia Golik:** No ekran, no to wiem.
+- [01:03:50] **Tomasz Rogala:** No to udostępnij ekran i zobaczymy wtedy razem. Wysyłanie tego tego smsa.
+- [01:03:57] **Ksenia Golik:** Poczekaj.
+- [01:04:01] **Ksenia Golik:** No czego my dzisiaj nic nie słucha. Boże te se jaja robią.
+- [01:04:14] **Tomasz Rogala:** No coś się ładuje, no dlaczego mówisz, że coś się nie słucha, wszystko się ciebie słucha jesteśmy. Widzimy ekran.
+- [01:04:34] **Ksenia Golik:** Nie wiem czy to dobrze mam ustawione w ogóle.
+- [01:04:36] **Tomasz Rogala:** No to jest wpisz tutaj.
+- [01:04:37] **Bartosz Rogala:** To sobie token sms sms apy masz tego tokena od nich.
+- [01:04:39] **Tomasz Rogala:** Swój numer telefonu.
+- [01:04:45] **Bartosz Rogala:** To nie od sms api.
+- [01:04:45] **Ksenia Golik:** Poczekaj. Muszę sprawdzić jeszcze, ona mi tam prowadziła, ale tam było coś nie tak z tym kontem. W ogóle ona mi to zmieniała.
+- [01:04:59] **Bartosz Rogala:** K to.
+- [01:05:00] **Ksenia Golik:** Zaraz się dowiem. To czekaj.
+- [01:05:03] **Ksenia Golik:** Wpłaciłam pieniążki.
+- [01:05:08] **Ksenia Golik:** Tak kazała mi za aktywować konto potwierdzenie wpłaty.
+- [01:05:16] **Ksenia Golik:** No więc powiedziała, że i tyle nic więcej nie wysyłali, ale poczekaj, zalogowałam się.
+- [01:05:23] **Bartosz Rogala:** Wzięli kasę ej ruszy, nie odzywają tak.
+- [01:05:35] **Ksenia Golik:** Także tylko z tym mam w zasadzie problem. W takim momencie razie, no kurde.
+- [01:05:40] **Tomasz Rogala:** I jeszcze możesz powiedzieć tam na temat jakieś wysłać kilka prac swoich. Moglibyśmy ci stronę też internetową postawić zintegrowaną z tym i jeszcze jakim mniej więcej adres byś tej. Yy strony internetowej chciała.
+- [01:05:59] **Ksenia Golik:** To na już.
+- [01:06:01] **Tomasz Rogala:** Nie no nie zastanów się. Zastanów się na spokojnie to to zrobimy.
+- [01:06:06] **Ksenia Golik:** To ja to na spokojnie już najwyżej osobną dyskusję na ten sposób podejmiemy, bo mam tyle na głowie, a wzięłam sobie dziewczynę jeszcze
+- [01:06:13] **Tomasz Rogala:** Pewnie.
+- [01:06:15] **Ksenia Golik:** odstrasza mediów i każdy mi przewertować zdjęcia na dysk i mnie szlak trafia, bo mam 4000 filmów i 2 tysią boże, 4000 zdjęć i 2000 filmów i \*\*\*\*\*\*\*\* mi się wszystkie konta w ogóle za dużo nawaliłam na te dyski po blokowało mi mailem masakra w ogóle. Yy jest ja muszę do tego spokojnie dojść i ja się po prostu tym wszystkim gubię, więc musicie mi dać chwilę.
+- [01:06:40] **Tomasz Rogala:** Pewnie o problemem.
+- [01:06:42] **Ksenia Golik:** Słuchajcie, to może potem token. Ja do niej napiszę, zadzwonię do tej pani hani sobie na spokojnie, jutro to może ona mnie poprowadzi i podam i to wszystko i ja sobie to wprowadzę,
+- [01:06:50] **Bartosz Rogala:** Na.
+- [01:06:51] **Ksenia Golik:** bo wystarczy, że ten token wpisze i będzie okej, nie?
+- [01:06:54] **Bartosz Rogala:** Tak powinno być okej, ewentualnie tam do akceptowanych nadawców sobie wpisz ten biuti ksenon, bo z tego co pamiętam jest tam w SM sa, p taka taka opcja. Yy więc ewentualnie to może być jeszcze wymagane, ale te te 2 rzeczy.
+- [01:07:05] **Ksenia Golik:** Aha, ok, dobra.
+- [01:07:11] **Ksenia Golik:** No to ja do niej zadzwonię.
+- [01:07:15] **Ksenia Golik:** Dobra, to ja do niej zadzwonię i się zapytam jutro na spokojnie dobra nie będę wam zawracała głowę, bo przyznam szczerze,
+- [01:07:19] **Bartosz Rogala:** Spoko.
+- [01:07:22] **Ksenia Golik:** że Jestem tak wypompowana jak nie wiem.
+- [01:07:26] **Bartosz Rogala:** O k rozumiemy i też nie będziemy cię tutaj na pewno przetrzymywać.
+- [01:07:26] **Ksenia Golik:** Czy?
+- [01:07:32] **Bartosz Rogala:** Dziękujemy ci bardzo za feedback jest dla nas bez o k.
+- [01:07:35] **Ksenia Golik:** Czeka jeszcze coś, poczekaj. Jeszcze coś przypomniałam sobie.
+- [01:07:39] **Bartosz Rogala:** Zanim skończę swoją mowę.
+- [01:07:42] **Ksenia Golik:** No to zanim skończysz, to jest teraz, gdzie Jestem, jest posłuchać jak masz usługi, ee.
+- [01:07:47] **Bartosz Rogala:** No dalej.
+- [01:07:48] **Ksenia Golik:** To, żeby do usług można było też dodawać zdjęcia pracy.
+- [01:07:53] **Bartosz Rogala:** O k dobra, to to nad tym pracuję nad tym pracuję, bo to pamiętam jeszcze z poprzednich tych także.
+- [01:07:56] **Ksenia Golik:** Dobra. Dobra, ale muszę powiedzieć to pytanie, znaczy stwierdzenie znaczy powiedzieć,
+- [01:08:00] **Bartosz Rogala:** D.
+- [01:08:02] **Ksenia Golik:** to chcę, żeby no, bo to jest dobre rozwiązanie.
+- [01:08:03] **Bartosz Rogala:** Dla dobra spoko.
+- [01:08:05] **Ksenia Golik:** No klient to widzi też, jak się umawia. Pytają o portfolio, więc uważam, że to jest nic nie jest,
+- [01:08:09] **Bartosz Rogala:** Spoko.
+- [01:08:13] **Ksenia Golik:** że tak powiem schowana nie dobra jak ogarnę to SMSAPI napiszę na grupie,
+- [01:08:16] **Bartosz Rogala:** Dobra, dobra, będę miał to na uwadze.
+- [01:08:19] **Ksenia Golik:** mam nadzieję, że coś wam dzisiaj pomogłam i nie zakręciłam was bardziej było to zakręcone.
+- [01:08:25] **Tomasz Rogala:** Bardzo bardzo nam pomogłaś. Dziękujemy ci za ten feedback.
+- [01:08:28] **Bartosz Rogala:** Zapom. Weź będziemy, będziemy tu pracowali nad takim narzędziem, żebyś uśmiechem na ustach szła do pracy i myślała, żeby już odpalić simpli salon.
+- [01:08:40] **Ksenia Golik:** Daria nawet codziennie siedzi cały czas to rozkminiam wykształcenia i Napisz do nich żeby to zrobili, bo ja dostanę tu nerwicy, a ja mówię dobrze to odstaw to dzisiaj sprawdź jeszcze i Napisz co jest jeszcze do poprawy. Ja zawołasz mnie ja to zweryfikuję i pogadam później jak sama się nie zakręcę w tym co mi przedstawiasz nie tak, że ja słucham też pracowników no bo oni też na tym pracują i też chodzi o to, że nawet jeżeli ktoś przychodzi nowy i siada do tego. To nie wiecie, nie przewraca oczami, no nie na tej zasadzie, no ale Daria nawet do tej pory jeszcze bóg się nie obcy zakała więc a syn.
+- [01:09:15] **Tomasz Rogala:** Też.
+- [01:09:18] **Tomasz Rogala:** Mamy w planie też tutoriale też do tego, żeby było.
+- [01:09:23] **Bartosz Rogala:** Tak dla nowych pracowników jak.
+- [01:09:23] **Tomasz Rogala:** Nagrane żeby było jak. Żeby łatwiej było je wdrożyć?
+- [01:09:26] **Bartosz Rogala:** No bo rośnie na.
+- [01:09:26] **Ksenia Golik:** O.
+- [01:09:28] **Bartosz Rogala:** Rośnie nam ta aplikacja dosyć dużo już tych opcji jest i dobrze by było, żeby właśnie krok po kroku te najważniejsze funkcjonalności, żeby żeby ktoś mógł wtedy 10 15 minut. Yy, po prostu zacząć korzystać, niekoniecznie.
+- [01:09:41] **Ksenia Golik:** Mhm.
+- [01:09:43] **Bartosz Rogala:** Każdy będzie korzystał ze wszystkiego, no.
+- [01:09:43] **Ksenia Golik:** No tak.
+- [01:09:46] **Ksenia Golik:** No nie no, chodzi o to, żeby było to też intuicyjne, dlatego no pewne rzeczy można ułatwić, żeby po prostu nie było tego dodatkowego klikania takiego zbędnego, że to muszę, to muszę ustawić, to muszę ustawić, żeby ustawić to nie tylko, że po prostu jest po potem kliknięciu nie.
+- [01:10:00] **Bartosz Rogala:** Mhm.
+- [01:10:04] **Ksenia Golik:** Szukałam nawet screenów z wersją, ale nie znalazłam już nic nie znalazłam więc. A była jeszcze taka opcja przedpłat na przykład, że jak się mawiało wizytę no to był automatyczny link, który też mógł być wysyłany właśnie tam jak mówisz, że tam coś planujesz ten szarawy 24, że na przykład do przedpłat nie.
+- [01:10:27] **Bartosz Rogala:** KOK dobra nadzieję, że że że płacisz część tego.
+- [01:10:27] **Ksenia Golik:** Że że chce pani dzisiaj wykonać przedpłatę gotówką czy kartą powie, że kartą dobrze, ale mamy przelewy, mogę pani wysłać smsa, link, no nie, ona sobie kliknij i już sobie tam wybierzesz to blik czy coś innego nie.
+- [01:10:41] **Bartosz Rogala:** No no przelewy mają to to to to, to to, że już czyli przedpłatę czy całą kwotę
+- [01:10:42] **Ksenia Golik:** I robi mi przedpłatę.
+- [01:10:47] **Bartosz Rogala:** czy może opcje albo cała kwota albo przedpłata.
+- [01:10:51] **Ksenia Golik:** Znaczy cała kwota przed. No zależy co klient wybierze. Niektóre są wiesz co jest u mnie też najgorszym problemem klientka przychodzi, płaci, umawia się na następną wizytę i na przykład nie mogę sobie zaznaczyć, że była przedpłata za tą wizytę na przykład 20 zł, a pani ksenią niech zostanie te 20 zł na następną usługę. No i \*\*\*\*\*, pamiętaj o niej, że ona miała te 20 zł. Ona będzie pamiętać, ale ja nie ni cholerę, nie.
+- [01:11:16] **Bartosz Rogala:** Jak ty zapomnisz, to się będzie czuła pokrzywdzona.
+- [01:11:18] **Ksenia Golik:** Tak, a ja pamiętam jest przedpłata to ona się czuję doceniona, że ja o niej myślę, a wcale nie myślałam i właśnie wersją było coś takiego, że była przedpłata do wizyty za każdym
+- [01:11:29] **Bartosz Rogala:** Key i ona by od razu jakby była przedpłata to by zdejmowała.
+- [01:11:29] **Ksenia Golik:** razem.
+- [01:11:33] **Ksenia Golik:** I widniała na jej koncie na jej koncie, że jak miała przedpłaty, to były przypisane do jej stricte konta, że jak ona chciała zapłacić mówi o pani kasiu, proszę pani przypadku, bo pani ostatni raz płaciła tylko,
+- [01:11:44] **Tomasz Rogala:** To niekoniecznie do to, niekoniecznie przypisane do usługi
+- [01:11:44] **Ksenia Golik:** żeby one były.
+- [01:11:48] **Tomasz Rogala:** przypisane do klienta balans.
+- [01:11:48] **Ksenia Golik:** Klienta Przepraszam, że to określiłam całą kupę. Przepraszam w łapałeś mnie.
+- [01:11:53] **Bartosz Rogala:** Czy czy czy czy, czyli do klienta balans przedpłat, a nie,
+- [01:11:55] **Ksenia Golik:** Tak.
+- [01:11:57] **Bartosz Rogala:** że na przykład, bo ja to bym widział tak, że jak się ktoś zapisuje na konkretną usługę, robi przedpłatę na tą konkretną jedną usługę i ściągamy na przykład te 20 zł odejmujemy od 250, który kosztuje cała usługa.
+- [01:12:14] **Ksenia Golik:** No ale jak przyjdzie je zmienić usługę w trakcie wizyty?
+- [01:12:14] **Bartosz Rogala:** Nie tak.
+- [01:12:14] **Tomasz Rogala:** No nie.
+- [01:12:17] **Ksenia Golik:** No jednak nie chciałam tego, może zrobimy to.
+- [01:12:17] **Tomasz Rogala:** Tak, nie lepiej.
+- [01:12:20] **Tomasz Rogala:** Lepiej zrób balans, a wtedy ona zrobi, wykona przedpłatę, a jeszcze jak przyjdzie do zapłaty to będzie miała minus przedpłata i minus balans. Ten, który ma na na na koncie.
+- [01:12:29] **Ksenia Golik:** Tak.
+- [01:12:33] **Bartosz Rogala:** O k no dobra, dobra, no to to akurat siedzę w płatnościach, więc. Więc to jest dobry moment, że.
+- [01:12:39] **Ksenia Golik:** No jakoś tak popatrzyłam na cyfry u siebie z utargu i tak mi przyszło do głowy. Tak ci powiem, że tego nie ma, ale to było wersu mi było \*\*\*\*\*\*\*\*\*,
+- [01:12:46] **Bartosz Rogala:** Dobra, dobra.
+- [01:12:48] **Ksenia Golik:** bo mogłybyśmy to robić po prostu bez problemu, nie.
+- [01:12:50] **Tomasz Rogala:** No to zastanowi. My się tutaj zrobimy jakiś Plan i i będziemy pewnie wdrażać. Jedna funkcjonalność po drugiej nie możemy też wszystkiego wdrażać. Za jednym razem na pewno.
+- [01:13:03] **Ksenia Golik:** Tomek rozumiem, rozumiem.
+- [01:13:05] **Tomasz Rogala:** Yy, także damy radę tutaj zrobimy jakiś Plan tego i ty, a ty, no to te, które są najbardziej problematyczne dla
+- [01:13:15] **Ksenia Golik:** Nie będę już notować, bo będę cię zawalać tymi samymi sprawami
+- [01:13:15] **Tomasz Rogala:** ciebie.
+- [01:13:18] **Ksenia Golik:** jak będziecie miały być coś nowego to mi dajcie znać i wtedy będę wiedziała dobra
+- [01:13:23] **Tomasz Rogala:** Dobra, dobra, dobra.
+- [01:13:23] **Ksenia Golik:** i będę dalej szukać, bo będę się powtarzać,
+- [01:13:23] **Bartosz Rogala:** Dobra.
+- [01:13:25] **Tomasz Rogala:** Myślimy, że.
+- [01:13:25] **Bartosz Rogala:** Spoko.
+- [01:13:26] **Ksenia Golik:** bo na przykład znajdę, a tego nie ma. Wiesz o co chodzi nie i ale to było to
+- [01:13:30] **Tomasz Rogala:** Dobra, dobra.
+- [01:13:30] **Ksenia Golik:** wydrążamy więc tak jakby nie powielajmy się nie chce. Wasz też wierzcie, bo też każdy czas jest cenny. Wiem, że już jest późno. Ja zaraz idę jeszcze śmieci, muszę przygotować do wywiezienia na jutro mi się nie chce. Ee no więc jak będziecie mieli coś nowego to dajcie mi znać czy na tej grupie ja będę sobie to sprawdzać i weryfikować dobra.
+- [01:13:52] **Tomasz Rogala:** Dam znać na pewno.
+- [01:13:52] **Bartosz Rogala:** Dobra, będziemy cię będziemy.
+- [01:13:53] **Ksenia Golik:** Ja też chcę, żeby to szybko ruszyło, bo mam chętnych. No i też chcę powiedzieć,
+- [01:13:55] **Tomasz Rogala:** Mhm super super, bardzo się cieszymy.
+- [01:13:55] **Bartosz Rogala:** Na.
+- [01:13:58] **Ksenia Golik:** że jest gotowe i mogą wziąć, nie mogą to brać, że to jest w ciemno w ogóle i niech biorą, a ja a ja ci bartku Napisz do mnie na
+- [01:14:03] **Bartosz Rogala:** Dobra.
+- [01:14:08] **Ksenia Golik:** odstapie odrębnie to ci wyślę dane do tego albo tomkowi wyślę co tam jakkolwiek.
+- [01:14:13] **Bartosz Rogala:** Możesz możesz mi wysłać. Ja Jestem na tej grupie, możesz mi wysłać bezpośrednia, nie, nie, nie.
+- [01:14:17] **Ksenia Golik:** A no to dobra, no to.
+- [01:14:17] **Tomasz Rogala:** To to Napisz to Napisz do kseni tylko odezwij się i żeby miała do ciebie numer telefonu i ten.
+- [01:14:22] **Ksenia Golik:** No ja będę wiedziała to ja sobie wyślę ci dalej się będziesz grzebał ile chcesz.
+- [01:14:23] **Bartosz Rogala:** Dobra.
+- [01:14:28] **Bartosz Rogala:** Już się nie mogę doczekać wszystko wszystko ściągnę z tamtąd.
+- [01:14:30] **Ksenia Golik:** No.
+- [01:14:33] **Ksenia Golik:** Dobrze, że sali nie mają tej klientki.
+- [01:14:38] **Ksenia Golik:** Dobra, no to masz tam wgląd będziesz miał, zobaczysz sobie wszystko po kolei co tam jest i ja ci to udostępnie rób wszystko, żeby było to lepsze niż to bóg si ä ö i
+- [01:14:47] **Bartosz Rogala:** Dla dokładnie dobra dobra, dzięki ksenia, za poświęcony czas wszystkiego dobrego.
+- [01:14:47] **Tomasz Rogala:** Super, tak zrobimy.
+- [01:14:47] **Ksenia Golik:** tyle.
+- [01:14:49] **Ksenia Golik:** No dobra, no to na razie trzymajcie się, pa hej.
+- [01:14:50] **Tomasz Rogala:** Dobra, dobra. Czy miescie?
+- [01:14:53] **Bartosz Rogala:** Pa.

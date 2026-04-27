@@ -22,8 +22,11 @@ import BookingServicesEditor from '@/components/calendar/booking-services-editor
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useCreateBooking, useUpdateBooking } from '@/hooks/use-bookings'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
+import { useCurrentRole } from '@/hooks/use-current-role'
 import { useEmployees } from '@/hooks/use-employees'
 import { useServices } from '@/hooks/use-services'
 import { BOOKING_STATUS_LABELS } from '@/lib/constants'
@@ -80,6 +83,13 @@ type DraftValidationResult = {
   warnings: string[]
 }
 
+type SmsTemplate = {
+  id: string
+  name: string
+  body: string
+  channel: string
+}
+
 const getInitialCartItem = (
   prefilledSlot?: { date: string; time: string; employeeId?: string } | null
 ): CartItemState => ({
@@ -112,6 +122,7 @@ const getServiceOptions = (servicesData: any[] | undefined): ServiceOption[] =>
 export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings, prefilledSlot }: BookingDialogProps) {
   const params = useParams<{ slug: string | string[] }>()
   const salonId = Array.isArray(params?.slug) ? params.slug[0] : params?.slug
+  const { salonId: roleSalonId, isOwnerOrManager } = useCurrentRole()
   const queryClient = useQueryClient()
   const supabase = useMemo(() => createClient(), [])
 
@@ -150,8 +161,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [isCheckingDraftAvailability, setIsCheckingDraftAvailability] = useState(false)
   const [conflictError, setConflictError] = useState<string | null>(null)
   const [forceOverride, setForceOverride] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+  const [smsTemplates, setSmsTemplates] = useState<SmsTemplate[]>([])
+  const [smsPreview, setSmsPreview] = useState('')
+  const [isSendingSms, setIsSendingSms] = useState(false)
 
   const employees = (employeesData ?? []) as EmployeeOption[]
+  const canSendSms = isOwnerOrManager()
+  const showSmsSection = canSendSms && Boolean(booking?.id)
+
   const [filteredEmployeesMap, setFilteredEmployeesMap] = useState<Map<number, EmployeeOption[]>>(new Map())
   useEffect(() => {
     const controllers: AbortController[] = []
@@ -674,15 +692,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
         if (!response.ok) {
           const error = await response.json().catch(() => null)
+          if (response.status === 409 && error?.message) {
+            setConflictError(error.message)
+            setForceOverride(false)
+            return
+          }
           if (response.status === 409 && error?.conflictingItemIndex !== undefined) {
             setConflictError(
               `Termin niedostepny dla uslugi ${error.conflictingItemIndex + 1}. Wybierz inny termin albo zapisz mimo konfliktu.`
             )
-            setForceOverride(false)
-            return
-          }
-          if (response.status === 409 && error?.message) {
-            setConflictError(error.message)
             setForceOverride(false)
             return
           }
@@ -752,6 +770,77 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     setClientVouchers([])
     setClientVouchersLoaded(false)
   }, [booking?.id, isOpen])
+
+  useEffect(() => {
+    if (!isOpen || !booking?.id || !canSendSms || !roleSalonId) {
+      setSmsTemplates([])
+      setSelectedTemplateId(null)
+      setSmsPreview('')
+      return
+    }
+
+    let active = true
+
+    const fetchSmsTemplates = async () => {
+      try {
+        const response = await fetch(`/api/crm/templates?salonId=${encodeURIComponent(roleSalonId)}`)
+        if (!response.ok) {
+          throw new Error('Nie udalo sie pobrac szablonow SMS')
+        }
+
+        const data = await response.json()
+        const allTemplates = Array.isArray(data?.templates) ? data.templates : []
+        const filteredTemplates = allTemplates
+          .filter((template: any) => template?.channel === 'sms' || template?.channel === 'both')
+          .map((template: any) => ({
+            id: String(template.id ?? ''),
+            name: String(template.name ?? ''),
+            body: String(template.body ?? ''),
+            channel: String(template.channel ?? ''),
+          }))
+          .filter((template: SmsTemplate) => template.id.length > 0)
+
+        if (active) {
+          setSmsTemplates(filteredTemplates)
+        }
+      } catch {
+        if (active) {
+          setSmsTemplates([])
+        }
+      }
+    }
+
+    void fetchSmsTemplates()
+
+    return () => {
+      active = false
+    }
+  }, [booking?.id, canSendSms, isOpen, roleSalonId])
+
+  useEffect(() => {
+    if (!showSmsSection || !selectedTemplateId) {
+      setSmsPreview('')
+      return
+    }
+
+    const template = smsTemplates.find((entry) => entry.id === selectedTemplateId)
+    if (!template) {
+      setSmsPreview('')
+      return
+    }
+
+    const serviceName =
+      booking?.service?.name ??
+      (cartItems[0]?.serviceId ? services.find((entry) => entry.id === cartItems[0]?.serviceId)?.name : '') ??
+      ''
+    const appointmentTime = `${booking?.booking_date ?? ''} ${booking?.booking_time ?? ''}`.trim()
+    const preview = template.body
+      .replaceAll('{{client_name}}', booking?.client?.full_name ?? '')
+      .replaceAll('{{service_name}}', serviceName)
+      .replaceAll('{{appointment_time}}', appointmentTime)
+
+    setSmsPreview(preview)
+  }, [booking?.booking_date, booking?.booking_time, booking?.client?.full_name, booking?.service?.name, cartItems, selectedTemplateId, services, showSmsSection, smsTemplates])
 
   useEffect(() => {
     if (!booking?.id || !isOpen) {
@@ -1035,6 +1124,31 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     }
   }
 
+  const handleSendSms = async () => {
+    if (!booking?.id || !selectedTemplateId) {
+      return
+    }
+
+    setIsSendingSms(true)
+    try {
+      const response = await fetch(`/api/bookings/${booking.id}/sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_id: selectedTemplateId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Nie udalo sie wyslac SMS')
+      }
+
+      toast.success(`SMS wysłany do ${booking.client?.full_name || 'klienta'}`)
+    } catch {
+      toast.error('Nie udało się wysłać SMS')
+    } finally {
+      setIsSendingSms(false)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden">
@@ -1175,6 +1289,51 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 <div className="glass rounded-lg p-3">
                   <Label className="text-xs font-semibold uppercase text-gray-600">Notatki</Label>
                   <p className="mt-1 text-sm text-gray-700">{booking.notes}</p>
+                </div>
+              )}
+
+              {showSmsSection && (
+                <div className="space-y-3">
+                  <Separator />
+                  <div className="space-y-3">
+                    <Label className="text-xs font-semibold uppercase text-gray-600">
+                      Wyślij SMS do klienta
+                    </Label>
+                    {smsTemplates.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Brak szablonów SMS</p>
+                    ) : (
+                      <>
+                        <Select
+                          value={selectedTemplateId ?? ''}
+                          onValueChange={(value) => setSelectedTemplateId(value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Wybierz szablon SMS" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {smsTemplates.map((template) => (
+                              <SelectItem key={template.id} value={template.id}>
+                                {template.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {selectedTemplateId && (
+                          <Textarea readOnly rows={3} value={smsPreview} />
+                        )}
+
+                        <Button
+                          type="button"
+                          onClick={handleSendSms}
+                          disabled={!selectedTemplateId || isSendingSms}
+                          className="w-full sm:w-auto"
+                        >
+                          {isSendingSms ? 'Wysyłanie...' : 'Wyślij SMS'}
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1629,10 +1788,10 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               Dodaj kolejna usluge
             </Button>
 
-            {conflictError && (
+            {(conflictError || hasDraftWarnings) && (
               <Alert variant="destructive">
                 <AlertDescription className="space-y-3">
-                  <p>{conflictError}</p>
+                  {conflictError && <p>{conflictError}</p>}
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="force-override"
@@ -1676,7 +1835,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 >
                   {isCheckingDraftAvailability ? 'Sprawdzam...' : 'Zapisz wizyte'}
                 </Button>
-                {conflictError && (
+                {(conflictError || hasDraftWarnings) && (
                   <Button
                     type="button"
                     variant="destructive"

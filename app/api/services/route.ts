@@ -3,6 +3,10 @@ import { getAuthContext } from '@/lib/supabase/get-auth-context'
 import { createServiceSchema } from '@/lib/validators/service.validators'
 import { withErrorHandling } from '@/lib/error-handler'
 import { applyRateLimit } from '@/lib/middleware/rate-limit'
+import { ValidationError } from '@/lib/errors'
+import { SERVICE_PRICE_TYPES, normalizeServicePriceType } from '@/lib/services/price-types'
+
+const VALID_PRICE_TYPES = SERVICE_PRICE_TYPES
 
 // GET /api/services - List all services
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -47,6 +51,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       id: service.id,
       name: service.name,
       price: service.price,
+      price_type: normalizeServicePriceType(service.price_type),
       duration: service.duration,
       description: service.description,
       surchargeAllowed: service.surcharge_allowed,
@@ -71,6 +76,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { supabase, salonId } = await getAuthContext()
 
   const body = await request.json()
+  const priceType = body.price_type ?? 'fixed'
+
+  if (!VALID_PRICE_TYPES.includes(priceType)) {
+    throw new ValidationError('Invalid price_type')
+  }
+
   const validatedData = createServiceSchema.parse({
     ...body,
     salon_id: salonId,
@@ -85,6 +96,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       name: validatedData.name,
       duration: validatedData.duration,
       price: validatedData.price,
+      price_type: priceType,
       description: validatedData.description ?? null,
       active: validatedData.active ?? true,
       surcharge_allowed: validatedData.surcharge_allowed ?? true,

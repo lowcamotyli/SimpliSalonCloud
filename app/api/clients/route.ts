@@ -66,12 +66,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return NextResponse.json({ tags: distinct })
   }
 
+  const sortParam = searchParams.get('sort')
+  const orderParam = searchParams.get('order')
+  const allowedSortCols = ['full_name', 'last_visit_at', 'visit_count', 'created_at'] as const
+  type SortCol = (typeof allowedSortCols)[number]
+  const sortCol: SortCol = allowedSortCols.includes(sortParam as SortCol) ? (sortParam as SortCol) : 'created_at'
+  const ascending = orderParam === 'asc'
+
   let query = supabase
     .from('clients')
     .select('*')
     .eq('salon_id', typedProfile.salon_id)
     .is('deleted_at', null)
-    .order('created_at', { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
 
   if (search) {
     const sanitizedSearch = search.replace(/%/g, '\\%').replace(/_/g, '\\_')

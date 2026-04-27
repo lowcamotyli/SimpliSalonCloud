@@ -6,8 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScheduleTab } from '@/components/employees/schedule-tab'
 import { EmployeeServicesTab } from '@/components/employees/employee-services-tab'
 import { EmployeeShiftsTab } from '@/components/employees/employee-shifts-tab'
-import { ShiftTemplatesManager } from '@/components/employees/shift-templates-manager'
-import { ShiftRulesManager } from '@/components/employees/shift-rules-manager'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ListLoadingState } from '@/components/ui/list-loading-state'
@@ -745,15 +743,7 @@ export default function EmployeesPage() {
 
             <TabsContent value="zmiana">
               {editingEmployee ? (
-                <>
-                  <EmployeeShiftsTab employeeId={editingEmployee.id} />
-                  <div className="mt-6">
-                    <ShiftRulesManager employeeId={editingEmployee.id} />
-                  </div>
-                  <div className="mt-6">
-                    <ShiftTemplatesManager />
-                  </div>
-                </>
+                <EmployeeShiftsTab employeeId={editingEmployee.id} />
               ) : (
                 <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
                   Najpierw dodaj pracownika, aby zarządzać grafikiem.

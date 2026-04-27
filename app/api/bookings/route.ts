@@ -9,6 +9,8 @@ import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/li
 import { generateFormToken } from '@/lib/forms/token'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { sendTransactionalEmail } from '@/lib/messaging/email-sender'
+import { canEmployeePerformService } from '@/lib/bookings/employee-service-authorization'
+import { findTimeReservationConflict, formatTimeReservationConflictMessage } from '@/lib/bookings/time-reservation-conflicts'
 
 // GET /api/bookings - List bookings with optional filters
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -229,6 +231,27 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (serviceError) throw serviceError
 
   const conflictTypes: string[] = []
+  const duration = validatedData.duration || (service as any).duration || 30
+
+  const timeReservationConflict = await findTimeReservationConflict({
+    supabase: supabase as any,
+    salonId,
+    employeeId: validatedData.employee_id as string,
+    date: validatedData.date,
+    startTime: validatedData.start_time,
+    durationMinutes: duration,
+  })
+
+  if (timeReservationConflict) {
+    if (forceOverride) {
+      conflictTypes.push('time_reservation')
+    } else {
+      return NextResponse.json({
+        error: 'TIME_RESERVATION_CONFLICT',
+        message: formatTimeReservationConflictMessage(timeReservationConflict),
+      }, { status: 409 })
+    }
+  }
 
   if (forceOverride) {
     const { data: sameDayBookings, error: sameDayBookingsError } = await supabase
@@ -259,35 +282,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
   }
 
-  const { count: serviceAssignmentCount, error: assignmentCountError } = await supabase
-    .from('employee_services')
-    .select('*', { count: 'exact', head: true })
-    .eq('salon_id', salonId)
-    .eq('service_id', validatedData.service_id as string)
+  const canPerformService = await canEmployeePerformService(
+    supabase as any,
+    salonId,
+    validatedData.employee_id as string,
+    validatedData.service_id as string
+  )
 
-  if (assignmentCountError) throw assignmentCountError
-
-  if ((serviceAssignmentCount ?? 0) > 0) {
-    const { data: employeeService, error: employeeServiceError } = await supabase
-      .from('employee_services')
-      .select('id')
-      .eq('salon_id', salonId)
-      .eq('employee_id', validatedData.employee_id as string)
-      .eq('service_id', validatedData.service_id as string)
-      .maybeSingle()
-
-    if (employeeServiceError) throw employeeServiceError
-
-    if (!employeeService) {
-      return NextResponse.json(
-        { error: 'Employee is not authorized to perform this service' },
-        { status: 400 }
-      )
-    }
+  if (!canPerformService) {
+    return NextResponse.json(
+      { error: 'Employee is not authorized to perform this service' },
+      { status: 400 }
+    )
   }
 
   // 3. Check equipment availability for the service
-  const duration = validatedData.duration || (service as any).duration || 30
   const startsAt = new Date(`${validatedData.date}T${validatedData.start_time}:00Z`)
   const endsAt = new Date(startsAt.getTime() + duration * 60_000)
   const requiredEquipment = await getRequiredEquipmentForService(validatedData.service_id as string)

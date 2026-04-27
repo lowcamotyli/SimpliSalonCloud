@@ -1,0 +1,520 @@
+Delivered-To: wisxenon@gmail.com
+Received: by 2002:a05:6802:67cf:b0:628:7a95:6bd9 with SMTP id w15csp1575309occ;
+        Thu, 16 Apr 2026 02:18:19 -0700 (PDT)
+X-Received: by 2002:a05:690e:d8d:b0:64a:cff3:8f4c with SMTP id 956f58d0204a3-65198be5152mr24105699d50.65.1776331099123;
+        Thu, 16 Apr 2026 02:18:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776331099; cv=none;
+        d=google.com; s=arc-20240605;
+        b=CeB39i1tV8t3uD3AjB6JVwiWaZNA8Vx2132KU75QSruGFuZY4sbyeV0Zo55Mp2m3Mb
+         +TcnN1Orj1BkayyXVPKpXs4KhhjU0Mvsidn/Q7JUpe7asImYj/BkV6rOSYx/G9UY8P48
+         on/bTPiY415Jbo88K7+fcIllswm39RUsedQwRtdhhV5Fe7SKapT97OREDN2oBtYJ+g4V
+         JftCuiqK0aFeZyRNTdG8zzPUjAfIyxt1XdtJSxHX8n9U7nhYJJGm+ZZXhhyBN5qjZHY5
+         fgFzReg48SR83waUQx+cvwBG9lKhBi2lWT3M8BdRtsdSaRr0mAESnOJywyVZ4pv6d+LF
+         FGyA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=mime-version:date:feedback-id:to:message-id:reply-to:subject:from
+         :dkim-signature:dkim-signature;
+        bh=yg9p9nKG6yuypz1/N9dvTxv4CEkCOd7ypb0Ht6scCno=;
+        fh=MMXQ3jq5ybMNMGiEIj1QuCNQBjmW0sTClsTkCTDOzvk=;
+        b=NX/LZ1IB5PDlR6D/Kcef3ut+M3qGlatrbdk90y+SstH9efP2Tzozx2OvrF2FrVVWAN
+         FZc++VK8dXWbTDSro6y8woAkVJX2CYPjLbYscW5go3vyXHLL4DGseESwBlJCKQ+xsT7W
+         0m8/JgO61vyeH0xz+bVI9c97JPdsBbfhVpLyu569kfy5vXSp61Ln9nBhG3flPJn+Xykt
+         wgiiy61bChEvOO/SYwpiBTXyf/XeyPEEJbZrZRj9GmfseccbSUnqpS9znjQefy1c4Jit
+         7d1PrmJKN85gg6bPKv2wFyVpL/dgy7rxYTbmAjE/hHrfxH3DokbsB5TxQtorKlPCw+tX
+         +XsA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@mandrillapp.com header.s=mte1 header.b=SdxHWzqb;
+       dkim=pass header.i=@booksy.com header.s=mte1 header.b=ZZbbnxHb;
+       spf=pass (google.com: domain of bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com designates 198.2.179.34 as permitted sender) smtp.mailfrom=bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=booksy.com
+Return-Path: <bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com>
+Received: from mail179-34.suw41.mandrillapp.com (mail179-34.suw41.mandrillapp.com. [198.2.179.34])
+        by mx.google.com with ESMTPS id 956f58d0204a3-65306a95b42si39061d50.151.2026.04.16.02.18.18
+        for <wisxenon@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 02:18:19 -0700 (PDT)
+Received-SPF: pass (google.com: domain of bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com designates 198.2.179.34 as permitted sender) client-ip=198.2.179.34;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@mandrillapp.com header.s=mte1 header.b=SdxHWzqb;
+       dkim=pass header.i=@booksy.com header.s=mte1 header.b=ZZbbnxHb;
+       spf=pass (google.com: domain of bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com designates 198.2.179.34 as permitted sender) smtp.mailfrom=bounce-md_30558554.69e0a95a.v1-9b6ed87e1c9f4ad0bce9f11bd3b3699c@mandrillapp.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=booksy.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mandrillapp.com;
+	s=mte1; t=1776331098; x=1776601098;
+	bh=yg9p9nKG6yuypz1/N9dvTxv4CEkCOd7ypb0Ht6scCno=;
+	h=From:Subject:Reply-To:Message-Id:To:Feedback-ID:Date:MIME-Version:
+	 Content-Type:CC:Date:Subject:From;
+	b=SdxHWzqbY/L+t/74/qsm9lU1KdA9U3jhGtd/iG6FfT7/HbKj6BhL28WuvWqSvsS4u
+	 gWeWTyWKOQm57bBxL8YXGBxoBo54KbPubZrIYwwuKmK9ueKPGJSPXpTy+R3mZbs9TJ
+	 vCM2iM+1SUaxd9b2D15JY3FBcCWwrN6tGDy3h3dRXg5Wosyx+G5DbnB4sPT4qywSua
+	 eZe1GWXXtui2bh+ul1g+VkrhfWVJfrSdqdICZwxWM6d3y6WUT3cFfB+iQY7pwA7tlN
+	 p5eQpEnDbb/g3s2yEgQEDiWb9Bvu25p6Z41CAm9/48vXgD/wCz4brL9ECEfj33cDDw
+	 BTHPagNqTMXlQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=booksy.com; s=mte1;
+	t=1776331098; x=1776591598; i=no-reply@booksy.com;
+	bh=yg9p9nKG6yuypz1/N9dvTxv4CEkCOd7ypb0Ht6scCno=;
+	h=From:Subject:Reply-To:Message-Id:To:Feedback-ID:Date:MIME-Version:
+	 Content-Type:CC:Date:Subject:From;
+	b=ZZbbnxHbinHh5VvHbAqaS3vU5YkV0j7WrRM5yY7ZE13eogSiDOo1zrI76KNbp1t32
+	 BnMAOm1HpgsVLWtYnKtBLLhZN9F2nDYfXpcGiLkHKjt39/AZAB/umuDdHbOayo+PCG
+	 KzeGitW28mPo6b+nhyI4Uk4kXrYSniRrRJGJi9sRI3QLtASf+EoFXSberNEXf9JqWY
+	 S6JQa685mqrfmxMVobpfVsGZsN1ZB4e8Taiq/S6nLohRwsFXQj5pGFR/MizTefv8in
+	 LYxaahtcoEiS2fx+nezTy3CjIEN/GVueOzd79jYl+XtExKYupOZfRv7skon19SUYL9
+	 g+jJuI5eKJeiQ==
+Received: from pmta12.mandrill.prod.suw01.rsglab.com (localhost [127.0.0.1])
+	by mail179-34.suw41.mandrillapp.com (Mailchimp) with ESMTP id 4fxC9Q602RzS62SKd
+	for <wisxenon@gmail.com>; Thu, 16 Apr 2026 09:18:18 +0000 (GMT)
+From: "=?utf-8?Q?Izabela=20=C5=81azorko?=" <no-reply@booksy.com>
+Subject: =?utf-8?Q?Izabela=20=C5=81azorko:=20zmieni=C5=82=20rezerwacj=C4=99=20i=20czeka=20na=20potwierdzenie?=
+Received: from [34.77.21.218] by mandrillapp.com id 9b6ed87e1c9f4ad0bce9f11bd3b3699c; Thu, 16 Apr 2026 09:18:18 +0000
+Reply-To: zochaa00@o2.pl
+Message-Id: <177633109858.218881.12773643882049303315@core-pl-celery-priority-worker-7b9774cb78-b44mm>
+To: "Beauty Xenon Ksenia Golik" <wisxenon@gmail.com>
+X-Native-Encoded: 1
+X-Report-Abuse: =?UTF-8?Q?Please=20forward=20a=20copy=20of=20this=20message,=20including=20all=20headers,=20to=20abuse@mandrill.com.=20You=20can=20also=20report=20abuse=20here:=20https://mandrillapp.com/contact/abuse=3Fid=3D30558554.9b6ed87e1c9f4ad0bce9f11bd3b3699c?=
+X-Mandrill-User: md_30558554
+Feedback-ID: 30558554:30558554.20260416:md
+Date: Thu, 16 Apr 2026 09:18:18 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="_av-v2XqUniWpEu5jtFpQQ7Baw"
+
+--_av-v2XqUniWpEu5jtFpQQ7Baw
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+ https://booksy.com/biz/pl-pl/ - =09
+Izabela =C5=81azorkoprzesun=C4=85=C5=82 swoj=C4=85 wizyt=C4=99 Uzupe=C5=82n=
+ienie stylizacji =C5=BCelowej/korekta z dniaczwartek, 11 czerwca 202612:30n=
+a inny termin.
+
+Poniewa=C5=BC masz ustawiony kalendarz w tryb manualny klient czeka na potw=
+ierdzenie nowego terminu.
+
+Mo=C5=BCesz potwierdzi=C4=87 ten termin za pomoc=C4=85:
+
+=E2=80=A2=09strony internetowej https://dl.booksy.com/T5REoVBKUKb - biz.boo=
+ksy.com=09
+=E2=80=A2=09aplikacji na telefonie: sprawd=C5=BA zak=C5=82adk=C4=99 =E2=80=
+=9ETablica=E2=80=9D, znajd=C5=BA klienta i potwierd=C5=BA lub odrzu=C4=87 n=
+owy termin wizyty=09
+
+Po potwierdzeniu poprzedni termin wizyty b=C4=99dzie uwolniony i b=C4=99dzi=
+e ponownie czeka=C4=87 na rezerwacj=C4=99 innego klienta.
+
+Izabela =C5=81azorko
+
+506 836 261
+
+ mailto:zochaa00@o2.pl - zochaa00@o2.pl
+
+czwartek, 28 maja 2026, 10:15 - 11:30
+
+=09Manicure KSENIA: Uzupe=C5=82nienie stylizacji =C5=BCelowej/korekta
+
+180,00=C2=A0z=C5=82+,
+
+                        10:15 - 11:30
+
+pracownik:
+                        Ksenia
+
+=09
+
+=09
+=09
+
+=09
+
+=09
+=09
+Rozwijaj biznesrazem z Booksy
+
+ https://itunes.apple.com/us/app/booksybiz-smarter-way-to-find/id725335996 =
+-  https://play.google.com/store/apps/details?id=3Dnet.booksy.business -
+
+ https://www.facebook.com/booksypolska -  https://www.instagram.com/booksy_=
+poland/ -  https://www.youtube.com/channel/UC48XwCJYOYHxFiByPI60WcA -  http=
+s://www.linkedin.com/company/booksy-polska -
+
+ mailto: - Masz pytania? Napisz do nas na czacie.Nasz czat pracuje od ponie=
+dzia=C5=82ku do pi=C4=85tku w godzinach 9:00-19:00.Zrezygnuj z otrzymywania=
+ wiadomo=C5=9Bci https://booksy.com/pl-pl/unsubscribe-email/47a90e4c-517539=
+52-654117d5 - tutaj.
+
+Administratorem Twoich danych osobowych jest Booksy International Sp. z o.o=
+. Informacje o przetwarzaniu danych oraz o przys=C5=82uguj=C4=85cych Ci pra=
+wach znajdziesz na naszej stronie internetowej w zak=C5=82adce http://links=
+.booksy.com/u/click?_t=3D7355738c6df140ae8e7c71966fa96b76&_m=3DpQLPPvRpgTpu=
+rGVos0u2ul1njgKhrjSX&_e=3Dz9QQiVxGl6J-KDomlPJfuvQVGsMD_CPdcQCtTBqjzn4ahGXnp=
+d3Ec_wkK02ENBZQ0E8vtwdPdSxtFm-97XIP9ACHFCQQX33OzOl3NeLZFtvzLhqtwBGpQ0yOdhry=
+GpOViNsLD2f7jKsHmhEVaYsQFtO7QhJpYXEy3K-jZWFP271EcMyp_pjjlHJxc3uaVdApQv7ZzYJ=
+kQ7966YBqwUPYW6b2Synq1lGdDX1LmuJDVRTXe8iWh09kXzL8qc1jIG-NO-Jx0_zFK91gXj10QJ=
+RDYLC8zkKUKjavYQgie7WNsqg%3D - Polityka Prywatno=C5=9Bci. Booksy Internatio=
+nal Sp. z o. o. z siedzib=C4=85 w Warszawie, ul. Prosta 67, pi=C4=99tro 28,=
+ 00-838 Warszawa, wpisana do rejestru przedsi=C4=99biorc=C3=B3w Krajowego R=
+ejestru S=C4=85dowego prowadzonego przez S=C4=85d Rejonowy dla m. st. Warsz=
+awy w Warszawie, XIII Wydzia=C5=82 Gospodarczy Krajowego Rejestru S=C4=85do=
+wego pod nr KRS 0000515914, NIP 951-238-16-07, REGON 147315920.
+
+=09
+
+
+
+
+--_av-v2XqUniWpEu5jtFpQQ7Baw
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<p>
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//ENhttp://www.w3=
+.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+ <html>
+  <head>
+   <title>
+    Izabela =C5=81azorko: zmieni=C5=82 rezerwacj=C4=99 i czeka na potwierdz=
+enie
+   </title>
+   <meta content=3D"text/html; charset=3Dutf-8" http-equiv=3D"Content-Type"=
+ />
+  </head>
+  <body bgcolor=3D"#f9f9f9" leftmargin=3D"0" marginheight=3D"20" marginwidt=
+h=3D"20" offset=3D"0" topmargin=3D"0">
+   <center>
+    <table bgcolor=3D"#fff" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" style=3D"max-width: 500px; width: 100%;">
+     <!--HEADER-->
+     <tr>
+      <td>
+       <a href=3D"https://mandrillapp.com/track/click/30558554/booksy.com?p=
+=3DeyJzIjoiY2VfenRiUEtKUkhhTnNMejhTM2RIdGdVUHpNIiwidiI6MiwicCI6IntcInVcIjoz=
+MDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL2Jvb2tzeS5jb21cXFwvYml=
+6XFxcL3BsLXBsXFxcL1wiLFwiaWRcIjpcIjliNmVkODdlMWM5ZjRhZDBiY2U5ZjExYmQzYjM2OT=
+ljXCIsXCJ1cmxfaWRzXCI6W1wiYmYxNDEzYjVhOTU0MmRiMDUzNzVhZWQ0MmM2ZGViYjc4Njg3O=
+GI2YVwiXSxcIm1zZ190c1wiOjE3NzYzMzEwOTh9In0">
+        <img alt=3D"Booksy" src=3D"https://static.booksy.com/static/live/pl=
+/scenarios/header-b2b-500px.png" />
+       </a>
+      </td>
+     </tr>
+     <!--HEADER-->
+     <!--CONTENT-->
+     <tr>
+      <td valign=3D"top">
+       <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D"bor=
+der-left: 1px solid #f9f9f9; border-right: 1px solid #f9f9f9;" width=3D"100=
+%">
+        <tr>
+         <td style=3D"background: #fff;" valign=3D"top">
+          <div style=3D"padding: 35px 0;">
+           <span style=3D"color: #5e5e5e; font-family: arial; font-size: 16=
+px; line-height: 26px;">
+            <b>
+             Izabela =C5=81azorko
+            </b>
+            przesun=C4=85=C5=82 swoj=C4=85 wizyt=C4=99 Uzupe=C5=82nienie st=
+ylizacji =C5=BCelowej/korekta z dnia
+            <b>
+             czwartek, 11 czerwca 2026
+            </b>
+            <b>
+             12:30
+            </b>
+            na inny termin.
+           </span>
+           <br />
+           <br />
+           <span style=3D"color: #5e5e5e; font-family: arial; font-size: 16=
+px; line-height: 26px;">
+            Poniewa=C5=BC masz ustawiony kalendarz w tryb manualny klient c=
+zeka na potwierdzenie nowego terminu.
+           </span>
+           <br />
+           <br />
+           <span style=3D"color: #5e5e5e; font-family: arial; font-size: 16=
+px; line-height: 26px;">
+            <b>
+             Mo=C5=BCesz potwierdzi=C4=87 ten termin za pomoc=C4=85:
+            </b>
+           </span>
+           <br />
+           <br />
+           <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D=
+"color: #5e5e5e; font-family: arial; font-size: 12px; line-height: 26px;" w=
+idth=3D"100%">
+            <tr>
+             <td valign=3D"top" width=3D"15">
+              <span style=3D"color: #26cbc5;">
+               =E2=80=A2
+              </span>
+             </td>
+             <td>
+              strony internetowej
+              <a href=3D"https://mandrillapp.com/track/click/30558554/dl.bo=
+oksy.com?p=3DeyJzIjoiYjlkeGItTzFhal9DVVVVaUhYR1RsaW45UTVvIiwidiI6MiwicCI6In=
+tcInVcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL2RsLmJvb2tze=
+S5jb21cXFwvVDVSRW9WQktVS2JcIixcImlkXCI6XCI5YjZlZDg3ZTFjOWY0YWQwYmNlOWYxMWJk=
+M2IzNjk5Y1wiLFwidXJsX2lkc1wiOltcImYzMGY4MjM3OWRmYTJlMWVhYWY4ZTA3MmU1NGUyNDN=
+mNTMwYzlkZmJcIl0sXCJtc2dfdHNcIjoxNzc2MzMxMDk4fSJ9" style=3D"color: #26cbc5;=
+ text-decoration: underline;">
+               <b>
+                biz.booksy.com
+               </b>
+              </a>
+             </td>
+            </tr>
+            <tr>
+             <td valign=3D"top" width=3D"15">
+              <span style=3D"color: #26cbc5;">
+               =E2=80=A2
+              </span>
+             </td>
+             <td>
+              aplikacji na telefonie: sprawd=C5=BA zak=C5=82adk=C4=99 =E2=
+=80=9ETablica=E2=80=9D, znajd=C5=BA klienta i potwierd=C5=BA lub odrzu=C4=
+=87 nowy termin wizyty
+             </td>
+            </tr>
+           </table>
+           <br />
+           <br />
+           <span style=3D"color: #5e5e5e; font-family: arial; font-size: 16=
+px; line-height: 26px;">
+            Po potwierdzeniu poprzedni termin wizyty b=C4=99dzie uwolniony =
+i b=C4=99dzie ponownie czeka=C4=87 na rezerwacj=C4=99 innego klienta.
+           </span>
+           <br />
+           <br />
+           <div style=3D"line-height: 18px">
+            <div style=3D"background-color:#f4f4f4; padding: 15px;">
+             <div style=3D"font-size: 16px; color: #666;">
+              Izabela =C5=81azorko
+             </div>
+             <div style=3D"font-size: 12px;  color: #999;">
+              506 836 261
+             </div>
+             <div>
+              <a href=3D"mailto:zochaa00@o2.pl" style=3D"color: #26cbc5; te=
+xt-decoration: underline;">
+               zochaa00@o2.pl
+              </a>
+             </div>
+            </div>
+            <div style=3D"padding: 15px 0 10px 0;">
+             <b>
+              czwartek, 28 maja 2026, 10:15 - 11:30
+             </b>
+            </div>
+            <div style=3D"background: #9D9D9D; height: 1px; line-height:1px=
+; font-size: 1px;">
+            </div>
+            <table cellpadding=3D"0" cellspacing=3D"0" style=3D"border-bott=
+om: solid 1px #ccc;  line-height: 18px; font-size: 12px; width: 100%; borde=
+r-collapse:collapse;">
+             <tr>
+              <td style=3D"padding: 10px 0; vertical-align: middle;" valign=
+=3D"middle" width=3D"80px">
+               <img src=3D"https://d375139ucebi94.cloudfront.net/region2/pl=
+/103566/resource_photos/60326812ab1a4a479204353c4117342b.jpeg?size=3D100x10=
+0" style=3D"background-color: #bbb; border-radius: 50px; width: 80px; heigh=
+t: 80px; border: solid 1px #bbb; vertical-align: middle;">
+               </img>
+              </td>
+              <td style=3D"padding-left: 20px; text-align: left;" valign=3D=
+"middle">
+               <div>
+                Manicure KSENIA: Uzupe=C5=82nienie stylizacji =C5=BCelowej/=
+korekta
+               </div>
+               <div>
+                180,00=C2=A0z=C5=82+,
+                        
+                        10:15 - 11:30
+               </div>
+               <div>
+                pracownik:
+                        Ksenia
+               </div>
+              </td>
+             </tr>
+            </table>
+           </div>
+           <br />
+          </div>
+         </td>
+        </tr>
+        <tr>
+         <td style=3D"background: #f3f3f3; height: 1px;" valign=3D"top">
+         </td>
+        </tr>
+       </table>
+      </td>
+     </tr>
+     <tr>
+      <td style=3D"background: #fff;" valign=3D"top">
+       <div style=3D"text-align:center;padding: 0 10px 10px 10px;">
+        <img alt=3D"Booksy-Semilac" src=3D"https://d375139ucebi94.cloudfron=
+t.net/region2/ecommerce/product_category/semilac_9ff4ab14.png" style=3D"ver=
+tical-align: middle;" title=3D"Booksy Semilac" />
+       </div>
+      </td>
+     </tr>
+     <tr>
+      <td style=3D"background: #f3f3f3; height: 1px;" valign=3D"top">
+      </td>
+     </tr>
+     <!--CONTENT-->
+     <!--FOOTER-->
+     <tr>
+      <td style=3D"background-color:#04677e;padding:20px 20px 20px 20px">
+       <p style=3D"font-size: 24px; line-height: 1.2; text-align: center; w=
+ord-break: break-word; font-family: Arial, Helvetica Neue, Helvetica, sans-=
+serif; mso-line-height-alt: 29px;color: #ffffff;margin: 0;">
+        <span style=3D"font-size: 24px;">
+         <strong>
+          Rozwijaj biznes
+          <br />
+          razem z Booksy
+          <br />
+         </strong>
+        </span>
+       </p>
+       <div style=3D"text-align:center;padding: 20px 10px 10px 10px;">
+        <a href=3D"https://mandrillapp.com/track/click/30558554/itunes.appl=
+e.com?p=3DeyJzIjoiZXRLNC1zbmJNaU5zTF9rNmxXQklETzZjeVc4IiwidiI6MiwicCI6IntcI=
+nVcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL2l0dW5lcy5hcHBs=
+ZS5jb21cXFwvdXNcXFwvYXBwXFxcL2Jvb2tzeWJpei1zbWFydGVyLXdheS10by1maW5kXFxcL2l=
+kNzI1MzM1OTk2XCIsXCJpZFwiOlwiOWI2ZWQ4N2UxYzlmNGFkMGJjZTlmMTFiZDNiMzY5OWNcIi=
+xcInVybF9pZHNcIjpbXCIwY2QzYzhlNWQ2ZjFlODU1NzU5OWQ3ZGQ0M2Y3MjVmMTg1MDlmOGU5X=
+CJdLFwibXNnX3RzXCI6MTc3NjMzMTA5OH0ifQ" style=3D"margin-right:5px;  text-dec=
+oration: none;" target=3D"_blank" title=3D"Booksy dla iOS">
+         <img alt=3D"Booksy dla iOS" height=3D"40" src=3D"https://static.bo=
+oksy.com/static/live/pl/scenarios/apple-pl.png" style=3D"vertical-align: mi=
+ddle;" title=3D"Booksy dla iOS" width=3D"135" />
+        </a>
+        <a href=3D"https://mandrillapp.com/track/click/30558554/play.google=
+.com?p=3DeyJzIjoiZ0tZcW1ldlhqSzhxRy0tTWU0TlpCMHlhemNnIiwidiI6MiwicCI6IntcIn=
+VcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL3BsYXkuZ29vZ2xlL=
+mNvbVxcXC9zdG9yZVxcXC9hcHBzXFxcL2RldGFpbHM_aWQ9bmV0LmJvb2tzeS5idXNpbmVzc1wi=
+LFwiaWRcIjpcIjliNmVkODdlMWM5ZjRhZDBiY2U5ZjExYmQzYjM2OTljXCIsXCJ1cmxfaWRzXCI=
+6W1wiYWRhMmMxYmYzZWVmMDAyNDcwM2IyYjU3ZjJjZjI3N2E1NjAyMmI1NVwiXSxcIm1zZ190c1=
+wiOjE3NzYzMzEwOTh9In0" target=3D"_blank" title=3D"Booksy dla Android">
+         <img alt=3D"Booksy dla Android" height=3D"40" src=3D"https://stati=
+c.booksy.com/static/live/pl/scenarios/google-pl.png" style=3D"vertical-alig=
+n: middle;" title=3D"Booksy dla Android" width=3D"135" />
+        </a>
+       </div>
+       <div style=3D"text-align:center;padding: 0 10px 10px 10px;">
+        <a href=3D"https://mandrillapp.com/track/click/30558554/www.faceboo=
+k.com?p=3DeyJzIjoibks4aTN6bHVMMmVud05FVkZUamlzRWpYc2ZJIiwidiI6MiwicCI6IntcI=
+nVcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL3d3dy5mYWNlYm9v=
+ay5jb21cXFwvYm9va3N5cG9sc2thXCIsXCJpZFwiOlwiOWI2ZWQ4N2UxYzlmNGFkMGJjZTlmMTF=
+iZDNiMzY5OWNcIixcInVybF9pZHNcIjpbXCJjNGIyNjM2NjMwZjBjNjJiMzc1YzE5MTczZWQxYW=
+FmOTBlYzk4Njg5XCJdLFwibXNnX3RzXCI6MTc3NjMzMTA5OH0ifQ" style=3D"padding: 10p=
+x 5px 10px 5px; text-decoration: none;" target=3D"_blank">
+         <img alt=3D"Facebook" height=3D"32" src=3D"https://d2fi4ri5dhpqd1.=
+cloudfront.net/public/resources/social-networks-icon-sets/t-outline-circle-=
+white/facebook@2x.png" style=3D"vertical-align: middle;" title=3D"Facebook"=
+ width=3D"32" />
+        </a>
+        <a href=3D"https://mandrillapp.com/track/click/30558554/www.instagr=
+am.com?p=3DeyJzIjoiejNuLUpCV09kak1aam00YTNLMmlidEtrWFpVIiwidiI6MiwicCI6Intc=
+InVcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL3d3dy5pbnN0YWd=
+yYW0uY29tXFxcL2Jvb2tzeV9wb2xhbmRcXFwvXCIsXCJpZFwiOlwiOWI2ZWQ4N2UxYzlmNGFkMG=
+JjZTlmMTFiZDNiMzY5OWNcIixcInVybF9pZHNcIjpbXCI0ZWYxMDNiMjA4N2JiZmI4ZGIwNzM0M=
+mZmYzg2NDVhM2Y5MjU1ZjkwXCJdLFwibXNnX3RzXCI6MTc3NjMzMTA5OH0ifQ" style=3D"pad=
+ding: 10px 5px 10px 5px; text-decoration: none;" target=3D"_blank">
+         <img alt=3D"Instagram" height=3D"32" src=3D"https://d2fi4ri5dhpqd1=
+.cloudfront.net/public/resources/social-networks-icon-sets/t-outline-circle=
+-white/instagram@2x.png" style=3D"vertical-align: middle;" title=3D"Instagr=
+am" width=3D"32" />
+        </a>
+        <a href=3D"https://mandrillapp.com/track/click/30558554/www.youtube=
+.com?p=3DeyJzIjoiRUVTVlFTNzlfVkJFTG51UVpoY1VCNG5hOWpZIiwidiI6MiwicCI6IntcIn=
+VcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL3d3dy55b3V0dWJlL=
+mNvbVxcXC9jaGFubmVsXFxcL1VDNDhYd0NKWU9ZSHhGaUJ5UEk2MFdjQVwiLFwiaWRcIjpcIjli=
+NmVkODdlMWM5ZjRhZDBiY2U5ZjExYmQzYjM2OTljXCIsXCJ1cmxfaWRzXCI6W1wiNWNlNjBkNzF=
+iM2FmN2FlYmI1ODQ0YzU4MDI3OTVmNWQ2Y2U4OTI2ZVwiXSxcIm1zZ190c1wiOjE3NzYzMzEwOT=
+h9In0" style=3D"padding: 10px 5px 10px 5px; text-decoration: none;" target=
+=3D"_blank">
+         <img alt=3D"Youtube" height=3D"32" src=3D"https://d2fi4ri5dhpqd1.c=
+loudfront.net/public/resources/social-networks-icon-sets/t-outline-circle-w=
+hite/youtube@2x.png" style=3D"vertical-align: middle;" title=3D"Youtube" wi=
+dth=3D"32" />
+        </a>
+        <a href=3D"https://mandrillapp.com/track/click/30558554/www.linkedi=
+n.com?p=3DeyJzIjoiRmRwU2RlQ19tY3pOVlRLV1lDQmN0dzc5WWNnIiwidiI6MiwicCI6IntcI=
+nVcIjozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL3d3dy5saW5rZWRp=
+bi5jb21cXFwvY29tcGFueVxcXC9ib29rc3ktcG9sc2thXCIsXCJpZFwiOlwiOWI2ZWQ4N2UxYzl=
+mNGFkMGJjZTlmMTFiZDNiMzY5OWNcIixcInVybF9pZHNcIjpbXCJiODczMTRlNjcxNzhkYjc3Zj=
+JiNGJjNWM0NjhlYmRjZDA1MDE4NzI1XCJdLFwibXNnX3RzXCI6MTc3NjMzMTA5OH0ifQ" style=
+=3D"padding: 10px 5px 10px 5px; text-decoration: none;" target=3D"_blank">
+         <img alt=3D"Linkedin" height=3D"32" src=3D"https://d2fi4ri5dhpqd1.=
+cloudfront.net/public/resources/social-networks-icon-sets/t-outline-circle-=
+white/linkedin@2x.png" style=3D"vertical-align: middle;" title=3D"Linkedin"=
+ width=3D"32" />
+        </a>
+       </div>
+       <p style=3D"font-size: 11px; line-height: 1.2; word-break: break-wor=
+d; margin: 0px; text-align: center;color:#ffffff;font-family:Arial,Helvetic=
+a,sans-serif;">
+        <a href=3D"mailto:" rel=3D"noopener" style=3D"color:#ffffff;text-de=
+coration:none" target=3D"_blank">
+        </a>
+        <br />
+        Masz pytania? Napisz do nas na czacie.
+        <br />
+        Nasz czat pracuje od poniedzia=C5=82ku do pi=C4=85tku w godzinach 9=
+:00-19:00.
+        <br />
+        <span style=3D"text-decoration:none;margin-top:20px">
+         Zrezygnuj z otrzymywania wiadomo=C5=9Bci
+         <a href=3D"https://mandrillapp.com/track/click/30558554/booksy.com=
+?p=3DeyJzIjoiaVRJSFg3ci1kZEQzSllSTHRxbTQzcE1ZVGxFIiwidiI6MiwicCI6IntcInVcIj=
+ozMDU1ODU1NCxcInZcIjoyLFwidXJsXCI6XCJodHRwczpcXFwvXFxcL2Jvb2tzeS5jb21cXFwvc=
+GwtcGxcXFwvdW5zdWJzY3JpYmUtZW1haWxcXFwvNDdhOTBlNGMtNTE3NTM5NTItNjU0MTE3ZDVc=
+IixcImlkXCI6XCI5YjZlZDg3ZTFjOWY0YWQwYmNlOWYxMWJkM2IzNjk5Y1wiLFwidXJsX2lkc1w=
+iOltcImNlZDQyNmFhZjc5NWMwZWNlOTg5ZDUyOWMyNmQzMDE2MzIyZWZiMDhcIl0sXCJtc2dfdH=
+NcIjoxNzc2MzMxMDk4fSJ9" rel=3D"noopener" style=3D"text-decoration: underlin=
+e; color:#ffffff;" target=3D"_blank">
+          tutaj
+         </a>
+         .
+        </span>
+       </p>
+       <p style=3D"margin: 20px 0 0 0;font-size: 8px; line-height: 1.2; wor=
+d-break: break-word; color:#ffffff;font-family:Arial,Helvetica,sans-serif;t=
+ext-align:justify;text-align-last:center;">
+        Administratorem Twoich danych osobowych jest Booksy International S=
+p. z o.o. Informacje o przetwarzaniu danych oraz o przys=C5=82uguj=C4=85cyc=
+h Ci prawach znajdziesz na naszej stronie internetowej w zak=C5=82adce
+        <a href=3D"http://links.booksy.com/u/click?_t=3D7355738c6df140ae8e7=
+c71966fa96b76&_m=3DpQLPPvRpgTpurGVos0u2ul1njgKhrjSX&_e=3Dz9QQiVxGl6J-KDomlP=
+JfuvQVGsMD_CPdcQCtTBqjzn4ahGXnpd3Ec_wkK02ENBZQ0E8vtwdPdSxtFm-97XIP9ACHFCQQX=
+33OzOl3NeLZFtvzLhqtwBGpQ0yOdhryGpOViNsLD2f7jKsHmhEVaYsQFtO7QhJpYXEy3K-jZWFP=
+271EcMyp_pjjlHJxc3uaVdApQv7ZzYJkQ7966YBqwUPYW6b2Synq1lGdDX1LmuJDVRTXe8iWh09=
+kXzL8qc1jIG-NO-Jx0_zFK91gXj10QJRDYLC8zkKUKjavYQgie7WNsqg%3D" rel=3D"noopene=
+r" style=3D"text-decoration: underline; color:#ffffff;" target=3D"_blank">
+         Polityka Prywatno=C5=9Bci
+        </a>
+        . Booksy International Sp. z o. o. z siedzib=C4=85 w Warszawie, ul.=
+ Prosta 67, pi=C4=99tro 28, 00-838 Warszawa, wpisana do rejestru przedsi=C4=
+=99biorc=C3=B3w Krajowego Rejestru S=C4=85dowego prowadzonego przez S=C4=85=
+d Rejonowy dla m. st. Warszawy w Warszawie, XIII Wydzia=C5=82 Gospodarczy K=
+rajowego Rejestru S=C4=85dowego pod nr KRS 0000515914, NIP 951-238-16-07, R=
+EGON 147315920.
+       </p>
+      </td>
+     </tr>
+     <!--FOOTER-->
+    </table>
+   </center>
+  <img src=3D"https://mandrillapp.com/track/open.php?u=3D30558554&id=3D9b6e=
+d87e1c9f4ad0bce9f11bd3b3699c" height=3D"1" width=3D"1" alt=3D""></body>
+ </html>
+</p>
+
+
+
+--_av-v2XqUniWpEu5jtFpQQ7Baw--
+
