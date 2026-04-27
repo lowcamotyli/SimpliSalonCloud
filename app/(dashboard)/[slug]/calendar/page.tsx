@@ -104,6 +104,9 @@ type CalendarTimeReservation = {
   durationMinutes: number
 }
 
+const formatEmployeeDisplayName = (employee: any) =>
+  `${employee?.first_name ?? ''} ${employee?.last_name ?? ''}`.trim() || 'Nieznany pracownik'
+
 function mapReservationToCalendarLocal(reservation: any, salonTimeZone: string): CalendarTimeReservation | null {
   if (!reservation?.id || !reservation?.employee_id) return null
   const start = new Date(reservation.start_at)
@@ -144,6 +147,7 @@ export default function CalendarPage() {
   const [isInitialized, setIsInitialized] = useState(false)
   const [previewDurations, setPreviewDurations] = useState<Record<string, number>>({})
   const [timeReservations, setTimeReservations] = useState<any[]>([])
+  const [absences, setAbsences] = useState<any[]>([])
   const [salonTimeZone, setSalonTimeZone] = useState<string>(DEFAULT_TIMEZONE)
 
   const { data: employees } = useEmployees()
@@ -342,9 +346,21 @@ export default function CalendarPage() {
       }
     }
 
+    const fetchAbsences = async () => {
+      try {
+        const response = await fetch('/api/absences', { signal: controller.signal })
+        if (!response.ok) { setAbsences([]); return }
+        const payload = await response.json() as { absences?: any[] }
+        setAbsences(Array.isArray(payload.absences) ? payload.absences : [])
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') setAbsences([])
+      }
+    }
+
     void fetchTimeReservations()
+    void fetchAbsences()
     return () => controller.abort()
-  }, [currentDate, viewType, isTimeReservationDialogOpen])
+  }, [currentDate, viewType, isTimeReservationDialogOpen, isAbsenceDialogOpen])
 
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking)
@@ -517,6 +533,7 @@ export default function CalendarPage() {
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
             timeReservations={timeReservations}
+            absences={absences}
             salonTimeZone={salonTimeZone}
           />
         )}
@@ -535,6 +552,7 @@ export default function CalendarPage() {
             previewDurations={previewDurations}
             setPreviewDurations={setPreviewDurations}
             timeReservations={timeReservations}
+            absences={absences}
             salonTimeZone={salonTimeZone}
           />
         )}
@@ -589,7 +607,7 @@ export default function CalendarPage() {
   )
 }
 
-function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, salonTimeZone }: any) {
+function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, absences, salonTimeZone }: any) {
   const dateStr = formatDate(currentDate)
   const now = new Date()
   const isToday = isSameDay(currentDate, now)
@@ -707,19 +725,40 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                     const duration = reservation.durationMinutes
                     const top = (startMinutes / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
                     const height = (duration / ((BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60)) * 100
+                    const employeeName = formatEmployeeDisplayName(employee)
                     return (
                       <div
                         key={reservation.id}
                         className="absolute p-[1px] z-[8] cursor-default"
                         style={{ top: `${top}%`, height: `${height}%`, minHeight: '44px', left: '0%', width: '96%' }}
-                        title={reservation.title || 'Zarezerwowane'}
+                        title={`${reservation.title || 'Zarezerwowane'} - ${employeeName}`}
                       >
-                        <div className="h-full w-full rounded-md border border-slate-600/40 bg-slate-500 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden">
-                          <div className="truncate">{reservation.title || 'Zarezerwowane'}</div>
+                        <div className={`h-full w-full rounded-md border ${colors.border} bg-slate-600 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden`}>
+                          <div className="truncate font-bold">{reservation.title || 'Zarezerwowane'}</div>
+                          <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-white/90">
+                            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bgAccent}`} />
+                            <span className="truncate">{employeeName}</span>
+                          </div>
                         </div>
                       </div>
                     )
                   })}
+
+                {(absences || [])
+                  .filter((a: any) => a.employee_id === employee.id && dateStr >= a.start_date && dateStr <= a.end_date)
+                  .map((a: any) => (
+                    <div
+                      key={`absence-${a.id}`}
+                      className="absolute inset-x-0 z-[7] pointer-events-none"
+                      style={{ top: '0%', height: '100%' }}
+                      title={`Nieobecność${a.reason ? `: ${a.reason}` : ''} — ${a.start_date === a.end_date ? a.start_date : `${a.start_date} – ${a.end_date}`}`}
+                    >
+                      <div className="h-full w-full bg-red-500/10 border-l-4 border-red-400 flex flex-col items-start justify-start pt-2 pl-3 gap-0.5 overflow-hidden">
+                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">Nieobecność</span>
+                        {a.reason && <span className="text-[10px] text-red-500/80 truncate max-w-full">{a.reason}</span>}
+                      </div>
+                    </div>
+                  ))}
 
                 {buildCalendarEntries(bookingsByEmployeeAndDate[employee.id]?.[dateStr] || [], previewDurations).map((entry, index, allEntries) => {
                   const booking = entry.booking
@@ -796,7 +835,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
   )
 }
 
-function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, salonTimeZone }: any) {
+function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees, visibleEmployees, onTimeSlotClick, onBookingClick, getEmployeeColor, onMoveBooking, onResizeBooking, previewDurations, setPreviewDurations, timeReservations, absences, salonTimeZone }: any) {
   const weekDays = generateWeekDays(currentDate)
   const now = new Date()
   const mappedTimeReservations = useMemo(() => {
@@ -850,17 +889,51 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
   return (
     <div className="overflow-auto h-full">
       <div className="min-w-[700px]">
-      <div className="theme-calendar-week-header grid grid-cols-8 border-b bg-slate-50/50 sticky top-0 z-30">
-        <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
-        {weekDays.map((day) => {
-          const today = isSameDay(day, now)
-          return (
-            <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
-              <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
-              <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+      <div className="theme-calendar-week-header sticky top-0 z-30 bg-slate-50/50 border-b">
+        <div className="grid grid-cols-8">
+          <div className="theme-calendar-time-head border-r p-3 text-center"><p className="text-xs font-semibold text-gray-600">CZAS</p></div>
+          {weekDays.map((day) => {
+            const today = isSameDay(day, now)
+            return (
+              <div key={day.toISOString()} className={`theme-calendar-week-day border-r p-3 text-center ${today ? 'bg-primary/5' : ''}`}>
+                <p className="theme-calendar-week-day-label text-xs font-semibold text-gray-600">{format(day, 'EEE').toUpperCase()}</p>
+                <p className={`theme-calendar-week-day-number font-bold ${today ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'd')}</p>
+              </div>
+            )
+          })}
+        </div>
+        {weekDays.some((day) => {
+          const dateStr = formatDate(day)
+          return (absences || []).some((a: any) => dateStr >= a.start_date && dateStr <= a.end_date)
+        }) && (
+          <div className="grid grid-cols-8 border-t border-red-100 bg-red-50/60">
+            <div className="border-r px-2 py-1 flex items-center justify-center">
+              <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide">Nieob.</span>
             </div>
-          )
-        })}
+            {weekDays.map((day) => {
+              const dateStr = formatDate(day)
+              const dayAbsences = (absences || []).filter((a: any) => dateStr >= a.start_date && dateStr <= a.end_date)
+              const today = isSameDay(day, now)
+              return (
+                <div key={dateStr} className={`border-r px-1.5 py-1 flex flex-wrap gap-1 min-h-[28px] ${today ? 'bg-primary/5' : ''}`}>
+                  {dayAbsences.map((a: any) => {
+                    const emp = (employees || []).find((e: any) => e.id === a.employee_id)
+                    const name = emp ? formatEmployeeDisplayName(emp) : '—'
+                    return (
+                      <span
+                        key={a.id}
+                        className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700 border border-red-200"
+                        title={a.reason ? `${name}: ${a.reason}` : name}
+                      >
+                        {name}
+                      </span>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
         <div className="grid grid-cols-8 min-w-[700px]">
@@ -906,6 +979,9 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
 
                 {employees?.map((employee: any) => {
                   if (!visibleEmployees.has(employee.id)) return null
+                  const employeeIndex = employees.findIndex((entry: any) => entry.id === employee.id)
+                  const colors = getEmployeeColor(employeeIndex)
+                  const employeeName = formatEmployeeDisplayName(employee)
                   const dayBookings = bookingsByEmployeeAndDate[employee.id]?.[dateStr] || []
                   const dayTimeReservations = mappedTimeReservations.filter((reservation: any) => {
                     return reservation.employee_id === employee.id && reservation.localDate === dateStr
@@ -923,10 +999,14 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                             key={reservation.id}
                             className="absolute p-[1px] z-[8] cursor-default"
                             style={{ top: `${top}px`, height: `${height}px`, minHeight: '44px', left: '0%', width: '96%' }}
-                            title={reservation.title || 'Zarezerwowane'}
+                            title={`${reservation.title || 'Zarezerwowane'} - ${employeeName}`}
                           >
-                            <div className="h-full w-full rounded-md border border-slate-600/40 bg-slate-500 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden">
-                              <div className="truncate">{reservation.title || 'Zarezerwowane'}</div>
+                            <div className={`h-full w-full rounded-md border ${colors.border} bg-slate-600 text-white px-2 py-1 text-xs font-medium shadow-sm overflow-hidden`}>
+                              <div className="truncate font-bold">{reservation.title || 'Zarezerwowane'}</div>
+                              <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-white/90">
+                                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bgAccent}`} />
+                                <span className="truncate">{employeeName}</span>
+                              </div>
                             </div>
                           </div>
                         )

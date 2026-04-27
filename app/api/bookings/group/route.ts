@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthContext } from '@/lib/supabase/get-auth-context';
 import { logger } from '@/lib/logger';
+import { canEmployeePerformService } from '@/lib/bookings/employee-service-authorization';
+import { findTimeReservationConflict, formatTimeReservationConflictMessage, getSalonTimeZoneForBookings } from '@/lib/bookings/time-reservation-conflicts';
 
 interface BookingItem {
   serviceId: string;
@@ -54,6 +56,19 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to fetch service details');
     }
 
+    const authorizationResults = await Promise.all(
+      body.items.map((item) =>
+        canEmployeePerformService(supabase as any, authSalonId, item.employeeId, item.serviceId)
+      )
+    );
+
+    if (authorizationResults.some((canPerformService) => !canPerformService)) {
+      return NextResponse.json(
+        { error: 'Employee is not authorized to perform this service' },
+        { status: 400 }
+      );
+    }
+
     const serviceMap = new Map(services.map(s => [s.id, s]));
     const rpcItems = body.items.map(item => {
       const dt = new Date(item.startTime);
@@ -67,6 +82,31 @@ export async function POST(request: NextRequest) {
         base_price: svc?.price ?? 0,
       };
     });
+
+    if (!forceOverride) {
+      const salonTimeZone = await getSalonTimeZoneForBookings(supabase as any, authSalonId);
+
+      for (let index = 0; index < rpcItems.length; index += 1) {
+        const item = rpcItems[index];
+        const conflict = await findTimeReservationConflict({
+          supabase: supabase as any,
+          salonId: authSalonId,
+          employeeId: item.employee_id,
+          date: item.booking_date,
+          startTime: item.booking_time,
+          durationMinutes: Number(item.duration) || 0,
+          timeZone: salonTimeZone,
+        });
+
+        if (conflict) {
+          return NextResponse.json({
+            error: 'TIME_RESERVATION_CONFLICT',
+            message: formatTimeReservationConflictMessage(conflict),
+            conflictingItemIndex: index,
+          }, { status: 409 });
+        }
+      }
+    }
 
     let result: any;
 

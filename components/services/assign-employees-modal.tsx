@@ -24,11 +24,30 @@ interface AssignEmployeesModalProps {
 
 interface Employee {
   id: string
-  name: string
+  name?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  employee_code?: string | null
 }
 
 interface EmployeesResponse {
   employees?: Employee[]
+}
+
+const getEmployeeDisplayName = (employee: Employee): string => {
+  const fullName = [employee.first_name, employee.last_name]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    employee.name?.trim() ||
+    fullName ||
+    employee.email?.trim() ||
+    employee.employee_code?.trim() ||
+    'Pracownik bez nazwy'
+  )
 }
 
 export function AssignEmployeesModal({
@@ -178,6 +197,7 @@ export function AssignEmployeesModal({
             <div className="space-y-3 p-4">
               {employees.map((employee) => {
                 const checkboxId = `assign-employee-${employee.id}`
+                const displayName = getEmployeeDisplayName(employee)
 
                 return (
                   <div key={employee.id} className="flex items-center gap-3">
@@ -188,7 +208,7 @@ export function AssignEmployeesModal({
                       disabled={isSubmitting}
                     />
                     <Label htmlFor={checkboxId} className="cursor-pointer text-sm font-medium">
-                      {employee.name}
+                      {displayName}
                     </Label>
                   </div>
                 )

@@ -73,7 +73,7 @@ type RuleFormState = {
 const DAY_OPTIONS = [
   { label: 'Pon', value: 0, defaultChecked: true },
   { label: 'Wt', value: 1, defaultChecked: true },
-  { label: '\Śr', value: 2, defaultChecked: true },
+  { label: 'Śr', value: 2, defaultChecked: true },
   { label: 'Czw', value: 3, defaultChecked: true },
   { label: 'Pt', value: 4, defaultChecked: true },
   { label: 'Sob', value: 5, defaultChecked: false },
@@ -150,13 +150,13 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac zasad.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać zasad.'))
       }
 
       const payload = (await response.json()) as ShiftRulesResponse
       setRules(payload.data ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac zasad.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać zasad.'
       setRules([])
       setRulesError(message)
     } finally {
@@ -175,13 +175,13 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac szablonow zmian.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać szablonów zmian.'))
       }
 
       const payload = (await response.json()) as ShiftTemplatesResponse
       setTemplates(payload.templates ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac szablonow zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać szablonów zmian.'
       setTemplates([])
       setTemplatesError(message)
     } finally {
@@ -218,27 +218,27 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
     const selectedDays = getSelectedDays(form.daysOfWeek)
 
     if (!form.name.trim()) {
-      toast.error('Podaj nazwe zasady.')
+      toast.error('Podaj nazwę zasady.')
       return
     }
 
     if (!form.templateAId) {
-      toast.error('Wybierz zmiane A.')
+      toast.error('Wybierz zmianę A.')
       return
     }
 
     if (selectedDays.length === 0) {
-      toast.error('Wybierz przynajmniej jeden dzien.')
+      toast.error('Wybierz przynajmniej jeden dzień.')
       return
     }
 
     if (form.ruleType === 'alternating' && !form.templateBId) {
-      toast.error('Wybierz zmiane B.')
+      toast.error('Wybierz zmianę B.')
       return
     }
 
     if (form.ruleType === 'alternating' && !form.referenceWeek) {
-      toast.error('Wybierz tydzien odniesienia.')
+      toast.error('Wybierz tydzień odniesienia.')
       return
     }
 
@@ -261,7 +261,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie zapisac zasady.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się zapisać zasady.'))
       }
 
       const payload = (await response.json()) as ShiftRuleResponse
@@ -270,10 +270,10 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
         setRules((current) => [...current, payload.data as ShiftRule])
       }
 
-      toast.success('Zasada zostala zapisana.')
+      toast.success('Zasada została zapisana.')
       handleCancelAdd()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac zasady.'
+      const message = error instanceof Error ? error.message : 'Nie udało się zapisać zasady.'
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -281,7 +281,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
   }
 
   const handleDelete = async (ruleId: string): Promise<void> => {
-    const confirmed = window.confirm('Usunac te zasade?')
+    const confirmed = window.confirm('Usunąć tę zasadę?')
 
     if (!confirmed) {
       return
@@ -295,13 +295,13 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie usunac zasady.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się usunąć zasady.'))
       }
 
       setRules((current) => current.filter((rule) => rule.id !== ruleId))
-      toast.success('Zasada zostala usunieta.')
+      toast.success('Zasada została usunięta.')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie usunac zasady.'
+      const message = error instanceof Error ? error.message : 'Nie udało się usunąć zasady.'
       toast.error(message)
     } finally {
       setDeletingRuleId(null)
@@ -314,7 +314,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
         <h3 className="text-lg font-semibold">Zasady automatyczne</h3>
         {!isAdding ? (
           <Button type="button" variant="outline" onClick={handleStartAdd}>
-            Dodaj zasad\ę
+            Dodaj zasadę
           </Button>
         ) : null}
       </div>
@@ -348,8 +348,8 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
                 <SelectValue placeholder="Wybierz typ zasady" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fixed">Sta\ła zmiana</SelectItem>
-                <SelectItem value="alternating">Naprzemienna co tydzie\ń</SelectItem>
+                <SelectItem value="fixed">Stała zmiana</SelectItem>
+                <SelectItem value="alternating">Naprzemienna co tydzień</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -361,7 +361,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
               onValueChange={(value: string) => setForm((current) => ({ ...current, templateAId: value }))}
             >
               <SelectTrigger id="rule-template-a">
-                <SelectValue placeholder={isLoadingTemplates ? 'Ladowanie...' : 'Wybierz szablon'} />
+                <SelectValue placeholder={isLoadingTemplates ? 'Ładowanie...' : 'Wybierz szablon'} />
               </SelectTrigger>
               <SelectContent>
                 {templates.map((template) => (
@@ -381,7 +381,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
                 onValueChange={(value: string) => setForm((current) => ({ ...current, templateBId: value }))}
               >
                 <SelectTrigger id="rule-template-b">
-                  <SelectValue placeholder={isLoadingTemplates ? 'Ladowanie...' : 'Wybierz szablon'} />
+                  <SelectValue placeholder={isLoadingTemplates ? 'Ładowanie...' : 'Wybierz szablon'} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((template) => (
@@ -411,7 +411,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
 
           {form.ruleType === 'alternating' ? (
             <div className="space-y-2">
-              <Label htmlFor="reference-week">Tydzie\ń A (punkt odniesienia)</Label>
+              <Label htmlFor="reference-week">Tydzień A (punkt odniesienia)</Label>
               <Input
                 id="reference-week"
                 type="week"
@@ -439,7 +439,7 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
         </div>
       ) : null}
 
-      {isLoadingRules ? <p className="text-sm text-muted-foreground">Ladowanie zasad...</p> : null}
+      {isLoadingRules ? <p className="text-sm text-muted-foreground">Ładowanie zasad...</p> : null}
       {rulesError ? <p className="text-sm text-destructive">{rulesError}</p> : null}
 
       {!isLoadingRules && !rulesError && activeRules.length === 0 ? (
@@ -472,14 +472,14 @@ export function ShiftRulesManager({ employeeId }: ShiftRulesManagerProps): React
               </div>
 
               <div className="flex items-center gap-1">
-                <Button type="button" size="icon" variant="ghost" aria-label={`Edytuj zasade ${rule.name}`} disabled>
+                <Button type="button" size="icon" variant="ghost" aria-label={`Edytuj zasadę ${rule.name}`} disabled>
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   type="button"
                   size="icon"
                   variant="ghost"
-                  aria-label={`Usun zasade ${rule.name}`}
+                  aria-label={`Usuń zasadę ${rule.name}`}
                   onClick={() => {
                     void handleDelete(rule.id)
                   }}

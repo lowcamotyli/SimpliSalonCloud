@@ -1,23 +1,22 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { formatPrice } from '@/lib/formatters'
+import { cn } from '@/lib/utils/cn'
 
 type Service = {
   id: string
@@ -77,7 +76,15 @@ function normalizeServices(
       }
     }
 
-    return normalized
+    const seen = new Set<string>()
+    return normalized.filter((service) => {
+      if (seen.has(service.id)) {
+        return false
+      }
+
+      seen.add(service.id)
+      return true
+    })
   }
 
   return (services as Service[]).filter((service) => service.active !== false)
@@ -189,14 +196,22 @@ export function EmployeeServicesPanel({
   }, [search, services])
 
   const groupedServices = useMemo(() => {
-    return filteredServices.reduce<Record<string, Service[]>>((groups, service) => {
-      if (!groups[service.category]) {
-        groups[service.category] = []
-      }
+    return filteredServices.reduce<Record<string, Record<string, Service[]>>>(
+      (groups, service) => {
+        if (!groups[service.category]) {
+          groups[service.category] = {}
+        }
 
-      groups[service.category].push(service)
-      return groups
-    }, {})
+        const subcategory = service.subcategory ?? ''
+        if (!groups[service.category][subcategory]) {
+          groups[service.category][subcategory] = []
+        }
+
+        groups[service.category][subcategory].push(service)
+        return groups
+      },
+      {}
+    )
   }, [filteredServices])
 
   const groupedEntries = useMemo(() => Object.entries(groupedServices), [groupedServices])
@@ -248,107 +263,103 @@ export function EmployeeServicesPanel({
   }
 
   return (
-    <Sheet
-      open={isOpen}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen && !isSaving) {
-          onClose()
-        }
-      }}
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden transition-all duration-300 border rounded-lg bg-background shrink-0',
+        isOpen ? 'w-[480px] opacity-100' : 'w-0 opacity-0 border-0'
+      )}
     >
-      <SheetContent side="right" className="flex h-full w-full max-w-2xl flex-col sm:max-w-2xl">
-        <SheetHeader>
-          <SheetTitle>Uslugi pracownika</SheetTitle>
-          <SheetDescription>
-            Wybierz uslugi, ktore ten pracownik moze wykonywac.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="mt-6 flex min-h-0 flex-1 flex-col gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-start justify-between border-b px-4 py-3">
+            <div>
+              <h2 className="text-base font-semibold">Usługi pracownika</h2>
+              <p className="text-sm text-muted-foreground">
+                {filteredServices.length} usług dostępnych
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} disabled={isSaving}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Szukaj po nazwie lub kategorii"
               disabled={isLoading || isSaving}
             />
-            <Badge variant="secondary">{filteredServices.length}</Badge>
-          </div>
-
-          {isLoading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : groupedEntries.length === 0 ? (
-            <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              Brak uslug pasujacych do wyszukiwania.
-            </div>
-          ) : (
-            <ScrollArea className="flex-1 rounded-md border">
-              <div className="space-y-6 p-4">
-                {groupedEntries.map(([category, categoryServices]) => (
-                  <section key={category} className="space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-semibold">{category}</h3>
-                      <Badge variant="outline">{categoryServices.length}</Badge>
-                    </div>
-
-                    <div className="space-y-2">
-                      {categoryServices.map((service) => {
-                        const checkboxId = `employee-service-${service.id}`
-
-                        return (
-                          <label
-                            key={service.id}
-                            htmlFor={checkboxId}
-                            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
-                          >
-                            <Checkbox
-                              id={checkboxId}
-                              checked={checkedIds.has(service.id)}
-                              onCheckedChange={(checked) =>
-                                toggleService(service.id, checked === true)
-                              }
-                              disabled={isSaving}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-sm font-medium">{service.name}</span>
-                                {service.subcategory ? (
-                                  <Badge variant="secondary">{service.subcategory}</Badge>
-                                ) : null}
-                              </div>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {service.duration} min • {formatPrice(service.price)}
-                              </p>
-                            </div>
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </section>
-                ))}
+            {isLoading ? (
+              <div className="flex flex-1 items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            </ScrollArea>
-          )}
-        </div>
-
-        <SheetFooter className="mt-6 sm:justify-end">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              void handleSave()
-            }}
-            disabled={isLoading || isSaving}
-          >
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+            ) : groupedEntries.length === 0 ? (
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
+                Brak usług pasujących do wyszukiwania.
+              </div>
+            ) : (
+              <ScrollArea className="flex-1">
+                <div className="p-2">
+                  <Accordion type="multiple" defaultValue={[]} className="space-y-1">
+                    {groupedEntries.map(([category, subcatMap]) => {
+                      const totalCount = Object.values(subcatMap).reduce((s, arr) => s + arr.length, 0)
+                      return (
+                        <AccordionItem key={category} value={category} className="rounded-md border px-0 shadow-none">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-semibold hover:no-underline">
+                            <span className="flex items-center gap-2">
+                              {category}
+                              <Badge variant="outline" className="text-xs">{totalCount}</Badge>
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-3 pb-2">
+                            {Object.entries(subcatMap).map(([subcat, subcatServices]) => (
+                              <div key={subcat} className="space-y-1">
+                                {subcat ? (
+                                  <p className="pb-1 pt-2 text-xs font-medium text-muted-foreground">{subcat}</p>
+                                ) : null}
+                                {subcatServices.map((service) => {
+                                  const checkboxId = "employee-service-" + service.id
+                                  return (
+                                    <label
+                                      key={service.id}
+                                      htmlFor={checkboxId}
+                                      className="flex cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 transition-colors hover:bg-muted/50"
+                                    >
+                                      <Checkbox
+                                        id={checkboxId}
+                                        checked={checkedIds.has(service.id)}
+                                        onCheckedChange={(checked) => toggleService(service.id, checked === true)}
+                                        disabled={isSaving}
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm">{service.name}</span>
+                                        <span className="text-xs text-muted-foreground">{service.duration} min • {formatPrice(service.price)}</span>
+                                      </div>
+                                    </label>
+                                  )
+                                })}
+                              </div>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      )
+                    })}
+                  </Accordion>
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+          <div className="flex shrink-0 justify-end gap-2 border-t px-4 py-3">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+              Anuluj
+            </Button>
+            <Button
+              type="button"
+              onClick={() => { void handleSave() }}
+              disabled={isLoading || isSaving}
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Zapisz
+            </Button>
+          </div>
+    </div>
   )
 }

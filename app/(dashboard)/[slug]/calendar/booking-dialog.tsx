@@ -692,15 +692,15 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
         if (!response.ok) {
           const error = await response.json().catch(() => null)
+          if (response.status === 409 && error?.message) {
+            setConflictError(error.message)
+            setForceOverride(false)
+            return
+          }
           if (response.status === 409 && error?.conflictingItemIndex !== undefined) {
             setConflictError(
               `Termin niedostepny dla uslugi ${error.conflictingItemIndex + 1}. Wybierz inny termin albo zapisz mimo konfliktu.`
             )
-            setForceOverride(false)
-            return
-          }
-          if (response.status === 409 && error?.message) {
-            setConflictError(error.message)
             setForceOverride(false)
             return
           }

@@ -38,11 +38,13 @@ type SalonServiceGroup = {
 type EmployeeServicesTabProps = {
   employeeId: string
   salonSlug: string
+  onPanelChange?: (open: boolean) => void
 }
 
 export function EmployeeServicesTab({
   employeeId,
   salonSlug,
+  onPanelChange,
 }: EmployeeServicesTabProps) {
   const { isOwnerOrManager, isLoading: isRoleLoading } = useCurrentRole()
   const canManage = isOwnerOrManager()
@@ -178,8 +180,8 @@ export function EmployeeServicesTab({
   }
 
   return (
-    <>
-      <Card data-salon-slug={salonSlug}>
+    <div className='flex items-start gap-4'>
+      <Card className='flex-1 min-w-0' data-salon-slug={salonSlug}>
         <CardHeader className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
@@ -194,7 +196,10 @@ export function EmployeeServicesTab({
                 type="button"
                 variant="outline"
                 disabled={isLoadingAll || isLoadingAssigned}
-                onClick={() => setIsPanelOpen(true)}
+                onClick={() => {
+                  setIsPanelOpen(true)
+                  onPanelChange?.(true)
+                }}
               >
                 Zarządzaj usługami
               </Button>
@@ -212,47 +217,46 @@ export function EmployeeServicesTab({
 
         <Separator />
 
-        <CardContent className="space-y-3 p-6">
+        <CardContent className="p-3">
           {isLoadingAssigned || isLoadingAll ? (
-            <p className="text-sm text-muted-foreground">Ładowanie usług...</p>
+            <p className="px-2 py-1 text-sm text-muted-foreground">Ładowanie usług...</p>
           ) : assignedServices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Ten pracownik nie ma jeszcze przypisanych usług.
+            <p className="px-2 py-1 text-sm text-muted-foreground">
+              Brak przypisanych usług.
             </p>
           ) : (
-            assignedServices.map((service) => (
-              <div
-                key={service.id}
-                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{service.name}</span>
-                    <Badge variant="outline">{service.category}</Badge>
-                    <Badge variant="secondary">{service.subcategory}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span>{service.duration} min</span>
-                    <span>{formatPrice(service.price)}</span>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => void handleRemoveService(service.id)}
-                  disabled={isMutating || removingId === service.id}
-                  className={cn(
-                    'shrink-0 text-muted-foreground hover:text-destructive',
-                    removingId === service.id && 'animate-pulse'
-                  )}
-                  aria-label={`Usuń usługę ${service.name}`}
+            <div className="max-h-56 overflow-y-auto space-y-0.5">
+              {assignedServices.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
+                  <span className="flex-1 truncate text-sm">{service.name}</span>
+                  {service.subcategory ? (
+                    <Badge variant="secondary" className="hidden shrink-0 text-xs sm:inline-flex">
+                      {service.subcategory}
+                    </Badge>
+                  ) : null}
+                  <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
+                    {service.duration} min
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void handleRemoveService(service.id)}
+                    disabled={isMutating || removingId === service.id}
+                    className={cn(
+                      'h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive',
+                      removingId === service.id && 'animate-pulse'
+                    )}
+                    aria-label={`Usuń usługę ${service.name}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -260,12 +264,16 @@ export function EmployeeServicesTab({
       <EmployeeServicesPanel
         employeeId={employeeId}
         isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
+        onClose={() => {
+          setIsPanelOpen(false)
+          onPanelChange?.(false)
+        }}
         onSaved={() => {
           setIsPanelOpen(false)
+          onPanelChange?.(false)
           void fetchAssignedServices()
         }}
       />
-    </>
+    </div>
   )
 }

@@ -64,7 +64,7 @@ type EmployeeShiftsTabProps = {
   employeeId: string
 }
 
-const DAY_LABELS = ['Pon', 'Wt', 'Sr', 'Czw', 'Pt', 'Sob', 'Nie'] as const
+const DAY_LABELS = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'] as const
 const WEEK_APPLY_DAY_OPTIONS = [
   { label: 'Pon', index: 0, defaultChecked: true },
   { label: 'Wt', index: 1, defaultChecked: true },
@@ -145,7 +145,7 @@ function ShiftAssignDialog({
     }
 
     if (mode === 'manual' && (!startTime || !endTime)) {
-      toast.error('Podaj godzine rozpoczecia i zakonczenia.')
+      toast.error('Podaj godzinę rozpoczęcia i zakończenia.')
       return
     }
 
@@ -182,14 +182,14 @@ function ShiftAssignDialog({
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie przypisac zmiany.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się przypisać zmiany.'))
       }
 
-      toast.success('Zmiana zostala przypisana.')
+      toast.success('Zmiana została przypisana.')
       onOpenChange(false)
       await onAssigned()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie przypisac zmiany.'
+      const message = error instanceof Error ? error.message : 'Nie udało się przypisać zmiany.'
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -202,7 +202,7 @@ function ShiftAssignDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Przypisz zmiane</DialogTitle>
+          <DialogTitle>Przypisz zmianę</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -218,14 +218,14 @@ function ShiftAssignDialog({
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="template">Ze szablonu</TabsTrigger>
-              <TabsTrigger value="manual">Manual</TabsTrigger>
+              <TabsTrigger value="manual">Ręcznie</TabsTrigger>
             </TabsList>
 
             <TabsContent value="template" className="space-y-2">
               <Label htmlFor="shift-template">Szablon</Label>
               <Select value={templateId} onValueChange={setTemplateId}>
                 <SelectTrigger id="shift-template">
-                  <SelectValue placeholder={isTemplatesLoading ? 'Ladowanie...' : 'Wybierz szablon'} />
+                  <SelectValue placeholder={isTemplatesLoading ? 'Ładowanie...' : 'Wybierz szablon'} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((template) => (
@@ -236,7 +236,7 @@ function ShiftAssignDialog({
                 </SelectContent>
               </Select>
               {!isTemplatesLoading && templates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Brak aktywnych szablonow zmian.</p>
+                <p className="text-sm text-muted-foreground">Brak aktywnych szablonów zmian.</p>
               ) : null}
             </TabsContent>
 
@@ -328,13 +328,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac zmian.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać zmian.'))
       }
 
       const data = (await response.json()) as EmployeeShiftsResponse
       setShifts(data.shifts ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać zmian.'
       toast.error(message)
       setShifts([])
     } finally {
@@ -352,13 +352,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie pobrac szablonow zmian.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się pobrać szablonów zmian.'))
       }
 
       const data = (await response.json()) as ShiftTemplatesResponse
       setTemplates(data.templates ?? [])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie pobrac szablonow zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się pobrać szablonów zmian.'
       toast.error(message)
       setTemplates([])
     } finally {
@@ -415,7 +415,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
     const selectedDays = weekDays.filter((_, index) => weekApplyDays[index])
 
     if (selectedDays.length === 0) {
-      toast.error('Wybierz przynajmniej jeden dzien.')
+      toast.error('Wybierz przynajmniej jeden dzień.')
       return
     }
 
@@ -438,16 +438,16 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
           })
 
           if (!response.ok) {
-            throw new Error(await getErrorMessage(response, 'Nie udalo sie przypisac zmiany.'))
+            throw new Error(await getErrorMessage(response, 'Nie udało się przypisać zmiany.'))
           }
         })
       )
 
-      toast.success('Zmiany zostaly przypisane.')
+      toast.success('Zmiany zostały przypisane.')
       setIsWeekApplyDialogOpen(false)
       await fetchShifts()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie przypisac zmian.'
+      const message = error instanceof Error ? error.message : 'Nie udało się przypisać zmian.'
       toast.error(message)
     } finally {
       setIsApplyingWeek(false)
@@ -455,7 +455,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
   }
 
   const handleDeleteShift = async (shift: EmployeeShift): Promise<void> => {
-    const confirmDelete = window.confirm('Usunac te zmiane?')
+    const confirmDelete = window.confirm('Usunąć tę zmianę?')
 
     if (!confirmDelete) {
       return
@@ -469,13 +469,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
       })
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Nie udalo sie usunac zmiany.'))
+        throw new Error(await getErrorMessage(response, 'Nie udało się usunąć zmiany.'))
       }
 
-      toast.success('Zmiana zostala usunieta.')
+      toast.success('Zmiana została usunięta.')
       await fetchShifts()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udalo sie usunac zmiany.'
+      const message = error instanceof Error ? error.message : 'Nie udało się usunąć zmiany.'
       toast.error(message)
     } finally {
       setDeletingShiftId(null)
@@ -483,13 +483,13 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
   }
 
   return (
-    <>
-      <Card>
+    <div className="flex items-start gap-4">
+      <Card className="flex-1 min-w-0">
         <CardHeader className="space-y-5">
           <div className="space-y-1">
             <CardTitle className="text-lg">Zmiany pracownika</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Przegladaj i przypisuj zmiany w ukladzie tygodniowym.
+              Przeglądaj i przypisuj zmiany w układzie tygodniowym.
             </p>
           </div>
 
@@ -500,7 +500,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
               size="icon"
               className="h-9 w-9 rounded-full"
               onClick={() => setCurrentWeekStart((value) => addWeeks(value, -1))}
-              aria-label="Poprzedni tydzien"
+              aria-label="Poprzedni tydzień"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -511,7 +511,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
               size="icon"
               className="h-9 w-9 rounded-full"
               onClick={() => setCurrentWeekStart((value) => addWeeks(value, 1))}
-              aria-label="Nastepny tydzien"
+              aria-label="Następny tydzień"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -521,14 +521,14 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
               size="sm"
               onClick={() => setIsWeekApplyDialogOpen(true)}
             >
-              {'Zastosuj na tydzie\u0144'}
+              Zastosuj na tydzień
             </Button>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {isLoadingShifts ? (
-            <p className="text-sm text-muted-foreground">Ladowanie zmian...</p>
+            <p className="text-sm text-muted-foreground">Ładowanie zmian...</p>
           ) : null}
 
           <div className="grid grid-cols-7 gap-2">
@@ -552,7 +552,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                       </p>
                       <p className="text-2xl font-semibold leading-none">{format(day, 'd')}</p>
                     </div>
-                    {isToday ? <Badge variant="secondary">Dzis</Badge> : null}
+                    {isToday ? <Badge variant="secondary">Dziś</Badge> : null}
                   </div>
 
                   <div className="flex w-full flex-1 items-center justify-center px-2">
@@ -576,7 +576,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                           className="absolute right-1 top-1 h-4 w-4 rounded-full bg-white/20 text-white hover:bg-white/30 hover:text-white"
                           onClick={() => void handleDeleteShift(shift)}
                           disabled={deletingShiftId === shift.id}
-                          aria-label="Usun zmiane"
+                          aria-label="Usuń zmianę"
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -588,7 +588,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                         size="icon"
                         className="h-7 w-7 rounded-full"
                         onClick={() => handleOpenAssignDialog(day)}
-                        aria-label={`Dodaj zmiane ${format(day, 'dd.MM.yyyy')}`}
+                        aria-label={`Dodaj zmianę ${format(day, 'dd.MM.yyyy')}`}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -603,14 +603,14 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
             <div className="space-y-1">
               <h3 className="text-sm font-semibold">Zasady i szablony</h3>
               <p className="text-sm text-muted-foreground">
-                Otworz panel boczny, aby zarzadzac automatyzacjami i dostepnymi zmianami.
+                Otwórz panel boczny, aby zarządzać automatyzacjami i dostępnymi zmianami.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setSidePanelMode('rules')}>
                 <Settings className="mr-2 h-4 w-4" />
-                Zarzadzaj zasadami
+                Zarządzaj zasadami
               </Button>
               <Button
                 type="button"
@@ -619,7 +619,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                 onClick={() => setSidePanelMode('templates')}
               >
                 <Calendar className="mr-2 h-4 w-4" />
-                Zarzadzaj szablonami
+                Zarządzaj szablonami
               </Button>
             </div>
           </div>
@@ -646,7 +646,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                 <Label htmlFor="week-apply-template">Szablon</Label>
                 <Select value={weekApplyTemplateId} onValueChange={setWeekApplyTemplateId}>
                   <SelectTrigger id="week-apply-template">
-                    <SelectValue placeholder={isLoadingTemplates ? 'Ladowanie...' : 'Wybierz szablon'} />
+                    <SelectValue placeholder={isLoadingTemplates ? 'Ładowanie...' : 'Wybierz szablon'} />
                   </SelectTrigger>
                   <SelectContent>
                     {templates.map((template) => (
@@ -657,7 +657,7 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
                   </SelectContent>
                 </Select>
                 {!isLoadingTemplates && templates.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Brak aktywnych szablonow zmian.</p>
+                  <p className="text-sm text-muted-foreground">Brak aktywnych szablonów zmian.</p>
                 ) : null}
               </div>
 
@@ -705,6 +705,6 @@ export function EmployeeShiftsTab({ employeeId }: EmployeeShiftsTabProps): React
         mode={sidePanelMode ?? 'rules'}
         employeeId={employeeId}
       />
-    </>
+    </div>
   )
 }

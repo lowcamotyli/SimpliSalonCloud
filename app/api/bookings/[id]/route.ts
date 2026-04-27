@@ -6,6 +6,8 @@ import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from
 import type { Database } from '@/types/supabase'
 import { BUSINESS_HOURS } from '@/lib/constants'
 import { checkEquipmentAvailability, getRequiredEquipmentForService } from '@/lib/equipment/availability'
+import { canEmployeePerformService } from '@/lib/bookings/employee-service-authorization'
+import { findTimeReservationConflict, formatTimeReservationConflictMessage } from '@/lib/bookings/time-reservation-conflicts'
 
 type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 type BookingAddonInsert = Database['public']['Tables']['booking_addons']['Insert']
@@ -138,28 +140,15 @@ export const PATCH = withErrorHandling(async (
       throw new ValidationError('Service not found in this salon')
     }
 
-    const { count: serviceAssignmentCount, error: assignmentCountError } = await supabase
-      .from('employee_services')
-      .select('*', { count: 'exact', head: true })
-      .eq('salon_id', currentBooking.salon_id)
-      .eq('service_id', targetServiceId)
+    const canPerformService = await canEmployeePerformService(
+      supabase as any,
+      currentBooking.salon_id,
+      targetEmployeeId,
+      targetServiceId
+    )
 
-    if (assignmentCountError) throw assignmentCountError
-
-    if ((serviceAssignmentCount ?? 0) > 0) {
-      const { data: employeeService, error: employeeServiceError } = await supabase
-        .from('employee_services')
-        .select('id')
-        .eq('salon_id', currentBooking.salon_id)
-        .eq('employee_id', targetEmployeeId)
-        .eq('service_id', targetServiceId)
-        .maybeSingle()
-
-      if (employeeServiceError) throw employeeServiceError
-
-      if (!employeeService) {
-        throw new ValidationError('Employee is not authorized to perform this service')
-      }
+    if (!canPerformService) {
+      throw new ValidationError('Employee is not authorized to perform this service')
     }
 
     targetBasePrice = Number((service as any).price ?? 0)
@@ -210,6 +199,19 @@ export const PATCH = withErrorHandling(async (
 
     if (hasConflict) {
       throw new ConflictError('Wybrany termin koliduje z inna wizyta')
+    }
+
+    const timeReservationConflict = await findTimeReservationConflict({
+      supabase: supabase as any,
+      salonId: currentBooking.salon_id,
+      employeeId: targetEmployeeId,
+      date: targetDate,
+      startTime: targetStartTime,
+      durationMinutes: targetDuration,
+    })
+
+    if (timeReservationConflict) {
+      throw new ConflictError(formatTimeReservationConflictMessage(timeReservationConflict))
     }
   }
 
