@@ -59,13 +59,13 @@ import { ImageUpload } from '@/components/ui/image-upload'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { formatPrice } from '@/lib/formatters'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RBAC_ROLES, Role } from '@/lib/rbac/role-maps'
+import { ObjectCell } from '@/components/objects/ObjectCell'
 
 const employeeFormSchema = z.object({
   firstName: z.string().min(2, 'Minimum 2 znaki'),
@@ -309,7 +309,7 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+    <div className="mx-auto max-w-[1440px] space-y-8 px-4 pb-10 sm:px-0">
       {/* Header & Main Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="space-y-1">
@@ -329,8 +329,8 @@ export default function EmployeesPage() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Users className="h-6 w-6" />
           </div>
@@ -339,7 +339,7 @@ export default function EmployeesPage() {
             <p className="text-2xl font-black text-gray-900">{stats.total}</p>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
             <CheckCircle2 className="h-6 w-6" />
           </div>
@@ -348,7 +348,7 @@ export default function EmployeesPage() {
             <p className="text-2xl font-black text-gray-900">{stats.active}</p>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
             <TrendingUp className="h-6 w-6" />
           </div>
@@ -359,8 +359,8 @@ export default function EmployeesPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="lista">
-        <TabsList className="mb-2">
+      <Tabs defaultValue={searchParams.get('tab') === 'grafik' ? 'grafik' : 'lista'}>
+        <TabsList className="mb-2 rounded-full border border-slate-200 bg-slate-50 p-1">
           <TabsTrigger value="lista">Lista pracowników</TabsTrigger>
           <TabsTrigger value="grafik">Grafik</TabsTrigger>
         </TabsList>
@@ -379,14 +379,14 @@ export default function EmployeesPage() {
         {/* ── ZAKŁADKA: LISTA ── */}
         <TabsContent value="lista" className="space-y-6">
           {/* Search Bar */}
-          <Card className="p-4 glass border-none shadow-xl shadow-slate-200/50">
+          <Card className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Szukaj po imieniu, nazwisku, emailu lub telefonie..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+                className="h-11 rounded-full border-slate-300 bg-white pl-12 text-sm transition-all focus-visible:ring-2 focus-visible:ring-emerald-600/25"
               />
             </div>
           </Card>
@@ -403,51 +403,26 @@ export default function EmployeesPage() {
               <AnimatePresence mode="popLayout">
                 {filteredEmployees.map((employee) => (
                   <motion.div key={employee.id} layout variants={itemVariants}>
-                    <Card className="group relative overflow-hidden p-6 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10">
+                    <Card className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:shadow-md">
                       <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-14 w-14 shrink-0 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border-2 border-white shadow-inner">
-                          {employee.avatar_url ? (
-                            <Image
-                              src={employee.avatar_url}
-                              alt={employee.first_name}
-                              fill
-                              className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary text-lg font-black">
-                              {employee.first_name[0]}{employee.last_name?.[0] || ''}
-                            </div>
+                        <ObjectCell
+                          type="worker"
+                          id={employee.id}
+                          label={((employee as any).full_name ?? (employee as any).name ?? `${employee.first_name} ${employee.last_name ?? ''}`).trim()}
+                          slug={slug}
+                          meta={(employee as any).position ?? employee.role ?? undefined}
+                          avatarUrl={employee.avatar_url ?? undefined}
+                          showActions={true}
+                        />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
+                            Kod: {employee.employee_code}
+                          </p>
+                          {!employee.user_id && (
+                            <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
+                              Brak konta
+                            </Badge>
                           )}
-
-                          {employee.active ? (
-                            <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
-                          ) : (
-                            <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white" />
-                          )}
-                          </div>
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="truncate text-lg font-black text-foreground">
-                                {employee.first_name} {employee.last_name}
-                              </h3>
-                              {employee.role && (
-                                <Badge variant="secondary" className="uppercase tracking-wider text-[10px]">
-                                  {employee.role}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
-                                Kod: {employee.employee_code}
-                              </p>
-                              {!employee.user_id && (
-                                <Badge variant="outline" className="uppercase tracking-wider text-[10px] text-rose-600 border-rose-200">
-                                  Brak konta
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
                         </div>
 
                         <div className="w-full space-y-2 py-2">
@@ -527,7 +502,7 @@ export default function EmployeesPage() {
               </AnimatePresence>
             </motion.div>
           ) : (
-            <Card className="flex flex-col items-center justify-center py-24 px-6 text-center glass border-dashed border-2 border-gray-200">
+            <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white px-6 py-24 text-center">
               <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6">
                 {search ? <Search className="h-10 w-10 text-gray-300" /> : <Sparkles className="h-10 w-10 text-gray-300" />}
               </div>
@@ -553,7 +528,7 @@ export default function EmployeesPage() {
 
       {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] rounded-2xl border border-slate-200 bg-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">
               {editingEmployee ? 'Edytuj pracownika' : 'Dodaj pracownika'}
@@ -756,7 +731,7 @@ export default function EmployeesPage() {
 
       {/* Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] rounded-2xl border border-slate-200 bg-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">Zmień rolę</DialogTitle>
             <DialogDescription>
@@ -813,7 +788,7 @@ export default function EmployeesPage() {
 
       {/* Link Account Dialog */}
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg glass rounded-2xl">
+        <DialogContent className="max-w-[95vw] rounded-2xl border border-slate-200 bg-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl font-black">Powiąż konto</DialogTitle>
             <DialogDescription>

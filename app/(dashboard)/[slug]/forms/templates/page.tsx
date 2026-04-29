@@ -320,8 +320,8 @@ export default function FormTemplatesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
-            <Card key={template.id} className="flex flex-col">
-              <CardHeader>
+            <Card key={template.id} className="flex flex-col border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md">
+              <CardHeader className="border-b">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-xl">{template.name}</CardTitle>
@@ -344,7 +344,7 @@ export default function FormTemplatesPage() {
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="grid grid-cols-2 gap-2 border-t pt-4">
+              <CardFooter className="grid grid-cols-2 gap-2 border-t bg-muted/20 pt-4">
                 <Button variant="ghost" size="sm" className="col-span-2 text-blue-600 hover:text-blue-700" onClick={() => setPreviewTemplate(template)}>
                   <Eye className="mr-2 h-3.5 w-3.5" /> Podgląd
                 </Button>

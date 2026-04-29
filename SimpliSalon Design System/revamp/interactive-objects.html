@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>SimpliSalon · 09 Interactive Objects + Related Actions</title>
+<link rel="stylesheet" href="tokens-v3.css?v=fraunces">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--v3-bg); color: var(--v3-text-primary); }
+
+  .page { max-width: 1440px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Headings (mirror revamp.html) */
+  .eyebrow { font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v3-gold); margin-bottom: 12px; }
+  .page-title { font-family: var(--v3-font-display); font-size: 44px; font-weight: 600; letter-spacing: -0.025em; color: var(--v3-text-primary); margin: 0; }
+  .page-sub { font-size: 16px; color: var(--v3-text-secondary); margin: 8px 0 0; max-width: 760px; line-height: 1.6; }
+
+  .section { background: var(--v3-surface); border: 1px solid var(--v3-border); border-radius: var(--v3-r-md); margin-bottom: 32px; overflow: hidden; }
+  .section-head { padding: 20px 28px; border-bottom: 1px solid var(--v3-border); display: flex; align-items: baseline; justify-content: space-between; background: linear-gradient(180deg, #fff, #fcfcfb); }
+  .section-head h2 { font-family: var(--v3-font-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--v3-secondary); margin: 0; }
+  .section-head .num { font-family: var(--v3-font-display); font-style: italic; font-size: 14px; color: var(--v3-gold); }
+  .section-body { padding: 28px; }
+
+  .label-mini { font-family: var(--v3-font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--v3-text-secondary); margin-bottom: 10px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .stack > * + * { margin-top: 12px; }
+
+  .demo-block { background: var(--v3-bg-alt); border: 1px dashed var(--v3-border); border-radius: var(--v3-r); padding: 20px; }
+  .demo-block.plain { background: #fff; border-style: solid; }
+
+  /* ===========================================================
+     OBJECT SYSTEM — core tokens
+     - .obj wraps any interactive object reference
+     - data-obj-type drives the type-color (left dot / icon)
+     - hover/focus/open are unified across variants
+     =========================================================== */
+
+  /* type colors as data-attr lookup */
+  .obj { --obj-color: var(--v3-text-secondary); --obj-bg: var(--v3-bg-alt); }
+  .obj[data-obj-type="client"]   { --obj-color: #276FB7; --obj-bg: var(--v3-secondary-soft); }
+  .obj[data-obj-type="worker"]   { --obj-color: #32855F; --obj-bg: var(--v3-primary-soft); }
+  .obj[data-obj-type="service"]  { --obj-color: #B88A43; --obj-bg: var(--v3-gold-soft); }
+  .obj[data-obj-type="booking"]  { --obj-color: #6E59C7; --obj-bg: #ECE7F8; }
+  .obj[data-obj-type="salon"]    { --obj-color: #0875E1; --obj-bg: #E1EEFB; }
+
+  /* avatars / icon dot used in all variants */
+  .obj-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--obj-bg); color: var(--obj-color);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: var(--v3-font-ui); font-size: 10px; font-weight: 700;
+  }
+  .obj-dot svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .obj-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--obj-bg); color: var(--obj-color);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700;
+  }
+  .obj-avatar.lg { width: 40px; height: 40px; font-size: 13px; }
+  .obj-avatar.sm { width: 22px; height: 22px; font-size: 10px; }
+
+  /* ----- 1. ObjectLink inline ----- */
+  .obj-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--v3-font-ui); font-size: 14px; font-weight: 500;
+    color: var(--v3-text-primary); text-decoration: none; cursor: pointer;
+    border-radius: var(--v3-r-sm); padding: 1px 4px; margin: 0 -4px;
+    border-bottom: 1px dotted transparent;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+  }
+  .obj-link::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--obj-color); flex-shrink: 0;
+  }
+  .obj-link:hover { color: var(--obj-color); border-bottom-color: var(--obj-color); }
+  .obj-link:focus-visible { outline: none; box-shadow: var(--v3-shadow-focus); background: var(--obj-bg); }
+  .obj-link.is-disabled { color: var(--v3-text-disabled); pointer-events: none; }
+  .obj-link.is-disabled::before { background: var(--v3-text-disabled); }
+  .obj-link.is-missing { color: var(--v3-text-secondary); font-style: italic; }
+  .obj-link.is-missing::before { background: transparent; border: 1px dashed var(--v3-border-strong); width: 6px; height: 6px; }
+
+  /* trigger that sits next to a link / pill */
+  .obj-trigger {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: transparent; border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--v3-text-secondary);
+    transition: background 160ms, color 160ms;
+  }
+  .obj-trigger:hover { background: var(--v3-bg-alt); color: var(--v3-text-primary); }
+  .obj-trigger:focus-visible { outline: none; box-shadow: var(--v3-shadow-focus); }
+  .obj-trigger.is-open { background: var(--obj-bg); color: var(--obj-color); }
+  .obj-trigger svg { width: 14px; height: 14px; }
+
+  /* ----- 2. ObjectPill compact ----- */
+  .obj-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 28px; padding: 0 4px 0 8px;
+    background: #fff; border: 1px solid var(--v3-border); border-radius: var(--v3-r-pill);
+    font-family: var(--v3-font-ui); font-size: 13px; font-weight: 500; color: var(--v3-text-primary);
+    cursor: pointer; transition: all 160ms; max-width: 100%;
+  }
+  .obj-pill .pill-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  .obj-pill:hover { border-color: var(--obj-color); background: var(--obj-bg); color: var(--obj-color); }
+  .obj-pill:focus-visible { outline: none; border-color: var(--obj-color); box-shadow: var(--v3-shadow-focus); }
+  .obj-pill.is-open { border-color: var(--obj-color); background: var(--obj-bg); color: var(--obj-color); }
+  .obj-pill.is-disabled { color: var(--v3-text-disabled); border-color: var(--v3-border); pointer-events: none; }
+  .obj-pill.is-loading .obj-avatar { background: var(--v3-bg-alt); color: var(--v3-text-disabled); }
+  .obj-pill.is-loading .pill-name {
+    width: 80px; height: 10px; border-radius: 4px; color: transparent;
+    background: linear-gradient(90deg, #EEF1F4 0%, #F7F8FA 50%, #EEF1F4 100%);
+    background-size: 200% 100%; animation: shimmer 1.2s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .obj-pill.is-missing { color: var(--v3-text-secondary); font-style: italic; border-style: dashed; }
+  .obj-pill.is-missing .obj-avatar { background: transparent; border: 1px dashed var(--v3-border-strong); color: var(--v3-text-secondary); }
+  .obj-pill.is-destructive { border-color: var(--v3-error); color: var(--v3-error); background: var(--v3-error-bg); }
+  .obj-pill.is-destructive .obj-avatar { background: #fff; color: var(--v3-error); }
+
+  .obj-pill .pill-trigger {
+    width: 22px; height: 22px; margin-left: 4px;
+    border-radius: 50%; border: 0; background: transparent; color: inherit;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 0.7; transition: all 140ms;
+  }
+  .obj-pill:hover .pill-trigger, .obj-pill.is-open .pill-trigger { opacity: 1; background: rgba(255,255,255,0.6); }
+  .obj-pill .pill-trigger svg { width: 12px; height: 12px; }
+
+  /* ----- 3. Object row inside booking card ----- */
+  .booking-card-mock {
+    background: #fff; border: 1px solid var(--v3-border); border-radius: var(--v3-r-md);
+    padding: 16px 18px; box-shadow: var(--v3-shadow-card);
+    display: grid; grid-template-columns: 64px 4px 1fr auto; gap: 14px; align-items: center;
+    cursor: pointer; transition: all 180ms;
+  }
+  .booking-card-mock:hover { border-color: var(--v3-border-strong); box-shadow: var(--v3-shadow-card-hover); }
+  .booking-card-mock .bc-time { font-family: var(--v3-font-ui); font-size: 13px; color: var(--v3-text-secondary); font-variant-numeric: tabular-nums; }
+  .booking-card-mock .bc-time strong { display: block; color: var(--v3-text-primary); font-size: 15px; font-weight: 700; }
+  .booking-card-mock .bc-bar { width: 4px; height: 52px; border-radius: 2px; background: var(--v3-secondary); }
+  .booking-card-mock .bc-body { min-width: 0; }
+  .booking-card-mock .bc-actions { display: flex; gap: 4px; align-items: center; }
+
+  /* the inline object rows inside a booking card — small + dense */
+  .obj-row {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 6px 4px 4px; border-radius: var(--v3-r-sm);
+    transition: background 140ms;
+  }
+  .obj-row:hover { background: var(--v3-bg-alt); }
+  .obj-row .obj-link { padding: 0; margin: 0; font-size: 13.5px; }
+  .obj-row .obj-link::before { display: none; }
+  .obj-row .role-tag {
+    font-family: var(--v3-font-ui); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--obj-color); background: var(--obj-bg); padding: 2px 6px; border-radius: 3px;
+  }
+  .obj-row-stack { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+
+  /* booking title row uses serif name */
+  .bc-title { font-family: var(--v3-font-display); font-size: 17px; font-weight: 600; color: var(--v3-text-primary); margin: 0 0 4px; letter-spacing: -0.005em; }
+
+  /* ----- 4. RelatedActions dropdown ----- */
+  .ra-anchor { position: relative; display: inline-block; }
+  .ra-menu {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+    min-width: 248px; background: #fff;
+    border: 1px solid var(--v3-border); border-radius: var(--v3-r-md);
+    box-shadow: var(--v3-shadow-modal); padding: 6px;
+    font-family: var(--v3-font-ui);
+  }
+  .ra-menu.right { left: auto; right: 0; }
+  .ra-menu .ra-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px 12px; border-bottom: 1px solid var(--v3-border); margin-bottom: 6px;
+  }
+  .ra-menu .ra-head .ra-meta-name { font-family: var(--v3-font-ui); font-size: 13.5px; font-weight: 700; color: var(--v3-text-primary); }
+  .ra-menu .ra-head .ra-meta-sub { font-size: 11.5px; color: var(--v3-text-secondary); }
+
+  .ra-group { padding: 4px 0; }
+  .ra-group + .ra-group { border-top: 1px solid var(--v3-border); margin-top: 4px; padding-top: 6px; }
+  .ra-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--v3-text-secondary); padding: 6px 10px 4px; }
+
+  .ra-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 8px 10px; border-radius: var(--v3-r-sm);
+    background: transparent; border: 0; cursor: pointer; text-align: left;
+    font-family: var(--v3-font-ui); font-size: 13.5px; color: var(--v3-text-primary);
+    transition: background 120ms, color 120ms;
+  }
+  .ra-item:hover { background: var(--v3-bg-alt); }
+  .ra-item:focus-visible { outline: none; background: var(--v3-secondary-soft); color: var(--v3-secondary); }
+  .ra-item .ra-icon { width: 16px; height: 16px; color: var(--v3-text-secondary); flex-shrink: 0; }
+  .ra-item:hover .ra-icon { color: var(--obj-color, var(--v3-secondary)); }
+  .ra-item .ra-shortcut { margin-left: auto; font-family: 'SF Mono', ui-monospace, Menlo, monospace; font-size: 11px; color: var(--v3-text-secondary); }
+  .ra-item.is-primary { color: var(--v3-primary); font-weight: 600; }
+  .ra-item.is-primary .ra-icon { color: var(--v3-primary); }
+  .ra-item.is-destructive { color: var(--v3-error); }
+  .ra-item.is-destructive .ra-icon { color: var(--v3-error); }
+  .ra-item.is-destructive:hover { background: var(--v3-error-bg); }
+  .ra-item.is-disabled { color: var(--v3-text-disabled); cursor: not-allowed; }
+  .ra-item.is-disabled .ra-icon { color: var(--v3-text-disabled); }
+  .ra-item.is-disabled:hover { background: transparent; }
+  .ra-item.is-loading .ra-icon { animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ----- 5. Rich Object Preview popover ----- */
+  .preview {
+    width: 320px; background: #fff; border: 1px solid var(--v3-border);
+    border-radius: var(--v3-r-md); box-shadow: var(--v3-shadow-modal); overflow: hidden;
+  }
+  .preview-head { padding: 16px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--v3-border); }
+  .preview-head .pv-name { font-family: var(--v3-font-display); font-size: 18px; font-weight: 600; color: var(--v3-text-primary); margin: 0; letter-spacing: -0.005em; }
+  .preview-head .pv-sub { font-size: 12px; color: var(--v3-text-secondary); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .preview-head .obj-avatar.lg { font-size: 14px; }
+  .preview-meta { padding: 14px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  .preview-meta .mk { font-size: 11px; font-weight: 600; color: var(--v3-text-secondary); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
+  .preview-meta .mv { font-family: var(--v3-font-ui); font-size: 13px; font-weight: 600; color: var(--v3-text-primary); }
+  .preview-meta .mv.gold { font-family: var(--v3-font-display); color: var(--v3-gold); }
+  .preview-actions { display: flex; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--v3-border); background: var(--v3-bg-alt); }
+  .preview-actions .btn-mini {
+    height: 32px; padding: 0 12px; border-radius: var(--v3-r-pill);
+    font-family: var(--v3-font-ui); font-size: 12.5px; font-weight: 600;
+    border: 1px solid var(--v3-border); background: #fff; color: var(--v3-text-primary); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 140ms;
+  }
+  .preview-actions .btn-mini:hover { border-color: var(--obj-color, var(--v3-text-secondary)); color: var(--obj-color, var(--v3-text-primary)); }
+  .preview-actions .btn-mini.is-primary { background: var(--v3-primary); color: #fff; border-color: var(--v3-primary); }
+  .preview-actions .btn-mini.is-primary:hover { background: var(--v3-primary-hover); }
+  .preview-actions .btn-mini svg { width: 12px; height: 12px; }
+  .preview-actions .more { margin-left: auto; }
+
+  /* ----- 6. Table cell object variant ----- */
+  .obj-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .obj-table thead th { background: var(--v3-bg-alt); padding: 10px 14px; text-align: left; font-family: var(--v3-font-ui); font-weight: 600; font-size: 12.5px; color: var(--v3-text-primary); border-bottom: 1px solid var(--v3-border); }
+  .obj-table thead th:last-child { width: 40px; }
+  .obj-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--v3-border); color: var(--v3-text-primary); vertical-align: middle; }
+  .obj-table tbody tr { transition: background 120ms; cursor: pointer; }
+  .obj-table tbody tr:hover td { background: var(--v3-secondary-soft); }
+  .obj-table tbody tr:hover .row-trigger { opacity: 1; }
+  .row-trigger {
+    width: 26px; height: 26px; border-radius: 50%; border: 0; background: transparent;
+    color: var(--v3-text-secondary); cursor: pointer; opacity: 0.4;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 140ms;
+  }
+  .row-trigger:hover { background: #fff; color: var(--v3-text-primary); box-shadow: var(--v3-shadow-card); }
+  .row-trigger.is-open { opacity: 1; background: #fff; color: var(--v3-secondary); box-shadow: var(--v3-shadow-card); }
+
+  .obj-cell { display: flex; align-items: center; gap: 10px; }
+  .obj-cell .name { font-weight: 600; color: var(--v3-text-primary); }
+  .obj-cell .name:hover { color: var(--obj-color); text-decoration: underline; }
+  .obj-cell .sub { font-size: 12px; color: var(--v3-text-secondary); }
+
+  /* ----- 7. Mobile variant ----- */
+  .mobile { width: 360px; background: #fff; border: 1px solid var(--v3-border); border-radius: 16px; overflow: hidden; box-shadow: var(--v3-shadow-card); }
+  .mobile-head { padding: 14px 16px; border-bottom: 1px solid var(--v3-border); display: flex; align-items: center; justify-content: space-between; }
+  .mobile-head h3 { font-family: var(--v3-font-display); font-size: 17px; font-weight: 600; margin: 0; }
+  .mobile-card { padding: 14px 16px; border-bottom: 1px solid var(--v3-border); }
+  .mobile-card:last-child { border-bottom: 0; }
+  .mobile-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .mobile-row .obj-avatar { width: 32px; height: 32px; }
+  .mobile-row .name { font-family: var(--v3-font-ui); font-weight: 600; font-size: 14px; color: var(--v3-text-primary); }
+  .mobile-row .sub { font-size: 12px; color: var(--v3-text-secondary); }
+  .mobile-row .grow { flex: 1; min-width: 0; }
+  .mobile-row .chev {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--v3-bg-alt);
+    color: var(--v3-text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .mobile-row .chev:active { background: var(--obj-bg); color: var(--obj-color); }
+
+  /* mobile bottom action sheet */
+  .sheet { width: 360px; border: 1px solid var(--v3-border); border-radius: 16px; overflow: hidden; background: #fff; box-shadow: var(--v3-shadow-modal); }
+  .sheet-grab { width: 36px; height: 4px; border-radius: 2px; background: var(--v3-border-strong); margin: 10px auto 6px; }
+  .sheet-head { padding: 8px 16px 14px; border-bottom: 1px solid var(--v3-border); display: flex; gap: 12px; align-items: center; }
+  .sheet-head .obj-avatar.lg { width: 44px; height: 44px; font-size: 14px; }
+  .sheet-head .pv-name { font-family: var(--v3-font-display); font-size: 18px; font-weight: 600; margin: 0; }
+  .sheet-head .pv-sub { font-size: 12px; color: var(--v3-text-secondary); }
+  .sheet-list { padding: 6px 8px 12px; }
+  .sheet-item {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; padding: 14px 12px; border-radius: var(--v3-r);
+    background: transparent; border: 0; text-align: left; cursor: pointer;
+    font-family: var(--v3-font-ui); font-size: 15px; font-weight: 500; color: var(--v3-text-primary);
+  }
+  .sheet-item:active { background: var(--v3-bg-alt); }
+  .sheet-item.is-destructive { color: var(--v3-error); }
+  .sheet-item .ra-icon { width: 18px; height: 18px; color: var(--v3-text-secondary); }
+  .sheet-item.is-destructive .ra-icon { color: var(--v3-error); }
+
+  /* spec list */
+  .spec { font-family: var(--v3-font-ui); font-size: 13.5px; color: var(--v3-text-primary); line-height: 1.6; }
+  .spec li { margin: 6px 0; }
+  .spec code { background: var(--v3-bg-alt); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--v3-border); font-family: 'SF Mono', monospace; font-size: 12px; }
+  .spec strong { color: var(--v3-secondary); }
+
+  /* type-color legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 8px; font-family: var(--v3-font-ui); font-size: 13px; color: var(--v3-text-primary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .figcap { font-family: var(--v3-font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--v3-text-secondary); margin-bottom: 12px; }
+  .annot { font-size: 12px; color: var(--v3-text-secondary); margin-top: 8px; line-height: 1.5; }
+</style>
+</head>
+<body class="v3">
+  <div class="page">
+
+    <!-- Header -->
+    <header style="margin-bottom: 32px;">
+      <div class="eyebrow">SimpliSalon · Revamp v3 · Sekcja 09</div>
+      <h1 class="page-title">Interactive Objects + <em style="color: var(--v3-gold); font-style: italic;">Related Actions</em></h1>
+      <p class="page-sub">
+        Każdy obiekt biznesowy (klientka, pracownik, usługa, rezerwacja, salon) jest
+        klikalny i ma własny zestaw szybkich akcji. Spec definiuje 7 wariantów wizualnych
+        i jednolity protokół zachowań — bez nowej palety, na tokenach v3.
+      </p>
+    </header>
+
+    <!-- ============= 09.0 · LEGEND + RULES ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09 · Zasady i typy obiektów</h2><span class="num">ix.</span></div>
+      <div class="section-body">
+
+        <div class="grid-2" style="margin-bottom: 24px;">
+          <div>
+            <div class="label-mini">Trzy strefy klikalne</div>
+            <ul class="spec">
+              <li><strong>Nazwa / avatar</strong> obiektu → przejście na stronę obiektu (<code>navigate(obj)</code>).</li>
+              <li><strong>Trigger</strong> <code>···</code> lub chevron → otwiera <em>RelatedActions</em>.</li>
+              <li><strong>Pusta część rzędu rezerwacji</strong> → otwiera szczegóły rezerwacji jako jeden obiekt.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="label-mini">Typ obiektu = kolor + ikona (na bazie tokenów v3)</div>
+            <div class="legend">
+              <span class="legend-item"><span class="legend-dot" style="background: #276FB7;"></span> client · błękit</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #32855F;"></span> worker · zieleń</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #B88A43;"></span> service · złoto</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #6E59C7;"></span> booking · fiolet</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #0875E1;"></span> salon · accent</span>
+            </div>
+            <p class="annot">Fiolet (booking) i error/destructive zostają nieujęte w paleteie brand — używamy ich tylko jako semantycznego cienia (booking inherituje neutralny wygląd, kolor występuje tylko w awatarze).</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============= 09.1 · OBJECT LINK INLINE ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.1 · ObjectLink — inline</h2><span class="num">x.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">Najlżejszy wariant. Kropka typu + nazwa, hover = pod-kreślenie kolorem typu. Stosować w prozie, opisach, breadcrumbach, notach.</p>
+
+        <div class="demo-block">
+          <p style="margin: 0; line-height: 1.9; font-size: 14.5px; color: var(--v3-text-primary);">
+            Wizyta dla
+            <span class="obj" data-obj-type="client"><a class="obj-link">Anna Kowalska</a></span>
+            u
+            <span class="obj" data-obj-type="worker"><a class="obj-link">Magdalena M.</a></span>
+            na
+            <span class="obj" data-obj-type="service"><a class="obj-link">Strzyżenie damskie</a></span>
+            zaplanowana w
+            <span class="obj" data-obj-type="salon"><a class="obj-link">Salon Luxe — Centrum</a></span>.
+            Powiązana rezerwacja:
+            <span class="obj" data-obj-type="booking"><a class="obj-link">#BK-2841</a></span>.
+          </p>
+        </div>
+
+        <div class="figcap" style="margin-top: 24px;">Stany</div>
+        <div class="row" style="gap: 24px; row-gap: 12px;">
+          <span class="obj" data-obj-type="client"><a class="obj-link">default</a></span>
+          <span class="obj" data-obj-type="client"><a class="obj-link" style="color: #276FB7; border-bottom: 1px dotted #276FB7;">hover</a></span>
+          <span class="obj" data-obj-type="client"><a class="obj-link" style="background: var(--v3-secondary-soft); box-shadow: var(--v3-shadow-focus);">focus</a></span>
+          <span class="obj" data-obj-type="client"><a class="obj-link is-disabled">disabled</a></span>
+          <span class="obj"><a class="obj-link is-missing">— klient usunięty —</a></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.2 · OBJECT PILL COMPACT ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.2 · ObjectPill — compact</h2><span class="num">xi.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">Avatar + nazwa + trigger. Dwa hit-targets w jednym pillu. Stosować w listach, filtrach, na kartach, w polach formularza (selected value).</p>
+
+        <div class="figcap">Każdy typ</div>
+        <div class="row" style="margin-bottom: 28px;">
+          <span class="obj" data-obj-type="client">
+            <span class="obj-pill"><span class="obj-avatar">AK</span><span class="pill-name">Anna Kowalska</span><button class="pill-trigger" aria-label="Akcje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+          </span>
+          <span class="obj" data-obj-type="worker">
+            <span class="obj-pill"><span class="obj-avatar">MM</span><span class="pill-name">Magdalena M.</span><button class="pill-trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+          </span>
+          <span class="obj" data-obj-type="service">
+            <span class="obj-pill"><span class="obj-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2v6l-3 3v9h18v-9l-3-3V2"/><path d="M9 7h6"/></svg></span><span class="pill-name">Strzyżenie damskie</span><button class="pill-trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+          </span>
+          <span class="obj" data-obj-type="booking">
+            <span class="obj-pill"><span class="obj-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="pill-name">#BK-2841 · 14:30</span><button class="pill-trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+          </span>
+          <span class="obj" data-obj-type="salon">
+            <span class="obj-pill"><span class="obj-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span><span class="pill-name">Salon Luxe — Centrum</span><button class="pill-trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+          </span>
+        </div>
+
+        <div class="figcap">Stany</div>
+        <div class="row" style="row-gap: 12px;">
+          <span class="obj" data-obj-type="client"><span class="obj-pill"><span class="obj-avatar">AK</span><span class="pill-name">default</span></span></span>
+          <span class="obj" data-obj-type="client"><span class="obj-pill" style="border-color: #276FB7; background: var(--v3-secondary-soft); color: #276FB7;"><span class="obj-avatar">AK</span><span class="pill-name">hover</span></span></span>
+          <span class="obj" data-obj-type="client"><span class="obj-pill" style="border-color: #276FB7; box-shadow: var(--v3-shadow-focus);"><span class="obj-avatar">AK</span><span class="pill-name">focus</span></span></span>
+          <span class="obj" data-obj-type="client"><span class="obj-pill is-open"><span class="obj-avatar">AK</span><span class="pill-name">open</span><button class="pill-trigger" style="opacity:1; background: rgba(255,255,255,0.6);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span></span>
+          <span class="obj" data-obj-type="client"><span class="obj-pill is-disabled"><span class="obj-avatar">AK</span><span class="pill-name">disabled</span></span></span>
+          <span class="obj" data-obj-type="client"><span class="obj-pill is-loading"><span class="obj-avatar">··</span><span class="pill-name">loading</span></span></span>
+          <span class="obj"><span class="obj-pill is-missing"><span class="obj-avatar">?</span><span class="pill-name">brak klienta</span></span></span>
+          <span class="obj"><span class="obj-pill is-destructive"><span class="obj-avatar">!</span><span class="pill-name">konflikt</span></span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.3 · OBJECT ROW IN BOOKING CARD ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.3 · Object row inside booking card</h2><span class="num">xii.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">
+          Booking card składa się z <strong>4 osobnych obiektów</strong> w jednej karcie.
+          Klik w nazwę → strona obiektu. Klik w pustą część rzędu (białe pole, czas, pasek statusu) → szczegóły rezerwacji.
+        </p>
+
+        <div class="stack">
+          <!-- Card 1 — full state, all objects present -->
+          <div class="booking-card-mock" data-obj-type="booking" style="grid-template-columns: 64px 4px 1fr auto;">
+            <div class="bc-time"><strong>10:00</strong>11:00</div>
+            <div class="bc-bar" style="background: var(--v3-secondary);"></div>
+            <div class="bc-body">
+              <h4 class="bc-title">Strzyżenie + modelowanie</h4>
+              <div class="obj-row-stack">
+                <span class="obj" data-obj-type="client">
+                  <span class="obj-row">
+                    <span class="role-tag">Klient</span>
+                    <span class="obj-avatar sm">AK</span>
+                    <a class="obj-link">Anna Kowalska</a>
+                    <button class="obj-trigger" aria-label="Akcje klientki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+                  </span>
+                </span>
+                <span class="obj" data-obj-type="worker">
+                  <span class="obj-row">
+                    <span class="role-tag">Pracownik</span>
+                    <span class="obj-avatar sm">MM</span>
+                    <a class="obj-link">Magdalena M.</a>
+                    <button class="obj-trigger" aria-label="Akcje pracownika"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+                  </span>
+                </span>
+                <span class="obj" data-obj-type="service">
+                  <span class="obj-row">
+                    <span class="role-tag">Usługa</span>
+                    <a class="obj-link" style="font-family: var(--v3-font-display); font-size: 14.5px; font-weight: 600;">Strzyżenie damskie</a>
+                    <span style="font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold); font-size: 13px;">160 zł</span>
+                    <button class="obj-trigger" aria-label="Akcje usługi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="bc-actions">
+              <span class="badge success" style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-family:var(--v3-font-ui);font-size:11px;font-weight:600;background: var(--v3-success-bg); color: var(--v3-success);">Potwierdzona</span>
+              <button class="obj-trigger" title="Akcje rezerwacji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Card 2 — missing client + service loading -->
+          <div class="booking-card-mock">
+            <div class="bc-time"><strong>14:30</strong>16:00</div>
+            <div class="bc-bar" style="background: #B88A43;"></div>
+            <div class="bc-body">
+              <h4 class="bc-title">Koloryzacja Balayage</h4>
+              <div class="obj-row-stack">
+                <span class="obj">
+                  <span class="obj-row">
+                    <span class="role-tag" style="color: var(--v3-text-secondary); background: var(--v3-bg-alt);">Klient</span>
+                    <a class="obj-link is-missing">— walk-in, brak danych —</a>
+                    <button class="obj-trigger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+                  </span>
+                </span>
+                <span class="obj" data-obj-type="worker">
+                  <span class="obj-row">
+                    <span class="role-tag">Pracownik</span>
+                    <span class="obj-avatar sm">PK</span>
+                    <a class="obj-link">Paulina K.</a>
+                  </span>
+                </span>
+                <span class="obj" data-obj-type="service">
+                  <span class="obj-row">
+                    <span class="role-tag">Usługa</span>
+                    <span style="display:inline-block; width: 140px; height: 12px; border-radius: 4px; background: linear-gradient(90deg, #EEF1F4, #F7F8FA, #EEF1F4); background-size: 200% 100%; animation: shimmer 1.2s linear infinite;"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="bc-actions">
+              <span class="badge gold" style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-family:var(--v3-font-ui);font-size:11px;font-weight:600;background: var(--v3-gold-soft); color: var(--v3-gold); border: 1px solid #E9D6A8;">★ VIP</span>
+              <button class="obj-trigger is-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <p class="annot" style="margin-top: 16px;">
+          <strong style="color: var(--v3-secondary);">Hit-zones:</strong>
+          szare obszary tła + bc-time + bc-bar + bc-actions (poza triggerami) = otwierają szczegóły rezerwacji.
+          Każdy <code>.obj-row</code> blokuje propagację — klik trafia tylko do swojego obiektu.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============= 09.4 · RELATED ACTIONS DROPDOWN ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.4 · RelatedActions — dropdown</h2><span class="num">xiii.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">Otwierany triggerem <code>···</code> lub chevronem. Header z miniaturą obiektu, sekcje akcji rozdzielone delikatną linią, akcja destruktywna zawsze ostatnia. Min 248px.</p>
+
+        <div class="grid-3" style="gap: 22px; align-items: flex-start;">
+
+          <!-- Client menu -->
+          <div>
+            <div class="figcap">Client</div>
+            <div class="ra-menu obj" data-obj-type="client" style="position: static;">
+              <div class="ra-head">
+                <span class="obj-avatar lg">AK</span>
+                <div>
+                  <div class="ra-meta-name">Anna Kowalska</div>
+                  <div class="ra-meta-sub">VIP · 24 wizyty · 8 420 zł</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> Otwórz profil <span class="ra-shortcut">↵</span></button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z"/></svg> Zadzwoń</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Wyślij SMS</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg> Wyślij email</button>
+              </div>
+              <div class="ra-group">
+                <div class="ra-section-label">Dodaj</div>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg> Stwórz wizytę</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Dodaj notatkę</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Historia wizyt</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Worker menu -->
+          <div>
+            <div class="figcap">Worker</div>
+            <div class="ra-menu obj" data-obj-type="worker" style="position: static;">
+              <div class="ra-head">
+                <span class="obj-avatar lg">MM</span>
+                <div>
+                  <div class="ra-meta-name">Magdalena Malicka</div>
+                  <div class="ra-meta-sub">Stylistka · dzisiaj 6 wizyt · 78% zajętości</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Otwórz profil</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Grafik tygodnia</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Wizyty na dziś</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Wyślij wiadomość</button>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-destructive"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Dodaj nieobecność</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking menu -->
+          <div>
+            <div class="figcap">Booking</div>
+            <div class="ra-menu obj" data-obj-type="booking" style="position: static;">
+              <div class="ra-head">
+                <span class="obj-avatar lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                <div>
+                  <div class="ra-meta-name">#BK-2841 · 14:30</div>
+                  <div class="ra-meta-sub">Anna Kowalska · Balayage · 380 zł</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> Otwórz szczegóły <span class="ra-shortcut">↵</span></button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Przełóż termin</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Potwierdź</button>
+              </div>
+              <div class="ra-group">
+                <div class="ra-section-label">Komunikacja i płatność</div>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Wyślij przypomnienie</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> Przyjmij płatność</button>
+                <button class="ra-item is-loading is-disabled"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="20"/></svg> Synchronizacja…</button>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-destructive"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Anuluj wizytę</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service menu -->
+          <div>
+            <div class="figcap">Service</div>
+            <div class="ra-menu obj" data-obj-type="service" style="position: static;">
+              <div class="ra-head">
+                <span class="obj-avatar lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2v6l-3 3v9h18v-9l-3-3V2"/></svg></span>
+                <div>
+                  <div class="ra-meta-name">Strzyżenie damskie</div>
+                  <div class="ra-meta-sub">45 min · 160 zł · 4 stylistki</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> Otwórz szczegóły</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edytuj</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Pokaż pracowników</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Dodaj do rezerwacji</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Salon menu -->
+          <div>
+            <div class="figcap">Salon / Lokalizacja</div>
+            <div class="ra-menu obj" data-obj-type="salon" style="position: static;">
+              <div class="ra-head">
+                <span class="obj-avatar lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>
+                <div>
+                  <div class="ra-meta-name">Salon Luxe — Centrum</div>
+                  <div class="ra-meta-sub">Warszawa · 6 stylistów · otwarte do 20:00</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> Otwórz lokalizację</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Godziny otwarcia</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg> Przypisz pracownika</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty / missing menu -->
+          <div>
+            <div class="figcap">Missing object</div>
+            <div class="ra-menu obj" style="position: static;">
+              <div class="ra-head" style="border-bottom: 1px dashed var(--v3-border-strong);">
+                <span class="obj-avatar lg" style="background: transparent; border: 1px dashed var(--v3-border-strong); color: var(--v3-text-secondary);">?</span>
+                <div>
+                  <div class="ra-meta-name" style="color: var(--v3-text-secondary); font-style: italic;">Obiekt nie istnieje</div>
+                  <div class="ra-meta-sub">Mógł zostać usunięty lub jeszcze nie został przypisany.</div>
+                </div>
+              </div>
+              <div class="ra-group">
+                <button class="ra-item is-primary"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Przypisz istniejący</button>
+                <button class="ra-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg> Zgłoś brak danych</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.5 · RICH PREVIEW POPOVER ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.5 · Rich Object Preview — popover</h2><span class="num">xiv.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">
+          Otwierany hoverem na avatarze/nazwie z opóźnieniem 400ms (lub focus + długie wciśnięcie na mobile).
+          Cel: dać kontekst zanim user kliknie. <strong>Nie</strong> zastępuje RelatedActions — ma własny zestaw 3-4 najczęstszych akcji + “Więcej”.
+        </p>
+
+        <div class="grid-3" style="gap: 22px; align-items: flex-start;">
+
+          <!-- Client preview -->
+          <div>
+            <div class="figcap">Client</div>
+            <div class="preview obj" data-obj-type="client">
+              <div class="preview-head">
+                <span class="obj-avatar lg">AK</span>
+                <div style="flex: 1; min-width: 0;">
+                  <h3 class="pv-name">Anna Kowalska</h3>
+                  <div class="pv-sub">
+                    <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;background: var(--v3-gold-soft); color: var(--v3-gold); letter-spacing: 0.04em;">★ VIP</span>
+                    +48 600 123 456
+                  </div>
+                </div>
+              </div>
+              <div class="preview-meta">
+                <div><div class="mk">Wizyt</div><div class="mv">24</div></div>
+                <div><div class="mk">Wartość</div><div class="mv gold">8 420 zł</div></div>
+                <div><div class="mk">Ostatnio</div><div class="mv">14 kwi</div></div>
+                <div><div class="mk">Następnie</div><div class="mv" style="color: var(--v3-secondary);">jutro 10:00</div></div>
+              </div>
+              <div class="preview-actions">
+                <button class="btn-mini is-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Wizyta</button>
+                <button class="btn-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z"/></svg></button>
+                <button class="btn-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+                <button class="btn-mini more">Więcej ⌄</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking preview -->
+          <div>
+            <div class="figcap">Booking</div>
+            <div class="preview obj" data-obj-type="booking">
+              <div class="preview-head">
+                <span class="obj-avatar lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                <div style="flex: 1; min-width: 0;">
+                  <h3 class="pv-name">#BK-2841</h3>
+                  <div class="pv-sub">
+                    <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;background: var(--v3-success-bg); color: var(--v3-success); letter-spacing: 0.04em;">Potwierdzona</span>
+                    środa 15 kwi
+                  </div>
+                </div>
+              </div>
+              <div class="preview-meta">
+                <div><div class="mk">Czas</div><div class="mv">14:30 — 16:00</div></div>
+                <div><div class="mk">Cena</div><div class="mv gold">380 zł</div></div>
+                <div><div class="mk">Klient</div><div class="mv" style="color: #276FB7;">Anna Kowalska</div></div>
+                <div><div class="mk">Stylista</div><div class="mv" style="color: #32855F;">Paulina K.</div></div>
+              </div>
+              <div class="preview-actions">
+                <button class="btn-mini is-primary">Otwórz</button>
+                <button class="btn-mini">Przełóż</button>
+                <button class="btn-mini">Płatność</button>
+                <button class="btn-mini more">···</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service preview -->
+          <div>
+            <div class="figcap">Service</div>
+            <div class="preview obj" data-obj-type="service">
+              <div class="preview-head">
+                <span class="obj-avatar lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2v6l-3 3v9h18v-9l-3-3V2"/></svg></span>
+                <div style="flex: 1; min-width: 0;">
+                  <h3 class="pv-name" style="font-family: var(--v3-font-display);">Koloryzacja Balayage</h3>
+                  <div class="pv-sub">
+                    <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;background: var(--v3-gold-soft); color: var(--v3-gold); letter-spacing: 0.04em;">Premium</span>
+                    Koloryzacja
+                  </div>
+                </div>
+              </div>
+              <div class="preview-meta">
+                <div><div class="mk">Czas trwania</div><div class="mv">90 min</div></div>
+                <div><div class="mk">Cena</div><div class="mv gold">380 zł</div></div>
+                <div><div class="mk">Stylistki</div><div class="mv">4 z 6</div></div>
+                <div><div class="mk">Popularność</div><div class="mv" style="color: var(--v3-success);">Top 3</div></div>
+              </div>
+              <div class="preview-actions">
+                <button class="btn-mini is-primary">Dodaj do wizyty</button>
+                <button class="btn-mini">Edytuj</button>
+                <button class="btn-mini more">Więcej ⌄</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.6 · TABLE CELL VARIANT ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.6 · Table cell — object variant</h2><span class="num">xv.</span></div>
+      <div class="section-body">
+        <p class="annot" style="margin: 0 0 18px;">W tabelach cały rząd jest klikalny (= booking details). Avatar+name w kolumnie obiektowej działa jak link do strony obiektu (zatrzymuje propagację). Trigger pojawia się na hover w stałej kolumnie po prawej.</p>
+
+        <div class="demo-block plain" style="padding: 0; overflow: hidden;">
+          <table class="obj-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Czas</th>
+                <th>Klientka</th>
+                <th>Pracownik</th>
+                <th>Usługa</th>
+                <th style="text-align: right;">Cena</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="obj" data-obj-type="booking">
+                <td><strong style="font-family: var(--v3-font-ui); font-size: 13px;">10:00</strong></td>
+                <td>
+                  <span class="obj" data-obj-type="client" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar">AK</span><div><a class="name">Anna Kowalska</a><div class="sub">VIP · 24 wizyty</div></div></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="worker" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar sm">MM</span><a class="name">Magdalena M.</a></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="service" onclick="event.stopPropagation()">
+                    <a class="name" style="font-family: var(--v3-font-display); font-size: 14.5px;">Strzyżenie damskie</a>
+                  </span>
+                </td>
+                <td style="text-align: right; font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold);">160 zł</td>
+                <td><button class="row-trigger" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></td>
+              </tr>
+              <tr class="obj" data-obj-type="booking">
+                <td><strong style="font-family: var(--v3-font-ui); font-size: 13px;">14:30</strong></td>
+                <td>
+                  <span class="obj" data-obj-type="client" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar">IN</span><div><a class="name">Iwona Nowak</a><div class="sub">VIP · 18 wizyt</div></div></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="worker" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar sm">PK</span><a class="name">Paulina K.</a></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="service" onclick="event.stopPropagation()">
+                    <a class="name" style="font-family: var(--v3-font-display); font-size: 14.5px;">Koloryzacja Balayage</a>
+                  </span>
+                </td>
+                <td style="text-align: right; font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold);">380 zł</td>
+                <td><button class="row-trigger is-open" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></td>
+              </tr>
+              <tr class="obj" data-obj-type="booking">
+                <td><strong style="font-family: var(--v3-font-ui); font-size: 13px;">17:00</strong></td>
+                <td>
+                  <span class="obj" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar" style="background: transparent; border: 1px dashed var(--v3-border-strong); color: var(--v3-text-secondary);">?</span><div><a class="name" style="font-style: italic; color: var(--v3-text-secondary);">— walk-in —</a><div class="sub">brak danych</div></div></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="worker" onclick="event.stopPropagation()">
+                    <span class="obj-cell"><span class="obj-avatar sm">AR</span><a class="name">Alicja R.</a></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="obj" data-obj-type="service" onclick="event.stopPropagation()">
+                    <a class="name" style="font-family: var(--v3-font-display); font-size: 14.5px;">Zabieg nawilżający</a>
+                  </span>
+                </td>
+                <td style="text-align: right; font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold);">220 zł</td>
+                <td><button class="row-trigger" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.7 · MOBILE VARIANT ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.7 · Mobile — variant</h2><span class="num">xvi.</span></div>
+      <div class="section-body" style="background: var(--v3-bg);">
+        <p class="annot" style="margin: 0 0 18px;">
+          Na mobile <strong>tap = strona obiektu</strong>, <strong>tap chevron / long-press</strong> = bottom action sheet.
+          Hit-zones ≥ 44px. Brak hover stanów — feedback przez <code>:active</code>.
+        </p>
+
+        <div style="display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start;">
+
+          <!-- Mobile booking card -->
+          <div class="mobile">
+            <div class="mobile-head">
+              <h3>Środa · 15 kwi</h3>
+              <span style="font-size: 12px; color: var(--v3-text-secondary);">3 wizyty</span>
+            </div>
+
+            <div class="mobile-card">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+                <div style="font-family: var(--v3-font-ui); font-size: 13px; color: var(--v3-text-secondary); font-variant-numeric: tabular-nums;"><strong style="color: var(--v3-text-primary); font-size: 16px; font-weight: 700;">10:00</strong> · 1h</div>
+                <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:9999px;font-size:10px;font-weight:700;background: var(--v3-success-bg); color: var(--v3-success);">Potwierdzona</span>
+              </div>
+              <h4 style="font-family: var(--v3-font-display); font-size: 18px; font-weight: 600; margin: 0 0 10px; color: var(--v3-text-primary);">Strzyżenie damskie</h4>
+              <div class="obj" data-obj-type="client">
+                <div class="mobile-row">
+                  <span class="obj-avatar">AK</span>
+                  <div class="grow"><div class="name">Anna Kowalska</div><div class="sub">VIP · +48 600 123 456</div></div>
+                  <span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+                </div>
+              </div>
+              <div class="obj" data-obj-type="worker">
+                <div class="mobile-row">
+                  <span class="obj-avatar">MM</span>
+                  <div class="grow"><div class="name">Magdalena M.</div><div class="sub">Stylistka</div></div>
+                  <span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button style="flex: 1; height: 44px; border-radius: 9999px; background: var(--v3-primary); color: #fff; font-family: var(--v3-font-ui); font-weight: 600; font-size: 14px; border: 0;">Otwórz wizytę</button>
+                <button style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--v3-border); background: #fff; color: var(--v3-text-primary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile bottom sheet (Client actions) -->
+          <div class="sheet obj" data-obj-type="client">
+            <div class="sheet-grab"></div>
+            <div class="sheet-head">
+              <span class="obj-avatar lg">AK</span>
+              <div style="flex: 1; min-width: 0;">
+                <h3 class="pv-name">Anna Kowalska</h3>
+                <div class="pv-sub">VIP · 24 wizyty</div>
+              </div>
+              <button style="width: 36px; height: 36px; border-radius: 50%; background: var(--v3-bg-alt); border: 0; color: var(--v3-text-secondary);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="sheet-list">
+              <button class="sheet-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> Otwórz profil</button>
+              <button class="sheet-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z"/></svg> Zadzwoń · +48 600 123 456</button>
+              <button class="sheet-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Wyślij SMS</button>
+              <button class="sheet-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Stwórz wizytę</button>
+              <button class="sheet-item"><svg class="ra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Historia wizyt</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 09.8 · BEHAVIOR SPEC ============= -->
+    <section class="section">
+      <div class="section-head"><h2>09.8 · Specyfikacja zachowania</h2><span class="num">xvii.</span></div>
+      <div class="section-body">
+        <div class="grid-2" style="gap: 40px;">
+          <div>
+            <div class="label-mini">Hit-targets &amp; routing</div>
+            <ul class="spec">
+              <li>Klik w <strong>nazwę / avatar</strong> obiektu → <code>navigate(/{type}/{id})</code>.</li>
+              <li>Klik w <strong>trigger ··· / chevron</strong> → otwiera RelatedActions (popover desktop, sheet mobile). Trigger ZAWSZE <code>stopPropagation</code>.</li>
+              <li>Klik w <strong>pustą część booking row</strong> (czas, pasek, tło, badge statusu) → szczegóły rezerwacji.</li>
+              <li>Hover (≥400ms) na avatarze/nazwie → <strong>Rich Preview</strong>. Tap+long-press na mobile.</li>
+              <li>Każdy <code>.obj</code> ma własny event boundary — nie propaguje do parent rowa.</li>
+            </ul>
+
+            <div class="label-mini" style="margin-top: 24px;">Klawiatura &amp; a11y</div>
+            <ul class="spec">
+              <li><code>Tab</code> przechodzi: nazwa → trigger → następny obiekt. <code>Enter</code> = navigate. <code>Space</code>/<code>↓</code> na triggerze = otwórz menu.</li>
+              <li>RelatedActions: <code>↑↓</code> nawiguje, <code>Esc</code> zamyka, focus wraca na trigger.</li>
+              <li>Każdy obiekt ma <code>aria-label="{type}: {name}"</code>. Trigger: <code>aria-haspopup="menu"</code> + <code>aria-expanded</code>.</li>
+              <li>Missing object: <code>aria-disabled="true"</code>, fokus pomijany.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="label-mini">Stany — kontrakt</div>
+            <ul class="spec">
+              <li><strong>default</strong> — neutralny, kropka/avatar w kolorze typu.</li>
+              <li><strong>hover</strong> — soft bg w kolorze typu, border lub underline.</li>
+              <li><strong>focus</strong> — <code>box-shadow: var(--v3-shadow-focus)</code>, border-color staje się typowym.</li>
+              <li><strong>open</strong> — pełne wypełnienie soft bg + border w kolorze typu, trigger podświetlony.</li>
+              <li><strong>disabled</strong> — <code>color: --v3-text-disabled</code>, <code>pointer-events: none</code>.</li>
+              <li><strong>loading</strong> — avatar i nazwa zastąpione shimmerem 1.2s linear infinite.</li>
+              <li><strong>destructive</strong> — <code>--v3-error</code> jako kolor + bg <code>--v3-error-bg</code>. Dotyczy konfliktów rezerwacji, np. nakładających się slotów.</li>
+              <li><strong>missing</strong> — italic, dashed border, kropka pusta. Trigger pokazuje tylko “Przypisz / Zgłoś”.</li>
+            </ul>
+
+            <div class="label-mini" style="margin-top: 24px;">Tokens używane (z v3)</div>
+            <ul class="spec">
+              <li><code>--v3-r-sm</code> 4px (linki, cells), <code>--v3-r</code> 6px (popovery), <code>--v3-r-md</code> 8px (preview, sheet), <code>--v3-r-pill</code> (pille).</li>
+              <li><code>--v3-shadow-card</code> dla pillów open · <code>--v3-shadow-modal</code> dla menu i preview · <code>--v3-shadow-focus</code> dla focus.</li>
+              <li>Type-color = istniejące akcenty marki: <code>--v3-secondary</code> (client), <code>--v3-primary</code> (worker), <code>--v3-gold</code> (service), <code>--v3-accent</code> (salon). Booking dziedziczy neutralny + fioletowy obrys avatara.</li>
+              <li>Typografia: nazwy obiektów <code>--v3-font-ui</code> 500/600 · usługi i premium nagłówki <code>--v3-font-display</code> · meta <code>--v3-font-body</code> 13px.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align: center; padding: 40px 0 0; color: var(--v3-text-secondary); font-size: 13px;">
+      SimpliSalon Revamp v3 · Sekcja 09 · Interactive Objects + Related Actions · Tokeny w
+      <code style="background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--v3-border); font-family: 'SF Mono', monospace;">revamp/tokens-v3.css</code>
+    </footer>
+
+  </div>
+</body>
+</html>

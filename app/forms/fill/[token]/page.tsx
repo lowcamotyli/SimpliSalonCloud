@@ -262,7 +262,7 @@ export default function PublicFormPage() {
       </header>
 
       <main className="max-w-2xl mx-auto p-4 mt-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-10">
           <div className="mb-10">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">{data?.template.name}</h2>
             <p className="text-gray-500 text-lg leading-relaxed italic border-l-4 border-blue-500 pl-4">
@@ -413,7 +413,7 @@ export default function PublicFormPage() {
                         />
                         <label 
                           htmlFor={`file-${field.id}`}
-                          className="flex flex-col items-center justify-center border-4 border-dashed border-gray-100 rounded-3xl p-10 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
+                          className="flex flex-col items-center justify-center border-4 border-dashed border-gray-100 rounded-xl p-10 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
                         >
                           {answers[field.id] ? (
                             <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg">
@@ -440,7 +440,7 @@ export default function PublicFormPage() {
 
                     {field.type === 'signature' && (
                       <div className="space-y-4">
-                        <div className="border-4 border-gray-100 rounded-3xl bg-gray-50/50 overflow-hidden relative shadow-inner">
+                        <div className="border-4 border-gray-100 rounded-xl bg-gray-50/50 overflow-hidden relative shadow-inner">
                           <canvas
                             ref={canvasRef}
                             width={800}
@@ -486,7 +486,7 @@ export default function PublicFormPage() {
 
             {data?.template.gdpr_consent_text && (
               <div className="pt-12 border-t border-gray-100 space-y-5">
-                <label className={`flex items-start space-x-5 p-6 border-2 rounded-3xl cursor-pointer transition-all hover:shadow-lg ${answers.gdpr_consent ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50/20'}`}>
+                <label className={`flex items-start space-x-5 p-6 border-2 rounded-xl cursor-pointer transition-all hover:shadow-lg ${answers.gdpr_consent ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50/20'}`}>
                   <div className={`mt-1 w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${answers.gdpr_consent ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
                     {answers.gdpr_consent && (
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -517,7 +517,7 @@ export default function PublicFormPage() {
 
             {requiresHealthConsent && (
               <div className="space-y-5">
-                <label className={`flex items-start space-x-5 p-6 border-2 rounded-3xl cursor-pointer transition-all hover:shadow-lg ${answers.health_consent ? 'border-emerald-600 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/50'}`}>
+                <label className={`flex items-start space-x-5 p-6 border-2 rounded-xl cursor-pointer transition-all hover:shadow-lg ${answers.health_consent ? 'border-emerald-600 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/50'}`}>
                   <div className={`mt-1 w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${answers.health_consent ? 'border-emerald-600 bg-emerald-600' : 'border-amber-400 bg-white'}`}>
                     {answers.health_consent && (
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -550,10 +550,10 @@ export default function PublicFormPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className={`w-full py-6 px-8 rounded-3xl text-2xl font-black text-white transition-all shadow-2xl hover:shadow-blue-500/40 active:scale-[0.96] flex items-center justify-center space-x-4 uppercase tracking-widest ${
+                className={`w-full py-6 px-8 rounded-xl text-2xl font-black text-white transition-all shadow-sm hover:shadow-blue-500/40 active:scale-[0.96] flex items-center justify-center space-x-4 uppercase tracking-widest ${
                   submitting 
                     ? 'bg-gray-400 cursor-not-allowed translate-y-1 shadow-none' 
-                    : 'bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+                    : 'bg-primary'
                 }`}
               >
                 {submitting ? (

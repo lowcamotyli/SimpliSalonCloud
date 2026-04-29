@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { ObjectPill } from '@/components/objects'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -83,6 +85,8 @@ export default function BookingServicesEditor({
   availableEmployees,
   onSaved,
 }: BookingServicesEditorProps) {
+  const params = useParams<{ slug: string | string[] }>()
+  const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug ?? ''
   const [rows, setRows] = useState<EditableRow[]>(() => {
     if (initialServices.length > 0) {
       return initialServices.map((row) => ({
@@ -495,8 +499,16 @@ export default function BookingServicesEditor({
       }
 
       if (newRows.length > 0) {
-        if (!groupId) {
-          throw new Error('Brak identyfikatora grupy wizyty dla nowej usługi.')
+        let resolvedGroupId = groupId
+        if (!resolvedGroupId) {
+          const promoteRes = await fetch(`/api/bookings/${bookingId}/promote-to-group`, {
+            method: 'POST',
+          })
+          if (!promoteRes.ok) {
+            throw new Error('Nie udało się utworzyć grupy wizyty.')
+          }
+          const promoteData = await promoteRes.json() as { groupId: string }
+          resolvedGroupId = promoteData.groupId
         }
 
         for (const row of newRows) {
@@ -508,7 +520,7 @@ export default function BookingServicesEditor({
             ...(saveWithForceOverride ? { force_override: true } : {}),
           }
 
-          const response = await fetch(`/api/bookings/group/${groupId}/add`, {
+          const response = await fetch(`/api/bookings/group/${resolvedGroupId}/add`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -563,6 +575,7 @@ export default function BookingServicesEditor({
       <div className="space-y-4">
         {rows.map((row, index) => {
           const addons = addonsByRow[row.localId] ?? []
+          const selectedService = availableServices.find((service) => service.id === row.service_id)
           const rowEmployees =
             row.service_id && employeesByRow[row.localId] ? employeesByRow[row.localId] : availableEmployees
 
@@ -570,10 +583,20 @@ export default function BookingServicesEditor({
             <div key={row.localId} className="space-y-3 rounded-md border p-3">
               <div className="flex items-center justify-between">
                 <Badge variant="secondary">Usługa {index + 1}</Badge>
+                {selectedService ? (
+                  <ObjectPill
+                    type="service"
+                    id={selectedService.id}
+                    label={selectedService.name}
+                    slug={slug}
+                    className="max-w-[220px]"
+                  />
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="ml-auto"
                   disabled={rows.length === 1}
                   onClick={() => handleRemoveRow(row.localId)}
                 >

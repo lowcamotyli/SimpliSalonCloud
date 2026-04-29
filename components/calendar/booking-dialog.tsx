@@ -485,7 +485,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
   return (
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl glass rounded-2xl">
+      <DialogContent className="max-w-2xl  rounded-2xl">
         <DialogHeader>
           <DialogTitle className="gradient-text">
             {booking ? 'Szczegóły wizyty' : 'Nowa wizyta'}
@@ -495,13 +495,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
         {booking ? (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Klient</Label>
                 <p className="font-bold text-gray-900">{booking.client?.full_name || 'Nieznany klient'}</p>
                 <p className="text-sm text-gray-600">{booking.client?.phone ? formatPhoneNumber(booking.client.phone) : 'Brak telefonu'}</p>
               </div>
 
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Data i czas</Label>
                 <div className="flex flex-col">
                   <p className="font-bold text-gray-900">{formatDateTime(booking.booking_date, booking.booking_time)}</p>
@@ -511,7 +511,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 </div>
               </div>
 
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Usługa</Label>
                 <p className="font-bold text-gray-900">{booking.service.name}</p>
                 <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
@@ -547,21 +547,21 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 )}
               </div>
 
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Pracownik</Label>
                 <p className="font-bold text-gray-900">
                   {booking.employee.first_name} {booking.employee.last_name}
                 </p>
               </div>
 
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Status</Label>
                 <Badge className="mt-1" variant={booking.status === 'completed' ? 'success' : booking.status === 'cancelled' ? 'destructive' : 'secondary'}>
                   {BOOKING_STATUS_LABELS[booking.status] || booking.status}
                 </Badge>
               </div>
 
-              <div className="glass p-3 rounded-lg flex flex-col justify-between">
+              <div className=" p-3 rounded-lg flex flex-col justify-between">
                 <div>
                   <Label className="text-xs text-gray-600 uppercase font-semibold">Cena końcowa</Label>
                   <p className="font-bold text-purple-600 text-xl">{formatPrice(booking.base_price + addonsTotal + (surcharge || 0))}</p>
@@ -597,13 +597,13 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
             </div>
 
             {booking.notes && (
-              <div className="glass p-3 rounded-lg">
+              <div className=" p-3 rounded-lg">
                 <Label className="text-xs text-gray-600 uppercase font-semibold">Notatki</Label>
                 <p className="text-sm text-gray-700 mt-1">{booking.notes}</p>
               </div>
             )}
 
-            <div className="glass p-3 rounded-lg space-y-3">
+            <div className=" p-3 rounded-lg space-y-3">
               <Label className="text-xs text-gray-600 uppercase font-semibold">Płatność online</Label>
               {isOnlinePaymentLoading ? (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -660,7 +660,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                     <Button
                       onClick={() => handleCompleteBooking('cash')}
                       disabled={updateMutation.isPending}
-                      className="h-10 rounded-full px-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
+                      className="h-10 rounded-full px-5 bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
                     >
                       {processingPayment === 'cash' ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -672,7 +672,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                     <Button
                       onClick={() => handleCompleteBooking('card')}
                       disabled={updateMutation.isPending}
-                      className="h-10 rounded-full px-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
+                      className="h-10 rounded-full px-5 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all border-0 shrink-0"
                     >
                       {processingPayment === 'card' ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -779,7 +779,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <select
                   {...form.register('employeeId')}
                   disabled={isFilteredEmployeesLoading}
-                  className="w-full glass rounded-lg px-3 py-2"
+                  className="w-full  rounded-lg px-3 py-2"
                 >
                   <option value="">Wybierz pracownika</option>
                   {isFilteredEmployeesLoading && (
@@ -803,7 +803,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
               <div className="space-y-2 col-span-full">
                 <Label className="font-semibold">Usługa *</Label>
-                <div className="glass rounded-xl p-4 min-h-[200px] flex flex-col">
+                <div className=" rounded-xl p-4 min-h-[200px] flex flex-col">
                   {selectedService && pickerView === 'category' && !searchTerm ? (
                     <div className="flex items-center justify-between bg-purple-50 p-4 rounded-lg border border-purple-100 animate-in fade-in zoom-in duration-200">
                       <div>
@@ -956,7 +956,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <Input
                   {...form.register('clientName')}
                   placeholder="Wpisz imię lub nazwisko"
-                  className="glass rounded-lg"
+                  className=" rounded-lg"
                   // Bug #6 fix: close dropdown when input loses focus (with delay for click)
                   onBlur={() => setTimeout(() => setClientSuggestions([]), 150)}
                 />
@@ -967,7 +967,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                   </p>
                 )}
                 {clientSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 glass rounded-lg overflow-hidden z-50">
+                  <div className="absolute top-full left-0 right-0 mt-1  rounded-lg overflow-hidden z-50">
                     {clientSuggestions.map((client) => (
                       <button
                         key={client.id}
@@ -992,7 +992,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
                 <Input
                   {...form.register('clientPhone')}
                   placeholder="+48 123 456 789"
-                  className="glass rounded-lg"
+                  className=" rounded-lg"
                 />
                 {form.formState.errors.clientPhone && (
                   <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
@@ -1004,7 +1004,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
               <div className="space-y-2">
                 <Label className="font-semibold">Data *</Label>
-                <Input type="date" {...form.register('bookingDate')} className="glass rounded-lg" />
+                <Input type="date" {...form.register('bookingDate')} className=" rounded-lg" />
                 {form.formState.errors.bookingDate && (
                   <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
                     <AlertCircle className="h-3 w-3" />
@@ -1015,7 +1015,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
               <div className="space-y-2">
                 <Label className="font-semibold">Godzina *</Label>
-                <Input type="time" {...form.register('bookingTime')} className="glass rounded-lg" />
+                <Input type="time" {...form.register('bookingTime')} className=" rounded-lg" />
                 {form.watch('bookingTime') && selectedService && (
                   <p className="text-[10px] text-purple-600 font-bold mt-1">
                     Przewidywany koniec: {format(addMinutes(new Date(`2000-01-01T${form.watch('bookingTime')}`), selectedService.duration), 'HH:mm')}
@@ -1032,7 +1032,7 @@ export function BookingDialog({ isOpen, onClose, booking, prefilledSlot }: Booki
 
             <div className="space-y-2">
               <Label className="font-semibold">Notatki</Label>
-              <Input {...form.register('notes')} placeholder="Dodatkowe informacje..." className="glass rounded-lg" />
+              <Input {...form.register('notes')} placeholder="Dodatkowe informacje..." className=" rounded-lg" />
             </div>
 
             <DialogFooter>

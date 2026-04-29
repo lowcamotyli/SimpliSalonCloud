@@ -292,7 +292,7 @@ export interface DesignTokens {
     foreground: string
   }
   typography: {
-    fontFamily: { sans: string; mono: string }
+    fontFamily: { display: string; ui: string; body: string; sans: string; mono: string }
     fontSize: Record<'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl', string>
   }
   borderRadius: Record<'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full', string>

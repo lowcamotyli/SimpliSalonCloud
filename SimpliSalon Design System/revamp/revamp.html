@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>SimpliSalon — Revamp v3</title>
+<link rel="stylesheet" href="tokens-v3.css?v=fraunces">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--v3-bg); color: var(--v3-text-primary); }
+
+  .page { max-width: 1440px; margin: 0 auto; padding: 48px 32px 80px; }
+  .header-block { margin-bottom: 48px; }
+  .eyebrow {
+    font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--v3-gold);
+    margin-bottom: 12px;
+  }
+  .page-title {
+    font-family: var(--v3-font-display); font-size: 44px; font-weight: 600;
+    letter-spacing: -0.025em; color: var(--v3-text-primary); margin: 0;
+  }
+  .page-sub { font-size: 16px; color: var(--v3-text-secondary); margin: 8px 0 0; max-width: 720px; }
+
+  .section {
+    background: var(--v3-surface); border: 1px solid var(--v3-border);
+    border-radius: var(--v3-r-md); margin-bottom: 32px; overflow: hidden;
+  }
+  .section-head {
+    padding: 20px 28px; border-bottom: 1px solid var(--v3-border);
+    display: flex; align-items: baseline; justify-content: space-between;
+    background: linear-gradient(180deg, #fff, #fcfcfb);
+  }
+  .section-head h2 {
+    font-family: var(--v3-font-ui); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--v3-secondary);
+    margin: 0;
+  }
+  .section-head .num {
+    font-family: var(--v3-font-display); font-style: italic; font-size: 14px;
+    color: var(--v3-gold);
+  }
+  .section-body { padding: 28px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .stack > * + * { margin-top: 16px; }
+
+  .label-mini {
+    font-family: var(--v3-font-ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--v3-text-secondary);
+    margin-bottom: 8px;
+  }
+
+  /* ------- Buttons ------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding: 0 20px;
+    font-family: var(--v3-font-ui); font-size: 14px; font-weight: 600;
+    border-radius: var(--v3-r-pill); border: 0; cursor: pointer;
+    transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease, border-color 180ms ease;
+  }
+  .btn-primary { background: var(--v3-primary); color: #fff; }
+  .btn-primary:hover { background: var(--v3-primary-hover); box-shadow: 0 2px 8px rgba(50, 133, 95, 0.25); }
+  .btn-primary:active { background: #1F5A40; }
+  .btn-primary:disabled { background: #C5CACE; color: #fff; cursor: not-allowed; box-shadow: none; }
+
+  .btn-secondary { background: #fff; color: var(--v3-secondary); border: 1px solid var(--v3-secondary); }
+  .btn-secondary:hover { background: var(--v3-secondary-soft); }
+  .btn-secondary:active { background: #D7E5F4; }
+
+  .btn-ghost { background: transparent; color: var(--v3-text-primary); border: 1px solid var(--v3-border-strong); }
+  .btn-ghost:hover { background: var(--v3-bg-alt); border-color: var(--v3-text-secondary); }
+
+  .btn-danger { background: var(--v3-error); color: #fff; }
+  .btn-danger:hover { background: #B92B3A; }
+
+  .btn-link { background: transparent; color: var(--v3-accent); padding: 0 4px; height: auto; }
+  .btn-link:hover { color: var(--v3-accent-hover); text-decoration: underline; }
+
+  /* Luxury accent variant — gold outline, premium moments only */
+  .btn-gold { background: #fff; color: var(--v3-gold); border: 1px solid var(--v3-gold); }
+  .btn-gold:hover { background: var(--v3-gold-soft); }
+
+  .btn-sm { height: 32px; padding: 0 14px; font-size: 13px; }
+  .btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
+
+  .btn-icon {
+    width: 32px; height: 32px; padding: 0; border-radius: 50%;
+    background: #fff; border: 1px solid var(--v3-border); color: var(--v3-text-primary);
+  }
+  .btn-icon:hover { background: var(--v3-bg-alt); color: var(--v3-accent); }
+
+  /* ------- Form fields ------- */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-family: var(--v3-font-ui); font-size: 13px; font-weight: 500; color: var(--v3-text-primary); }
+  .field-hint { font-size: 12px; color: var(--v3-text-secondary); }
+  .field-error { font-size: 12px; color: var(--v3-text-error); }
+
+  .input, .textarea, .select {
+    width: 100%; height: 40px; padding: 0 12px;
+    background: #fff; border: 1px solid var(--v3-border); border-radius: var(--v3-r-sm);
+    font-family: var(--v3-font-ui); font-size: 14px; color: var(--v3-text-primary);
+    outline: none; transition: border-color 180ms, box-shadow 180ms;
+  }
+  .input::placeholder { color: var(--v3-text-secondary); }
+  .input:hover, .textarea:hover, .select:hover { border-color: var(--v3-border-strong); }
+  .input:focus, .textarea:focus, .select:focus {
+    border-color: var(--v3-border-focus); box-shadow: var(--v3-shadow-focus);
+  }
+  .input:disabled { background: var(--v3-bg-alt); color: var(--v3-text-disabled); cursor: not-allowed; }
+  .input.is-error { border-color: var(--v3-error); }
+  .input.is-error:focus { box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.18); }
+
+  .textarea { height: auto; padding: 10px 12px; min-height: 88px; resize: vertical; line-height: 1.5; }
+  .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='%237B858F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M1 1l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  /* Search with frosted glass */
+  .search {
+    position: relative; height: 40px; min-width: 280px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(232, 235, 237, 0.8); border-radius: var(--v3-r-pill);
+    display: flex; align-items: center; padding: 0 14px 0 38px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+  .search input { border: 0; outline: 0; background: transparent; flex: 1; font-size: 14px; color: var(--v3-text-primary); }
+  .search input::placeholder { color: var(--v3-text-secondary); }
+  .search svg { position: absolute; left: 14px; color: var(--v3-text-secondary); }
+
+  /* Checkbox / Radio / Toggle */
+  .check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: 14px; }
+  .check-box {
+    width: 18px; height: 18px; border: 1px solid var(--v3-border-strong); border-radius: 4px; background: #fff;
+    display: inline-flex; align-items: center; justify-content: center; transition: all 180ms;
+  }
+  .check input:checked + .check-box { background: var(--v3-primary); border-color: var(--v3-primary); }
+  .check input { display: none; }
+  .check input:checked + .check-box svg { display: block; }
+  .check-box svg { display: none; color: #fff; }
+
+  .radio-dot {
+    width: 18px; height: 18px; border: 1px solid var(--v3-border-strong); border-radius: 50%; background: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .check input:checked + .radio-dot { border-color: var(--v3-primary); }
+  .check input:checked + .radio-dot::after {
+    content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--v3-primary);
+  }
+
+  .toggle { width: 36px; height: 20px; border-radius: 9999px; background: var(--v3-border-strong); position: relative; transition: background 180ms; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: transform 180ms; }
+  .check input:checked + .toggle { background: var(--v3-primary); }
+  .check input:checked + .toggle::after { transform: translateX(16px); }
+
+  /* ------- Cards ------- */
+  .card {
+    background: var(--v3-surface); border: 1px solid var(--v3-border);
+    border-radius: var(--v3-r-md); box-shadow: var(--v3-shadow-card);
+    transition: box-shadow 220ms ease;
+  }
+  .card:hover { box-shadow: var(--v3-shadow-card-hover); }
+  .card-head { padding: 16px 20px; border-bottom: 1px solid var(--v3-border); display: flex; justify-content: space-between; align-items: center; }
+  .card-head h3 { font-family: var(--v3-font-ui); font-size: 14px; font-weight: 700; color: var(--v3-text-primary); }
+  .card-body { padding: 20px; }
+
+  /* ------- Stat card ------- */
+  .stat {
+    background: #fff; border: 1px solid var(--v3-border); border-radius: var(--v3-r-md);
+    padding: 20px; position: relative; transition: box-shadow 220ms;
+  }
+  .stat:hover { box-shadow: var(--v3-shadow-card-hover); }
+  .stat-eyebrow { font-family: var(--v3-font-ui); font-size: 12px; font-weight: 600; color: var(--v3-text-secondary); margin-bottom: 12px; }
+  .stat-value { font-family: var(--v3-font-display); font-size: 32px; font-weight: 600; color: var(--v3-text-primary); letter-spacing: -0.025em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-trend { font-family: var(--v3-font-ui); font-size: 12px; font-weight: 600; color: var(--v3-success); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; }
+  .stat-trend.down { color: var(--v3-error); }
+  .stat-icon { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; border-radius: 8px; background: var(--v3-secondary-soft); color: var(--v3-secondary); display: flex; align-items: center; justify-content: center; }
+  .stat.is-premium .stat-icon { background: var(--v3-gold-soft); color: var(--v3-gold); }
+  .stat.is-premium .stat-value { color: var(--v3-text-primary); }
+
+  /* ------- Badges ------- */
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-family: var(--v3-font-ui); font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .badge.success  { background: var(--v3-success-bg); color: var(--v3-success); }
+  .badge.info     { background: var(--v3-info-bg); color: var(--v3-info); }
+  .badge.warning  { background: var(--v3-warning-bg); color: var(--v3-warning); }
+  .badge.error    { background: var(--v3-error-bg); color: var(--v3-error); }
+  .badge.neutral  { background: var(--v3-bg-alt); color: var(--v3-text-secondary); border: 1px solid var(--v3-border); }
+  .badge.gold     { background: var(--v3-gold-soft); color: var(--v3-gold); border: 1px solid #E9D6A8; }
+
+  /* ------- Tables ------- */
+  .table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .table thead th { background: var(--v3-bg-alt); padding: 12px 16px; text-align: left; font-family: var(--v3-font-ui); font-weight: 600; font-size: 13px; color: var(--v3-text-primary); border-bottom: 1px solid var(--v3-border); }
+  .table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--v3-border); color: var(--v3-text-primary); }
+  .table tbody tr:nth-child(even) td { background: var(--v3-surface-alt); }
+  .table tbody tr:hover td { background: var(--v3-secondary-soft); }
+  .table a { color: var(--v3-accent); text-decoration: none; }
+  .table a:hover { text-decoration: underline; }
+
+  /* ------- Modal / Toast / Tooltip preview ------- */
+  .modal {
+    background: #fff; border-radius: var(--v3-r); box-shadow: var(--v3-shadow-modal);
+    width: 420px; padding: 24px;
+  }
+  .modal h3 { font-family: var(--v3-font-ui); font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .modal p  { font-size: 14px; color: var(--v3-text-secondary); line-height: 1.55; margin-bottom: 20px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  .toast {
+    background: #fff; border-radius: var(--v3-r); box-shadow: var(--v3-shadow-modal);
+    padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px;
+    min-width: 320px; border-left: 3px solid var(--v3-primary);
+  }
+  .toast.error   { border-left-color: var(--v3-error); }
+  .toast.warning { border-left-color: var(--v3-warning); }
+  .toast.info    { border-left-color: var(--v3-info); }
+  .toast .ico { width: 20px; height: 20px; flex-shrink: 0; color: var(--v3-primary); margin-top: 1px; }
+  .toast.error .ico   { color: var(--v3-error); }
+  .toast.warning .ico { color: var(--v3-warning); }
+  .toast.info .ico    { color: var(--v3-info); }
+  .toast strong { display: block; font-family: var(--v3-font-ui); font-size: 14px; color: var(--v3-text-primary); }
+  .toast span   { font-size: 13px; color: var(--v3-text-secondary); }
+
+  .tooltip {
+    background: #fff; border-radius: var(--v3-r-sm); box-shadow: var(--v3-shadow-tooltip);
+    padding: 8px 12px; font-size: 12px; color: var(--v3-text-primary); border: 1px solid var(--v3-border);
+    position: relative; display: inline-block;
+  }
+  .tooltip::after {
+    content: ''; position: absolute; bottom: -5px; left: 16px; width: 10px; height: 10px;
+    background: #fff; border-right: 1px solid var(--v3-border); border-bottom: 1px solid var(--v3-border);
+    transform: rotate(45deg);
+  }
+
+  /* ------- Tabs ------- */
+  .tabs { display: flex; border-bottom: 1px solid var(--v3-border); }
+  .tab { padding: 12px 18px; font-family: var(--v3-font-ui); font-size: 14px; font-weight: 500; color: var(--v3-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 180ms; }
+  .tab:hover { color: var(--v3-text-primary); }
+  .tab.active { color: var(--v3-secondary); border-bottom-color: var(--v3-secondary); font-weight: 600; }
+
+  /* ------- Top navbar (dwukolorowy per spec) ------- */
+  .topnav {
+    height: 56px; display: flex; align-items: stretch;
+    border-radius: var(--v3-r-md); overflow: hidden;
+    box-shadow: var(--v3-shadow-card);
+  }
+  .topnav-left {
+    background: var(--v3-primary); color: #fff;
+    display: flex; align-items: center; gap: 14px; padding: 0 24px;
+    flex-shrink: 0;
+  }
+  .topnav-left .logo {
+    width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--v3-font-display); font-style: italic; font-size: 18px; font-weight: 600;
+    color: #fff; border: 1px solid rgba(255,255,255,0.3);
+  }
+  .topnav-left .name {
+    font-family: var(--v3-font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .topnav-right {
+    background: var(--v3-secondary); color: #fff;
+    flex: 1; display: flex; align-items: center; padding: 0 24px; gap: 16px; justify-content: flex-end;
+  }
+  .topnav-right .search { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.3); flex: 1; max-width: 380px; }
+  .topnav-right .search input { color: #fff; }
+  .topnav-right .search input::placeholder { color: rgba(255, 255, 255, 0.75); }
+  .topnav-right .search svg { color: rgba(255, 255, 255, 0.85); }
+  .topnav-right .nav-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 180ms; color: #fff; }
+  .topnav-right .nav-icon:hover { background: rgba(255, 255, 255, 0.16); }
+  .topnav-right .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--v3-gold); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--v3-font-ui); font-weight: 700; font-size: 13px; border: 2px solid rgba(255,255,255,0.4); }
+
+  /* ------- Sidebar ------- */
+  .sidebar {
+    width: 224px; background: var(--v3-bg-alt); border-right: 1px solid var(--v3-border);
+    padding: 16px 12px; flex-shrink: 0;
+  }
+  .side-section { font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--v3-text-secondary); padding: 12px 12px 8px; }
+  .side-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 6px; font-family: var(--v3-font-ui); font-size: 14px; color: var(--v3-text-primary); cursor: pointer; transition: all 160ms; }
+  .side-item:hover { background: #EEF1F4; }
+  .side-item .si-icon { color: #2C2C2C; display: flex; flex-shrink: 0; }
+  .side-item:hover .si-icon { color: var(--v3-secondary); }
+  .side-item.active { background: var(--v3-secondary-soft); color: var(--v3-secondary); font-weight: 600; }
+  .side-item.active .si-icon { color: var(--v3-secondary); }
+  .side-item .badge-side { margin-left: auto; background: var(--v3-primary); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 9999px; }
+
+  /* ------- Booking row (luxury serif name + gold price) ------- */
+  .booking {
+    display: flex; align-items: center; gap: 16px; padding: 14px 16px;
+    border: 1px solid var(--v3-border); border-radius: var(--v3-r-md);
+    background: #fff; transition: all 180ms;
+  }
+  .booking:hover { box-shadow: var(--v3-shadow-card-hover); border-color: var(--v3-border-strong); }
+  .booking-time {
+    width: 64px; flex-shrink: 0; font-family: var(--v3-font-ui); font-size: 13px;
+    color: var(--v3-text-secondary); font-variant-numeric: tabular-nums;
+  }
+  .booking-time strong { display: block; color: var(--v3-text-primary); font-size: 15px; font-weight: 700; }
+  .booking-cat { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+  .booking-info { flex: 1; min-width: 0; }
+  .booking-info h4 { font-family: var(--v3-font-display); font-size: 17px; font-weight: 600; color: var(--v3-text-primary); margin: 0; letter-spacing: -0.005em; }
+  .booking-info p  { font-size: 13px; color: var(--v3-text-secondary); margin: 2px 0 0; }
+  .booking-price { font-family: var(--v3-font-display); font-size: 17px; font-weight: 700; color: var(--v3-gold); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+  /* ------- Layout ------- */
+  .app { display: flex; min-height: 720px; background: #fff; border: 1px solid var(--v3-border); border-radius: var(--v3-r-md); overflow: hidden; }
+  .app-main { flex: 1; padding: 24px 28px; background: var(--v3-bg); overflow: hidden; }
+  .app-main h1 { font-family: var(--v3-font-display); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+
+  /* Color swatches */
+  .swatch { display: flex; flex-direction: column; gap: 8px; }
+  .swatch-chip { height: 80px; border-radius: var(--v3-r-md); border: 1px solid var(--v3-border); display: flex; align-items: flex-end; padding: 10px 12px; }
+  .swatch-name { font-family: var(--v3-font-ui); font-size: 13px; font-weight: 600; }
+  .swatch-hex { font-family: 'SF Mono', ui-monospace, Menlo, monospace; font-size: 11px; color: var(--v3-text-secondary); }
+
+  /* Type spec */
+  .type-row { display: flex; align-items: baseline; gap: 28px; padding: 12px 0; border-bottom: 1px dashed var(--v3-border); }
+  .type-row:last-child { border-bottom: 0; }
+  .type-spec { width: 200px; flex-shrink: 0; font-family: 'SF Mono', monospace; font-size: 11px; color: var(--v3-text-secondary); }
+
+  /* Avatar utility */
+  .avatar-circle { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--v3-secondary-soft); color: var(--v3-secondary); font-family: var(--v3-font-ui); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
+  /* ------- Hero / Intro band ------- */
+  .intro {
+    background: linear-gradient(180deg, #fff, var(--v3-gold-soft) 280%);
+    border: 1px solid var(--v3-border); border-radius: var(--v3-r-md);
+    padding: 40px 48px; margin-bottom: 32px; position: relative; overflow: hidden;
+  }
+  .intro::after {
+    content: ''; position: absolute; top: 0; right: 0; width: 320px; height: 100%;
+    background: radial-gradient(circle at 80% 50%, rgba(184, 138, 67, 0.12), transparent 60%);
+    pointer-events: none;
+  }
+  .intro-stamp {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--v3-gold); margin-bottom: 14px;
+  }
+  .intro-stamp::before { content: ''; width: 24px; height: 1px; background: var(--v3-gold); }
+  .intro-title { font-family: var(--v3-font-display); font-size: 52px; font-weight: 600; letter-spacing: -0.025em; color: var(--v3-text-primary); margin: 0; line-height: 1.05; }
+  .intro-title em { font-style: italic; color: var(--v3-gold); font-weight: 700; }
+  .intro-desc { font-size: 16px; color: var(--v3-text-secondary); margin: 16px 0 0; max-width: 620px; line-height: 1.6; }
+  .intro-meta { display: flex; gap: 32px; margin-top: 24px; }
+  .intro-meta .key { font-family: var(--v3-font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--v3-text-secondary); margin-bottom: 4px; }
+  .intro-meta .val { font-family: var(--v3-font-display); font-size: 16px; font-weight: 600; color: var(--v3-text-primary); }
+</style>
+</head>
+<body class="v3">
+  <div class="page">
+
+    <!-- ============= INTRO ============= -->
+    <section class="intro">
+      <div class="intro-stamp">SimpliSalon · Revamp v3 · Kwiecień 2026</div>
+      <h1 class="intro-title">Czysty system. <em>Premium duch.</em></h1>
+      <p class="intro-desc">
+        Pełny katalog komponentów UI dla SimpliSalon — zbudowany na zasadach
+        flat designu, 8-punktowej siatce i parze zieleń/błękit (#32855F · #276FB7),
+        z gold akcentem (#B88A43) zarezerwowanym dla nazw usług, cen i premium statusów.
+        Fraunces (variable serif) — luksus + czytelność — tylko na H1 i momentach
+        premium; reszta to Manrope w pełnej hierarchii.
+      </p>
+      <div class="intro-meta">
+        <div><div class="key">Primary</div><div class="val" style="color: var(--v3-primary)">#32855F</div></div>
+        <div><div class="key">Secondary</div><div class="val" style="color: var(--v3-secondary)">#276FB7</div></div>
+        <div><div class="key">Accent</div><div class="val" style="color: var(--v3-accent)">#0875E1</div></div>
+        <div><div class="key">Premium</div><div class="val" style="color: var(--v3-gold)">#B88A43</div></div>
+      </div>
+    </section>
+
+    <!-- ============= 01 · TYPOGRAFIA ============= -->
+    <section class="section">
+      <div class="section-head"><h2>01 · Typografia</h2><span class="num">i.</span></div>
+      <div class="section-body">
+        <div class="type-row"><span class="type-spec">H1 · Fraunces 600 · 28px · 1.3</span><h1 style="margin: 0;">Dzisiejsze wizyty</h1></div>
+        <div class="type-row"><span class="type-spec">H2 · Manrope 600 · 18px · 1.3</span><h2 style="margin: 0;">Szybkie akcje w salonie</h2></div>
+        <div class="type-row"><span class="type-spec">H3 · Manrope 600 · 14px · 1.3</span><h3 style="margin: 0;">Klienci VIP</h3></div>
+        <div class="type-row"><span class="type-spec">Body · Inter 400 · 14px · 1.5</span><p>Zarządzaj rezerwacjami, klientami i zespołem w jednym, czytelnym widoku.</p></div>
+        <div class="type-row"><span class="type-spec">Label · Manrope 500 · 13px</span><span class="v3-label">Imię i nazwisko</span></div>
+        <div class="type-row"><span class="type-spec">Meta · Manrope 400 · 13px · #7B858F</span><span class="v3-meta">Ostatnia wizyta · 12 marca 2026</span></div>
+        <div class="type-row"><span class="type-spec">Link · Inter 500 · 14px · #0875E1</span><a class="v3-link">Zobacz wszystkie klientki</a></div>
+        <div class="type-row"><span class="type-spec">Premium serif (luxury overlay)</span><span class="v3-serif-name">Koloryzacja Balayage <span class="v3-serif-price" style="color: var(--v3-gold); margin-left: 12px;">380,00 zł</span></span></div>
+      </div>
+    </section>
+
+    <!-- ============= 02 · KOLORY ============= -->
+    <section class="section">
+      <div class="section-head"><h2>02 · Paleta</h2><span class="num">ii.</span></div>
+      <div class="section-body">
+        <div class="label-mini">Brand</div>
+        <div class="grid-4" style="margin-bottom: 28px;">
+          <div class="swatch"><div class="swatch-chip" style="background: #32855F;"></div><div class="swatch-name" style="color: #32855F;">Primary · Zieleń</div><div class="swatch-hex">#32855F · CTA, success</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #276FB7;"></div><div class="swatch-name" style="color: #276FB7;">Secondary · Błękit</div><div class="swatch-hex">#276FB7 · navbar prawy, akcenty</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #0875E1;"></div><div class="swatch-name" style="color: #0875E1;">Accent · Link</div><div class="swatch-hex">#0875E1 · linki, aktywne kontrolki</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #B88A43;"></div><div class="swatch-name" style="color: #B88A43;">Premium · Złoto</div><div class="swatch-hex">#B88A43 · ceny, nazwy usług, VIP</div></div>
+        </div>
+        <div class="label-mini">Tekst</div>
+        <div class="grid-4" style="margin-bottom: 28px;">
+          <div class="swatch"><div class="swatch-chip" style="background: #2C2C2C;"></div><div class="swatch-name">Primary</div><div class="swatch-hex">#2C2C2C</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #7B858F;"></div><div class="swatch-name">Secondary</div><div class="swatch-hex">#7B858F</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #0875E1;"></div><div class="swatch-name">Interactive</div><div class="swatch-hex">#0875E1</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #DC3545;"></div><div class="swatch-name">Error</div><div class="swatch-hex">#DC3545</div></div>
+        </div>
+        <div class="label-mini">Powierzchnie i ramki</div>
+        <div class="grid-4">
+          <div class="swatch"><div class="swatch-chip" style="background: #FFFFFF; border-color: var(--v3-border-strong);"></div><div class="swatch-name">Surface</div><div class="swatch-hex">#FFFFFF</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #F3F5F7;"></div><div class="swatch-name">Background</div><div class="swatch-hex">#F3F5F7</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #F7F7F7;"></div><div class="swatch-name">Surface alt</div><div class="swatch-hex">#F7F7F7</div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: #E8EBED;"></div><div class="swatch-name">Border</div><div class="swatch-hex">#E8EBED</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 03 · BUTTONS ============= -->
+    <section class="section">
+      <div class="section-head"><h2>03 · Przyciski</h2><span class="num">iii.</span></div>
+      <div class="section-body">
+        <div class="label-mini">Warianty</div>
+        <div class="row" style="margin-bottom: 24px;">
+          <button class="btn btn-primary">Nowa wizyta</button>
+          <button class="btn btn-secondary">Edytuj klientkę</button>
+          <button class="btn btn-ghost">Anuluj</button>
+          <button class="btn btn-danger">Usuń</button>
+          <button class="btn btn-gold">★ Oznacz jako VIP</button>
+          <a class="btn btn-link">Zobacz szczegóły →</a>
+        </div>
+        <div class="label-mini">Stany (primary)</div>
+        <div class="row" style="margin-bottom: 24px;">
+          <button class="btn btn-primary">Default</button>
+          <button class="btn btn-primary" style="background: var(--v3-primary-hover); box-shadow: 0 2px 8px rgba(50, 133, 95, 0.25);">Hover</button>
+          <button class="btn btn-primary" style="background: #1F5A40;">Active</button>
+          <button class="btn btn-primary" disabled>Disabled</button>
+          <button class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="20"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Loading…</button>
+        </div>
+        <div class="label-mini">Rozmiary</div>
+        <div class="row" style="margin-bottom: 24px;">
+          <button class="btn btn-primary btn-sm">Small</button>
+          <button class="btn btn-primary">Medium</button>
+          <button class="btn btn-primary btn-lg">Large</button>
+          <button class="btn btn-icon" title="Edytuj"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+          <button class="btn btn-icon" title="Plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="btn btn-icon" title="Search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 04 · FORM FIELDS ============= -->
+    <section class="section">
+      <div class="section-head"><h2>04 · Pola formularzy</h2><span class="num">iv.</span></div>
+      <div class="section-body">
+        <div class="grid-2" style="margin-bottom: 28px;">
+          <div class="field"><label class="field-label">Imię i nazwisko</label><input class="input" placeholder="np. Anna Kowalska"></div>
+          <div class="field"><label class="field-label">Email · focus</label><input class="input" value="anna@salon.pl" style="border-color: var(--v3-border-focus); box-shadow: var(--v3-shadow-focus);"></div>
+          <div class="field"><label class="field-label">Telefon</label><input class="input" disabled value="+48 ••• ••• •••"></div>
+          <div class="field"><label class="field-label" style="color: var(--v3-error)">Hasło</label><input class="input is-error" value="abc"><span class="field-error">Hasło musi mieć min. 8 znaków.</span></div>
+          <div class="field"><label class="field-label">Notatki o kliencie</label><textarea class="textarea" placeholder="np. preferowana stylizacja, alergie, wybrane produkty…"></textarea></div>
+          <div class="field"><label class="field-label">Salon</label><select class="select"><option>Salon Luxe — Centrum</option><option>Salon Luxe — Wilanów</option></select><span class="field-hint">Klientka będzie przypisana do tego salonu.</span></div>
+        </div>
+        <div class="label-mini">Wybory</div>
+        <div class="row" style="gap: 24px;">
+          <label class="check"><input type="checkbox" checked><span class="check-box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Powiadom SMS-em</label>
+          <label class="check"><input type="checkbox"><span class="check-box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Wyślij potwierdzenie e-mail</label>
+          <label class="check"><input type="radio" name="r" checked><span class="radio-dot"></span> Indywidualna</label>
+          <label class="check"><input type="radio" name="r"><span class="radio-dot"></span> Grupowa</label>
+          <label class="check"><input type="checkbox" checked><span class="toggle"></span> Online booking</label>
+          <label class="check"><input type="checkbox"><span class="toggle"></span> Zaliczka wymagana</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 05 · NAVIGATION ============= -->
+    <section class="section">
+      <div class="section-head"><h2>05 · Nawigacja</h2><span class="num">v.</span></div>
+      <div class="section-body" style="background: var(--v3-bg);">
+        <div class="topnav" style="margin-bottom: 24px;">
+          <div class="topnav-left">
+            <div class="logo" style="font-style: italic;">L</div>
+            <div class="name">Salon Luxe</div>
+          </div>
+          <div class="topnav-right">
+            <div class="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+              <input placeholder="Szukaj klientek, wizyt, usług…">
+            </div>
+            <div class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+            <div class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 14.6a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 8.4a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 008.4 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 8.4c.36.13.7.32 1 .56" stroke-linecap="round"/></svg></div>
+            <div class="avatar">AK</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 24px;">
+          <div class="sidebar" style="border-radius: 8px; border: 1px solid var(--v3-border);">
+            <div class="side-section">Główne</div>
+            <div class="side-item active"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span> Pulpit</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Kalendarz <span class="badge-side">12</span></div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H1l2-3 6 1zM21 13h-8l2 3 6-1z"/><path d="M3 8l9 13 9-13"/></svg></span> Rezerwacje</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span> Klientki</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span> Usługi</div>
+            <div class="side-section">Inne</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l4-4 4 4 5-5"/></svg></span> Raporty</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 14.6a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 8.4a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 008.4 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 8.4c.36.13.7.32 1 .56"/></svg></span> Ustawienia</div>
+          </div>
+          <div style="flex: 1; background: #fff; border: 1px solid var(--v3-border); border-radius: 8px; padding: 16px 20px;">
+            <div class="tabs" style="margin-bottom: 16px;">
+              <div class="tab active">Wszystkie</div>
+              <div class="tab">Dziś</div>
+              <div class="tab">Ten tydzień</div>
+              <div class="tab">Oczekujące</div>
+              <div class="tab">Anulowane</div>
+            </div>
+            <p class="v3-meta">Tabsy z dolnym borderem #276FB7 + tekst akcentu, zgodnie z dyrektywą.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 06 · CARDS & STATS ============= -->
+    <section class="section">
+      <div class="section-head"><h2>06 · Karty i statystyki</h2><span class="num">vi.</span></div>
+      <div class="section-body">
+        <div class="grid-4" style="margin-bottom: 24px;">
+          <div class="stat">
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+            <div class="stat-eyebrow">Dzisiejsze wizyty</div>
+            <div class="stat-value">12</div>
+            <div class="stat-trend"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M7 17l5-5 5 5M7 7l5 5 5-5"/></svg> +3 wobec wczoraj</div>
+          </div>
+          <div class="stat is-premium">
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="stat-eyebrow">Przychód dzisiaj</div>
+            <div class="stat-value" style="color: var(--v3-gold);">3 840 zł</div>
+            <div class="stat-trend">↑ 12% wobec wczoraj</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="stat-eyebrow">Baza klientek</div>
+            <div class="stat-value">847</div>
+            <div class="stat-trend">+23 w tym miesiącu</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="stat-eyebrow">Zajętość foteli</div>
+            <div class="stat-value">78%</div>
+            <div class="stat-trend down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M7 7l5 5 5-5"/></svg> -4% vs zeszły tydz.</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Nadchodzące wizyty</h3><a class="v3-link" style="font-size: 13px;">Zobacz wszystkie →</a></div>
+            <div class="card-body" style="padding: 12px;">
+              <div class="stack">
+                <div class="booking">
+                  <div class="booking-time"><strong>10:00</strong>11:00</div>
+                  <div class="booking-cat" style="background: var(--v3-secondary)"></div>
+                  <div class="booking-info"><h4>Strzyżenie damskie</h4><p>Anna Kowalska · Magdalena M.</p></div>
+                  <div><span class="badge success">Potwierdzona</span></div>
+                  <div class="booking-price">160 zł</div>
+                </div>
+                <div class="booking">
+                  <div class="booking-time"><strong>14:30</strong>16:00</div>
+                  <div class="booking-cat" style="background: #9333ea"></div>
+                  <div class="booking-info"><h4>Koloryzacja Balayage</h4><p>Iwona Nowak · Paulina K.</p></div>
+                  <div><span class="badge gold">★ VIP</span></div>
+                  <div class="booking-price">380 zł</div>
+                </div>
+                <div class="booking">
+                  <div class="booking-time"><strong>17:00</strong>17:45</div>
+                  <div class="booking-cat" style="background: #db2777"></div>
+                  <div class="booking-info"><h4>Zabieg nawilżający</h4><p>Kinga Wójcik · Alicja R.</p></div>
+                  <div><span class="badge warning">Oczekująca</span></div>
+                  <div class="booking-price">220 zł</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Klientki — top 5</h3><a class="v3-link" style="font-size: 13px;">CRM →</a></div>
+            <div style="padding: 0;">
+              <table class="table">
+                <thead><tr><th>Klientka</th><th>Wizyt</th><th style="text-align:right">Wartość</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar-circle">AK</span><div><div style="font-weight:600">Anna Kowalska</div><div class="v3-meta" style="font-size:12px;">VIP · ostatnio: 14 kwi</div></div></div></td><td>24</td><td style="text-align:right;font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold);">8 420 zł</td><td><a class="v3-link">profil</a></td></tr>
+                  <tr><td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar-circle" style="background: #FCE9EB; color: #DC3545;">IN</span><div><div style="font-weight:600">Iwona Nowak</div><div class="v3-meta" style="font-size:12px;">VIP · ostatnio: 12 kwi</div></div></div></td><td>18</td><td style="text-align:right;font-family: var(--v3-font-display); font-weight: 700; color: var(--v3-gold);">6 280 zł</td><td><a class="v3-link">profil</a></td></tr>
+                  <tr><td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar-circle" style="background: #E6F1EB; color: #32855F;">KW</span><div><div style="font-weight:600">Kinga Wójcik</div><div class="v3-meta" style="font-size:12px;">Stała · ostatnio: 09 kwi</div></div></div></td><td>14</td><td style="text-align:right;font-family: var(--v3-font-display); font-weight: 700;">4 180 zł</td><td><a class="v3-link">profil</a></td></tr>
+                  <tr><td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar-circle">MS</span><div><div style="font-weight:600">Maria Szymańska</div><div class="v3-meta" style="font-size:12px;">Stała · ostatnio: 02 kwi</div></div></div></td><td>11</td><td style="text-align:right;font-family: var(--v3-font-display); font-weight: 700;">3 540 zł</td><td><a class="v3-link">profil</a></td></tr>
+                  <tr><td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar-circle">EZ</span><div><div style="font-weight:600">Ewa Zielińska</div><div class="v3-meta" style="font-size:12px;">Nowa · ostatnio: 28 mar</div></div></div></td><td>3</td><td style="text-align:right;font-family: var(--v3-font-display); font-weight: 700;">980 zł</td><td><a class="v3-link">profil</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 07 · BADGES, MODALS, TOASTS ============= -->
+    <section class="section">
+      <div class="section-head"><h2>07 · Statusy, modale i komunikaty</h2><span class="num">vii.</span></div>
+      <div class="section-body">
+        <div class="label-mini">Badges</div>
+        <div class="row" style="margin-bottom: 28px;">
+          <span class="badge success">Potwierdzona</span>
+          <span class="badge info">Zaplanowana</span>
+          <span class="badge warning">Oczekująca</span>
+          <span class="badge error">Anulowana</span>
+          <span class="badge neutral">Zakończona</span>
+          <span class="badge gold">★ VIP</span>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 28px; gap: 32px; align-items: start;">
+          <div>
+            <div class="label-mini">Modal</div>
+            <div class="modal" style="margin: 0;">
+              <h3>Anulować wizytę?</h3>
+              <p>Klientka <strong style="color: var(--v3-text-primary);">Iwona Nowak</strong> otrzyma SMS z informacją o anulowaniu. Tej operacji nie można cofnąć.</p>
+              <div class="modal-actions">
+                <button class="btn btn-ghost btn-sm">Wróć</button>
+                <button class="btn btn-danger btn-sm">Anuluj wizytę</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="label-mini">Toasty</div>
+            <div class="stack">
+              <div class="toast">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <div><strong>Wizyta zapisana</strong><span>Anna Kowalska · 15 kwi · 10:00</span></div>
+              </div>
+              <div class="toast info">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div><strong>Synchronizacja Booksy</strong><span>Pobrano 7 nowych wizyt z ostatniej godziny.</span></div>
+              </div>
+              <div class="toast warning">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div><strong>Niska dostępność</strong><span>Magdalena M. ma tylko 2 wolne sloty w piątek.</span></div>
+              </div>
+              <div class="toast error">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <div><strong>Nie udało się zapisać</strong><span>Sprawdź połączenie i spróbuj ponownie.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="label-mini">Tooltip</div>
+        <div style="display: flex; gap: 32px; align-items: center;">
+          <div class="tooltip">Klientka VIP — automatyczna 10% zniżka</div>
+          <div class="tooltip" style="border-left: 3px solid var(--v3-gold);">Premium pakiet — 5 wizyt × Balayage</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 08 · DASHBOARD MOCKUP ============= -->
+    <section class="section">
+      <div class="section-head"><h2>08 · Pełny dashboard</h2><span class="num">viii.</span></div>
+      <div class="section-body" style="padding: 0;">
+        <div class="app">
+          <div class="sidebar">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px 16px; border-bottom: 1px solid var(--v3-border); margin-bottom: 12px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--v3-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--v3-font-display); font-style: italic; font-size: 18px; font-weight: 600;">L</div>
+              <div><div style="font-family: var(--v3-font-display); font-size: 16px; font-weight: 600; color: var(--v3-text-primary);">Salon Luxe</div><div style="font-size: 11px; color: var(--v3-text-secondary);">Centrum, Warszawa</div></div>
+            </div>
+            <div class="side-section">Główne</div>
+            <div class="side-item active"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span> Pulpit</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Kalendarz <span class="badge-side">12</span></div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9 13 9-13H3z"/></svg></span> Rezerwacje</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span> Klientki</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span> Usługi</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg></span> Pracownicy</div>
+            <div class="side-section">Analityka</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l4-4 4 4 5-5"/></svg></span> Raporty</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span> Płatności</div>
+            <div class="side-section">System</div>
+            <div class="side-item"><span class="si-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 14.6a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 8.4" stroke-linecap="round"/></svg></span> Ustawienia</div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="topnav" style="border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--v3-border);">
+              <div class="topnav-left" style="padding: 0 20px; gap: 10px;">
+                <div class="logo" style="width: 28px; height: 28px; font-size: 16px;">L</div>
+                <div class="name" style="font-size: 17px;">Salon Luxe</div>
+              </div>
+              <div class="topnav-right">
+                <div class="search">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+                  <input placeholder="Szukaj klientek, wizyt, usług…">
+                </div>
+                <div class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+                <div class="avatar">AK</div>
+              </div>
+            </div>
+            <div class="app-main">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+                <div>
+                  <div class="v3-meta" style="margin-bottom: 4px;">Środa, 15 kwietnia 2026</div>
+                  <h1>Dzień dobry, Anno</h1>
+                  <p class="v3-meta" style="margin-top: 6px;">Dziś masz <strong style="color: var(--v3-text-primary);">12 wizyt</strong> · planowany przychód <strong style="color: var(--v3-gold); font-family: var(--v3-font-display);">3 840 zł</strong></p>
+                </div>
+                <div class="row">
+                  <button class="btn btn-secondary btn-sm">Eksport PDF</button>
+                  <button class="btn btn-primary btn-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Nowa wizyta</button>
+                </div>
+              </div>
+
+              <div class="grid-4" style="margin-bottom: 20px;">
+                <div class="stat">
+                  <div class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+                  <div class="stat-eyebrow">Dziś</div>
+                  <div class="stat-value">12</div>
+                  <div class="stat-trend">+3 vs wczoraj</div>
+                </div>
+                <div class="stat is-premium">
+                  <div class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                  <div class="stat-eyebrow">Przychód</div>
+                  <div class="stat-value" style="color: var(--v3-gold);">3 840 zł</div>
+                  <div class="stat-trend">↑ 12%</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                  <div class="stat-eyebrow">Klientki</div>
+                  <div class="stat-value">847</div>
+                  <div class="stat-trend">+23 / mies.</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                  <div class="stat-eyebrow">Zajętość</div>
+                  <div class="stat-value">78%</div>
+                  <div class="stat-trend down">-4%</div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="card">
+                  <div class="card-head">
+                    <div class="row" style="gap: 8px;"><h3>Dziś — kalendarz wizyt</h3></div>
+                    <div class="tabs" style="border: 0; gap: 4px;"><div class="tab active" style="padding: 4px 10px; font-size: 12px;">Dzień</div><div class="tab" style="padding: 4px 10px; font-size: 12px;">Tydzień</div></div>
+                  </div>
+                  <div class="card-body" style="padding: 12px;">
+                    <div class="stack">
+                      <div class="booking">
+                        <div class="booking-time"><strong>09:00</strong>09:45</div>
+                        <div class="booking-cat" style="background: #16a34a"></div>
+                        <div class="booking-info"><h4>Manicure hybrydowy</h4><p>Maria Szymańska · Paulina K.</p></div>
+                        <div><span class="badge success">Potwierdzona</span></div>
+                        <div class="booking-price">120 zł</div>
+                      </div>
+                      <div class="booking" style="border-color: var(--v3-secondary); box-shadow: 0 2px 6px rgba(39, 111, 183, 0.10); background: var(--v3-secondary-soft);">
+                        <div class="booking-time" style="color: var(--v3-secondary);"><strong style="color: var(--v3-secondary);">10:00</strong>11:00</div>
+                        <div class="booking-cat" style="background: var(--v3-secondary)"></div>
+                        <div class="booking-info"><h4>Strzyżenie damskie</h4><p>Anna Kowalska · Magdalena M. · w trakcie</p></div>
+                        <div><span class="badge info">W trakcie</span></div>
+                        <div class="booking-price">160 zł</div>
+                      </div>
+                      <div class="booking">
+                        <div class="booking-time"><strong>14:30</strong>16:00</div>
+                        <div class="booking-cat" style="background: #9333ea"></div>
+                        <div class="booking-info"><h4>Koloryzacja Balayage</h4><p>Iwona Nowak · Paulina K.</p></div>
+                        <div><span class="badge gold">★ VIP</span></div>
+                        <div class="booking-price">380 zł</div>
+                      </div>
+                      <div class="booking">
+                        <div class="booking-time"><strong>17:00</strong>17:45</div>
+                        <div class="booking-cat" style="background: #db2777"></div>
+                        <div class="booking-info"><h4>Zabieg nawilżający Hydra</h4><p>Kinga Wójcik · Alicja R.</p></div>
+                        <div><span class="badge warning">Oczekująca</span></div>
+                        <div class="booking-price">220 zł</div>
+                      </div>
+                      <div class="booking" style="opacity: 0.65;">
+                        <div class="booking-time"><strong>18:30</strong>19:00</div>
+                        <div class="booking-cat" style="background: var(--v3-border-strong)"></div>
+                        <div class="booking-info"><h4 style="color: var(--v3-text-secondary);">Ewa Zielińska · konsultacja</h4><p>Przesunięte z 16 kwi</p></div>
+                        <div><span class="badge neutral">Anulowana</span></div>
+                        <div class="booking-price" style="color: var(--v3-text-secondary); text-decoration: line-through;">90 zł</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-head"><h3>Szybkie akcje</h3></div>
+                  <div class="card-body">
+                    <div class="stack">
+                      <button class="btn btn-primary" style="width: 100%; justify-content: flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Nowa wizyta</button>
+                      <button class="btn btn-secondary" style="width: 100%; justify-content: flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg> Dodaj klientkę</button>
+                      <button class="btn btn-ghost" style="width: 100%; justify-content: flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l9 13 9-13H3z"/></svg> Stwórz voucher</button>
+                      <button class="btn btn-gold" style="width: 100%; justify-content: flex-start;">★ Wyślij kampanię VIP</button>
+                    </div>
+                    <div style="height: 1px; background: var(--v3-border); margin: 20px 0;"></div>
+                    <div class="label-mini">Pogoda dla foteli</div>
+                    <div style="display: flex; align-items: flex-end; gap: 4px; height: 60px; margin-top: 10px;">
+                      <div style="flex: 1; background: var(--v3-primary-soft); height: 40%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary-soft); height: 60%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary); height: 78%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary); height: 90%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary); height: 95%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary-soft); height: 55%; border-radius: 3px;"></div>
+                      <div style="flex: 1; background: var(--v3-primary-soft); height: 30%; border-radius: 3px;"></div>
+                    </div>
+                    <div class="row" style="justify-content: space-between; margin-top: 6px;">
+                      <span class="v3-meta" style="font-size: 11px;">Pn</span>
+                      <span class="v3-meta" style="font-size: 11px;">Wt</span>
+                      <span class="v3-meta" style="font-size: 11px; color: var(--v3-text-primary); font-weight: 700;">Śr</span>
+                      <span class="v3-meta" style="font-size: 11px;">Cz</span>
+                      <span class="v3-meta" style="font-size: 11px;">Pt</span>
+                      <span class="v3-meta" style="font-size: 11px;">So</span>
+                      <span class="v3-meta" style="font-size: 11px;">Nd</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= FOOTER ============= -->
+    <section style="text-align: center; padding: 40px 0 0; color: var(--v3-text-secondary); font-size: 13px;">
+      SimpliSalon Revamp v3 · Kwiecień 2026 · Tokeny w <code style="background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--v3-border); font-family: 'SF Mono', monospace;">revamp/tokens-v3.css</code>
+    </section>
+
+  </div>
+</body>
+</html>

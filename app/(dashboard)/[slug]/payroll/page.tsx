@@ -101,7 +101,7 @@ export default function PayrollPage() {
   if (!hasPermission('finance:view')) {
     return (
       <div className="max-w-[1600px] mx-auto space-y-6 pb-8 px-4 sm:px-0">
-        <Card className="glass border-rose-100">
+        <Card className=" border-rose-100">
           <CardContent className="py-12 text-center">
             <div className="mx-auto h-16 w-16 bg-rose-50 rounded-full flex items-center justify-center mb-4">
               <DollarSign className="h-8 w-8 text-rose-500" />
@@ -141,7 +141,7 @@ export default function PayrollPage() {
           </p>
         </div>
 
-        <div className="flex flex-col items-stretch gap-4 glass p-4 rounded-2xl border-white/40 shadow-sm sm:items-end">
+        <div className="flex flex-col items-stretch gap-4  p-4 rounded-2xl border-white/40 shadow-sm sm:items-end">
           <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
               <Button
                 type="button"
@@ -245,18 +245,18 @@ export default function PayrollPage() {
       {isLoading ? (
         <div className="space-y-8">
           <div className="grid gap-6 sm:grid-cols-2">
-            <Skeleton className="h-32 rounded-3xl" />
-            <Skeleton className="h-32 rounded-3xl" />
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
           </div>
           <div className="space-y-4">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-3xl" />)}
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
           </div>
         </div>
       ) : payroll?.entries?.length > 0 ? (
         <>
           {/* Summary Cards */}
           <div className="grid gap-6 sm:grid-cols-2">
-            <Card className="glass overflow-hidden border-none shadow-xl shadow-blue-500/5 group hover:shadow-blue-500/10 transition-all">
+            <Card className=" overflow-hidden border-none shadow-xl shadow-blue-500/5 group hover:shadow-blue-500/10 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <CreditCard className="h-16 w-16" />
               </div>
@@ -268,7 +268,7 @@ export default function PayrollPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass overflow-hidden border-none shadow-xl shadow-emerald-500/5 group hover:shadow-emerald-500/10 transition-all">
+            <Card className=" overflow-hidden border-none shadow-xl shadow-emerald-500/5 group hover:shadow-emerald-500/10 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Users className="h-16 w-16" />
               </div>
@@ -284,7 +284,7 @@ export default function PayrollPage() {
           {/* Employee payroll entries */}
           <div className="space-y-6">
             {payroll.entries.map((entry: any) => (
-              <Card key={entry.employeeId} className="glass border-white/60 shadow-lg hover:shadow-xl transition-all rounded-3xl overflow-hidden group">
+              <Card key={entry.employeeId} className=" border-white/60 shadow-lg hover:shadow-xl transition-all rounded-xl overflow-hidden group">
                 <CardHeader className="pb-2 border-b border-gray-100/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -443,7 +443,7 @@ export default function PayrollPage() {
           </div>
         </>
       ) : (
-        <Card className="glass border-white shadow-xl rounded-3xl">
+        <Card className="border bg-card shadow-xl rounded-xl">
           <CardContent className="py-20 text-center">
             <div className="mx-auto h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
               <DollarSign className="h-10 w-10 text-gray-300" />

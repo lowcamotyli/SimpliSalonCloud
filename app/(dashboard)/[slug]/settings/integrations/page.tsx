@@ -120,10 +120,10 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Integracje</h1>
-        <p className="text-muted-foreground">Połącz zewnętrzne usługi i automatyzuj salon</p>
+    <div className="mx-auto max-w-6xl">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-5">
+        <h1 className="text-2xl font-semibold tracking-tight">Integracje</h1>
+        <p className="text-sm text-muted-foreground">Połącz zewnętrzne usługi i automatyzuj salon</p>
       </div>
 
       <div className="mt-8 space-y-12">
@@ -293,7 +293,7 @@ export default function IntegrationsPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-sm shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center shadow-sm shrink-0">
                     <span className="text-white font-black text-sm">P</span>
                   </div>
                   <span className="font-bold text-foreground text-sm">

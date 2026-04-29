@@ -130,7 +130,7 @@ export default function EquipmentListView({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] shadow-[var(--v3-shadow-card)]">
       <Table>
         <TableHeader>
           <TableRow>
@@ -178,18 +178,18 @@ export default function EquipmentListView({
             return (
               <TableRow
                 key={item.id}
-                className="cursor-pointer transition-colors hover:bg-muted/40"
+                className="cursor-pointer transition-colors hover:bg-[var(--v3-secondary-soft)]"
                 onClick={() => onOpenServices(item)}
               >
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{getTypeLabel(item.type)}</TableCell>
                 <TableCell>
-                  <Badge variant={servicesCount === 0 ? 'secondary' : 'default'}>
+                  <Badge variant={servicesCount === 0 ? 'neutral' : 'info'}>
                     {servicesCount} uslug
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                  <Badge variant={item.is_active ? 'success' : 'neutral'}>
                     {item.is_active ? 'Aktywny' : 'Nieaktywny'}
                   </Badge>
                 </TableCell>

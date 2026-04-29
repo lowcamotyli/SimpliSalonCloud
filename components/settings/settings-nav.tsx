@@ -35,7 +35,7 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
   )
 
   return (
-    <nav className="flex overflow-x-auto gap-1 pb-2 border-b border-border">
+    <nav className="flex gap-1 overflow-x-auto border-b border-border/70 pb-0.5">
       {visibleItems.map(item => {
         const href = `${baseUrl}${item.href}`
         // Match exact or startsWith depending on routing, but exact is safer here for settings.
@@ -47,12 +47,13 @@ export function SettingsNav({ baseUrl }: { baseUrl: string }) {
             key={href}
             href={href}
             className={cn(
-              buttonVariants({ variant: isActive ? 'secondary' : 'ghost' }),
-              'justify-start whitespace-nowrap shrink-0 gap-2 text-sm h-10 px-4 transition-colors'
+              buttonVariants({ variant: 'ghost' }),
+              'mb-[-1px] h-11 shrink-0 gap-2 rounded-none border-b-2 border-transparent px-4 text-sm text-muted-foreground transition-colors hover:text-foreground',
+              isActive && 'border-b-primary font-semibold text-foreground'
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            <span className={cn(isActive ? "font-medium" : "font-normal")}>{item.label}</span>
+            <span className={cn(isActive ? 'font-semibold' : 'font-normal')}>{item.label}</span>
           </Link>
         )
       })}

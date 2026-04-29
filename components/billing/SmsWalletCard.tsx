@@ -86,7 +86,7 @@ export default function SmsWalletCard() {
   }
 
   return (
-    <div className="rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6">
+    <div className="rounded-2xl border border-border/50 bg-card  shadow-xl p-6">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="space-y-1">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function SmsWalletCard() {
               key={pkg.packageSize}
               type="button"
               variant="outline"
-              className="h-auto py-3 px-4 rounded-xl bg-background/70"
+              className="h-auto py-3 px-4 rounded-full bg-background/70"
               disabled={isBusy}
               onClick={() => handleTopup(pkg.packageSize)}
             >

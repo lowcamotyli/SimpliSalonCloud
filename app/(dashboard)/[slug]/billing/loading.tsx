@@ -7,10 +7,10 @@ export default function Loading() {
             {/* Header Skeleton */}
             <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                    <Skeleton className="h-8 w-64 rounded-lg" />
+                    <Skeleton className="h-8 w-64 rounded-xl" />
                     <Skeleton className="h-4 w-96 rounded-md" />
                 </div>
-                <Skeleton className="h-10 w-32 rounded-lg" />
+                <Skeleton className="h-10 w-32 rounded-xl" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -33,9 +33,9 @@ export default function Loading() {
                             <Skeleton className="h-16 w-full rounded-xl" />
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-gray-100">
-                            <Skeleton className="h-10 w-32 rounded-lg" />
-                            <Skeleton className="h-10 w-40 rounded-lg" />
+                        <div className="flex gap-3 pt-4 border-t border-border">
+                            <Skeleton className="h-10 w-32 rounded-xl" />
+                            <Skeleton className="h-10 w-40 rounded-xl" />
                         </div>
                     </Card>
 
@@ -77,9 +77,9 @@ export default function Loading() {
                         <div className="p-6 space-y-4">
                             <Skeleton className="h-20 w-full rounded-xl" />
                             <div className="grid grid-cols-3 gap-2">
-                                <Skeleton className="h-16 w-full rounded-lg" />
-                                <Skeleton className="h-16 w-full rounded-lg" />
-                                <Skeleton className="h-16 w-full rounded-lg" />
+                                <Skeleton className="h-16 w-full rounded-xl" />
+                                <Skeleton className="h-16 w-full rounded-xl" />
+                                <Skeleton className="h-16 w-full rounded-xl" />
                             </div>
                         </div>
                     </Card>

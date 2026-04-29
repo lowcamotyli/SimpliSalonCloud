@@ -4,6 +4,16 @@ import { useEffect } from 'react'
 import { THEMES, type ThemeKey } from '@/lib/types/settings'
 import { hexToHsl } from '@/lib/utils/color'
 
+const REVAMP_V3 = {
+  primary: '#32855F',
+  secondary: '#276FB7',
+  accent: '#0875E1',
+  background: '#F3F5F7',
+  card: '#FFFFFF',
+  text: '#2C2C2C',
+  border: '#E8EBED',
+}
+
 interface ThemeProviderProps {
   themeKey: ThemeKey
   children: React.ReactNode
@@ -11,8 +21,7 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ themeKey, children }: ThemeProviderProps) {
   useEffect(() => {
-    const theme = THEMES[themeKey]
-    if (!theme) return
+    if (!THEMES[themeKey]) return
 
     const root = document.documentElement
     root.setAttribute('data-theme-key', themeKey)
@@ -22,39 +31,29 @@ export function ThemeProvider({ themeKey, children }: ThemeProviderProps) {
       root.style.setProperty(name, hexToHsl(hex))
     }
 
-    setHslVar('--primary', theme.primary)
-    setHslVar('--secondary', theme.secondary)
-    setHslVar('--accent', theme.accent)
-    setHslVar('--background', theme.background)
-    setHslVar('--card', theme.card)
+    setHslVar('--primary', REVAMP_V3.primary)
+    setHslVar('--secondary', REVAMP_V3.secondary)
+    setHslVar('--accent', REVAMP_V3.accent)
+    setHslVar('--background', REVAMP_V3.background)
+    setHslVar('--card', REVAMP_V3.card)
 
     // Set HEX variables for cases where HSL is not ideal
-    root.style.setProperty('--primary-hex', theme.primary)
-    root.style.setProperty('--background-hex', theme.background)
-    root.style.setProperty('--text-hex', theme.text)
+    root.style.setProperty('--primary-hex', REVAMP_V3.primary)
+    root.style.setProperty('--background-hex', REVAMP_V3.background)
+    root.style.setProperty('--text-hex', REVAMP_V3.text)
 
     // Set text/foreground
-    setHslVar('--foreground', theme.text)
-    setHslVar('--card-foreground', theme.text)
-    setHslVar('--popover-foreground', theme.text)
+    setHslVar('--foreground', REVAMP_V3.text)
+    setHslVar('--card-foreground', REVAMP_V3.text)
+    setHslVar('--popover-foreground', REVAMP_V3.text)
+    setHslVar('--border', REVAMP_V3.border)
+    setHslVar('--input', REVAMP_V3.border)
+    setHslVar('--ring', REVAMP_V3.secondary)
 
-    // Dynamic primary foreground for better contrast
-    if (themeKey === 'auto_service' || themeKey === 'beauty_salon') {
-      root.style.setProperty('--primary-foreground', '25 15% 15%') // Dark Brown/Black
-    } else {
-      root.style.setProperty('--primary-foreground', '0 0% 100%') // White
-    }
-
-    // Theme-specific border tuning
-    root.style.setProperty('--border', themeKey === 'auto_service' ? '36 32% 83%' : '214.3 31.8% 91.4%')
-
-    // Set radius
-    const radiusMap = {
-      sm: '0.3rem',
-      md: '0.5rem',
-      lg: '0.75rem'
-    }
-    root.style.setProperty('--radius', radiusMap[theme.borderRadius])
+    root.style.setProperty('--primary-foreground', '0 0% 100%')
+    root.style.setProperty('--secondary-foreground', '0 0% 100%')
+    root.style.setProperty('--accent-foreground', '0 0% 100%')
+    root.style.setProperty('--radius', 'var(--v3-r-md)')
 
   }, [themeKey])
 

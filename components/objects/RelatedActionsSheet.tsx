@@ -31,6 +31,7 @@ type RelatedActionsSheetProps = {
   avatarUrl?: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  triggerRef?: React.RefObject<HTMLButtonElement>
 }
 
 function splitActions(actions: RelatedAction[]): {
@@ -67,6 +68,7 @@ export function RelatedActionsSheet({
   avatarUrl,
   open,
   onOpenChange,
+  triggerRef,
 }: RelatedActionsSheetProps): React.JSX.Element {
   const router = useRouter()
   const config = OBJECT_TYPE_CONFIG[type]
@@ -76,6 +78,10 @@ export function RelatedActionsSheet({
     [id, router, slug, type]
   )
   const groups = React.useMemo(() => splitActions(actions), [actions])
+
+  const returnFocusToTrigger = React.useCallback((): void => {
+    window.setTimeout(() => triggerRef?.current?.focus(), 0)
+  }, [triggerRef])
 
   const handleAction = React.useCallback(
     async (action: RelatedAction): Promise<void> => {
@@ -90,26 +96,93 @@ export function RelatedActionsSheet({
       } finally {
         setLoadingActionId(null)
         onOpenChange(false)
+        returnFocusToTrigger()
       }
     },
-    [id, loadingActionId, onOpenChange, slug]
+    [id, loadingActionId, onOpenChange, returnFocusToTrigger, slug]
+  )
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean): void => {
+      onOpenChange(nextOpen)
+
+      if (!nextOpen) {
+        returnFocusToTrigger()
+      }
+    },
+    [onOpenChange, returnFocusToTrigger]
+  )
+
+  const handleMenuKeyDown = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>): void => {
+      if (event.key === "Escape") {
+        event.preventDefault()
+        handleOpenChange(false)
+        return
+      }
+
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "Enter") {
+        return
+      }
+
+      const menuItems = Array.from(
+        event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+      ).filter((item) => item.getAttribute("aria-disabled") !== "true")
+
+      if (menuItems.length === 0) {
+        return
+      }
+
+      const activeIndex = menuItems.findIndex((item) => item === document.activeElement)
+
+      if (event.key === "Enter") {
+        if (activeIndex >= 0) {
+          event.preventDefault()
+          menuItems[activeIndex]?.click()
+        }
+        return
+      }
+
+      event.preventDefault()
+
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? activeIndex < 0
+            ? 0
+            : (activeIndex + 1) % menuItems.length
+          : activeIndex < 0
+            ? menuItems.length - 1
+            : (activeIndex - 1 + menuItems.length) % menuItems.length
+
+      menuItems[nextIndex]?.focus()
+    },
+    [handleOpenChange]
   )
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-xl px-4 pb-5 pt-8">
-        <SheetHeader className="mb-4 flex-row items-center gap-3 space-y-0 text-left">
-          <ObjectAvatar type={type} size="lg" avatarUrl={avatarUrl} label={label} />
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="overflow-hidden rounded-t-2xl border border-[var(--v3-border)] bg-white px-0 pb-0 pt-0 shadow-[var(--v3-shadow-modal)]"
+      >
+        <div className="mx-auto mb-1.5 mt-2.5 h-1 w-9 rounded-full bg-[var(--v3-border-strong)]" />
+        <SheetHeader className="mb-0 flex-row items-center gap-3 space-y-0 border-b border-[var(--v3-border)] px-4 pb-3.5 pt-2 text-left">
+          <ObjectAvatar type={type} size="lg" avatarUrl={avatarUrl} label={label} className="h-11 w-11 text-sm" />
           <div className="min-w-0">
-            <SheetTitle className="truncate text-base leading-none">{label}</SheetTitle>
-            <SheetDescription className="truncate text-xs">
+            <SheetTitle className="truncate font-display text-lg font-semibold leading-tight text-[var(--v3-text-primary)]">{label}</SheetTitle>
+            <SheetDescription className="truncate font-ui text-xs text-[var(--v3-text-secondary)]">
               {config.label}
               {meta ? ` · ${meta}` : ""}
             </SheetDescription>
           </div>
         </SheetHeader>
 
-        <div className="space-y-2">
+        <div
+          aria-label={`${label} - akcje`}
+          className="space-y-0 px-2 pb-3 pt-1.5"
+          onKeyDown={handleMenuKeyDown}
+          role="menu"
+        >
           {groups.primary.map((action: RelatedAction) => {
             const Icon = action.icon
             const isLoading = loadingActionId === action.id
@@ -126,18 +199,22 @@ export function RelatedActionsSheet({
                   void handleAction(action)
                 }}
                 className={cn(
-                  "flex min-h-[44px] w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-semibold text-primary",
-                  "active:bg-muted",
+                  "flex min-h-[44px] w-full items-center gap-3 rounded-[var(--v3-r)] px-3 py-3.5 text-left font-ui text-[15px] font-semibold text-[var(--v3-primary)]",
+                  "active:bg-[var(--v3-bg-alt)]",
                   isDisabled && "pointer-events-none opacity-50"
                 )}
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+                {isLoading ? (
+                  <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin" />
+                ) : (
+                  <Icon className="h-[18px] w-[18px] shrink-0" />
+                )}
                 <span>{action.label}</span>
               </button>
             )
           })}
 
-          {groups.regular.length > 0 ? <div className="h-px bg-border" /> : null}
+          {groups.regular.length > 0 ? <div className="my-1 h-px bg-[var(--v3-border)]" /> : null}
 
           {groups.regular.map((action: RelatedAction) => {
             const Icon = action.icon
@@ -155,22 +232,22 @@ export function RelatedActionsSheet({
                   void handleAction(action)
                 }}
                 className={cn(
-                  "flex min-h-[44px] w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm",
-                  "active:bg-muted",
+                  "flex min-h-[44px] w-full items-center gap-3 rounded-[var(--v3-r)] px-3 py-3.5 text-left font-ui text-[15px] font-medium text-[var(--v3-text-primary)]",
+                  "active:bg-[var(--v3-bg-alt)]",
                   isDisabled && "pointer-events-none opacity-50"
                 )}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin" />
                 ) : (
-                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--v3-text-secondary)]" />
                 )}
                 <span>{action.label}</span>
               </button>
             )
           })}
 
-          {groups.destructive.length > 0 ? <div className="h-px bg-border" /> : null}
+          {groups.destructive.length > 0 ? <div className="my-1 h-px bg-[var(--v3-border)]" /> : null}
 
           {groups.destructive.map((action: RelatedAction) => {
             const Icon = action.icon
@@ -188,15 +265,15 @@ export function RelatedActionsSheet({
                   void handleAction(action)
                 }}
                 className={cn(
-                  "flex min-h-[44px] w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-destructive",
-                  "active:bg-destructive/10",
+                  "flex min-h-[44px] w-full items-center gap-3 rounded-[var(--v3-r)] px-3 py-3.5 text-left font-ui text-[15px] font-medium text-[var(--v3-error)]",
+                  "active:bg-[var(--v3-error-bg)]",
                   isDisabled && "pointer-events-none opacity-50"
                 )}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin" />
                 ) : (
-                  <Icon className="h-4 w-4 text-destructive" />
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--v3-error)]" />
                 )}
                 <span>{action.label}</span>
               </button>

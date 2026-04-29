@@ -147,8 +147,8 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
   const lastNotif = watch?.last_notification_at ? formatRelativeTime(watch.last_notification_at) : null
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
+      <CardHeader className="border-b border-border/80 pb-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <CardTitle className="text-base font-semibold">{mailbox.gmail_email}</CardTitle>
@@ -177,7 +177,7 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-0">
+      <CardContent className="space-y-3 pt-5">
         <div className="flex flex-wrap items-center gap-2">
           {mailbox.auth_status === "reauth_required" ? (
             <Button disabled={pendingAction !== null} onClick={onReconnect} size="sm" type="button" variant="default">
@@ -210,7 +210,7 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
               <Button
                 disabled={pendingAction !== null}
                 onClick={(): Promise<void> => runPostAction("set_primary", "/api/integrations/booksy/health", { action: "set_primary", accountId: mailbox.id })}
-                size="sm" type="button" variant="ghost"
+                size="sm" type="button" variant="outline"
               >
                 {pendingAction === "set_primary" ? "Trwa..." : "Ustaw jako główną"}
               </Button>
@@ -218,7 +218,7 @@ export function MailboxHealthCard({ mailbox, watch, salonSlug }: MailboxHealthCa
             <Button
               disabled={pendingAction !== null}
               onClick={(): Promise<void> => runPostAction("deactivate", "/api/integrations/booksy/health", { action: "deactivate", accountId: mailbox.id })}
-              size="sm" type="button" variant="ghost"
+              size="sm" type="button" variant="outline"
               className="text-destructive hover:text-destructive"
             >
               {pendingAction === "deactivate" ? "Trwa..." : "Rozłącz"}

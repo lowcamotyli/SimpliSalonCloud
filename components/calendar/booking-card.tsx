@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS, getServiceCategoryColor } from '@/lib/constants'
 import { Clock, User, DollarSign, Sparkles, Trash2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { ObjectAvatar, ObjectLink, ObjectPill, ObjectTrigger } from '@/components/objects'
+import { cn } from '@/lib/utils'
 
 type Booking = {
   id: string
@@ -43,6 +45,7 @@ interface BookingCardProps {
   onDelete?: () => void
   employeeColors?: any
   groupBookings?: Booking[]
+  slug?: string
 }
 
 const statusColors = {
@@ -56,16 +59,54 @@ const statusColors = {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Label } from '@/components/ui/label'
 
-export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors, groupBookings }: BookingCardProps) {
+export function BookingCard({ booking, onClick, serviceCategory, onDelete, employeeColors, groupBookings, slug }: BookingCardProps) {
   const isGroup = groupBookings && groupBookings.length > 1
   const router = useRouter()
+  const params = useParams<{ slug?: string | string[] }>()
   const [isDeleting, setIsDeleting] = useState(false)
   const categoryColor = getServiceCategoryColor(serviceCategory)
+  const paramsSlug = typeof params.slug === 'string' ? params.slug : Array.isArray(params.slug) ? params.slug[0] : undefined
+  const resolvedSlug = slug ?? paramsSlug
+  const missingClientLabel = '— walk-in, brak danych —'
+  const isDestructiveState = booking.status === 'cancelled' || booking.status === 'conflict'
+  const isActiveState = booking.status === 'confirmed'
+  const workerLabel = `${booking.employee.first_name} ${booking.employee.last_name || ''}`.trim()
+  const clientLabel = booking.client?.full_name || missingClientLabel
+  const serviceLabel = isGroup ? groupBookings!.map((b) => b.service.name).join(' + ') : booking.service.name
+  const groupStartMinutes = isGroup
+    ? Math.min(...groupBookings!.map((b) => {
+        const [bookingHour, bookingMinute] = b.booking_time.substring(0, 5).split(':').map(Number)
+        return bookingHour * 60 + bookingMinute
+      }))
+    : null
+  const groupEndMinutes = isGroup
+    ? Math.max(...groupBookings!.map((b) => {
+        const [bookingHour, bookingMinute] = b.booking_time.substring(0, 5).split(':').map(Number)
+        return bookingHour * 60 + bookingMinute + b.duration
+      }))
+    : null
+  const displayDuration = isGroup && groupStartMinutes !== null && groupEndMinutes !== null
+    ? groupEndMinutes - groupStartMinutes
+    : booking.duration
+  const isCompact = displayDuration < 60
 
   const startTime = booking.booking_time.substring(0, 5)
   const [hours, minutes] = startTime.split(':').map(Number)
-  const endDate = new Date(0, 0, 0, hours, minutes + booking.duration)
+  const endDate = new Date(0, 0, 0, hours, minutes + displayDuration)
   const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`
+  const groupTotalPrice = isGroup
+    ? groupBookings!.reduce((sum, entry) => sum + (Number(entry.total_price) || Number(entry.base_price) || 0), 0)
+    : booking.total_price
+  const getBookingMinutes = (time: string) => {
+    const [entryHour, entryMinute] = time.substring(0, 5).split(':').map(Number)
+    return entryHour * 60 + entryMinute
+  }
+  const formatBookingRange = (entry: Booking) => {
+    const entryStart = entry.booking_time.substring(0, 5)
+    const [entryHour, entryMinute] = entryStart.split(':').map(Number)
+    const entryEndDate = new Date(0, 0, 0, entryHour, entryMinute + entry.duration)
+    return `${entryStart} - ${String(entryEndDate.getHours()).padStart(2, '0')}:${String(entryEndDate.getMinutes()).padStart(2, '0')}`
+  }
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click
@@ -111,33 +152,243 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
     <Tooltip delayDuration={300}>
       <TooltipTrigger asChild>
         <Card
-          className={`theme-booking-card h-full min-h-11 w-full p-2 glass rounded-lg cursor-pointer group transition-all duration-200 hover:shadow-xl hover:z-50 border-l-4 ${employeeColors?.border || categoryColor.border} ${employeeColors?.bg || 'bg-white'} relative overflow-hidden flex flex-col`}
-          onClick={onClick}
+          className={`theme-booking-card relative flex h-full min-h-11 w-full cursor-pointer flex-col overflow-hidden rounded-[var(--v3-r-md)] border border-l-4 border-[var(--v3-border)] bg-[var(--v3-surface)] p-2 shadow-[var(--v3-shadow-card)] transition-[border-color,box-shadow,background-color,transform] duration-200 hover:z-50 hover:border-[var(--v3-border-strong)] hover:shadow-[var(--v3-shadow-card-hover)] ${employeeColors?.border || categoryColor.border} ${isActiveState ? 'bg-[var(--v3-secondary-soft)] ring-1 ring-[var(--v3-secondary)]/20' : ''} ${isDestructiveState ? 'ring-1 ring-destructive/50 border-destructive/40' : ''} ${booking.status === 'cancelled' ? 'opacity-60' : ''}`}
+          onClick={onClick ?? (() => { if (resolvedSlug) router.push(`/${resolvedSlug}/bookings/${booking.id}`) })}
         >
-          <div className="flex-1 flex flex-col justify-between min-h-0">
-            <div className="flex items-start justify-between gap-1 overflow-hidden">
-              <div className="flex-1 min-w-0 pr-1">
-                <p className="theme-booking-card-title font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate text-[12px] leading-tight">
-                  {booking.client?.full_name || 'Nieznany klient'}
-                  {isGroup && <span className="ml-1 text-[9px] font-semibold text-purple-500 bg-purple-50 px-1 rounded">×{groupBookings!.length}</span>}
-                </p>
-                {isGroup ? (
-                  <div className="flex flex-col gap-0.5">
-                    {groupBookings!.map((b) => (
-                      <p key={b.id} className={`text-[10px] font-semibold ${categoryColor.text} truncate leading-tight theme-service-name`}>
-                        {b.service.name}
-                      </p>
-                    ))}
+          {isGroup && !isCompact ? (
+            <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <p className="truncate text-[12px] font-bold leading-tight text-[var(--v3-text-primary)]">
+                      {clientLabel}
+                    </p>
+                    <span className="shrink-0 rounded bg-purple-50 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-purple-600">
+                      {groupBookings!.length} usl.
+                    </span>
                   </div>
-                ) : (
-                  <p className={`theme-booking-card-service text-[10px] font-semibold ${categoryColor.text} truncate leading-tight theme-service-name`}>
-                    {booking.service.name}
+                  <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[var(--v3-text-secondary)]">
+                    {booking.client?.phone || 'Brak telefonu'}
                   </p>
-                )}
+                </div>
+                <div className="relative shrink-0 flex items-start justify-end w-[30px] h-[24px]">
+                  <Badge className={`theme-booking-card-status absolute right-0 top-0 shrink-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
+                    {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="absolute right-0 -top-1 h-11 w-11 min-h-[44px] min-w-[44px] p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 z-10"
+                    title="Anuluj wizytę"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="relative min-h-0 flex-1 overflow-hidden rounded-[var(--v3-r-sm)] border border-[var(--v3-border)] bg-white/60 p-1.5">
+                <div className="absolute bottom-1.5 left-2 top-1.5 w-px bg-[var(--v3-border)]" aria-hidden="true" />
+                {groupBookings!.map((b) => (
+                  <div
+                    key={b.id}
+                    className="absolute left-3 right-1 min-h-12 min-w-0 rounded-[var(--v3-r-sm)] border border-[var(--v3-border)] bg-[var(--v3-surface)] px-1.5 py-1 shadow-sm"
+                    style={{
+                      top: `${Math.max(0, ((getBookingMinutes(b.booking_time) - (groupStartMinutes ?? 0)) / Math.max(displayDuration, 1)) * 100)}%`,
+                      height: `${Math.max(12, (b.duration / Math.max(displayDuration, 1)) * 100)}%`,
+                    }}
+                  >
+                    <p className="truncate font-display text-[11px] font-bold leading-tight text-[var(--v3-text-primary)]">
+                      {b.service.name}
+                    </p>
+                    <p className="mt-0.5 truncate text-[9px] font-medium leading-tight text-[var(--v3-text-secondary)]">
+                      {formatBookingRange(b)}
+                    </p>
+                    <div className="mt-0.5 flex min-w-0 items-center justify-between gap-1 text-[9px] font-medium leading-tight text-[var(--v3-text-secondary)]">
+                      <span className="min-w-0 truncate">
+                        {`${b.employee.first_name} ${b.employee.last_name || ''}`.trim()}
+                      </span>
+                      <span className="shrink-0 font-semibold text-[var(--v3-gold)]">
+                        {(Number(b.total_price) || Number(b.base_price) || 0).toFixed(0)} zł
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 overflow-hidden">
+                <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600">
+                  <Clock className="theme-booking-card-meta-icon h-2.5 w-2.5 text-purple-600" />
+                  <span className="text-[10px] font-medium">{startTime} - {endTime}</span>
+                </div>
+                <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600 shrink-0">
+                  <DollarSign className="theme-booking-card-meta-icon h-2.5 w-2.5 text-[var(--v3-gold)]" />
+                  <span className="font-display text-[10px] font-bold text-[var(--v3-gold)] tabular-nums shrink-0">
+                    {(groupTotalPrice || 0).toFixed(0)} zł
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : isCompact ? (
+            <div className="flex h-full min-h-0 flex-col justify-center gap-0.5 overflow-hidden">
+              <div className="flex min-w-0 items-center justify-between gap-1">
+                <span className="theme-booking-card-service min-w-0 truncate font-display text-[13px] font-bold leading-tight text-[var(--v3-text-primary)]">
+                  {serviceLabel}
+                </span>
+                {isGroup && <span className="shrink-0 rounded bg-purple-50 px-1 text-[9px] font-semibold text-purple-500">x{groupBookings!.length}</span>}
+              </div>
+              <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-tight text-[var(--v3-text-secondary)]">
+                <span className="shrink-0 tabular-nums">{startTime}</span>
+                <span className="text-[var(--v3-text-disabled)]">-</span>
+                <span className="min-w-0 truncate">{clientLabel}</span>
+                <span className="text-[var(--v3-text-disabled)]">-</span>
+                <span className="min-w-0 truncate">{workerLabel}</span>
+              </div>
+            </div>
+          ) : (
+          <div className="flex-1 flex flex-col justify-between min-h-0">
+            <div className={cn('flex items-start justify-between gap-1 overflow-hidden', isGroup && 'min-h-0 flex-1')}>
+              <div className="flex-1 min-w-0 pr-1 h-full">
+                <div className={cn('flex flex-col gap-0.5 min-w-0', isGroup && 'h-full min-h-0')}>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                      {booking.client ? (
+                        resolvedSlug ? (
+                          <ObjectPill
+                            type="client"
+                            id={booking.client.id}
+                            label={booking.client.full_name}
+                            slug={resolvedSlug}
+                            className="max-w-[120px]"
+                          />
+                        ) : (
+                          <span
+                            className="inline-flex h-7 max-w-[120px] items-center gap-1.5 rounded-[var(--v3-r-pill)] border border-[var(--v3-border)] bg-[var(--v3-secondary-soft)] px-2 py-0.5 text-sm text-[var(--v3-text-primary)]"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <ObjectAvatar type="client" label={booking.client.full_name} size="sm" />
+                            <ObjectLink
+                              type="client"
+                              id={booking.client.id}
+                              label={booking.client.full_name}
+                              slug=""
+                              disabled
+                              showDot={false}
+                              className="max-w-[120px] truncate px-0 py-0 hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-1"
+                            />
+                          </span>
+                        )
+                      ) : (
+                        <ObjectPill
+                          type="client"
+                          id=""
+                          label={missingClientLabel}
+                          slug={resolvedSlug || ''}
+                          className="max-w-[120px] pointer-events-none border-dashed italic opacity-50"
+                        />
+                      )}
+                    </div>
+                    <ObjectTrigger
+                      type="client"
+                      id={booking.client?.id || ''}
+                      label={booking.client?.full_name || missingClientLabel}
+                      slug={resolvedSlug || ''}
+                      className="shrink-0"
+                    />
+                    {isGroup && <span className="ml-1 text-[9px] font-semibold text-purple-500 bg-purple-50 px-1 rounded shrink-0">×{groupBookings!.length}</span>}
+                  </div>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                      {resolvedSlug ? (
+                        <ObjectPill
+                          type="worker"
+                          id={booking.employee.id}
+                          label={workerLabel}
+                          slug={resolvedSlug}
+                          className="max-w-[120px]"
+                        />
+                      ) : (
+                        <span
+                          className="inline-flex h-7 max-w-[120px] items-center gap-1.5 rounded-[var(--v3-r-pill)] border border-[var(--v3-border)] bg-[var(--v3-primary-soft)] px-2 py-0.5 text-sm text-[var(--v3-text-primary)]"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ObjectAvatar type="worker" label={workerLabel} size="sm" />
+                          <ObjectLink
+                            type="worker"
+                            id={booking.employee.id}
+                            label={workerLabel}
+                            slug=""
+                            disabled
+                            showDot={false}
+                            className="max-w-[120px] truncate px-0 py-0 hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-1"
+                          />
+                        </span>
+                      )}
+                    </div>
+                    <ObjectTrigger
+                      type="worker"
+                      id={booking.employee.id}
+                      label={workerLabel}
+                      slug={resolvedSlug || ''}
+                      className="shrink-0"
+                    />
+                  </div>
+                  {isGroup ? (
+                    <div className="mt-1 flex min-w-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-[var(--v3-r-sm)] border border-[var(--v3-border)] bg-white/50 p-1">
+                      {groupBookings!.map((b) => (
+                        <div key={b.id} className="min-w-0 rounded-[var(--v3-r-sm)] bg-[var(--v3-surface)] px-1.5 py-1">
+                          <div className="flex min-w-0 items-center gap-1">
+                            <ObjectLink
+                              type="service"
+                              id={b.service.id}
+                              label={b.service.name}
+                              slug={resolvedSlug || ''}
+                              disabled={!resolvedSlug}
+                              className="theme-booking-card-service min-w-0 flex-1 truncate px-0 py-0 font-display text-[12px] font-semibold leading-tight text-[var(--v3-text-primary)]"
+                            />
+                            <ObjectTrigger
+                              type="service"
+                              id={b.service.id}
+                              label={b.service.name}
+                              slug={resolvedSlug || ''}
+                              className="h-5 w-5 shrink-0"
+                            />
+                          </div>
+                          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[9px] font-medium leading-tight text-[var(--v3-text-secondary)]">
+                            <span className="shrink-0 tabular-nums">{b.booking_time.substring(0, 5)}</span>
+                            <span className="text-[var(--v3-text-disabled)]">-</span>
+                            <span className="min-w-0 truncate">
+                              {`${b.employee.first_name} ${b.employee.last_name || ''}`.trim()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 min-w-0">
+                      <ObjectLink
+                        type="service"
+                        id={booking.service.id}
+                        label={booking.service.name}
+                        slug={resolvedSlug || ''}
+                        disabled={!resolvedSlug}
+                        className="theme-booking-card-service max-w-[140px] truncate px-0 py-0 font-display text-[13px] font-semibold leading-tight text-[var(--v3-text-primary)]"
+                      />
+                      <ObjectTrigger
+                        type="service"
+                        id={booking.service.id}
+                        label={booking.service.name}
+                        slug={resolvedSlug || ''}
+                        className="shrink-0 h-5 w-5"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="relative shrink-0 flex items-start justify-end w-[30px] h-[24px]">
-                {booking.duration >= 45 && (
-                  <Badge className={`theme-booking-card-status absolute right-0 top-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
+                {displayDuration >= 45 && (
+                  <Badge className={`theme-booking-card-status absolute right-0 top-0 shrink-0 transition-opacity duration-200 group-hover:opacity-0 ${statusColors[booking.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'} border text-[9px] px-1 h-4`}>
                     {(BOOKING_STATUS_LABELS[booking.status] || booking.status || '').substring(0, 3)}
                   </Badge>
                 )}
@@ -154,30 +405,31 @@ export function BookingCard({ booking, onClick, serviceCategory, onDelete, emplo
               </div>
             </div>
 
-            {booking.duration >= 60 && (
+            {displayDuration >= 60 && (
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto overflow-hidden">
                 <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600">
                   <Clock className="theme-booking-card-meta-icon h-2.5 w-2.5 text-purple-600" />
-                  <span className="text-[10px] font-medium">{startTime}</span>
+                  <span className="text-[10px] font-medium">{startTime} - {endTime}</span>
                 </div>
-                {booking.duration >= 90 && (
-                  <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600">
-                    <DollarSign className="theme-booking-card-meta-icon h-2.5 w-2.5 text-purple-600" />
-                    <span className="text-[10px] font-bold text-purple-600">{(booking.total_price || 0).toFixed(0)} zł</span>
+                {displayDuration >= 90 && (
+                  <div className="theme-booking-card-meta flex items-center gap-1 text-gray-600 shrink-0">
+                    <DollarSign className="theme-booking-card-meta-icon h-2.5 w-2.5 text-[var(--v3-gold)]" />
+                    <span className="font-display text-[10px] font-bold text-[var(--v3-gold)] tabular-nums shrink-0">{(groupTotalPrice || 0).toFixed(0)} zł</span>
                   </div>
                 )}
               </div>
             )}
 
-            {booking.notes && booking.duration >= 90 && (
+            {booking.notes && displayDuration >= 90 && (
               <p className="theme-booking-card-notes text-[9px] text-gray-500 italic mt-1 truncate border-t border-black/5 pt-1">
                 {booking.notes}
               </p>
             )}
           </div>
+          )}
         </Card>
       </TooltipTrigger>
-      <TooltipContent side="right" className="w-80 p-0 overflow-hidden border-none shadow-2xl z-[100]">
+      <TooltipContent side="right" className="w-80 p-0 overflow-hidden border-none shadow-lg z-[100]">
         <div className="bg-white text-gray-900 border rounded-lg overflow-hidden shadow-xl">
           <div className={`p-4 border-l-4 ${employeeColors?.border || categoryColor.border} bg-gray-50/80`}>
             <div className="flex justify-between items-start gap-2">

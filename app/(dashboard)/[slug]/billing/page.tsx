@@ -97,7 +97,7 @@ function UsageBar({ label, current, limit, icon: Icon }: {
           <span className="text-sm text-muted-foreground font-medium">/ {isUnlimited ? 'Bez limitu' : (limit as number).toLocaleString('pl-PL')}</span>
         </div>
       </div>
-      <div className="relative w-full bg-secondary/50 rounded-full h-2 overflow-hidden backdrop-blur-sm border border-border/50">
+      <div className="relative w-full bg-secondary/50 rounded-full h-2 overflow-hidden border border-border/50">
         {isUnlimited ? (
           <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-teal-500 w-full opacity-30" />
         ) : (
@@ -166,15 +166,15 @@ export default function BillingPage() {
     return (
       <div className="max-w-[1400px] mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">
-          <div className="h-10 w-64 bg-muted rounded-xl" />
+          <div className="h-10 w-64 bg-muted rounded-full" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="h-64 bg-muted/40 rounded-3xl" />
-              <div className="h-48 bg-muted/40 rounded-3xl" />
+              <div className="h-64 bg-muted/40 rounded-2xl" />
+              <div className="h-48 bg-muted/40 rounded-2xl" />
             </div>
             <div className="space-y-6">
-              <div className="h-48 bg-muted/40 rounded-3xl" />
-              <div className="h-32 bg-muted/40 rounded-3xl" />
+              <div className="h-48 bg-muted/40 rounded-2xl" />
+              <div className="h-32 bg-muted/40 rounded-2xl" />
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function BillingPage() {
           </p>
         </div>
         <Link href={`/${slug}/billing/upgrade`} className="shrink-0">
-          <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-lg shadow-primary/25 gap-2 font-semibold transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-0.5 rounded-xl">
+          <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/25 gap-2 font-semibold transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-0.5 rounded-full">
             <Sparkles className="h-4 w-4" />
             Zmień Plan
           </Button>
@@ -214,11 +214,11 @@ export default function BillingPage() {
 
       {/* Alert Banners */}
       {status === 'trialing' && trialEndsAt && (
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background/50 backdrop-blur-md shadow-lg shadow-primary/5 p-5 md:p-6 group transition-all duration-300 hover:border-primary/40">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card  shadow-lg shadow-primary/5 p-5 md:p-6 ">
+          <div className="hidden" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
@@ -231,7 +231,7 @@ export default function BillingPage() {
               </div>
             </div>
             <Link href={`/${slug}/billing/upgrade`} className="self-stretch sm:self-auto">
-              <Button className="w-full sm:w-auto bg-primary text-primary-foreground gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl">
+              <Button className="w-full sm:w-auto bg-primary text-primary-foreground gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-full">
                 Wybierz Plan
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
@@ -241,11 +241,11 @@ export default function BillingPage() {
       )}
 
       {status === 'past_due' && (
-        <div className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-background/50 backdrop-blur-md shadow-lg shadow-red-500/10 p-5 md:p-6 group transition-all duration-300 hover:border-red-500/50">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-red-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-card  shadow-lg shadow-red-500/10 p-5 md:p-6 ">
+          <div className="hidden" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/20 shadow-inner">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 border border-red-200">
                 <XCircle className="h-6 w-6 text-red-500" />
               </div>
               <div>
@@ -256,7 +256,7 @@ export default function BillingPage() {
               </div>
             </div>
             <Link href={`/${slug}/billing/upgrade`} className="self-stretch sm:self-auto">
-              <Button variant="destructive" className="w-full sm:w-auto gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl">
+              <Button variant="destructive" className="w-full sm:w-auto gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-full">
                 Zaktualizuj Płatność
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
@@ -269,7 +269,7 @@ export default function BillingPage() {
         {/* Sekcja: Plan i zasoby */}
         <section>
           <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+            <div className="p-2 rounded-full bg-primary/10 text-primary">
               <Activity className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-bold tracking-tight text-foreground">
@@ -280,13 +280,10 @@ export default function BillingPage() {
           <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
             <div className="xl:col-span-3">
               {/* Current Plan Card */}
-              <div className="h-full group relative overflow-hidden rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-border/80 transition-all duration-500">
-                {/* Dynamic decorative background elements */}
-                <div className={`absolute top-0 right-0 -mt-20 -mr-20 h-64 w-64 rounded-full bg-gradient-to-br ${planColors.from} ${planColors.to} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-500`} />
-                <div className={`absolute bottom-0 left-0 -mb-20 -ml-20 h-40 w-40 rounded-full bg-gradient-to-br ${planColors.from} ${planColors.to} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500`} />
+              <div className="h-full group relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl hover:shadow-md hover:border-border/80 transition-all duration-500">
 
                 {/* Gradient Top Bar */}
-                <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${planColors.from} ${planColors.to}`} />
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-primary" />
 
                 <div className="relative p-6 sm:p-8">
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
@@ -300,7 +297,7 @@ export default function BillingPage() {
                           {STATUS_LABELS[status] || status}
                         </span>
                       </div>
-                      <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70 mb-2">
+                      <h2 className="text-4xl font-black text-foreground mb-2">
                         {PLAN_LABELS[plan] || plan}
                       </h2>
                       {subscription?.amount ? (
@@ -313,14 +310,14 @@ export default function BillingPage() {
                       )}
                     </div>
 
-                    <div className={`hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${planColors.from} ${planColors.to} shadow-lg ${planColors.shadow} text-white transform rotate-3 group-hover:rotate-6 transition-transform duration-500`}>
+                    <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-md text-white transform rotate-3 group-hover:rotate-6 transition-transform duration-500">
                       <TrendingUp className="h-8 w-8" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                     {currentPeriodEnd && (
-                      <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                      <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-card p-4 transition-colors hover:bg-background/80">
                         <div className="flex items-center gap-2 text-muted-foreground mb-1">
                           <Calendar className="h-4 w-4 text-primary" />
                           <span className="text-xs font-semibold uppercase tracking-wider">Odnowienie</span>
@@ -330,14 +327,14 @@ export default function BillingPage() {
                         </span>
                       </div>
                     )}
-                    <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                    <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-card p-4 transition-colors hover:bg-background/80">
                       <div className="flex items-center gap-2 text-muted-foreground mb-1">
                         <Shield className="h-4 w-4 text-emerald-500" />
                         <span className="text-xs font-semibold uppercase tracking-wider">Ochrona</span>
                       </div>
                       <span className="text-sm font-bold text-foreground">SSL / TLS Zapewnione</span>
                     </div>
-                    <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-background/50 p-4 transition-colors hover:bg-background/80">
+                    <div className="flex flex-col justify-center rounded-2xl border border-border/50 bg-card p-4 transition-colors hover:bg-background/80">
                       <div className="flex items-center gap-2 text-muted-foreground mb-1">
                         <Zap className="h-4 w-4 text-amber-500" />
                         <span className="text-xs font-semibold uppercase tracking-wider">Uptime</span>
@@ -348,7 +345,7 @@ export default function BillingPage() {
 
                   <div className="flex flex-wrap gap-4 pt-6 border-t border-border/50">
                     <Link href={`/${slug}/billing/upgrade`}>
-                      <Button className="bg-foreground text-background hover:bg-foreground/90 hover:scale-105 transition-all duration-300 shadow-xl shadow-foreground/10 rounded-xl px-6 h-11 font-semibold text-sm">
+                      <Button className="bg-foreground text-background hover:bg-foreground/90 hover:scale-105 transition-all duration-300 shadow-xl shadow-foreground/10 rounded-full px-6 h-11 font-semibold text-sm">
                         Aktualizuj Plan
                       </Button>
                     </Link>
@@ -357,7 +354,7 @@ export default function BillingPage() {
                         variant="outline"
                         onClick={handleCancel}
                         disabled={canceling}
-                        className="border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-all duration-300 rounded-xl px-6 h-11 font-medium bg-transparent"
+                        className="border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-all duration-300 rounded-full px-6 h-11 font-medium bg-transparent"
                       >
                         {canceling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                         Anuluj Subskrypcję
@@ -370,10 +367,10 @@ export default function BillingPage() {
 
             <div className="xl:col-span-2">
               {/* Usage Stats */}
-              <div className="h-full rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
+              <div className="h-full rounded-2xl border border-border/50 bg-card shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                    <div className="p-2.5 rounded-full bg-primary/10 text-primary">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                     <div>
@@ -456,7 +453,7 @@ export default function BillingPage() {
         {/* Sekcja: Płatności */}
         <section>
           <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+            <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
               <CardIcon className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-bold tracking-tight text-foreground">
@@ -466,9 +463,9 @@ export default function BillingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Payment Method */}
-            <div className="h-full rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
+            <div className="h-full rounded-2xl border border-border/50 bg-card shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
               <h2 className="text-lg font-bold text-foreground flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
                   <CardIcon className="h-5 w-5" />
                 </div>
                 Metoda Płatności
@@ -476,8 +473,8 @@ export default function BillingPage() {
 
               {subscription?.paymentMethod ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 rounded-2xl border border-border bg-background/50 p-4 hover:shadow-md transition-shadow">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 border border-border shadow-sm">
+                  <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted border border-border shadow-sm">
                       <CardIcon className="h-6 w-6 text-foreground" />
                     </div>
                     <div>
@@ -514,7 +511,7 @@ export default function BillingPage() {
             </div>
 
             {/* Przelewy24 System */}
-            <div className="h-full rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl overflow-hidden hover:border-border/80 transition-all duration-500 group flex flex-col">
+            <div className="h-full rounded-2xl border border-border/50 bg-card shadow-xl overflow-hidden hover:border-border/80 transition-all duration-500 group flex flex-col">
               <div className="relative border-b border-border/50 bg-muted/20 px-6 py-5 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
                 <div className="relative flex items-center justify-between">
@@ -531,7 +528,7 @@ export default function BillingPage() {
               <div className="p-6 space-y-6">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <div className="inline-flex items-center gap-2 rounded-2xl bg-background border border-border shadow-inner px-5 py-3 group-hover:shadow-md transition-shadow">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-sm">
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-sm">
                       <span className="text-white text-sm font-black">P</span>
                     </div>
                     <span className="font-extrabold text-foreground text-lg tracking-tight">Przelewy<span className="text-red-600">24</span></span>
@@ -549,7 +546,7 @@ export default function BillingPage() {
                     ].map((method) => (
                       <div
                         key={method.label}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-border/50 bg-background/50 py-3 px-2 hover:bg-muted/50 transition-colors shadow-sm"
+                        className="flex flex-col items-center gap-2 rounded-full border border-border/50 bg-card py-3 px-2 hover:bg-muted/50 transition-colors shadow-sm"
                       >
                         <span className="text-2xl group-hover:scale-110 transition-transform">{method.icon}</span>
                         <span className="text-xs text-foreground font-semibold">{method.label}</span>
@@ -558,7 +555,7 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                <div className="rounded-full bg-emerald-500/5 border border-emerald-500/10 p-4">
                   <p className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
                     <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-emerald-500" />
                     Płatności obsługiwane przez Przelewy24. Bezpieczne transakcje kartą, BLIK-iem i przelewem bankowym.
@@ -568,7 +565,7 @@ export default function BillingPage() {
             </div>
 
             {/* Info card */}
-            <div className="h-full rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
+            <div className="h-full rounded-2xl border border-border/50 bg-card shadow-xl p-6 sm:p-8 hover:border-border/80 transition-all duration-500 flex flex-col">
               <h2 className="text-sm font-bold text-foreground mb-4 tracking-wide uppercase">Warto Wiedzieć</h2>
               <div className="space-y-4">
                 {[
@@ -587,7 +584,7 @@ export default function BillingPage() {
 
               <div className="mt-auto pt-6 border-t border-border/50">
                 <Link href={`/${slug}/billing/invoices`}>
-                  <Button variant="secondary" className="w-full text-foreground hover:bg-muted font-bold rounded-xl gap-2 h-11">
+                  <Button variant="secondary" className="w-full text-foreground hover:bg-muted font-bold rounded-full gap-2 h-11">
                     <FileText className="h-4 w-4" />
                     Historia Faktur
                   </Button>

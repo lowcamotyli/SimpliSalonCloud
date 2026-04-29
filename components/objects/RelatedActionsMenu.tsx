@@ -78,6 +78,11 @@ export function RelatedActionsMenu({
     [id, router, slug, type]
   )
   const groups = React.useMemo(() => splitActions(actions), [actions])
+  const trigger = React.cloneElement(children, {
+    "aria-expanded": open,
+    "aria-haspopup": "menu",
+    "aria-label": `Akcje dla ${label}`,
+  })
 
   const handleActionSelect = React.useCallback(
     async (action: RelatedAction): Promise<void> => {
@@ -99,13 +104,17 @@ export function RelatedActionsMenu({
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[min(92vw,320px)] min-w-[248px] p-2">
-        <div className="mb-2 flex items-center gap-3 border-b pb-3">
-          <ObjectAvatar type={type} size="lg" avatarUrl={avatarUrl} label={label} />
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={6}
+        className="w-[min(92vw,320px)] min-w-[248px] rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white p-1.5 shadow-[var(--v3-shadow-modal)]"
+      >
+        <div className="mb-1.5 flex items-center gap-2.5 border-b border-[var(--v3-border)] px-2.5 pb-3 pt-2.5">
+          <ObjectAvatar type={type} size="lg" avatarUrl={avatarUrl} label={label} className="h-10 w-10" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{label}</p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate font-ui text-[13.5px] font-bold text-[var(--v3-text-primary)]">{label}</p>
+            <p className="truncate font-ui text-[11.5px] text-[var(--v3-text-secondary)]">
               {config.label}
               {meta ? ` · ${meta}` : ""}
             </p>
@@ -123,19 +132,29 @@ export function RelatedActionsMenu({
               role="menuitem"
               aria-disabled={isDisabled}
               disabled={isDisabled}
-              className={cn("gap-2 font-semibold text-primary", isDisabled && "opacity-50")}
+              className={cn(
+                "min-h-[34px] gap-2.5 px-2.5 py-2 font-ui text-[13.5px] font-semibold text-[var(--v3-primary)] focus:bg-[var(--v3-secondary-soft)] focus:text-[var(--v3-secondary)]",
+                isDisabled && "opacity-50"
+              )}
               onSelect={(event: Event): void => {
                 event.preventDefault()
                 void handleActionSelect(action)
               }}
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+              ) : (
+                <Icon className="h-4 w-4 shrink-0" />
+              )}
               <span>{action.label}</span>
+              <span className="ml-auto font-mono text-[11px] font-normal text-[var(--v3-text-secondary)]">
+                Enter
+              </span>
             </DropdownMenuItem>
           )
         })}
 
-        {groups.regular.length > 0 ? <DropdownMenuSeparator /> : null}
+        {groups.regular.length > 0 ? <DropdownMenuSeparator className="mx-0 my-1.5" /> : null}
 
         {groups.regular.map((action: RelatedAction) => {
           const Icon = action.icon
@@ -148,23 +167,26 @@ export function RelatedActionsMenu({
               role="menuitem"
               aria-disabled={isDisabled}
               disabled={isDisabled}
-              className={cn("gap-2", isDisabled && "opacity-50")}
+              className={cn(
+                "min-h-[34px] gap-2.5 px-2.5 py-2 font-ui text-[13.5px] text-[var(--v3-text-primary)] hover:bg-[var(--v3-bg-alt)] focus:bg-[var(--v3-secondary-soft)] focus:text-[var(--v3-secondary)]",
+                isDisabled && "opacity-50"
+              )}
               onSelect={(event: Event): void => {
                 event.preventDefault()
                 void handleActionSelect(action)
               }}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Icon className="h-4 w-4 shrink-0 text-[var(--v3-text-secondary)]" />
               )}
               <span>{action.label}</span>
             </DropdownMenuItem>
           )
         })}
 
-        {groups.destructive.length > 0 ? <DropdownMenuSeparator /> : null}
+        {groups.destructive.length > 0 ? <DropdownMenuSeparator className="mx-0 my-1.5" /> : null}
 
         {groups.destructive.map((action: RelatedAction) => {
           const Icon = action.icon
@@ -178,8 +200,7 @@ export function RelatedActionsMenu({
               aria-disabled={isDisabled}
               disabled={isDisabled}
               className={cn(
-                "gap-2 text-destructive focus:text-destructive",
-                "focus:bg-destructive/10",
+                "min-h-[34px] gap-2.5 px-2.5 py-2 font-ui text-[13.5px] text-[var(--v3-error)] hover:bg-[var(--v3-error-bg)] focus:bg-[var(--v3-error-bg)] focus:text-[var(--v3-error)]",
                 isDisabled && "opacity-50"
               )}
               onSelect={(event: Event): void => {
@@ -188,9 +209,9 @@ export function RelatedActionsMenu({
               }}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
-                <Icon className="h-4 w-4 text-destructive" />
+                <Icon className="h-4 w-4 shrink-0 text-[var(--v3-error)]" />
               )}
               <span>{action.label}</span>
             </DropdownMenuItem>

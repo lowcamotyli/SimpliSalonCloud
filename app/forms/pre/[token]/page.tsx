@@ -183,19 +183,19 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin border-4 border-gray-200 border-t-green-500 rounded-full w-8 h-8"></div>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-200 border-t-blue-600"></div>
       </div>
     )
   }
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-8 text-center">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Formularz wysłany!</h1>
-          <p className="text-gray-600">Dziękujemy! Twoje odpowiedzi zostały zapisane. Do zobaczenia na wizycie.</p>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-6xl text-emerald-600">✓</div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900">Formularz wysłany!</h1>
+          <p className="text-neutral-600">Dziękujemy! Twoje odpowiedzi zostały zapisane. Do zobaczenia na wizycie.</p>
         </div>
       </div>
     )
@@ -203,11 +203,11 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   if (status === 'already_submitted') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-8 text-center">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Formularz już wysłany</h1>
-          <p className="text-gray-600">Dziękujemy za wypełnienie formularza przed wizytą.</p>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-6xl text-emerald-600">✓</div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900">Formularz już wysłany</h1>
+          <p className="text-neutral-600">Dziękujemy za wypełnienie formularza przed wizytą.</p>
         </div>
       </div>
     )
@@ -215,11 +215,11 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   if (status === 'expired') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-8 text-center">
-          <div className="text-red-500 text-6xl mb-4">✕</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Link wygasł</h1>
-          <p className="text-gray-600">Ten link jest nieważny lub wygasł.</p>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-6xl text-red-600">✕</div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900">Link wygasł</h1>
+          <p className="text-neutral-600">Ten link jest nieważny lub wygasł.</p>
         </div>
       </div>
     )
@@ -227,14 +227,14 @@ export default function PreAppointmentFormPage(): JSX.Element {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-8 text-center">
-          <div className="text-red-500 text-6xl mb-4">!</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Wystąpił błąd</h1>
-          <p className="text-gray-600">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-6xl text-red-600">!</div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900">Wystąpił błąd</h1>
+          <p className="text-neutral-600">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-6 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            className="mt-6 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700"
           >
             Spróbuj ponownie
           </button>
@@ -250,34 +250,33 @@ export default function PreAppointmentFormPage(): JSX.Element {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-white">
-          <h2 className="text-xl font-bold text-gray-900">{formData.salonName}</h2>
-          <h1 className="text-lg font-medium text-gray-700 mt-1">Formularz przed wizytą</h1>
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
+      <div className="mx-auto max-w-2xl rounded-xl border border-neutral-200 bg-white shadow-sm">
+        <div className="border-b border-neutral-200 p-6">
+          <h2 className="text-xl font-bold text-neutral-900">{formData.salonName}</h2>
+          <h1 className="mt-1 text-lg font-medium text-neutral-700">Formularz przed wizytą</h1>
           {formData.clientName && (
-            <p className="mt-4 text-gray-800">Cześć, <span className="font-semibold">{formData.clientName}</span>!</p>
+            <p className="mt-4 text-neutral-800">Cześć, <span className="font-semibold">{formData.clientName}</span>!</p>
           )}
-          <p className="text-gray-600 mt-1">Prosimy o wypełnienie krótkiego formularza przed wizytą.</p>
+          <p className="mt-1 text-neutral-600">Prosimy o wypełnienie krótkiego formularza przed wizytą.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 p-6 md:p-8">
           {visibleFields.map((field) => (
-            <div key={field.id} className="space-y-2">
+            <div key={field.id} className="space-y-3">
               {field.type === 'section_header' ? (
-                <div className="pt-4">
-                  <h3 className="text-lg font-bold text-gray-900">{field.label}</h3>
-                  <hr className="mt-2 border-gray-200" />
+                <div className="mt-8 border-t border-neutral-200 pt-8 first:mt-0 first:border-0 first:pt-0">
+                  <h3 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-500">{field.label}</h3>
                 </div>
               ) : (
                 <>
-                  <label className="block font-bold text-gray-900">
+                  <label className="block text-sm font-semibold text-neutral-800">
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
                   
                   {field.helpText && (
-                    <p className="text-gray-500 text-sm italic">{field.helpText}</p>
+                    <p className="text-xs text-neutral-500">{field.helpText}</p>
                   )}
 
                   {field.type === 'text' && (
@@ -286,8 +285,8 @@ export default function PreAppointmentFormPage(): JSX.Element {
                       placeholder={field.placeholder || 'Twoja odpowiedz...'}
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${
-                        validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                      className={`h-11 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100 ${
+                        validationErrors[field.id] ? 'border-red-500' : 'border-neutral-300'
                       }`}
                     />
                   )}
@@ -298,8 +297,8 @@ export default function PreAppointmentFormPage(): JSX.Element {
                       placeholder={field.placeholder || 'Twoja odpowiedz...'}
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${
-                        validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                      className={`min-h-[96px] w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100 ${
+                        validationErrors[field.id] ? 'border-red-500' : 'border-neutral-300'
                       }`}
                     />
                   )}
@@ -308,8 +307,8 @@ export default function PreAppointmentFormPage(): JSX.Element {
                     <select
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      className={`w-full p-2 border rounded-md bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all ${
-                        validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                      className={`h-11 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100 ${
+                        validationErrors[field.id] ? 'border-red-500' : 'border-neutral-300'
                       }`}
                     >
                       <option value="">Wybierz opcje...</option>
@@ -326,60 +325,60 @@ export default function PreAppointmentFormPage(): JSX.Element {
                       type="date"
                       value={(answers[field.id] as string) || ''}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all ${
-                        validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                      className={`h-11 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100 ${
+                        validationErrors[field.id] ? 'border-red-500' : 'border-neutral-300'
                       }`}
                     />
                   )}
 
                   {field.type === 'radio' && (
-                    <div className="space-y-2 mt-2">
+                    <div className="mt-2 grid gap-2">
                       {field.options?.map((option) => (
-                        <label key={option} className="flex items-center space-x-3 cursor-pointer">
+                        <label key={option} className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2.5">
                           <input
                             type="radio"
                             name={field.id}
                             value={option}
                             checked={answers[field.id] === option}
                             onChange={(e) => handleInputChange(field.id, e.target.value)}
-                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                            className="h-4 w-4 border-neutral-300 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-gray-700">{option}</span>
+                          <span className="text-sm text-neutral-700">{option}</span>
                         </label>
                       ))}
                     </div>
                   )}
 
                   {field.type === 'checkbox' && (
-                    <div className="space-y-2 mt-2">
+                    <div className="mt-2 grid gap-2">
                       {field.options?.length ? (
                         field.options.map((option) => (
-                          <label key={option} className="flex items-center space-x-3 cursor-pointer">
+                          <label key={option} className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2.5">
                             <input
                               type="checkbox"
                               checked={((answers[field.id] as string[]) || []).includes(option)}
                               onChange={(e) => handleCheckboxChange(field.id, option, e.target.checked)}
-                              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                              className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-gray-700">{option}</span>
+                            <span className="text-sm text-neutral-700">{option}</span>
                           </label>
                         ))
                       ) : (
-                        <label className="flex items-center space-x-3 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2.5">
                           <input
                             type="checkbox"
                             checked={Boolean(answers[field.id])}
                             onChange={(e) => handleBooleanChange(field.id, e.target.checked)}
-                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                            className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-gray-700">Tak / Potwierdzam</span>
+                          <span className="text-sm text-neutral-700">Tak / Potwierdzam</span>
                         </label>
                       )}
                     </div>
                   )}
 
                   {validationErrors[field.id] && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors[field.id]}</p>
+                    <p className="mt-1 text-sm text-red-600">{validationErrors[field.id]}</p>
                   )}
                 </>
               )}
@@ -387,7 +386,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
           ))}
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -395,7 +394,7 @@ export default function PreAppointmentFormPage(): JSX.Element {
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {status === 'submitting' ? (
               <>

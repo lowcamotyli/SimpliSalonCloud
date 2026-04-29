@@ -166,6 +166,7 @@ export async function POST(request: NextRequest) {
           p_payment_method: body.paymentMethod ?? null,
           p_notes: body.notes ?? null,
           p_items: rpcItems,
+          p_terms_accepted_at: null,
         }
       );
 

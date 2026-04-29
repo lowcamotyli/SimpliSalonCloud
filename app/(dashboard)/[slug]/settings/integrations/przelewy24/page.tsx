@@ -106,7 +106,7 @@ export default function Przelewy24SettingsPage() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-md">
+            <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center shadow-sm">
               <span className="text-white font-black text-base">P</span>
             </div>
             <div>

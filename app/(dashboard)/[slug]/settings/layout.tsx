@@ -38,19 +38,20 @@ export default async function SettingsLayout({
   const baseUrl = `/${slug}/settings`
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 pb-8 px-4 sm:px-0">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-8 px-4 pb-10 pt-2 sm:px-6 lg:px-8">
+      <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm sm:p-7">
+        <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-primary">Ustawienia salonu</div>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Ustawienia
         </h1>
-        <p className="text-muted-foreground text-base">
+        <p className="mt-2 text-base text-muted-foreground">
           Zarządzaj konfiguracją salonu
         </p>
       </div>
 
-    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card p-4 shadow-sm sm:p-6">
         <SettingsNav baseUrl={baseUrl} />
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {children}
         </div>
       </div>

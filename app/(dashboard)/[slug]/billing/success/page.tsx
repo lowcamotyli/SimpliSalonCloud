@@ -131,7 +131,7 @@ export default function BillingSuccessPage() {
       >
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-primary/30 to-primary/50 rounded-2xl blur opacity-25 animate-pulse" />
 
-        <Card className="relative overflow-hidden border-border bg-card shadow-xl rounded-xl">
+        <Card className="relative overflow-hidden border-border bg-card shadow-xl rounded-2xl">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/80 via-primary to-primary/80" />
 
           <div className="p-8 sm:p-12 text-center space-y-8">
@@ -166,7 +166,7 @@ export default function BillingSuccessPage() {
               <p className="text-muted-foreground text-lg leading-relaxed">{content.description}</p>
             </div>
 
-            <div className="bg-primary/5 rounded-xl p-4 border border-primary/10 flex items-center gap-3 text-left">
+            <div className="bg-muted/30 rounded-2xl p-4 border border-border flex items-center gap-3 text-left">
               <ShieldCheck className="h-10 w-10 text-primary flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground text-sm">Status transakcji</p>
@@ -181,7 +181,7 @@ export default function BillingSuccessPage() {
                 </Button>
               </Link>
               <Link href={`/${slug}/dashboard`} className="w-full sm:w-auto">
-                <Button className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/20">
+                <Button className="w-full h-11 bg-primary text-primary-foreground">
                   Przejdz do dashboardu
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ListLoadingState } from '@/components/ui/list-loading-state'
+import { ObjectCell, ObjectLink, ObjectPill, ObjectTrigger } from '@/components/objects'
 import { BOOKING_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/constants'
 import {
   Search,
@@ -16,7 +17,6 @@ import {
   DollarSign,
   Clock,
   Filter,
-  ChevronRight,
   MoreVertical,
   CheckCircle2,
   XCircle,
@@ -27,6 +27,7 @@ import { formatPrice, formatDateTime } from '@/lib/formatters'
 import { cn } from '@/lib/utils/cn'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import Image from 'next/image'
+import { useParams, useRouter } from 'next/navigation'
 
 const STATUS_TABS = [
   { id: 'all', label: 'Wszystkie' },
@@ -46,6 +47,9 @@ const DATE_FILTERS = [
 ]
 
 export default function BookingsPage() {
+  const router = useRouter()
+  const params = useParams()
+  const slug = params.slug as string
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('today')
@@ -136,15 +140,15 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="mx-auto max-w-[1600px] space-y-8 px-4 pb-12 sm:px-0">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Rezerwacje</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-normal text-[var(--v3-text-primary)] sm:text-4xl">Rezerwacje</h1>
           <p className="mt-2 text-lg text-muted-foreground font-medium theme-header-subtitle">Zarządzaj wizytami w swoim salonie</p>
         </div>
         <Button
           size="lg"
-          className="gradient-button shadow-lg shadow-primary/20 h-12 px-6 rounded-xl font-bold"
+          className="h-11 rounded-[var(--v3-r-md)] px-5 font-ui font-semibold"
           onClick={() => {
             setSelectedBooking(null)
             setIsDialogOpen(true)
@@ -154,7 +158,7 @@ export default function BookingsPage() {
         </Button>
       </div>
 
-      <Card className="p-6 glass border-none shadow-xl shadow-slate-200/50 space-y-6">
+      <Card className="space-y-5 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] p-5 shadow-[var(--v3-shadow-card)]">
         <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -162,15 +166,15 @@ export default function BookingsPage() {
               placeholder="Szukaj klienta, usługi lub pracownika..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+              className="h-11 rounded-[var(--v3-r-md)] border-[var(--v3-border)] bg-white pl-12 font-ui text-sm transition-all focus:border-[var(--v3-secondary)]"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-12 glass rounded-xl border border-gray-100/50">
+            <div className="flex h-11 items-center gap-2 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white px-4">
               <CalendarDays className="h-5 w-5 text-gray-400" />
               <select
-                className="bg-transparent text-sm font-semibold text-gray-700 outline-none"
+                className="bg-transparent font-ui text-sm font-semibold text-[var(--v3-text-primary)] outline-none"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
               >
@@ -180,10 +184,10 @@ export default function BookingsPage() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 px-4 h-12 glass rounded-xl border border-gray-100/50">
+            <div className="flex h-11 items-center gap-2 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white px-4">
               <User className="h-5 w-5 text-gray-400" />
               <select
-                className="bg-transparent text-sm font-semibold text-gray-700 outline-none"
+                className="bg-transparent font-ui text-sm font-semibold text-[var(--v3-text-primary)] outline-none"
                 value={employeeFilter}
                 onChange={(e) => setEmployeeFilter(e.target.value)}
               >
@@ -202,10 +206,10 @@ export default function BookingsPage() {
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
+                "rounded-[var(--v3-r-pill)] px-4 py-2 font-ui text-sm font-semibold transition-all whitespace-nowrap",
                 statusFilter === tab.id
-                  ? "bg-primary text-white shadow-lg shadow-primary/20 translate-y-[-1px]"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-semibold"
+                  ? "bg-[var(--v3-primary)] text-white shadow-[var(--v3-shadow-card)]"
+                  : "text-[var(--v3-text-secondary)] hover:bg-[var(--v3-bg-alt)] hover:text-[var(--v3-text-primary)]"
               )}
             >
               {tab.label}
@@ -240,39 +244,45 @@ export default function BookingsPage() {
                 transition={{ duration: 0.2 }}
               >
                 <Card
-                  className="group relative overflow-hidden p-5 hover:shadow-2xl hover:shadow-primary/10 transition-all border-none bg-white hover:border-l-4 hover:border-l-primary cursor-pointer"
+                  className="group relative cursor-pointer overflow-hidden rounded-[var(--v3-r-md)] border border-l-4 border-[var(--v3-border)] border-l-[var(--v3-secondary)] bg-[var(--v3-surface)] p-5 shadow-[var(--v3-shadow-card)] transition-[border-color,box-shadow] hover:border-[var(--v3-border-strong)] hover:shadow-[var(--v3-shadow-card-hover)]"
                   onClick={() => {
-                    setSelectedBooking(booking)
-                    setIsDialogOpen(true)
+                    router.push(`/${slug}/bookings/${booking.id}`)
                   }}
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
                     {/* Time & Client Column */}
                     <div className="flex items-start gap-4 md:w-1/4">
-                      <div className="flex flex-col items-center justify-center h-16 w-16 rounded-2xl bg-primary/5 border border-primary/10 shrink-0">
-                        <span className="text-xs font-bold text-primary/60 uppercase">
+                      <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-bg-alt)]">
+                        <span className="font-ui text-xs font-semibold uppercase text-[var(--v3-text-secondary)]">
                           {new Date(booking.booking_date).toLocaleDateString('pl-PL', { weekday: 'short' })}
                         </span>
-                        <span className="text-lg font-black text-primary leading-none">
+                        <span className="font-ui text-[15px] font-bold leading-none text-[var(--v3-text-primary)] tabular-nums">
                           {booking.booking_time.slice(0, 5)}
                         </span>
                       </div>
                       <div className="space-y-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors truncate">
-                          {booking.client?.full_name || 'Nieznany klient'}
-                        </h3>
-                        <p className="text-sm font-medium text-gray-500 truncate">
-                          {booking.client?.phone || 'Brak telefonu'}
-                        </p>
+                        <ObjectCell
+                          type="client"
+                          id={booking.client?.id ?? ''}
+                          label={booking.client?.full_name || 'Nieznany klient'}
+                          slug={slug}
+                          meta={booking.client?.phone || 'Brak telefonu'}
+                          showActions={false}
+                          className="max-w-[160px]"
+                        />
                       </div>
                     </div>
 
                     {/* Service Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-gray-700 theme-service-name">
-                          {booking.service?.name || 'Usunięta usługa'}
-                        </span>
+                        <ObjectPill
+                          type="service"
+                          id={booking.service?.id ?? ''}
+                          label={booking.service?.name || 'Usunięta usługa'}
+                          slug={slug}
+                          className="max-w-[160px]"
+                        />
                         <span className="text-xs font-semibold text-gray-400 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {booking.duration} min
@@ -286,24 +296,29 @@ export default function BookingsPage() {
                             booking.employee?.first_name?.[0] || '?'
                           )}
                         </div>
-                        <span className="text-sm font-semibold text-gray-600">
-                          {booking.employee?.first_name || 'Nieznany'} {booking.employee?.last_name || 'pracownik'}
-                        </span>
+                        <ObjectLink
+                          type="worker"
+                          id={booking.employee?.id ?? ''}
+                          label={`${booking.employee?.first_name || 'Nieznany'} ${booking.employee?.last_name || 'pracownik'}`}
+                          slug={slug}
+                          showDot
+                          className="max-w-[160px] truncate"
+                        />
                       </div>
                     </div>
 
                     {/* Price & Status */}
                     <div className="flex items-center justify-between md:flex-col md:items-end gap-3 md:w-1/5 shrink-0 border-t md:border-t-0 md:border-l border-gray-100 pt-3 md:pt-0 md:pl-6">
                       <div className="text-right">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Cena</p>
-                        <p className="text-xl font-black text-slate-900">
+                        <p className="mb-1 font-ui text-xs font-semibold uppercase tracking-normal text-[var(--v3-text-secondary)]">Cena</p>
+                        <p className="font-display text-[17px] font-bold text-[var(--v3-gold)] tabular-nums">
                           {formatPrice(booking.total_price)}
                         </p>
                       </div>
                       <Badge
                         variant="outline"
                         className={cn(
-                          "px-3 py-1 rounded-lg text-xs font-bold border",
+                          "rounded-[var(--v3-r-pill)] border px-3 py-1 font-ui text-xs font-semibold",
                           statusColors[booking.status as keyof typeof statusColors]
                         )}
                       >
@@ -311,8 +326,14 @@ export default function BookingsPage() {
                       </Badge>
                     </div>
 
-                    <div className="hidden md:flex items-center justify-center w-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    <div className="hidden md:flex items-center justify-center opacity-100 transition-opacity">
+                      <ObjectTrigger
+                        type="booking"
+                        id={booking.id}
+                        label={booking.client?.full_name || 'Wizyta'}
+                        slug={slug}
+                        meta={booking.booking_date}
+                      />
                     </div>
                   </div>
 
@@ -334,25 +355,48 @@ export default function BookingsPage() {
           {filteredBookings.map((booking) => (
             <Card
               key={booking.id}
-              className="cursor-pointer border-none bg-white p-4 transition-all hover:shadow-lg"
+              className="cursor-pointer rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white p-4 shadow-[var(--v3-shadow-card)] transition-all hover:border-[var(--v3-border-strong)] hover:shadow-[var(--v3-shadow-card-hover)]"
               onClick={() => {
-                setSelectedBooking(booking)
-                setIsDialogOpen(true)
+                router.push(`/${slug}/bookings/${booking.id}`)
               }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
-                  <p className="truncate text-sm font-bold text-gray-900">
-                    {booking.client?.full_name || 'Nieznany klient'}
-                  </p>
-                  <p className="truncate text-sm font-medium text-gray-500">
-                    {booking.service?.name || 'Usunieta usluga'}
-                  </p>
+                  <ObjectCell
+                    type="client"
+                    id={booking.client?.id ?? ''}
+                    label={booking.client?.full_name || 'Nieznany klient'}
+                    slug={slug}
+                    meta={booking.client?.phone || 'Brak telefonu'}
+                    showActions={false}
+                    className="max-w-[160px]"
+                  />
+                  <ObjectPill
+                    type="service"
+                    id={booking.service?.id ?? ''}
+                    label={booking.service?.name || 'Usunięta usługa'}
+                    slug={slug}
+                    className="max-w-[160px]"
+                  />
                   <p className="text-xs font-semibold text-gray-500">
                     {new Date(booking.booking_date).toLocaleDateString('pl-PL')} - {booking.booking_time.slice(0, 5)}
                   </p>
+                  <ObjectLink
+                    type="worker"
+                    id={booking.employee?.id ?? ''}
+                    label={`${booking.employee?.first_name || 'Nieznany'} ${booking.employee?.last_name || 'pracownik'}`}
+                    slug={slug}
+                    showDot
+                    className="max-w-[160px] truncate"
+                  />
                 </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+                <ObjectTrigger
+                  type="booking"
+                  id={booking.id}
+                  label={booking.client?.full_name || 'Wizyta'}
+                  slug={slug}
+                  meta={booking.booking_date}
+                />
               </div>
               <div className="mt-3">
                 <Badge
@@ -370,7 +414,7 @@ export default function BookingsPage() {
         </div>
         </>
       ) : (
-        <Card className="flex flex-col items-center justify-center py-20 px-6 text-center glass border-dashed border-2 border-gray-200">
+        <Card className="flex flex-col items-center justify-center rounded-[var(--v3-r-md)] border-2 border-dashed border-[var(--v3-border)] bg-[var(--v3-surface)] px-6 py-20 text-center">
           <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6">
             <Search className="h-10 w-10 text-gray-300" />
           </div>

@@ -7,25 +7,35 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--v3-r-pill)] border-0 font-ui text-sm font-semibold transition-[background,box-shadow,color,border-color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-[var(--v3-shadow-focus)] disabled:cursor-not-allowed disabled:bg-[var(--v3-text-disabled)] disabled:text-white disabled:shadow-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default:
+          "bg-[var(--v3-primary)] text-white hover:bg-[var(--v3-primary-hover)] hover:shadow-[0_2px_8px_rgba(50,133,95,0.25)] active:bg-[#1F5A40]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-[var(--v3-error)] text-white hover:bg-[#B92B3A]",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-[var(--v3-secondary)] bg-white text-[var(--v3-secondary)] hover:bg-[var(--v3-secondary-soft)] active:bg-[#D7E5F4]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-[var(--v3-secondary)] bg-white text-[var(--v3-secondary)] hover:bg-[var(--v3-secondary-soft)] active:bg-[#D7E5F4]",
+        ghost:
+          "border border-[var(--v3-border-strong)] bg-transparent text-[var(--v3-text-primary)] hover:border-[var(--v3-text-secondary)] hover:bg-[var(--v3-bg-alt)]",
+        link:
+          "h-auto bg-transparent px-1 py-0 text-[var(--v3-accent)] hover:text-[var(--v3-accent-hover)] hover:underline disabled:bg-transparent disabled:text-[var(--v3-text-disabled)]",
+        gold:
+          "border border-[var(--v3-gold)] bg-white text-[var(--v3-gold)] hover:bg-[var(--v3-gold-soft)]",
+        info:
+          "border border-[var(--v3-secondary)] bg-white text-[var(--v3-secondary)] hover:bg-[var(--v3-secondary-soft)] active:bg-[#D7E5F4]",
+        neutral:
+          "border border-[var(--v3-border-strong)] bg-transparent text-[var(--v3-text-primary)] hover:border-[var(--v3-text-secondary)] hover:bg-[var(--v3-bg-alt)]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-10 px-5 py-0",
+        sm: "h-8 px-3.5 py-0 text-[13px]",
+        lg: "h-12 px-6 py-0 text-[15px]",
+        icon:
+          "h-8 w-8 rounded-full border border-[var(--v3-border)] bg-white p-0 text-[var(--v3-text-primary)] hover:bg-[var(--v3-bg-alt)] hover:text-[var(--v3-accent)]",
       },
     },
     defaultVariants: {

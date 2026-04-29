@@ -50,17 +50,17 @@ export default async function DunningBanner({ salonId, slug }: DunningBannerProp
         : `Próba ${attempt}/3. Zaktualizuj metodę płatności, aby uniknąć przerwy w dostępie.`
 
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-background/50 backdrop-blur-md shadow-lg shadow-red-500/10 p-5 md:p-6 group transition-all duration-300 hover:border-red-500/50">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-red-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative overflow-hidden rounded-2xl border border-red-200 bg-red-50/70 p-5 md:p-6">
+        <div className="hidden" />
 
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/20 shadow-inner">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 border border-red-200">
               <AlertCircle className="h-6 w-6 text-red-500" />
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-red-500 tracking-tight">Problemy z płatnością</h3>
+              <h3 className="text-lg font-semibold text-red-700 tracking-tight">Problemy z płatnością</h3>
               <p className="mt-0.5 text-sm text-muted-foreground">{details}</p>
             </div>
           </div>
@@ -68,7 +68,7 @@ export default async function DunningBanner({ salonId, slug }: DunningBannerProp
           <Link href={`/${slug}/billing`} className="self-stretch sm:self-auto">
             <Button
               variant="destructive"
-              className="w-full sm:w-auto gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl"
+              className="w-full sm:w-auto gap-2 shadow-md hover:shadow-xl transition-all duration-300 rounded-full"
             >
               Zaktualizuj płatność
             </Button>

@@ -588,14 +588,17 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+    <div className="mx-auto max-w-[1600px] space-y-8 px-4 pb-10 sm:px-0">
       {/* Header & Main Actions */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">
+            CRM
+          </p>
+          <h1 className="text-4xl font-semibold tracking-[-0.025em] text-foreground">
             Klienci
           </h1>
-          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">Buduj trwałe relacje ze swoimi klientami</p>
+          <p className="text-base text-muted-foreground theme-header-subtitle">Buduj trwałe relacje ze swoimi klientami</p>
         </div>
         <div className="flex gap-2">
           <div className="flex gap-2">
@@ -641,47 +644,53 @@ export default function ClientsPage() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="border border-border bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Users className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Baza klientów</p>
-            <p className="text-2xl font-black text-gray-900">{stats.total}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Baza klientów</p>
+              <p className="text-3xl font-semibold tracking-[-0.025em] text-foreground">{stats.total}</p>
+            </div>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+        <Card className="border border-border bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
             <Calendar className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Śr. wizyt</p>
-            <p className="text-2xl font-black text-gray-900">{stats.avgVisits}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Śr. wizyt</p>
+              <p className="text-3xl font-semibold tracking-[-0.025em] text-foreground">{stats.avgVisits}</p>
+            </div>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+        <Card className="border border-border bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
             <Award className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Top Klient</p>
-            <p className="text-xl font-black text-gray-900 truncate">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Top Klient</p>
+              <p className="truncate text-2xl font-semibold tracking-[-0.025em] text-foreground">
               {stats.topClient ? stats.topClient.full_name : '---'}
             </p>
+            </div>
           </div>
         </Card>
       </div>
 
       {/* Search Bar */}
-      <Card className="p-6 glass border-none shadow-xl shadow-slate-200/50">
+      <Card className="border border-border bg-white p-6 shadow-sm">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Szukaj po imieniu, telefonie lub adresie e-mail..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+            className="h-11 rounded-full border-border bg-background pl-12 text-base transition-all"
           />
         </div>
       </Card>
@@ -753,7 +762,7 @@ export default function ClientsPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card
-                    className="group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
+                    className="group relative overflow-hidden p-5 transition-all border bg-card hover:shadow-md cursor-pointer"
                     onClick={() => handleEditClient(client)}
                   >
                     <div className="absolute right-4 top-4">

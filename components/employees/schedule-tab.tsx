@@ -107,7 +107,7 @@ function EmployeeScheduleCard({ employeeId, employeeName }: EmployeeScheduleCard
     const workingDays = WEEK_ORDER.filter(dow => getDayData(dow).is_working)
 
     return (
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <CardHeader
                 className="cursor-pointer select-none pb-3"
                 onClick={() => setExpanded(v => !v)}
@@ -152,7 +152,7 @@ function EmployeeScheduleCard({ employeeId, employeeName }: EmployeeScheduleCard
                                         return (
                                             <div
                                                 key={dow}
-                                                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                                                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100"
                                             >
                                                 <div className="w-28 flex-shrink-0">
                                                     <span className="text-sm font-bold text-gray-700">{DAY_LABELS[dow]}</span>
@@ -262,7 +262,7 @@ function EmployeeScheduleCard({ employeeId, employeeName }: EmployeeScheduleCard
 
             {/* Dialog dodawania wyjątku */}
             <Dialog open={exceptionDialog} onOpenChange={setExceptionDialog}>
-                <DialogContent className="max-w-sm glass rounded-2xl">
+                <DialogContent className="max-w-sm rounded-2xl border border-slate-200 bg-white">
                     <DialogHeader>
                         <DialogTitle className="gradient-text font-black">Dodaj wyjątek</DialogTitle>
                     </DialogHeader>

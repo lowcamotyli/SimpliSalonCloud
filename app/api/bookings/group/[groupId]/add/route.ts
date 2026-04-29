@@ -54,16 +54,12 @@ export async function POST(
 
     const serviceId = typeof body.service_id === 'string' ? body.service_id.trim() : ''
     const employeeId = typeof body.employee_id === 'string' ? body.employee_id.trim() : ''
-    const startTime = typeof body.start_time === 'string' ? body.start_time.trim() : ''
-    const bookingDate = typeof body.booking_date === 'string' ? body.booking_date.trim() : ''
+    const startTime = typeof body.start_time === 'string' ? body.start_time.trim().slice(0, 5) : ''
+    let bookingDate = typeof body.booking_date === 'string' ? body.booking_date.trim() : ''
     const forceOverride = body.force_override === true
 
-    if (!serviceId || !employeeId || !startTime || !bookingDate) {
+    if (!serviceId || !employeeId || !startTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    if (!isValidDate(bookingDate) || toMinutes(startTime) === null) {
-      return NextResponse.json({ error: 'Invalid date or time format' }, { status: 400 })
     }
 
     const { data: visitGroup, error: visitGroupError } = await supabase
@@ -75,6 +71,34 @@ export async function POST(
 
     if (visitGroupError || !visitGroup) {
       return NextResponse.json({ error: 'Visit group not found' }, { status: 404 })
+    }
+
+    if (!bookingDate) {
+      const { data: firstGroupBooking, error: firstGroupBookingError } = await supabase
+        .from('bookings')
+        .select('booking_date')
+        .eq('visit_group_id', groupId)
+        .eq('salon_id', authSalonId)
+        .is('deleted_at', null)
+        .order('booking_time', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      if (firstGroupBookingError) {
+        throw firstGroupBookingError
+      }
+
+      if (firstGroupBooking?.booking_date) {
+        bookingDate = String(firstGroupBooking.booking_date)
+      }
+    }
+
+    if (!bookingDate) {
+      return NextResponse.json({ error: 'Could not determine booking date' }, { status: 400 })
+    }
+
+    if (!isValidDate(bookingDate) || toMinutes(startTime) === null) {
+      return NextResponse.json({ error: 'Invalid date or time format' }, { status: 400 })
     }
 
     const { data: service, error: serviceError } = await supabase

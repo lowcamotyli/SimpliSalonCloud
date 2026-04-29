@@ -226,7 +226,7 @@ export function ManualReviewQueue({ salonId, salonSlug }: ManualReviewQueueProps
       ) : null}
 
       {!hasEvents ? (
-        <div className="rounded-lg border-2 border-dashed bg-muted/20 py-8 text-center">
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 py-10 text-center">
           <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground opacity-40" />
           <p className="text-sm text-muted-foreground">Brak rezerwacji do przejrzenia</p>
         </div>
@@ -237,7 +237,7 @@ export function ManualReviewQueue({ salonId, salonSlug }: ManualReviewQueueProps
           const isEventPending = pendingEventId === event.id
 
           return (
-            <Card key={event.id}>
+            <Card key={event.id} className="rounded-2xl border border-border bg-card shadow-sm">
               <CardHeader className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className={eventTypeBadgeClass(event.event_type)}>
@@ -278,7 +278,7 @@ export function ManualReviewQueue({ salonId, salonSlug }: ManualReviewQueueProps
                     {candidates.map((candidate) => {
                       const inputId = `manual-review-${event.id}-${candidate.id}`
                       return (
-                        <div key={candidate.id} className="flex items-start gap-2 rounded-md border p-3 hover:bg-muted/40">
+                        <div key={candidate.id} className="flex items-start gap-2 rounded-xl border border-border p-3 hover:bg-muted/30">
                           <RadioGroupItem id={inputId} value={candidate.id} />
                           <Label htmlFor={inputId} className="cursor-pointer space-y-0.5 text-sm">
                             <p className="font-medium">{formatDateTime(candidate.appointmentDate, candidate.startTime)}</p>

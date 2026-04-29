@@ -158,7 +158,7 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
 
   return (
     <div className="space-y-4" data-salon-id={salonId}>
-      <section className="space-y-3 rounded-xl border border-border/60 bg-background/50 p-4">
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Dodatki do usługi</h3>
           <p className="text-xs text-muted-foreground">Lista dodatków aktualnie przypisanych do tej usługi.</p>
@@ -197,7 +197,7 @@ export function AddonsEditor({ serviceId, salonId }: AddonsEditorProps) {
         ) : null}
       </section>
 
-      <section className="space-y-3 rounded-xl border border-border/60 bg-background/50 p-4">
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Opcje dodatkowe</h3>
           <p className="text-sm text-muted-foreground">

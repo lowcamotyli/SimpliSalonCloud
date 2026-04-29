@@ -4,26 +4,87 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --v3-font-display: var(--font-cormorant), Georgia, serif;
+    --v3-font-ui: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+    --v3-font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --v3-primary: #32855F;
+    --v3-primary-hover: #276B4D;
+    --v3-primary-soft: #C9E0D3;
+    --v3-secondary: #276FB7;
+    --v3-secondary-soft: #E6EFF8;
+    --v3-accent: #0875E1;
+    --v3-accent-hover: #0660BB;
+    --v3-gold: #B88A43;
+    --v3-gold-soft: #F5EBD7;
+
+    --v3-success: #32855F;
+    --v3-success-bg: #E6F1EB;
+    --v3-info: #276FB7;
+    --v3-info-bg: #E6EFF8;
+    --v3-warning: #B45309;
+    --v3-warning-bg: #FEF3C7;
+    --v3-error: #DC3545;
+    --v3-error-bg: #FCE9EB;
+
+    --v3-text-primary: #2C2C2C;
+    --v3-text-secondary: #7B858F;
+    --v3-text-disabled: #C5CACE;
+    --v3-text-error: #DC3545;
+    --v3-text-on-dark: #FFFFFF;
+
+    --v3-surface: #FFFFFF;
+    --v3-surface-alt: #F7F7F7;
+    --v3-bg: #F3F5F7;
+    --v3-bg-alt: #F7F8FA;
+    --v3-border: #E8EBED;
+    --v3-border-strong: #C5CACE;
+    --v3-border-focus: #276FB7;
+
+    --v3-r-sm: 4px;
+    --v3-r: 6px;
+    --v3-r-md: 8px;
+    --v3-r-lg: 12px;
+    --v3-r-pill: 9999px;
+
+    --v3-shadow-card: 0 1px 2px rgba(20, 25, 30, 0.04), 0 1px 3px rgba(20, 25, 30, 0.06);
+    --v3-shadow-card-hover: 0 2px 6px rgba(20, 25, 30, 0.08), 0 4px 12px rgba(20, 25, 30, 0.06);
+    --v3-shadow-modal: 0 12px 32px rgba(20, 25, 30, 0.16);
+    --v3-shadow-tooltip: 0 4px 12px rgba(20, 25, 30, 0.12);
+    --v3-shadow-focus: 0 0 0 3px rgba(39, 111, 183, 0.20);
+
+    --v3-s-1: 4px;
+    --v3-s-2: 8px;
+    --v3-s-3: 12px;
+    --v3-s-4: 16px;
+    --v3-s-5: 24px;
+    --v3-s-6: 32px;
+    --v3-s-7: 48px;
+    --v3-s-8: 64px;
+
+    --background: 210 20% 96%;
+    --foreground: 0 0% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 80% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 280 85% 95%;
-    --secondary-foreground: 262 80% 50%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 350 89% 60%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 80% 50%;
-    --radius: 0.5rem;
+    --popover-foreground: 0 0% 17%;
+    --primary: 153 45% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 65% 44%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 210 8% 52%;
+    --accent: 210 93% 46%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 354 70% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 204 12% 92%;
+    --input: 204 12% 92%;
+    --ring: 210 65% 44%;
+    --radius: var(--v3-r-md);
+    --primary-hex: var(--v3-primary);
+    --background-hex: var(--v3-bg);
+    --text-hex: var(--v3-text-primary);
   }
 }
 
@@ -34,39 +95,81 @@
 
   body {
     @apply bg-background text-foreground;
-    background-attachment: fixed;
+    min-height: 100vh;
+    background: var(--v3-bg);
+    color: var(--v3-text-primary);
+    font-family: var(--v3-font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: 0;
   }
 }
 
 @layer components {
   .theme-dashboard-shell {
     min-height: 100vh;
+    background: var(--v3-bg);
+    color: var(--v3-text-primary);
+  }
+
+  .theme-dashboard-main {
+    background: var(--v3-bg);
+  }
+
+  .theme-sidebar {
+    background: var(--v3-bg-alt);
+    border-color: var(--v3-border);
+    color: var(--v3-text-primary);
+  }
+
+  .theme-navbar {
+    background: var(--v3-surface);
+    border-color: var(--v3-border);
+    color: var(--v3-text-primary);
   }
 
   .glass {
-    @apply backdrop-blur-md bg-card/80 border border-white/20 shadow-xl rounded-2xl;
-  }
-
-  .glass-dark {
-    @apply backdrop-blur-md bg-black/10 border border-white/10 shadow-xl rounded-2xl;
+    background: var(--v3-surface);
+    border: 1px solid var(--v3-border);
+    border-radius: var(--v3-r-md);
+    box-shadow: var(--v3-shadow-card);
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(to right, var(--primary-hex), var(--primary-hex));
+    color: var(--v3-primary);
   }
 
   .gradient-button {
-    background-image: linear-gradient(to right, var(--primary-hex), var(--primary-hex));
-    @apply text-white shadow-lg hover:shadow-xl transition-all duration-300 opacity-90 hover:opacity-100;
+    background: var(--v3-primary);
+    color: var(--v3-text-on-dark);
+    box-shadow: none;
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .gradient-button:hover {
+    background: var(--v3-primary-hover);
+    box-shadow: 0 2px 8px rgba(50, 133, 95, 0.25);
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .card-hover:hover {
+    border-color: var(--v3-border-strong);
+    box-shadow: var(--v3-shadow-card-hover);
   }
 
   .stat-card {
-    @apply glass p-6 card-hover;
+    background: var(--v3-surface);
+    border: 1px solid var(--v3-border);
+    border-radius: var(--v3-r-md);
+    box-shadow: var(--v3-shadow-card);
+    padding: 1.5rem;
   }
 }
 
@@ -79,18 +182,6 @@
 
   50% {
     transform: translateY(-10px);
-  }
-}
-
-@keyframes glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
-  }
-
-  50% {
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
   }
 }
 
@@ -128,19 +219,6 @@
   }
 }
 
-@keyframes luxe-breathe {
-  0%,
-  100% {
-    transform: translateY(0px);
-    box-shadow: 0 18px 50px rgba(194, 174, 140, 0.16);
-  }
-
-  50% {
-    transform: translateY(-2px);
-    box-shadow: 0 26px 60px rgba(194, 174, 140, 0.24);
-  }
-}
-
 @keyframes luxe-sheen {
   0% {
     transform: translateX(-120%);
@@ -166,22 +244,9 @@
   }
 }
 
-@keyframes luxe-bg-drift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
 @layer utilities {
   .animate-float {
     animation: float 3s ease-in-out infinite;
-  }
-
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite;
   }
 
   .animate-shimmer {
@@ -199,16 +264,15 @@
   }
 
   .animate-luxe-breathe {
-    animation: luxe-breathe 5.5s ease-in-out infinite;
+    animation: none;
   }
 
   .hover-luxe-lift {
-    transition: transform 240ms ease, box-shadow 240ms ease, background-color 240ms ease;
+    transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
   }
 
   .hover-luxe-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 45px rgba(194, 174, 140, 0.18);
+    box-shadow: var(--v3-shadow-card-hover);
   }
 
   .animate-luxe-fade-in-up {
@@ -216,57 +280,50 @@
   }
 
   .hover-luxe-soft-glow:hover {
-    box-shadow: 0 0 30px rgba(214, 176, 122, 0.08), 0 20px 40px rgba(194, 174, 140, 0.12);
-    transform: translateY(-2px) scale(1.005);
+    box-shadow: var(--v3-shadow-card-hover);
   }
 
-  .luxe-bg-animated {
-    background-size: 200% 200% !important;
-    animation: luxe-bg-drift 40s ease infinite;
-  }
 }
 
-/* Luxe Theme Global Overrides */
+/* Revamp v3 compatibility overrides for the existing test theme key. */
 html[data-theme-key='auto_service'] {
   scroll-behavior: smooth;
 }
 
 html[data-theme-key='auto_service'] body {
-  font-family: var(--font-preview-ui), var(--font-inter), sans-serif !important;
-  background:
-    radial-gradient(circle at top left, rgba(214, 176, 122, 0.15), transparent 35%),
-    linear-gradient(135deg, #fffdf9 0%, #f7f0e5 50%, #fffdf9 100%);
-  animation: luxe-bg-drift 60s ease-in-out infinite;
-  background-size: 200% 200%;
+  font-family: var(--v3-font-body) !important;
+  background: var(--v3-bg);
+  color: var(--v3-text-primary);
+  animation: none;
+  background-size: auto;
 }
 
 html[data-theme-key='auto_service'] .theme-dashboard-shell {
-  background:
-    radial-gradient(circle at top left, rgba(214, 176, 122, 0.12), transparent 30%),
-    linear-gradient(135deg, #fffdf9 0%, #f7f0e5 50%, #fffdf9 100%);
-  animation: luxe-bg-drift 60s ease-in-out infinite;
-  background-size: 200% 200%;
+  background: var(--v3-bg);
+  animation: none;
+  background-size: auto;
 }
 
 html[data-theme-key='auto_service'] .theme-dashboard-main {
+  background: var(--v3-bg);
   padding: 2rem;
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar {
-  background: linear-gradient(180deg, #fbf7f0 0%, #f5ecdf 100%);
-  border-color: #e7ddcf;
-  box-shadow: 0 22px 60px rgba(194, 174, 140, 0.14);
+  background: var(--v3-bg-alt);
+  border-color: var(--v3-border);
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-brand {
-  border-color: #ece2d4;
+  border-color: var(--v3-border);
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar h2 {
-  color: #3a2b1f;
-  font-family: var(--font-preview-display), serif;
+  color: var(--v3-text-primary);
+  font-family: var(--v3-font-display);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar p,
@@ -278,40 +335,41 @@ html[data-theme-key='auto_service'] .theme-sidebar svg {
 
 html[data-theme-key='auto_service'] .theme-sidebar-nav > a,
 html[data-theme-key='auto_service'] .theme-sidebar-nav > div > div:first-child {
-  border-radius: 1rem;
+  border-radius: var(--v3-r);
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-nav > a {
-  color: #76695a;
+  color: var(--v3-text-primary);
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-nav > a:hover {
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 12px 26px rgba(194, 174, 140, 0.12);
+  background: var(--v3-secondary-soft);
+  color: var(--v3-secondary);
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-nav > a.bg-primary\/10,
 html[data-theme-key='auto_service'] .theme-sidebar-nav > div > div.bg-primary\/10 {
-  background: #f0e2cd;
-  color: #6f5430;
-  border-color: rgba(214, 176, 122, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(214, 176, 122, 0.18);
+  background: var(--v3-secondary-soft);
+  color: var(--v3-secondary);
+  border-color: var(--v3-secondary-soft);
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-user {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid #eadfcf;
-  box-shadow: 0 18px 40px rgba(183, 160, 123, 0.14);
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  box-shadow: var(--v3-shadow-card);
 }
 
 html[data-theme-key='auto_service'] .theme-sidebar-footer {
-  border-color: #ece2d4;
+  border-color: var(--v3-border);
   background: transparent;
 }
 
 html[data-theme-key='auto_service'] .theme-navbar {
-  background: rgba(255, 253, 249, 0.82);
-  border-color: #ece2d4;
+  background: var(--v3-surface);
+  border-color: var(--v3-border);
 }
 
 html[data-theme-key='auto_service'] .theme-navbar-inner {
@@ -319,67 +377,68 @@ html[data-theme-key='auto_service'] .theme-navbar-inner {
 }
 
 html[data-theme-key='auto_service'] .theme-navbar-title h1 {
-  color: #2f241a;
+  color: var(--v3-text-primary);
   font-size: 2rem;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 html[data-theme-key='auto_service'] .theme-navbar-title p {
-  color: #8b7e70;
+  color: var(--v3-text-secondary);
   font-size: 1rem;
 }
 
 html[data-theme-key='auto_service'] .theme-button[data-variant='default'] {
-  background: linear-gradient(180deg, #d6b07a 0%, #c59d63 100%);
+  background: var(--v3-primary);
   border: 0;
-  color: #fffdf8;
-  box-shadow: 0 12px 30px rgba(214, 176, 122, 0.28);
+  color: var(--v3-text-on-dark);
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-button[data-variant='default']:hover {
-  background: linear-gradient(180deg, #ddb782 0%, #cb9f61 100%);
+  background: var(--v3-primary-hover);
+  box-shadow: 0 2px 8px rgba(50, 133, 95, 0.25);
 }
 
 html[data-theme-key='auto_service'] .theme-button[data-variant='outline'] {
-  border-color: #dccdb9;
-  background: rgba(255, 255, 255, 0.86);
-  color: #6d5d4b;
+  border-color: var(--v3-secondary);
+  background: var(--v3-surface);
+  color: var(--v3-secondary);
 }
 
 html[data-theme-key='auto_service'] .theme-button[data-variant='outline']:hover,
 html[data-theme-key='auto_service'] .theme-button[data-variant='ghost']:hover {
-  background: #faf4eb;
-  color: #4f4133;
+  background: var(--v3-secondary-soft);
+  color: var(--v3-secondary);
 }
 
 html[data-theme-key='auto_service'] .theme-button[data-variant='ghost'] {
-  color: #866f54;
+  color: var(--v3-text-primary);
 }
 
 html[data-theme-key='auto_service'] .theme-card {
-  border-color: #eadfcf;
-  background: rgba(255, 255, 255, 0.88);
-  color: #2f241a;
-  box-shadow: 0 16px 40px rgba(190, 169, 132, 0.14);
+  border-color: var(--v3-border);
+  background: var(--v3-surface);
+  color: var(--v3-text-primary);
+  box-shadow: var(--v3-shadow-card);
 }
 
 html[data-theme-key='auto_service'] .theme-card h3,
 html[data-theme-key='auto_service'] .theme-card h2 {
-  color: #2f241a;
+  color: var(--v3-text-primary);
 }
 
 html[data-theme-key='auto_service'] .stat-card {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid #eadfcf;
-  box-shadow: 0 16px 40px rgba(190, 169, 132, 0.14);
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  box-shadow: var(--v3-shadow-card);
 }
 
 html[data-theme-key='auto_service'] .glass {
-  background: rgba(255, 251, 246, 0.84);
-  border: 1px solid #eadfcf;
-  box-shadow: 0 16px 42px rgba(194, 174, 140, 0.12);
-  backdrop-filter: blur(12px);
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  box-shadow: var(--v3-shadow-card);
+  backdrop-filter: none;
 }
 
 html[data-theme-key='auto_service'] .theme-button,
@@ -401,43 +460,43 @@ html[data-theme-key='auto_service'] .theme-input,
 html[data-theme-key='auto_service'] .theme-select-trigger,
 html[data-theme-key='auto_service'] textarea,
 html[data-theme-key='auto_service'] [role='combobox'] {
-  border-color: #ddcfbc;
-  background: rgba(255, 255, 255, 0.9);
-  color: #3d3025;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: var(--v3-border);
+  background: var(--v3-surface);
+  color: var(--v3-text-primary);
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-input::placeholder,
 html[data-theme-key='auto_service'] textarea::placeholder {
-  color: #ad9c89;
+  color: var(--v3-text-secondary);
 }
 
 html[data-theme-key='auto_service'] .theme-input:focus-visible,
 html[data-theme-key='auto_service'] .theme-select-trigger:focus,
 html[data-theme-key='auto_service'] textarea:focus-visible {
-  border-color: #d1ae7d;
-  box-shadow: 0 0 0 4px rgba(214, 176, 122, 0.16);
+  border-color: var(--v3-border-focus);
+  box-shadow: var(--v3-shadow-focus);
 }
 
 html[data-theme-key='auto_service'] .theme-select-content {
-  border-color: #e5d8c8;
-  background: rgba(255, 251, 246, 0.98);
-  box-shadow: 0 24px 50px rgba(182, 155, 118, 0.18);
+  border-color: var(--v3-border);
+  background: var(--v3-surface);
+  box-shadow: var(--v3-shadow-modal);
 }
 
 html[data-theme-key='auto_service'] .theme-select-item[data-highlighted],
 html[data-theme-key='auto_service'] .theme-select-item:focus {
-  background: #f3e6d2;
-  color: #5c4731;
+  background: var(--v3-secondary-soft);
+  color: var(--v3-secondary);
 }
 
 html[data-theme-key='auto_service'] .theme-badge[data-variant='default'],
 html[data-theme-key='auto_service'] .theme-badge[data-variant='secondary'],
 html[data-theme-key='auto_service'] .theme-badge[data-variant='success'],
 html[data-theme-key='auto_service'] .theme-badge[data-variant='warning'] {
-  background: #f1e4d0;
-  color: #6e5435;
-  border-color: #dfccb0;
+  background: var(--v3-secondary-soft);
+  color: var(--v3-secondary);
+  border-color: var(--v3-border);
 }
 
 html[data-theme-key='auto_service'] h1,
@@ -450,24 +509,24 @@ html[data-theme-key='auto_service'] .theme-chart-title,
 html[data-theme-key='auto_service'] .theme-card h1,
 html[data-theme-key='auto_service'] .theme-card h2,
 html[data-theme-key='auto_service'] .theme-header-subtitle {
-  font-family: var(--font-preview-display), serif !important;
+  font-family: var(--v3-font-display) !important;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 html[data-theme-key='auto_service'] .theme-header-subtitle {
   font-weight: 500 !important;
-  letter-spacing: -0.01em !important;
-  color: #1a1a1a !important;
+  letter-spacing: 0 !important;
+  color: var(--v3-text-primary) !important;
   font-size: 1.15em !important;
   line-height: 1.4 !important;
   opacity: 1 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-service-name {
-  font-family: var(--font-preview-display), serif !important;
+  font-family: var(--v3-font-display) !important;
   font-weight: 700 !important;
-  color: #1a1a1a !important;
+  color: var(--v3-text-primary) !important;
   font-size: 1.15em !important;
   line-height: 1.4 !important;
   opacity: 1 !important;
@@ -478,38 +537,38 @@ html[data-theme-key='auto_service'] .theme-chart-card,
 html[data-theme-key='auto_service'] .theme-quick-actions,
 html[data-theme-key='auto_service'] .theme-upcoming-bookings,
 html[data-theme-key='auto_service'] .theme-calendar-shell {
-  background: rgba(255, 251, 246, 0.84);
-  border: 1px solid #eadfcf;
-  box-shadow: 0 24px 55px rgba(192, 166, 126, 0.13);
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  box-shadow: var(--v3-shadow-card);
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-title,
 html[data-theme-key='auto_service'] .theme-chart-card .text-gray-900 {
-  color: #5c4a39 !important;
+  color: var(--v3-text-primary) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-booking-card-title {
-  color: #1a1a1a !important;
-  font-family: var(--font-preview-display), serif !important;
+  color: var(--v3-text-primary) !important;
+  font-family: var(--v3-font-display) !important;
   font-size: 14px !important;
   font-weight: 800 !important;
   line-height: 1.3 !important;
-  letter-spacing: -0.02em !important;
+  letter-spacing: 0 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-booking-card-service {
-  font-family: var(--font-preview-display), serif !important;
+  font-family: var(--v3-font-display) !important;
   font-size: 13px !important;
-  color: #1a1a1a !important;
+  color: var(--v3-text-primary) !important;
   line-height: 1.3 !important;
   font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
+  letter-spacing: 0 !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-value {
   background-image: none !important;
-  color: #2f241a !important;
-  -webkit-text-fill-color: #2f241a;
+  color: var(--v3-text-primary) !important;
+  -webkit-text-fill-color: var(--v3-text-primary);
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-description,
@@ -519,81 +578,81 @@ html[data-theme-key='auto_service'] .theme-calendar-week-day-label,
 html[data-theme-key='auto_service'] .theme-calendar-month-label,
 html[data-theme-key='auto_service'] .theme-calendar-time-slot,
 html[data-theme-key='auto_service'] .theme-calendar-time-head p {
-  color: #867459 !important;
+  color: var(--v3-text-secondary) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-icon {
-  background: linear-gradient(180deg, #e0bf8b 0%, #cfa46a 100%) !important;
-  color: #fffaf2 !important;
-  box-shadow: 0 16px 30px rgba(214, 176, 122, 0.22);
+  background: var(--v3-secondary-soft) !important;
+  color: var(--v3-secondary) !important;
+  box-shadow: none;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-glow {
-  background: radial-gradient(circle at top, rgba(225, 198, 153, 0.24), transparent 70%) !important;
+  background: var(--v3-primary-soft) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-stat-card-trend {
-  color: #b88a43 !important;
+  color: var(--v3-primary) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-quick-action-item,
 html[data-theme-key='auto_service'] .theme-upcoming-item {
-  background: rgba(247, 239, 228, 0.66);
-  border: 1px solid rgba(226, 210, 187, 0.92);
-  box-shadow: 0 14px 26px rgba(194, 174, 140, 0.11);
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  box-shadow: var(--v3-shadow-card);
 }
 
 html[data-theme-key='auto_service'] .theme-quick-action-item:hover,
 html[data-theme-key='auto_service'] .theme-upcoming-item:hover {
-  background: rgba(251, 246, 238, 0.98) !important;
-  transform: translateY(-2px);
+  background: var(--v3-bg-alt) !important;
+  box-shadow: var(--v3-shadow-card-hover);
 }
 
 html[data-theme-key='auto_service'] .theme-quick-action-icon,
 html[data-theme-key='auto_service'] .theme-upcoming-avatar {
-  background: #efe2cf !important;
-  color: #bc8d4f !important;
+  background: var(--v3-secondary-soft) !important;
+  color: var(--v3-secondary) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-inline-link,
 html[data-theme-key='auto_service'] .theme-upcoming-name:hover {
-  color: #b48a52 !important;
+  color: var(--v3-accent) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-upcoming-status {
-  background: #f1e4d0 !important;
-  color: #7a5d38 !important;
-  border-color: #dfccb0 !important;
+  background: var(--v3-success-bg) !important;
+  color: var(--v3-success) !important;
+  border-color: var(--v3-border) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-day-header,
 html[data-theme-key='auto_service'] .theme-calendar-week-header {
-  background: rgba(252, 246, 238, 0.96) !important;
+  background: var(--v3-bg-alt) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-time-column,
 html[data-theme-key='auto_service'] .theme-calendar-time-head,
 html[data-theme-key='auto_service'] .theme-calendar-week-column,
 html[data-theme-key='auto_service'] .theme-calendar-day-column {
-  background: rgba(255, 251, 246, 0.82) !important;
+  background: var(--v3-surface) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-drop-slot {
-  border-color: #e0d0bc !important;
+  border-color: var(--v3-border) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-drop-slot:hover {
-  background: rgba(243, 231, 213, 0.36) !important;
+  background: var(--v3-secondary-soft) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-drop-badge {
-  background: #d5b07a !important;
+  background: var(--v3-primary) !important;
   border-color: transparent !important;
-  color: #fffaf2 !important;
+  color: var(--v3-text-on-dark) !important;
 }
 
 html[data-theme-key='auto_service'] .theme-calendar-month-day {
-  border: 1px solid #eadfcf;
-  background: rgba(255, 251, 246, 0.84) !important;
-  box-shadow: 0 12px 26px rgba(194, 174, 140, 0.08);
+  border: 1px solid var(--v3-border);
+  background: var(--v3-surface) !important;
+  box-shadow: var(--v3-shadow-card);
 }

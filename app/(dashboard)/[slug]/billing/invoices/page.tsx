@@ -89,7 +89,7 @@ export default function InvoicesPage() {
                     <Input
                         type="search"
                         placeholder="Szukaj po numerze..."
-                        className="pl-9 bg-background"
+                        className="pl-9 bg-background rounded-full"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -97,7 +97,7 @@ export default function InvoicesPage() {
             </div>
 
             {/* Invoices List */}
-            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
                         <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
@@ -106,7 +106,7 @@ export default function InvoicesPage() {
                 ) : filteredInvoices.length > 0 ? (
                     <Table>
                         <TableHeader>
-                            <TableRow className="hover:bg-muted/50 border-border">
+                            <TableRow className="border-border bg-muted/30">
                                 <TableHead>Numer faktury</TableHead>
                                 <TableHead>Data wystawienia</TableHead>
                                 <TableHead>Kwota</TableHead>
@@ -116,7 +116,7 @@ export default function InvoicesPage() {
                         </TableHeader>
                         <TableBody>
                             {filteredInvoices.map((invoice) => (
-                                <TableRow key={invoice.id} className="hover:bg-muted/30 border-border">
+                                <TableRow key={invoice.id} className="border-border hover:bg-muted/30">
                                     <TableCell className="font-medium text-foreground">
                                         {invoice.invoice_number}
                                     </TableCell>

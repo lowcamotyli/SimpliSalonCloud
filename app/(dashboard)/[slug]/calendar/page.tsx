@@ -422,15 +422,15 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+    <div className="mx-auto max-w-[1600px] space-y-8 px-4 pb-8 sm:px-0">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Kalendarz</h1>
-          <p className="text-muted-foreground text-base font-medium theme-header-subtitle">{getPeriodLabel()}</p>
+          <h1 className="font-display text-3xl font-semibold tracking-normal text-[var(--v3-text-primary)] sm:text-4xl">Kalendarz</h1>
+          <p className="font-ui text-base font-medium text-[var(--v3-text-secondary)] theme-header-subtitle">{getPeriodLabel()}</p>
         </div>
 
         <div className="w-full overflow-x-auto scrollbar-hide sm:w-auto">
-          <div className="flex min-w-max items-center gap-2 p-1 glass rounded-xl">
+          <div className="flex min-w-max items-center gap-2 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white p-1 shadow-[var(--v3-shadow-card)]">
             <Button variant={viewType === 'day' ? 'default' : 'ghost'} onClick={() => setViewType('day')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'day' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Dzień</Button>
             <Button variant={viewType === 'week' ? 'default' : 'ghost'} onClick={() => setViewType('week')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'week' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Tydzień</Button>
             <Button variant={viewType === 'month' ? 'default' : 'ghost'} onClick={() => setViewType('month')} size="sm" className={`h-11 min-h-[44px] min-w-[44px] rounded-lg px-4 shrink-0 transition-all ${viewType === 'month' ? 'shadow-sm' : 'hover:bg-muted/50'}`}>Miesiąc</Button>
@@ -497,7 +497,7 @@ export default function CalendarPage() {
                 setViewType('day')
               }}
             />
-            <div className="theme-employee-filter glass p-3 rounded-xl flex flex-col gap-1.5">
+            <div className="theme-employee-filter flex flex-col gap-1.5 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white p-3 shadow-[var(--v3-shadow-card)]">
               <span className="theme-employee-filter-label text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">Pracownicy</span>
               {employees?.map((emp, idx) => {
                 const colors = getEmployeeColor(idx)
@@ -517,7 +517,7 @@ export default function CalendarPage() {
           </div>
         )}
 
-        <Card className="theme-calendar-shell flex-1 overflow-hidden glass rounded-2xl min-w-0">
+        <Card className="theme-calendar-shell min-w-0 flex-1 overflow-hidden rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] shadow-[var(--v3-shadow-card)]">
         {viewType === 'day' && (
           <DayView
             currentDate={currentDate}
@@ -670,7 +670,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
         {visibleEmployeesList.map((emp: any) => {
           const empIdx = employees.findIndex((e: any) => e.id === emp.id)
           const colors = getEmployeeColor(empIdx)
-          return <div key={emp.id} className={`theme-calendar-employee-head p-3 border-r text-center overflow-hidden bg-gradient-to-b ${colors.gradient}`}><p className={`theme-calendar-employee-head-text font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
+          return <div key={emp.id} className={`theme-calendar-employee-head p-3 border-r text-center overflow-hidden ${colors.bg}`}><p className={`theme-calendar-employee-head-text font-bold truncate text-sm ${colors.text}`}>{emp.first_name} {emp.last_name}</p></div>
         })}
         {columnCount === 0 && <div className="p-3 text-center text-gray-500 text-sm">Brak wybranych pracowników</div>}
       </div>
@@ -815,7 +815,7 @@ function DayView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees,
                         onBookingClick(booking)
                       }}
                     >
-                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} groupBookings={entry.groupBookings} />
+                      <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={colors} groupBookings={entry.groupBookings} onClick={() => {}} />
                       <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                     </div>
                   )
@@ -1065,7 +1065,7 @@ function WeekView({ currentDate, timeSlots, bookingsByEmployeeAndDate, employees
                               onBookingClick(booking)
                             }}
                           >
-                            <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} />
+                            <BookingCard booking={booking} serviceCategory={booking.service.category} employeeColors={getEmployeeColor(employees.findIndex((ee: any) => ee.id === employee.id))} groupBookings={entry.groupBookings} onClick={() => {}} />
                             <div className="absolute left-1 right-1 bottom-0 h-2 cursor-ns-resize rounded-b bg-black/10 hover:bg-black/20" onMouseDown={(e) => startResize(e, booking)} />
                           </div>
                         )

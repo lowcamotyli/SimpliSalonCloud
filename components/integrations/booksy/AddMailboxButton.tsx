@@ -14,7 +14,7 @@ export function AddMailboxButton({ salonSlug }: AddMailboxButtonProps): JSX.Elem
   }
 
   return (
-    <Button className="w-full sm:w-auto" onClick={handleClick} type="button">
+    <Button className="w-full sm:w-auto rounded-full px-5" onClick={handleClick} type="button">
       Dodaj skrzynkę
     </Button>
   )

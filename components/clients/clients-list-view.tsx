@@ -8,14 +8,10 @@ import {
   ArrowUp,
   ArrowUpDown,
   Ban,
-  ChevronRight,
-  Loader2,
   Mail,
-  Pencil,
   Phone,
-  Trash2,
-  User,
 } from 'lucide-react'
+import { ObjectCell } from '@/components/objects/ObjectCell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +29,7 @@ type Client = {
   id: string
   client_code: string
   full_name: string
+  avatar_url?: string | null
   phone: string | null
   email: string | null
   notes: string | null
@@ -44,7 +41,7 @@ type Client = {
 
 interface ClientsListViewProps {
   clients: Client[]
-  slug: string
+  slug?: string
   sort: string
   order: string
   onSort: (col: string) => void
@@ -134,27 +131,23 @@ export function ClientsListView({
   sort,
   order,
   onSort,
-  onEditClient,
-  deletingClientId,
-  onDeleteClient,
-  isBulkDeletingClients,
   selectedClientIds,
   onToggleClientSelection,
 }: ClientsListViewProps): React.ReactElement {
   const router = useRouter()
   const params = useParams()
   const routeSlug = params.slug as string
-  const currentSlug = routeSlug || slug
+  const currentSlug = slug ?? routeSlug
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-hidden rounded-xl border border-border bg-white">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
+          <TableRow className="bg-muted/30 hover:bg-muted/30">
+            <TableHead className="h-11 w-12 text-[12.5px] font-semibold">
               <span className="sr-only">Wybierz klienta</span>
             </TableHead>
-            <TableHead className="min-w-[260px]">
+            <TableHead className="h-11 min-w-[260px] text-[12.5px] font-semibold">
               <SortHeader
                 column="full_name"
                 label="Imie i nazwisko"
@@ -163,9 +156,9 @@ export function ClientsListView({
                 onSort={onSort}
               />
             </TableHead>
-            <TableHead className="min-w-[170px]">Telefon</TableHead>
-            <TableHead className="min-w-[220px]">Email</TableHead>
-            <TableHead className="min-w-[160px]">
+            <TableHead className="h-11 min-w-[170px] text-[12.5px] font-semibold">Telefon</TableHead>
+            <TableHead className="h-11 min-w-[220px] text-[12.5px] font-semibold">Email</TableHead>
+            <TableHead className="h-11 min-w-[160px] text-[12.5px] font-semibold">
               <SortHeader
                 column="last_visit_at"
                 label="Ostatnia wizyta"
@@ -174,7 +167,7 @@ export function ClientsListView({
                 onSort={onSort}
               />
             </TableHead>
-            <TableHead className="min-w-[140px]">
+            <TableHead className="h-11 min-w-[140px] text-[12.5px] font-semibold">
               <SortHeader
                 column="visit_count"
                 label="Liczba wizyt"
@@ -183,14 +176,12 @@ export function ClientsListView({
                 onSort={onSort}
               />
             </TableHead>
-            <TableHead className="min-w-[180px]">Tagi</TableHead>
-            <TableHead className="w-[120px] text-right">Akcje</TableHead>
+            <TableHead className="h-11 min-w-[180px] text-[12.5px] font-semibold">Tagi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {clients.map((client) => {
             const isSelected = selectedClientIds.includes(client.id)
-            const isDeleting = deletingClientId === client.id
             const blacklistBadge = getBlacklistBadge(client.blacklist_status)
             const visibleTags = client.tags?.slice(0, 2) ?? []
             const hiddenTagsCount = client.tags ? Math.max(client.tags.length - visibleTags.length, 0) : 0
@@ -199,8 +190,8 @@ export function ClientsListView({
               <TableRow
                 key={client.id}
                 className={cn(
-                  'cursor-pointer transition-colors hover:bg-muted/40',
-                  isSelected && 'bg-muted/30'
+                  'cursor-pointer transition-colors hover:bg-secondary/10',
+                  isSelected && 'bg-secondary/10'
                 )}
                 onClick={() => router.push(`/${currentSlug}/clients/${client.id}`)}
               >
@@ -213,35 +204,37 @@ export function ClientsListView({
                     onChange={() => onToggleClientSelection(client.id)}
                   />
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span className="truncate font-medium text-foreground">{client.full_name}</span>
-                      </div>
-                      {blacklistBadge ? (
-                        <div className="flex flex-wrap items-center gap-2">{blacklistBadge}</div>
-                      ) : null}
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <TableCell className="py-3">
+                  <div className="space-y-2">
+                    <ObjectCell
+                      type="client"
+                      id={client.id}
+                      label={client.full_name}
+                      slug={currentSlug}
+                      meta={client.email ?? client.phone ?? undefined}
+                      avatarUrl={client.avatar_url ?? undefined}
+                      showActions={true}
+                    />
+                    {blacklistBadge ? (
+                      <div className="flex flex-wrap items-center gap-2">{blacklistBadge}</div>
+                    ) : null}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-3 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 shrink-0" />
                     <span>{client.phone ? formatPhoneNumber(client.phone) : '—'}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-3 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 shrink-0" />
                     <span className="truncate">{client.email || '—'}</span>
                   </div>
                 </TableCell>
-                <TableCell>{client.last_visit_at ? getRelativeTime(client.last_visit_at) : 'Brak'}</TableCell>
-                <TableCell className="font-medium">{client.visit_count}</TableCell>
-                <TableCell>
+                <TableCell className="py-3">{client.last_visit_at ? getRelativeTime(client.last_visit_at) : 'Brak'}</TableCell>
+                <TableCell className="py-3 font-medium">{client.visit_count}</TableCell>
+                <TableCell className="py-3">
                   <div className="flex flex-wrap gap-2">
                     {visibleTags.length > 0 ? (
                       visibleTags.map((tag) => (
@@ -255,39 +248,6 @@ export function ClientsListView({
                     {hiddenTagsCount > 0 ? (
                       <Badge variant="outline">+{hiddenTagsCount}</Badge>
                     ) : null}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      aria-label={`Edytuj klienta ${client.full_name}`}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onEditClient(client)
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      disabled={isDeleting || isBulkDeletingClients}
-                      aria-label={`Usun klienta ${client.full_name}`}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onDeleteClient(client.id, client.full_name)
-                      }}
-                    >
-                      {isDeleting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

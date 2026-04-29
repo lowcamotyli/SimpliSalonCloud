@@ -109,11 +109,13 @@ export function DashboardCommandPalette({ salonSlug }: { salonSlug: string }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const key = typeof event.key === 'string' ? event.key.toLowerCase() : ''
+
       if (isEditableTarget(event.target)) {
         return
       }
 
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      if ((event.ctrlKey || event.metaKey) && key === 'k') {
         event.preventDefault()
         setOpen((prev) => !prev)
       }

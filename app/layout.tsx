@@ -14,21 +14,21 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-const previewUi = Manrope({
+const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-preview-ui',
+  variable: '--font-manrope',
 })
 
-const previewDisplay = Cormorant_Garamond({
+const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['500', '600', '700'],
   display: 'swap',
-  variable: '--font-preview-display',
+  variable: '--font-cormorant',
 })
 
 export const viewport: Viewport = {
-  themeColor: '#1C2340',
+  themeColor: '#F3F5F7',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -56,7 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl">
-      <body className={`${inter.className} ${previewUi.variable} ${previewDisplay.variable}`}>
+      <body className={`${inter.className} ${inter.variable} ${manrope.variable} ${cormorant.variable}`}>
         <QueryProvider>
           <TooltipProvider>
             {children}

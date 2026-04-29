@@ -105,7 +105,7 @@ export function ServiceImport() {
             description="Pobierz szablon CSV, wypełnij go swoimi usługami i wgraj tutaj, aby szybko dodać ofertę salonu."
             action={<Badge variant="outline">Narzędzie</Badge>}
         >
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
                 <Button variant="outline" onClick={downloadTemplate} className="flex-1">
                     <Download className="mr-2 h-4 w-4" />
                     Pobierz szablon

@@ -59,11 +59,11 @@ export default function AppearancePage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
-      <div className="mb-6 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-muted/20 p-5">
         <div>
-          <h1 className="text-3xl font-bold">Wyglad</h1>
-          <p className="text-muted-foreground">Sprawdzaj nowe kierunki wizualne w dedykowanym slocie testowym.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Wyglad</h1>
+          <p className="text-sm text-muted-foreground">Sprawdzaj nowe kierunki wizualne w dedykowanym slocie testowym.</p>
         </div>
         <Button onClick={handleSave} disabled={updateSettings.isPending}>
           {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}

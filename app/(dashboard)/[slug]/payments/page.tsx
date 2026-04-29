@@ -178,15 +178,19 @@ export default async function PaymentsPage({
     <div className="space-y-6 pb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Płatności online</h1>
-          <p className="text-sm text-muted-foreground">Historia płatności za rezerwacje</p>
+          <h1 className="font-display text-3xl font-semibold tracking-normal text-[var(--v3-text-primary)] sm:text-4xl">
+            Płatności online
+          </h1>
+          <p className="font-ui text-base font-medium text-[var(--v3-text-secondary)] theme-header-subtitle">
+            Historia płatności za rezerwacje
+          </p>
         </div>
 
-        <form method="GET" className="flex items-center gap-2">
+        <form method="GET" className="flex items-center gap-2 rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white p-2 shadow-[var(--v3-shadow-card)]">
           <select
             name="status"
             defaultValue={selectedStatus}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 rounded-[var(--v3-r-sm)] border border-[var(--v3-border)] bg-white px-3 font-ui text-sm text-[var(--v3-text-primary)]"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -195,18 +199,18 @@ export default async function PaymentsPage({
             ))}
           </select>
           <input type="hidden" name="page" value="1" />
-          <Button type="submit" variant="outline">
+          <Button type="submit" variant="outline" className="rounded-[var(--v3-r-pill)]">
             Filtruj
           </Button>
         </form>
       </div>
 
       {payments.length === 0 ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
+        <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] p-8 text-center text-[var(--v3-text-secondary)] shadow-[var(--v3-shadow-card)]">
           Brak płatności online
         </div>
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] shadow-[var(--v3-shadow-card)]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -220,11 +224,13 @@ export default async function PaymentsPage({
             </TableHeader>
             <TableBody>
               {payments.map((payment) => (
-                <TableRow key={payment.id}>
+                <TableRow key={payment.id} className="transition-colors hover:bg-[var(--v3-secondary-soft)]">
                   <TableCell>{formatDateTime(payment.paidAt ?? payment.createdAt)}</TableCell>
                   <TableCell>{payment.clientName}</TableCell>
                   <TableCell>{payment.serviceName}</TableCell>
-                  <TableCell>{formatAmount(payment.amount)}</TableCell>
+                  <TableCell className="font-display text-[17px] font-bold tabular-nums text-[var(--v3-gold)]">
+                    {formatAmount(payment.amount)}
+                  </TableCell>
                   <TableCell>
                     <PaymentStatusBadge
                       status={payment.status}
@@ -232,7 +238,7 @@ export default async function PaymentsPage({
                     />
                   </TableCell>
                   <TableCell>
-                    <Button asChild variant="outline" size="sm">
+                    <Button asChild variant="outline" size="sm" className="rounded-[var(--v3-r-pill)]">
                       <Link href={`/${slug}/bookings`}>Przejdź do rezerwacji</Link>
                     </Button>
                   </TableCell>
@@ -243,13 +249,14 @@ export default async function PaymentsPage({
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-white px-4 py-3 shadow-[var(--v3-shadow-card)]">
+        <div className="flex items-center justify-between">
         {safePage <= 1 ? (
-          <Button variant="outline" disabled>
+          <Button variant="outline" className="rounded-[var(--v3-r-pill)]" disabled>
             Poprzednia
           </Button>
         ) : (
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="rounded-[var(--v3-r-pill)]">
             <Link href={previousPageHref}>Poprzednia</Link>
           </Button>
         )}
@@ -259,14 +266,15 @@ export default async function PaymentsPage({
         </p>
 
         {safePage >= totalPages ? (
-          <Button variant="outline" disabled>
+          <Button variant="outline" className="rounded-[var(--v3-r-pill)]" disabled>
             Następna
           </Button>
         ) : (
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="rounded-[var(--v3-r-pill)]">
             <Link href={nextPageHref}>Następna</Link>
           </Button>
         )}
+        </div>
       </div>
     </div>
   )

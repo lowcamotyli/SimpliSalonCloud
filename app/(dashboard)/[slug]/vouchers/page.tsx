@@ -63,7 +63,7 @@ const formatDate = (value: string) => {
 
 const getStatusBadge = (status: Voucher['status']) => {
   if (status === 'active') {
-    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aktywny</Badge>
+    return <Badge variant="success">Aktywny</Badge>
   }
 
   if (status === 'used') {
@@ -227,14 +227,14 @@ export default function VouchersSettingsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Vouchery</h1>
-          <p className="text-sm text-muted-foreground theme-header-subtitle">Zarzadzanie voucherami salonu.</p>
+          <h1 className="font-display text-3xl font-semibold tracking-normal text-[var(--v3-text-primary)] sm:text-4xl">Vouchery</h1>
+          <p className="font-ui text-base font-medium text-[var(--v3-text-secondary)] theme-header-subtitle">Zarzadzanie voucherami salonu.</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>Wystaw voucher</Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)}>
-        <TabsList>
+        <TabsList className="rounded-[var(--v3-r-sm)] border border-[var(--v3-border)] bg-[var(--v3-surface)] p-1">
           <TabsTrigger value="all">Wszystkie</TabsTrigger>
           <TabsTrigger value="active">Aktywne</TabsTrigger>
           <TabsTrigger value="used">Wykorzystane</TabsTrigger>
@@ -242,7 +242,7 @@ export default function VouchersSettingsPage() {
         </TabsList>
       </Tabs>
 
-      <div className="rounded-md border">
+      <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] shadow-[var(--v3-shadow-card)]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -256,7 +256,7 @@ export default function VouchersSettingsPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-8 text-center text-[var(--v3-text-secondary)]">
                   <span className="inline-flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Ladowanie voucherow...
@@ -265,7 +265,7 @@ export default function VouchersSettingsPage() {
               </TableRow>
             ) : filteredVouchers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-8 text-center text-[var(--v3-text-secondary)]">
                   Brak voucherow
                 </TableCell>
               </TableRow>
@@ -273,12 +273,12 @@ export default function VouchersSettingsPage() {
               filteredVouchers.map((voucher) => (
                 <TableRow
                   key={voucher.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer transition-colors hover:bg-[var(--v3-secondary-soft)]"
                   onClick={() => void handleOpenVoucherDetails(voucher.id)}
                 >
                   <TableCell className="font-medium">{voucher.code}</TableCell>
-                  <TableCell>{formatCurrency(Number(voucher.initial_value))}</TableCell>
-                  <TableCell>{formatCurrency(Number(voucher.current_balance))}</TableCell>
+                  <TableCell className="font-display text-[17px] font-bold tabular-nums text-[var(--v3-gold)]">{formatCurrency(Number(voucher.initial_value))}</TableCell>
+                  <TableCell className="font-display text-[17px] font-bold tabular-nums text-[var(--v3-gold)]">{formatCurrency(Number(voucher.current_balance))}</TableCell>
                   <TableCell>{getStatusBadge(voucher.status)}</TableCell>
                   <TableCell>{formatDate(voucher.expires_at)}</TableCell>
                 </TableRow>
@@ -368,7 +368,7 @@ export default function VouchersSettingsPage() {
 
               <div>
                 <p className="mb-2 text-sm font-medium">Historia transakcji</p>
-                <div className="rounded-md border">
+                <div className="rounded-[var(--v3-r-md)] border border-[var(--v3-border)] bg-[var(--v3-surface)] shadow-[var(--v3-shadow-card)]">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -387,10 +387,10 @@ export default function VouchersSettingsPage() {
                         </TableRow>
                       ) : (
                         (selectedVoucher.voucher_transactions ?? []).map((transaction) => (
-                          <TableRow key={transaction.id}>
+                          <TableRow key={transaction.id} className="transition-colors hover:bg-[var(--v3-secondary-soft)]">
                             <TableCell>{formatDate(transaction.created_at)}</TableCell>
-                            <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
-                            <TableCell>{formatCurrency(Number(transaction.balance_after))}</TableCell>
+                            <TableCell className="font-display font-bold tabular-nums text-[var(--v3-gold)]">{formatCurrency(Number(transaction.amount))}</TableCell>
+                            <TableCell className="font-display font-bold tabular-nums text-[var(--v3-gold)]">{formatCurrency(Number(transaction.balance_after))}</TableCell>
                             <TableCell>{transaction.note || '—'}</TableCell>
                           </TableRow>
                         ))

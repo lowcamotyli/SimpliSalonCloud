@@ -61,6 +61,7 @@ export function ObjectTrigger({
   onOpenChange,
 }: ObjectTriggerProps): JSX.Element {
   const [internalOpen, setInternalOpen] = React.useState(false)
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
   const isMobile = useMediaQuery("(max-width: 768px)")
   const isControlled = openProp !== undefined
   const open = isControlled ? openProp : internalOpen
@@ -80,10 +81,11 @@ export function ObjectTrigger({
     <button
       aria-expanded={open}
       aria-haspopup="menu"
-      aria-label={`Akcje: ${label}`}
+      aria-label={`Akcje dla ${label}`}
       className={cn(
         objectToneClasses[type],
-        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-transparent text-[var(--v3-text-secondary)] outline-none transition-colors hover:bg-[var(--object-bg)] hover:text-[var(--object-color)] focus-visible:ring-2 focus-visible:ring-[var(--object-color)] focus-visible:ring-offset-1",
+        "inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-[var(--v3-text-secondary)] outline-none transition-[background,color] duration-150 hover:bg-[var(--v3-bg-alt)] hover:text-[var(--v3-text-primary)] focus-visible:shadow-[var(--v3-shadow-focus)]",
+        isMobile ? "h-11 w-11" : "h-[22px] w-[22px]",
         open && "bg-[var(--object-bg)] text-[var(--object-color)]",
         !hasActions && "cursor-not-allowed opacity-50",
         className
@@ -95,12 +97,13 @@ export function ObjectTrigger({
           setOpen(!open)
         }
       }}
+      ref={triggerRef}
       type="button"
     >
       {variant === "chevron" ? (
-        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        <ChevronDown className={cn("h-3.5 w-3.5", isMobile && "h-4 w-4")} aria-hidden="true" />
       ) : (
-        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <MoreHorizontal className={cn("h-3.5 w-3.5", isMobile && "h-4 w-4")} aria-hidden="true" />
       )}
     </button>
   )
@@ -117,6 +120,7 @@ export function ObjectTrigger({
           onOpenChange={setOpen}
           open={open}
           slug={slug}
+          triggerRef={triggerRef}
           type={type}
         />
       </>

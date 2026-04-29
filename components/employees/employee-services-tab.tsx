@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { EmployeeServicesPanel } from '@/components/employees/employee-services-panel'
+import { ObjectLink } from '@/components/objects'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { formatPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils/cn'
@@ -231,7 +232,7 @@ export function EmployeeServicesTab({
                   key={service.id}
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40"
                 >
-                  <span className="flex-1 truncate text-sm">{service.name}</span>
+                  <ObjectLink type="service" id={service.id} label={service.name} slug={salonSlug} className="flex-1 truncate text-sm" />
                   {service.subcategory ? (
                     <Badge variant="secondary" className="hidden shrink-0 text-xs sm:inline-flex">
                       {service.subcategory}

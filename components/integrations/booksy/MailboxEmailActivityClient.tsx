@@ -137,7 +137,7 @@ function JsonBlock({ value }: { value: unknown }): JSX.Element {
   }
 
   return (
-    <pre className="max-h-80 overflow-auto rounded-md border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
+    <pre className="max-h-80 overflow-auto rounded-xl border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
       {JSON.stringify(value, null, 2)}
     </pre>
   )
@@ -297,18 +297,18 @@ export function MailboxEmailActivityClient({ emails }: { emails: MailboxEmailAct
       </div>
 
       {visibleEmails.length === 0 ? (
-        <div className="rounded-md border border-dashed py-8 text-center text-sm text-gray-500">
+        <div className="rounded-xl border border-dashed py-8 text-center text-sm text-gray-500">
           Brak emaili dla wybranych filtrów
         </div>
       ) : (
-        <ul className="divide-y">
+        <ul className="divide-y divide-border">
           {visibleEmails.map((email) => {
             const classes = getColorClasses(email.status.color)
 
             return (
               <li key={email.id}>
                 <button
-                  className="flex w-full items-start justify-between gap-3 py-3 text-left hover:bg-muted/40"
+                  className="flex w-full items-start justify-between gap-3 py-3 text-left hover:bg-muted/30"
                   onClick={() => setSelectedEmail(email)}
                   type="button"
                 >
@@ -374,7 +374,7 @@ export function MailboxEmailActivityClient({ emails }: { emails: MailboxEmailAct
                 </section>
 
                 {selectedEmail.errorMessage ? (
-                  <section className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <section className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                       <p>{selectedEmail.errorMessage}</p>
@@ -391,10 +391,10 @@ export function MailboxEmailActivityClient({ emails }: { emails: MailboxEmailAct
                     </div>
                   ) : null}
                   {details.status === "error" ? (
-                    <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{details.error}</p>
+                    <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{details.error}</p>
                   ) : null}
                   {details.status === "loaded" ? (
-                    <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
+                    <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-xl border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
                       {details.data.rawText ?? details.data.htmlText ?? "Brak treści w zapisanym MIME."}
                     </pre>
                   ) : null}
@@ -420,7 +420,7 @@ export function MailboxEmailActivityClient({ emails }: { emails: MailboxEmailAct
 
 function Detail({ label, value }: { label: string; value: string }): JSX.Element {
   return (
-    <div className="min-w-0 rounded-md border bg-background p-2">
+    <div className="min-w-0 rounded-xl border bg-background p-2">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 break-words text-sm text-foreground">{value}</dd>
     </div>

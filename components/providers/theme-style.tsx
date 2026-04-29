@@ -3,24 +3,26 @@
 import { useEffect } from 'react'
 import { THEMES, type ThemeKey } from '@/lib/types/settings'
 
+const REVAMP_V3 = {
+    primary: '#32855F',
+    background: '#F3F5F7',
+    text: '#2C2C2C',
+}
+
 interface ThemeStyleProps {
     themeKey: ThemeKey
 }
 
 export function ThemeStyle({ themeKey }: ThemeStyleProps) {
     useEffect(() => {
-        const theme = THEMES[themeKey]
-        if (!theme) return
+        if (!THEMES[themeKey]) return
 
         const root = document.documentElement
 
-        // Set colors from theme
-        root.style.setProperty('--primary', hexToHSL(theme.primary))
-        root.style.setProperty('--primary-hex', theme.primary)
-        root.style.setProperty('--background-hex', theme.background)
-        root.style.setProperty('--text-hex', theme.text)
-
-        // Derived colors logic would go here if needed
+        root.style.setProperty('--primary', hexToHSL(REVAMP_V3.primary))
+        root.style.setProperty('--primary-hex', REVAMP_V3.primary)
+        root.style.setProperty('--background-hex', REVAMP_V3.background)
+        root.style.setProperty('--text-hex', REVAMP_V3.text)
 
     }, [themeKey])
 

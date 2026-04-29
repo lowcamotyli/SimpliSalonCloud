@@ -88,14 +88,14 @@ export function BooksySyncOptions({ salonId, initialSettings }: BooksySyncOption
     settings.booksy_sync_from_date !== lastSavedSettings.booksy_sync_from_date
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
+      <CardHeader className="border-b border-border/80 pb-4">
         <CardTitle className="flex items-center gap-2 text-base">
           <SlidersHorizontal className="h-5 w-5 text-orange-500" />
           Opcje synchronizacji
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-5">
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="booksy-sender-filter">Adres e-mail nadawcy Booksy</Label>

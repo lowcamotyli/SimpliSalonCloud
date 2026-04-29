@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,7 +32,9 @@ import { SubmissionViewDialog } from '@/components/forms/submission-view-dialog'
 import { ClientBalanceCard } from '@/components/clients/client-balance-card'
 import { PaymentLinkDialog } from '@/components/clients/payment-link-dialog'
 import { ClientTags } from '@/components/clients/client-tags'
+import { ObjectLink, ObjectPill, ObjectTrigger } from '@/components/objects'
 import { createClient } from '@/lib/supabase/client'
+import { BOOKING_STATUS_LABELS } from '@/lib/constants'
 
 interface Client {
   id: string;
@@ -86,9 +88,21 @@ interface Voucher {
   beneficiary_client_id: string | null;
 }
 
+interface AppointmentHistoryItem {
+  id: string;
+  booking_date: string;
+  booking_time: string | null;
+  status: string | null;
+  service_id: string | null;
+  service_name: string | null;
+  employee_id: string | null;
+  employee_name: string | null;
+}
+
 
 export default function ClientDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = params.slug as string
   const id = params.id as string
 
@@ -96,6 +110,7 @@ export default function ClientDetailPage() {
   const [forms, setForms] = useState<ClientForm[]>([])
   const [beautyPlans, setBeautyPlans] = useState<BeautyPlan[]>([])
   const [vouchers, setVouchers] = useState<Voucher[]>([])
+  const [appointmentHistory, setAppointmentHistory] = useState<AppointmentHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [paymentLinkOpen, setPaymentLinkOpen] = useState(false)
   const [showAddVoucher, setShowAddVoucher] = useState(false)
@@ -176,11 +191,26 @@ export default function ClientDetailPage() {
 
       const salonId = salonData?.id ?? ''
 
-      const [clientRes, formsRes, plansRes, vouchersRes] = await Promise.all([
+      const [clientRes, formsRes, plansRes, vouchersRes, historyRes] = await Promise.all([
         fetch(`/api/clients/${id}`),
         fetch(`/api/clients/${id}/forms`),
         fetch(`/api/clients/${id}/beauty-plans`),
         salonId ? fetch(`/api/vouchers?salonId=${salonId}&clientId=${id}`) : Promise.resolve(null),
+        salonId
+          ? supabase
+              .from('bookings')
+              .select(`
+                id, booking_date, booking_time, status, service_id, employee_id,
+                services:services (id, name),
+                employees:employees (id, first_name, last_name)
+              `)
+              .eq('salon_id', salonId)
+              .eq('client_id', id)
+              .is('deleted_at', null)
+              .order('booking_date', { ascending: false })
+              .order('booking_time', { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [], error: null }),
       ])
 
       if (clientRes.ok) { const cd = await clientRes.json(); setClient(cd.client ?? cd) }
@@ -196,6 +226,22 @@ export default function ClientDetailPage() {
       } else {
         setVouchers([])
       }
+      if (historyRes.error) throw historyRes.error
+      setAppointmentHistory(((historyRes.data ?? []) as any[]).map((booking) => {
+        const service = Array.isArray(booking.services) ? booking.services[0] : booking.services
+        const employee = Array.isArray(booking.employees) ? booking.employees[0] : booking.employees
+
+        return {
+          id: booking.id,
+          booking_date: booking.booking_date,
+          booking_time: booking.booking_time,
+          status: booking.status,
+          service_id: booking.service_id ?? service?.id ?? null,
+          service_name: service?.name ?? null,
+          employee_id: booking.employee_id ?? employee?.id ?? null,
+          employee_name: employee ? `${employee.first_name ?? ''} ${employee.last_name ?? ''}`.trim() : null,
+        }
+      }))
     } catch (error) {
       toast.error('Błąd podczas pobierania danych')
     } finally {
@@ -275,18 +321,19 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <Link href={`/${slug}/clients`} className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+    <div className="space-y-6 p-6">
+      <Link href={`/${slug}/clients`} className="flex items-center text-sm text-muted-foreground transition-colors hover:text-primary">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Wróć do klientów
       </Link>
 
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{client?.full_name}</h1>
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">Profil klienta</p>
+          <h1 className="text-4xl font-semibold tracking-[-0.025em]">{client?.full_name}</h1>
           <p className="text-muted-foreground">{client?.email || 'Brak adresu email'}</p>
         </div>
-        <Badge variant="outline" className="text-lg py-1 px-3">
+        <Badge variant="outline" className="px-3 py-1 text-lg">
           Wizyty: {client?.visit_count || 0}
         </Badge>
       </div>
@@ -303,8 +350,9 @@ export default function ClientDetailPage() {
       ) : null}
 
       <Tabs defaultValue="ogolne" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 lg:w-[860px]">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-muted/30 p-1 sm:grid-cols-3 lg:w-[980px] lg:grid-cols-7">
           <TabsTrigger value="ogolne">Ogólne</TabsTrigger>
+          <TabsTrigger value="historia">Historia</TabsTrigger>
           <TabsTrigger value="karty">Karty medyczne</TabsTrigger>
           <TabsTrigger value="beauty">Beauty Plan</TabsTrigger>
           <TabsTrigger value="plany">Serie zabiegów</TabsTrigger>
@@ -313,9 +361,9 @@ export default function ClientDetailPage() {
         </TabsList>
 
         <TabsContent value="ogolne" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informacje o kliencie</CardTitle>
+          <Card className="border border-border bg-white shadow-sm">
+            <CardHeader className="border-b border-border/80">
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.1em] text-secondary">Informacje o kliencie</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -358,20 +406,98 @@ export default function ClientDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="karty" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Wypełnione formularze</CardTitle>
+        <TabsContent value="historia" className="mt-6">
+          <Card className="border border-border bg-white shadow-sm">
+            <CardHeader className="border-b border-border/80">
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.1em] text-secondary">Historia wizyt</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Data przesłania</TableHead>
-                    <TableHead>Nazwa szablonu</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Podpis</TableHead>
-                    <TableHead className="text-right">Akcje</TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Data</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Usługa</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Pracownik</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Status</TableHead>
+                    <TableHead className="h-11 text-right text-[12.5px] font-semibold">Akcje</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointmentHistory.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Brak historii wizyt
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    appointmentHistory.map((booking) => (
+                      <TableRow
+                        key={booking.id}
+                        className="cursor-pointer hover:bg-secondary/10"
+                        onClick={() => router.push(`/${slug}/bookings/${booking.id}`)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span>{new Date(booking.booking_date).toLocaleDateString('pl-PL')}</span>
+                            <span className="text-xs text-muted-foreground">{booking.booking_time?.slice(0, 5) ?? '-'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <ObjectPill
+                            type="service"
+                            id={booking.service_id ?? ''}
+                            label={booking.service_name ?? 'Usługa'}
+                            slug={slug}
+                            className="max-w-[220px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <ObjectLink
+                            type="worker"
+                            id={booking.employee_id ?? ''}
+                            label={booking.employee_name ?? 'Pracownik'}
+                            slug={slug}
+                            showDot
+                            className="max-w-[220px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {booking.status ? BOOKING_STATUS_LABELS[booking.status as keyof typeof BOOKING_STATUS_LABELS] ?? booking.status : '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <ObjectTrigger
+                            type="booking"
+                            id={booking.id}
+                            label={booking.service_name ?? 'Wizyta'}
+                            slug={slug}
+                            meta={booking.booking_date}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="karty" className="mt-6">
+          <Card className="border border-border bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.1em] text-secondary">Wypełnione formularze</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Data przesłania</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Nazwa szablonu</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Status</TableHead>
+                    <TableHead className="h-11 text-[12.5px] font-semibold">Podpis</TableHead>
+                    <TableHead className="h-11 text-right text-[12.5px] font-semibold">Akcje</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -383,7 +509,7 @@ export default function ClientDetailPage() {
                     </TableRow>
                   ) : (
                     forms.map((form) => (
-                      <TableRow key={form.id} className="cursor-pointer" onClick={() => form.submitted_at && handleShowForm(form)}>
+                      <TableRow key={form.id} className="cursor-pointer hover:bg-secondary/10" onClick={() => form.submitted_at && handleShowForm(form)}>
                         <TableCell>{form.submitted_at ? new Date(form.submitted_at).toLocaleDateString('pl-PL') : '-'}</TableCell>
                         <TableCell className="font-medium">{form.template_name}</TableCell>
                         <TableCell>
@@ -415,10 +541,12 @@ export default function ClientDetailPage() {
               id: selectedForm.id,
               source: selectedForm.source,
               form_template_id: selectedForm.form_template_id,
+              client_id: id,
               form_templates: selectedForm.template_name ? { name: selectedForm.template_name } : null,
               clients: client ? { full_name: client.full_name } : null,
               submitted_at: selectedForm.submitted_at ?? null,
             } : null}
+            slug={slug}
             open={isFormDialogOpen}
             onOpenChange={setIsFormDialogOpen}
           />
@@ -568,9 +696,9 @@ export default function ClientDetailPage() {
           </Dialog>
         </TabsContent>
         <TabsContent value="plany" className="mt-6">
-          <Card>
+          <Card className="border border-border bg-white shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Serie zabiegów</CardTitle>
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.1em] text-secondary">Serie zabiegów</CardTitle>
               <Link href={`/${slug}/clients/${id}/treatment-plans`}>
                 <Button className="gradient-button rounded-lg" size="sm">
                   <Plus className="h-4 w-4 mr-1" /> Zarządzaj planami
@@ -586,9 +714,9 @@ export default function ClientDetailPage() {
           <SmsChat clientId={id} />
         </TabsContent>
         <TabsContent value="vouchery" className="mt-6">
-          <Card>
+          <Card className="border border-border bg-white shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Vouchery klienta</CardTitle>
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.1em] text-secondary">Vouchery klienta</CardTitle>
               <Button size="sm" onClick={() => setShowAddVoucher(v => !v)} className="gradient-button rounded-lg">
                 <Plus className="h-4 w-4 mr-1" /> Dodaj voucher
               </Button>
@@ -621,11 +749,11 @@ export default function ClientDetailPage() {
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Kod</TableHead>
-                      <TableHead>Saldo / Wartość</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Wygasa</TableHead>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="h-11 text-[12.5px] font-semibold">Kod</TableHead>
+                      <TableHead className="h-11 text-[12.5px] font-semibold">Saldo / Wartość</TableHead>
+                      <TableHead className="h-11 text-[12.5px] font-semibold">Status</TableHead>
+                      <TableHead className="h-11 text-[12.5px] font-semibold">Wygasa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

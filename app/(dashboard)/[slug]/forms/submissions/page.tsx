@@ -61,6 +61,7 @@ export default function FormSubmissionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [viewingSubmission, setViewingSubmission] = useState<SubmissionRow | null>(null)
+  const salonSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug ?? ''
 
   useEffect(() => {
     const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug
@@ -183,8 +184,8 @@ export default function FormSubmissionsPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader className="border-b">
           <CardTitle>Ostatnie zgłoszenia</CardTitle>
           <CardDescription>
             Lista ostatnich 50 formularzy z datą przesłania.
@@ -206,7 +207,7 @@ export default function FormSubmissionsPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {filteredSubmissions.map((submission) => {
                 const client = getRelation(submission.clients)
                 const formTemplate = getRelation(submission.form_templates)
@@ -214,7 +215,7 @@ export default function FormSubmissionsPage() {
                 const formName = formTemplate?.name ?? 'Bez nazwy formularza'
 
                 return (
-                  <Card key={submission.id} className="border-border/60 shadow-sm">
+                  <Card key={submission.id} className="border-border/70 bg-background shadow-sm transition-shadow hover:shadow-md">
                     <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                       <div className="space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
@@ -269,6 +270,7 @@ export default function FormSubmissionsPage() {
       </Card>
       <SubmissionViewDialog
         submission={viewingSubmission}
+        slug={salonSlug}
         open={!!viewingSubmission}
         onOpenChange={(open) => { if (!open) setViewingSubmission(null) }}
       />

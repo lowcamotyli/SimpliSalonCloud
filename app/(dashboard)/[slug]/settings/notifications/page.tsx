@@ -120,11 +120,11 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Powiadomienia</h1>
-          <p className="text-muted-foreground">Zarządzaj komunikacją z klientami</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Powiadomienia</h1>
+          <p className="text-sm text-muted-foreground">Zarządzaj komunikacją z klientami</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>

@@ -93,23 +93,23 @@ export default function SurveyPage(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-200 border-t-blue-600"></div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full rounded-xl bg-white p-8 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-red-500">
             <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="mb-2 text-xl font-bold text-gray-900">Blad</h1>
-          <p className="text-gray-600">{error}</p>
+          <h1 className="mb-2 text-xl font-bold text-neutral-900">Blad</h1>
+          <p className="text-neutral-600">{error}</p>
         </div>
       </div>
     )
@@ -117,15 +117,15 @@ export default function SurveyPage(): JSX.Element {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full rounded-xl bg-white p-8 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-green-500">
             <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Dziekujemy!</h1>
-          <p className="text-gray-600">Twoja opinia jest dla nas wazna.</p>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900">Dziekujemy!</h1>
+          <p className="text-neutral-600">Twoja opinia jest dla nas wazna.</p>
         </div>
       </div>
     )
@@ -138,11 +138,11 @@ export default function SurveyPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full rounded-xl bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
         <header className="mb-8 text-center">
           <p className="mb-1 text-sm font-medium uppercase tracking-wide text-blue-600">{salonName}</p>
-          <h1 className="text-2xl font-bold text-gray-900">Jak oceniasz dzisiejsza wizyte?</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Jak oceniasz dzisiejsza wizyte?</h1>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -167,7 +167,7 @@ export default function SurveyPage(): JSX.Element {
           </div>
 
           <div className="space-y-4">
-            <p className="text-center font-medium text-gray-700">Czy polecilbys nas znajomym?</p>
+            <p className="text-center font-medium text-neutral-700">Czy polecilbys nas znajomym?</p>
             <div className="grid grid-cols-6 gap-1 sm:grid-cols-11">
               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
                 <button
@@ -180,20 +180,20 @@ export default function SurveyPage(): JSX.Element {
                 </button>
               ))}
             </div>
-            <div className="flex justify-between text-[10px] uppercase tracking-tighter text-gray-400">
+            <div className="flex justify-between text-[10px] uppercase tracking-tighter text-neutral-400">
               <span>Wcale nie</span>
               <span>Zdecydowanie tak</span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="comment" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="comment" className="block text-sm font-medium text-neutral-700">
               Co moglibysmy zrobic lepiej? (opcjonalnie)
             </label>
             <textarea
               id="comment"
               rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder="Twoja opinia..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -203,7 +203,7 @@ export default function SurveyPage(): JSX.Element {
           <button
             type="submit"
             disabled={rating === 0 || submitting}
-            className={`w-full rounded-md px-4 py-3 font-bold text-white transition-all ${
+            className={`w-full rounded-xl px-4 py-3 font-bold text-white transition-all ${
               rating === 0 || submitting
                 ? "cursor-not-allowed bg-gray-300"
                 : "bg-blue-600 shadow-md hover:bg-blue-700 active:bg-blue-800"

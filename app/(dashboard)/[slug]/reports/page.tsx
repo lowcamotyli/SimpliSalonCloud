@@ -348,7 +348,7 @@ export default function ReportsPage(): JSX.Element {
         {/* ======================= OVERVIEW TAB ======================= */}
         <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="glass border-none overflow-hidden relative group">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent transition-opacity group-hover:opacity-100 opacity-50" />
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Suma Przychodów ({days} dni)</CardTitle>
@@ -358,7 +358,7 @@ export default function ReportsPage(): JSX.Element {
               </CardContent>
             </Card>
 
-            <Card className="glass border-none overflow-hidden relative group">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent transition-opacity group-hover:opacity-100 opacity-50" />
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Liczba Wizyt</CardTitle>
@@ -368,7 +368,7 @@ export default function ReportsPage(): JSX.Element {
               </CardContent>
             </Card>
 
-            <Card className="glass border-none overflow-hidden relative group">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent transition-opacity group-hover:opacity-100 opacity-50" />
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Wskaźnik NPS</CardTitle>
@@ -394,7 +394,7 @@ export default function ReportsPage(): JSX.Element {
         <TabsContent value="revenue" className="space-y-6 animate-in fade-in-50 duration-500">
           <RevenueChart data={chartData} title={`Zarobki (ostatnie ${days} dni)`} />
 
-          <Card className="glass border-none shadow-sm">
+          <Card className="rounded-2xl border border-border bg-card shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">Metody platnosci</CardTitle>
             </CardHeader>
@@ -438,7 +438,7 @@ export default function ReportsPage(): JSX.Element {
             </CardContent>
           </Card>
 
-          <Card className="glass border-none shadow-sm">
+          <Card className="rounded-2xl border border-border bg-card shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/50">
               <CardTitle className="text-lg">Szczegółowe dane</CardTitle>
               <a
@@ -452,7 +452,7 @@ export default function ReportsPage(): JSX.Element {
             <CardContent className="pt-4 p-0">
               <div className="relative overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs uppercase text-muted-foreground bg-muted/30">
+                  <thead className="text-xs uppercase text-muted-foreground bg-muted/40">
                     <tr>
                       <th className="px-6 py-3 font-semibold">Data</th>
                       <th className="px-6 py-3 text-right font-semibold">Liczba wizyt</th>
@@ -466,7 +466,7 @@ export default function ReportsPage(): JSX.Element {
                       </tr>
                     ) : (
                       revenueData.map((row) => (
-                        <tr key={row.booking_date} className="hover:bg-muted/30 transition-colors">
+                        <tr key={row.booking_date} className="hover:bg-muted/40 transition-colors">
                           <td className="px-6 py-3 font-medium">{new Date(row.booking_date).toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'long' })}</td>
                           <td className="px-6 py-3 text-right">{row.booking_count}</td>
                           <td className="px-6 py-3 text-right font-bold text-emerald-600">{formatPLN(row.revenue)}</td>
@@ -492,7 +492,7 @@ export default function ReportsPage(): JSX.Element {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ServicesChart data={servicesChartData.slice(0, 5)} />
 
-            <Card className="glass border-none">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Top Usługi</CardTitle>
               </CardHeader>
@@ -502,8 +502,8 @@ export default function ReportsPage(): JSX.Element {
                     <p className="text-center py-8 text-muted-foreground">Brak danych</p>
                   ) : (
                     topServices.map((service, index) => (
-                      <div key={service.service_name} className="flex items-center gap-4 p-3 rounded-xl border border-border/50 bg-card/50 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold text-sm shadow-sm">
+                      <div key={service.service_name} className="flex items-center gap-4 p-3 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary/15 text-secondary font-bold text-sm shadow-sm">
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -518,7 +518,7 @@ export default function ReportsPage(): JSX.Element {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-blue-600">{formatPLN(service.total_revenue)}</p>
+                          <p className="font-bold text-foreground">{formatPLN(service.total_revenue)}</p>
                         </div>
                       </div>
                     ))
@@ -534,7 +534,7 @@ export default function ReportsPage(): JSX.Element {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <EmployeeRevenueChart data={employeesChartData} title={`Przychód wg pracowników (ostatnie ${days} dni)`} />
 
-            <Card className="glass border-none">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Top Pracownicy</CardTitle>
               </CardHeader>
@@ -544,8 +544,8 @@ export default function ReportsPage(): JSX.Element {
                     <p className="text-center py-8 text-muted-foreground">Brak danych o pracownikach</p>
                   ) : (
                     topEmployees.map((emp, index) => (
-                      <div key={emp.employee_id || index} className="flex items-center gap-4 p-3 rounded-xl border border-border/50 bg-card/50 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-bold text-sm shadow-sm">
+                      <div key={emp.employee_id || index} className="flex items-center gap-4 p-3 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary/15 text-secondary font-bold text-sm shadow-sm">
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -556,7 +556,7 @@ export default function ReportsPage(): JSX.Element {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-purple-600">{formatPLN(emp.revenue)}</p>
+                          <p className="font-bold text-foreground">{formatPLN(emp.revenue)}</p>
                         </div>
                       </div>
                     ))
@@ -566,7 +566,7 @@ export default function ReportsPage(): JSX.Element {
             </Card>
           </div>
 
-          <Card className="glass border-none shadow-sm">
+          <Card className="rounded-2xl border border-border bg-card shadow-sm">
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-lg">Godziny przepracowane</CardTitle>
               <div className="flex items-center gap-2">
@@ -636,7 +636,7 @@ export default function ReportsPage(): JSX.Element {
         {/* ======================= NPS TAB ======================= */}
         <TabsContent value="nps" className="space-y-6 animate-in fade-in-50 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="glass border-none">
+            <Card className="rounded-2xl border border-border bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Twój wynik NPS</CardTitle>
               </CardHeader>
@@ -682,7 +682,7 @@ export default function ReportsPage(): JSX.Element {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 glass border-none">
+            <Card className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Komentarze od klientów</CardTitle>
               </CardHeader>
@@ -696,7 +696,7 @@ export default function ReportsPage(): JSX.Element {
                     </div>
                   ) : (
                     npsComments.map((c, i) => (
-                      <div key={i} className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-muted/30 transition-colors space-y-3">
+                      <div key={i} className="p-5 rounded-xl border border-border bg-background hover:bg-muted/40 transition-colors space-y-3">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white

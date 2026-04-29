@@ -18,14 +18,15 @@ const config: Record<
   none: {
     label: 'Brak płatności',
     variant: 'secondary',
+    className: 'border-[var(--v3-border)] bg-[var(--v3-bg-alt)] text-[var(--v3-text-secondary)]',
   },
   pending: {
     label: 'Oczekuje na płatność',
-    className: 'bg-yellow-100 text-yellow-800',
+    className: 'border-[#E9D6A8] bg-[var(--v3-gold-soft)] text-[var(--v3-gold)]',
   },
   paid: {
     label: 'Opłacono',
-    className: 'bg-green-100 text-green-800',
+    className: 'border-[var(--v3-success)] bg-[var(--v3-success-bg)] text-[var(--v3-success)]',
   },
   failed: {
     label: 'Płatność nieudana',
@@ -33,11 +34,12 @@ const config: Record<
   },
   refunded: {
     label: 'Zwrócono',
-    className: 'bg-blue-100 text-blue-800',
+    className: 'border-[var(--v3-secondary)] bg-[var(--v3-secondary-soft)] text-[var(--v3-secondary)]',
   },
   cancelled: {
     label: 'Anulowano',
     variant: 'secondary',
+    className: 'border-[var(--v3-border)] bg-[var(--v3-bg-alt)] text-[var(--v3-text-secondary)]',
   },
 }
 
@@ -49,7 +51,10 @@ export function PaymentStatusBadge({ status, amount }: PaymentStatusBadgeProps) 
       : label
 
   return (
-    <Badge variant={variant} className={className}>
+    <Badge
+      variant={variant}
+      className={`rounded-[var(--v3-r-pill)] px-2.5 py-0.5 font-ui text-xs font-semibold ${className ?? ''}`}
+    >
       {text}
     </Badge>
   )

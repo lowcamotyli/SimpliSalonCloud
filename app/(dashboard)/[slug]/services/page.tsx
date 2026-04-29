@@ -62,6 +62,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ListLoadingState } from '@/components/ui/list-loading-state'
 import { motion, AnimatePresence } from 'framer-motion'
 import { normalizeServicePriceType, ServicePriceType } from '@/lib/services/price-types'
+import { ObjectCell, ObjectTrigger } from '@/components/objects'
 
 const serviceSchema = z.object({
   category: z.string().min(2, 'Minimum 2 znaki'),
@@ -551,7 +552,7 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-8 px-4 sm:px-0">
+    <div className="mx-auto max-w-[1440px] space-y-8 px-4 pb-10 sm:px-0">
       {/* Header & Main Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
@@ -582,8 +583,8 @@ export default function ServicesPage() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Layers className="h-6 w-6" />
           </div>
@@ -592,7 +593,7 @@ export default function ServicesPage() {
             <p className="text-2xl font-black text-gray-900">{stats.total}</p>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
             <DollarSign className="h-6 w-6" />
           </div>
@@ -601,7 +602,7 @@ export default function ServicesPage() {
             <p className="text-2xl font-black text-gray-900">{formatPrice(stats.avgPrice)}</p>
           </div>
         </Card>
-        <Card className="p-4 glass border-none shadow-sm flex items-center gap-4">
+        <Card className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
             <Clock className="h-6 w-6" />
           </div>
@@ -613,22 +614,22 @@ export default function ServicesPage() {
       </div>
 
       {/* Search & Categories */}
-      <Card className="p-6 glass border-none shadow-xl shadow-slate-200/50 space-y-6">
+      <Card className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <Input
             placeholder="Szukaj usługi, kategorii lub podkategorii..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 bg-white/50 border-gray-200/50 focus:bg-white transition-all text-base rounded-xl"
+            className="h-11 rounded-full border-slate-300 bg-white pl-12 text-sm transition-all focus-visible:ring-2 focus-visible:ring-emerald-600/25"
           />
         </div>
-        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white/70 p-1 w-fit">
+        <div className="flex w-fit items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
           <Button
             type="button"
             size="sm"
             variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            className="h-9 rounded-lg px-3"
+            className="h-8 rounded-full px-4 text-xs"
             onClick={() => setViewMode('grid')}
           >
             <LayoutGrid className="h-4 w-4 mr-1.5" />
@@ -638,7 +639,7 @@ export default function ServicesPage() {
             type="button"
             size="sm"
             variant={viewMode === 'list' ? 'default' : 'ghost'}
-            className="h-9 rounded-lg px-3"
+            className="h-8 rounded-full px-4 text-xs"
             onClick={() => setViewMode('list')}
           >
             <List className="h-4 w-4 mr-1.5" />
@@ -779,7 +780,7 @@ export default function ServicesPage() {
 
                 return (
                   <motion.div key={category} layout variants={itemVariants}>
-                    <AccordionItem value={category} className="border border-slate-200/70 rounded-2xl px-4 bg-white/70">
+                    <AccordionItem value={category} className="rounded-2xl border border-slate-200 bg-white px-4">
                       <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-1 bg-primary rounded-full" />
@@ -811,13 +812,16 @@ export default function ServicesPage() {
                               )}>
                                 {(services as Service[]).map((service) => {
                                   const priceDisplay = getServicePriceDisplay(service)
+                                  const objectMeta = priceDisplay.showHiddenBadge
+                                    ? `${service.duration} min`
+                                    : `${service.duration} min • ${priceDisplay.text}`
                                   return (
                                   <Card
                                     key={service.id}
                                     className={cn(
                                       viewMode === 'grid'
-                                        ? "group relative overflow-hidden p-5 transition-all border-none bg-white hover:shadow-2xl hover:shadow-primary/10"
-                                        : "group relative overflow-hidden p-3 transition-all border border-slate-200 bg-white hover:shadow-md",
+                                        ? "group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-md"
+                                        : "group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-3 transition-all hover:shadow-md",
                                       !service.active && "opacity-60 bg-gray-50/50"
                                     )}
                                   >
@@ -831,9 +835,15 @@ export default function ServicesPage() {
                                             className="h-4 w-4 rounded accent-primary"
                                           aria-label={`Zaznacz usługę ${service.name}`}
                                           />
-                                          <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate theme-service-name">
-                                            {service.name}
-                                          </h4>
+                                          <ObjectCell
+                                            type="service"
+                                            id={service.id}
+                                            label={service.name}
+                                            slug={slug}
+                                            meta={objectMeta}
+                                            showActions={false}
+                                            className="max-w-[240px] sm:max-w-[320px]"
+                                          />
                                           {!service.active && (
                                             <Badge variant="outline" className="bg-white text-gray-400 border-gray-200 font-bold text-xs uppercase">
                                               Nieaktywna
@@ -863,6 +873,13 @@ export default function ServicesPage() {
                                           ? "opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
                                           : "opacity-100"
                                       )}>
+                                        <ObjectTrigger
+                                          type="service"
+                                          id={service.id}
+                                          label={service.name}
+                                          slug={slug}
+                                          meta={service.category}
+                                        />
                                         <Button
                                           size="icon"
                                           variant="ghost"
@@ -930,7 +947,7 @@ export default function ServicesPage() {
 
       {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl glass rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-y-auto rounded-2xl border border-slate-200 bg-white sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="gradient-text text-2xl">
               {editingService ? 'Edytuj usługę' : 'Nowa usługa'}

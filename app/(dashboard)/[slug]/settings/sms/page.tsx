@@ -119,10 +119,10 @@ export default function SmsSettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">SMS</h1>
-        <p className="text-muted-foreground">Konfiguracja dostawcy i przypomnień SMS</p>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-5">
+        <h1 className="text-2xl font-semibold tracking-tight">SMS</h1>
+        <p className="text-sm text-muted-foreground">Konfiguracja dostawcy i przypomnień SMS</p>
       </div>
 
       <SettingsCard title="Dostawca SMS" description="Wybór provider-a i dane dostępowe">

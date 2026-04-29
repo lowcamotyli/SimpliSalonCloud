@@ -444,9 +444,9 @@ export default function EquipmentPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Sprzet salonu</h1>
+    <div className="container mx-auto space-y-6 py-6">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-3xl font-semibold tracking-normal text-[var(--v3-text-primary)] sm:text-4xl">Sprzet salonu</h1>
         <div className="flex items-center gap-2">
           <Button
             variant={viewMode === 'tiles' ? 'default' : 'outline'}
@@ -475,7 +475,7 @@ export default function EquipmentPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : equipment.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed rounded-lg">
+        <div className="rounded-[var(--v3-r-md)] border border-dashed border-[var(--v3-border)] bg-[var(--v3-surface)] py-20 text-center shadow-[var(--v3-shadow-card)]">
           <p className="text-muted-foreground text-lg">Brak sprzetu. Dodaj pierwszy sprzet.</p>
           <Button variant="outline" className="mt-4" onClick={handleOpenAddDialog}>
             Dodaj teraz
@@ -499,29 +499,29 @@ export default function EquipmentPage() {
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {equipment.map((item) => (
             <Card
               key={item.id}
-              className={`${!item.is_active ? 'opacity-70 bg-muted/30' : ''} cursor-pointer hover:border-primary/50 transition-colors`}
+              className={`${!item.is_active ? 'opacity-70 bg-[var(--v3-bg-alt)]' : 'bg-[var(--v3-surface)]'} cursor-pointer rounded-[var(--v3-r-md)] border border-[var(--v3-border)] shadow-[var(--v3-shadow-card)] transition-[border-color,box-shadow] hover:border-[var(--v3-border-strong)] hover:shadow-[var(--v3-shadow-card-hover)]`}
               onClick={() => handleOpenServicesDialog(item)}
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-[var(--v3-border)] pb-3">
                 <CardTitle className="text-xl font-semibold truncate pr-2 theme-service-name">
                   {item.name}
                 </CardTitle>
-                <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                <Badge variant={item.is_active ? 'success' : 'neutral'}>
                   {item.is_active ? 'Aktywny' : 'Nieaktywny'}
                 </Badge>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3 pt-4">
                 <div>
-                  <Badge variant="outline" className="capitalize">
+                  <Badge variant="neutral" className="capitalize">
                     {getTypeLabel(item.type)}
                   </Badge>
                 </div>
                 <div>
-                  <Badge variant={getAssignedServicesCount(item) === 0 ? 'secondary' : 'default'}>
+                  <Badge variant={getAssignedServicesCount(item) === 0 ? 'neutral' : 'info'}>
                     {getAssignedServicesCount(item)} uslug
                   </Badge>
                 </div>
@@ -531,7 +531,7 @@ export default function EquipmentPage() {
                   </p>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
+              <CardFooter className="flex justify-end gap-2 border-t border-[var(--v3-border)] pt-4">
                 <Button
                   variant="ghost"
                   size="sm"

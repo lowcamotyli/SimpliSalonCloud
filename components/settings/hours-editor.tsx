@@ -1,7 +1,6 @@
 // components/settings/hours-editor.tsx
 'use client'
 
-import { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -34,14 +33,14 @@ export function HoursEditor({ hours, onChange }: HoursEditorProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {DAYS.map(day => {
         const dayHours = hours[day] || { open: '09:00', close: '18:00', closed: false }
         
         return (
-          <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <div key={day} className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/10 p-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="w-full sm:w-32">
-              <Label>{DAY_LABELS[day]}</Label>
+              <Label className="text-sm font-medium">{DAY_LABELS[day]}</Label>
             </div>
             
             <div className="flex items-center gap-2">

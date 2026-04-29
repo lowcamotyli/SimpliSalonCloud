@@ -136,12 +136,12 @@ export default function BusinessSettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl">
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-5">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Informacje o biznesie</h1>
-            <p className="text-muted-foreground">Dane kontaktowe i godziny otwarcia Twojego salonu</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Informacje o biznesie</h1>
+            <p className="text-sm text-muted-foreground">Dane kontaktowe i godziny otwarcia Twojego salonu</p>
           </div>
           <Button type="submit" className="w-full sm:w-auto" disabled={updateSettings.isPending || !form.formState.isValid}>
             {updateSettings.isPending ? (

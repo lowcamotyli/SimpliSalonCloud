@@ -93,14 +93,14 @@ export default async function DashboardLayout({
   return (
     <ThemeProvider themeKey={themeKey}>
       <MobileNavProvider>
-      <div className="theme-dashboard-shell flex h-screen overflow-hidden bg-background">
+      <div className="theme-dashboard-shell flex h-screen overflow-hidden bg-[var(--v3-bg)] text-[var(--v3-text-primary)] [&_.theme-navbar]:!border-[var(--v3-border)] [&_.theme-navbar]:!bg-[var(--v3-surface)] [&_.theme-navbar]:!shadow-none [&_.theme-navbar]:!backdrop-blur-none [&_.theme-sidebar]:!w-56 [&_.theme-sidebar]:!border-[var(--v3-border)] [&_.theme-sidebar]:!bg-[var(--v3-bg-alt)] [&_.theme-sidebar]:!shadow-none">
         <DashboardCommandPalette salonSlug={slug} />
         <Sidebar salonSlug={slug} userName={typedProfile?.full_name ?? undefined} />
 
         <div className="flex flex-1 flex-col overflow-hidden">
-          <Navbar salonName={salon.name} />
+          <Navbar salonName={salon.name} salonSlug={slug} />
 
-          <main className="theme-dashboard-main flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="theme-dashboard-main flex-1 overflow-y-auto bg-[var(--v3-bg)] p-4 md:px-7 md:py-6">
             <DunningBanner salonId={salon.id} slug={slug} />
             {children}
           </main>

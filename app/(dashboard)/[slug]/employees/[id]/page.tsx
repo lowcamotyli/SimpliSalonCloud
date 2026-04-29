@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { use, useMemo } from 'react'
 import { useEmployees } from '@/hooks/use-employees'
 import { useCurrentRole } from '@/hooks/use-current-role'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,14 +13,11 @@ import { EmployeeShiftsTab } from '@/components/employees/employee-shifts-tab'
 import { ShiftTemplatesManager } from '@/components/employees/shift-templates-manager'
 
 type EmployeeProfilePageProps = {
-  params: {
-    slug: string
-    id: string
-  }
+  params: Promise<{ slug: string; id: string }>
 }
 
 export default function EmployeeProfilePage({ params }: EmployeeProfilePageProps) {
-  const { slug, id } = params
+  const { slug, id } = use(params)
   const { data: employees, isLoading, isError } = useEmployees()
   const { isOwnerOrManager } = useCurrentRole()
 
@@ -61,7 +58,7 @@ export default function EmployeeProfilePage({ params }: EmployeeProfilePageProps
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="mx-auto max-w-[1440px] space-y-6 px-4 py-6 sm:px-0">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">{fullName}</h1>
         <Link href={`/${slug}/employees`}>
@@ -70,14 +67,14 @@ export default function EmployeeProfilePage({ params }: EmployeeProfilePageProps
       </div>
 
       <Tabs defaultValue="informacje" className="w-full">
-        <TabsList>
+        <TabsList className="rounded-full border border-slate-200 bg-slate-50 p-1">
           <TabsTrigger value="informacje">Informacje</TabsTrigger>
           <TabsTrigger value="grafik">Grafik</TabsTrigger>
           <TabsTrigger value="uslugi">Uslugi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="informacje" className="mt-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle>Dane podstawowe</CardTitle>
             </CardHeader>
@@ -90,12 +87,12 @@ export default function EmployeeProfilePage({ params }: EmployeeProfilePageProps
                 <span className="font-medium">Rola:</span>{' '}
                 {isOwnerOrManager() ? employee.role || '-' : 'Brak dostepu'}
               </p>
-              <p className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <span className="font-medium">Status:</span>
                 <Badge variant={employee.active ? 'default' : 'secondary'}>
                   {employee.active ? 'Aktywny' : 'Nieaktywny'}
                 </Badge>
-              </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

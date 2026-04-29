@@ -25,7 +25,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
 
   if (!salon) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] glass p-12 rounded-3xl">
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-12 rounded-xl border bg-card">
         <Activity className="h-16 w-16 text-rose-500 mb-4 animate-pulse" />
         <h2 className="text-2xl font-bold text-gray-900">Salon nie znaleziony</h2>
         <p className="text-gray-500 mt-2">Upewnij się, że używasz poprawnego linku.</p>
@@ -253,14 +253,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
           <BooksyStatusWidget salonId={typedSalon.id} salonSlug={slug} />
 
         {/* Quick Actions */}
-        <div className="theme-quick-actions glass p-6 rounded-2xl flex flex-col flex-1 bg-white/50 backdrop-blur-sm border-none">
+        <div className="theme-quick-actions  p-6 rounded-2xl flex flex-col flex-1 bg-white/50 backdrop-blur-sm border-none">
           <h2 className="theme-section-title text-xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-600" />
             Szybkie akcje
           </h2>
           <div className="grid grid-cols-1 gap-3 flex-1">
             <Link href={`/${slug}/clients`} className="group">
-              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl  hover:bg-purple-100/50 transition-all border-none">
                 <div className="theme-quick-action-icon p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
                   <Users className="h-6 w-6" />
                 </div>
@@ -271,7 +271,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
               </div>
             </Link>
             <Link href={`/${slug}/employees`} className="group">
-              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl  hover:bg-purple-100/50 transition-all border-none">
                 <div className="theme-quick-action-icon p-3 rounded-lg bg-green-100 text-green-600 group-hover:scale-110 transition-transform">
                   <Clock className="h-6 w-6" />
                 </div>
@@ -282,7 +282,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
               </div>
             </Link>
             <Link href={`/${slug}/calendar`} className="group">
-              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl  hover:bg-purple-100/50 transition-all border-none">
                 <div className="theme-quick-action-icon p-3 rounded-lg bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
                   <Calendar className="h-6 w-6" />
                 </div>
@@ -293,7 +293,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
               </div>
             </Link>
             <Link href={`/${slug}/settings`} className="group">
-              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl glass hover:bg-purple-100/50 transition-all border-none">
+              <div className="theme-quick-action-item flex items-center gap-4 p-4 rounded-xl  hover:bg-purple-100/50 transition-all border-none">
                 <div className="theme-quick-action-icon p-3 rounded-lg bg-rose-100 text-rose-600 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-6 w-6" />
                 </div>
@@ -310,7 +310,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
 
       <div className="grid gap-6 lg:grid-cols-1">
         {/* Upcoming Bookings */}
-        <div className="theme-upcoming-bookings glass p-6 rounded-2xl bg-card/50 backdrop-blur-sm border-none">
+        <div className="theme-upcoming-bookings p-6 bg-card border rounded-xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="theme-section-title text-xl font-bold text-foreground">Dzisiejsze wizyty</h2>
             <Link href={`/${slug}/calendar`} className="theme-inline-link text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
@@ -323,7 +323,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
                 <div
                   key={booking.id}
                   style={{ animationDelay: `${index * 50}ms` }}
-                  className="theme-upcoming-item flex flex-wrap items-center justify-between p-4 rounded-xl glass group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
+                  className="theme-upcoming-item flex flex-wrap items-center justify-between p-4 rounded-xl  group hover:bg-card/80 transition-all duration-300 border-none animate-fade-in"
                 >
                   <div className="flex items-center gap-4">
                     <div className="theme-upcoming-avatar h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">

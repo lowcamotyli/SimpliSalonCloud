@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { ObjectLink } from '@/components/objects'
 import { createClient } from '@/lib/supabase/client'
 
 interface FormField {
@@ -25,10 +26,12 @@ interface Props {
     id: string
     source: 'client_form' | 'pre_appointment'
     form_template_id: string
+    client_id?: string | null
     form_templates: { name: string } | null
     clients: { full_name: string | null } | null
     submitted_at: string | null
   } | null
+  slug: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -49,7 +52,7 @@ function renderAnswerValue(value: unknown): string {
   return String(value)
 }
 
-export function SubmissionViewDialog({ submission, open, onOpenChange }: Props): JSX.Element {
+export function SubmissionViewDialog({ submission, slug, open, onOpenChange }: Props): JSX.Element {
   const [isLoading, setIsLoading] = useState(false)
   const [answers, setAnswers] = useState<Answers | null>(null)
   const [fields, setFields] = useState<FormField[] | null>(null)
@@ -110,15 +113,26 @@ export function SubmissionViewDialog({ submission, open, onOpenChange }: Props):
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-lg'>
+      <DialogContent className='max-w-lg border-border/80 p-0'>
         <DialogHeader>
+          <div className='border-b px-6 py-4'>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {clientName} &bull; {submittedAt}
+          <DialogDescription className='mt-1 flex flex-wrap items-center gap-1.5'>
+            <ObjectLink
+              id={submission?.client_id ?? ''}
+              label={clientName}
+              missing={!submission?.client_id || !submission?.clients?.full_name?.trim()}
+              showDot={false}
+              slug={slug}
+              type='client'
+            />
+            <span aria-hidden='true'>&bull;</span>
+            <span>{submittedAt}</span>
           </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className='max-h-[60vh] overflow-y-auto pr-1'>
+        <div className='max-h-[60vh] overflow-y-auto px-6 py-4'>
           {isLoading ? (
             <div className='flex min-h-[120px] items-center justify-center'>
               <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />

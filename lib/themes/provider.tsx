@@ -25,8 +25,9 @@ export function generateCSSVariables(tokens: DesignTokens): string {
     }
   }
 
-  variables.push(`--font-family-sans: ${tokens.typography.fontFamily.sans};`)
-  variables.push(`--font-family-mono: ${tokens.typography.fontFamily.mono};`)
+  for (const [family, value] of Object.entries(tokens.typography.fontFamily)) {
+    variables.push(`--font-family-${family}: ${value};`)
+  }
 
   for (const [size, value] of Object.entries(tokens.typography.fontSize)) {
     variables.push(`--font-size-${size}: ${value};`)

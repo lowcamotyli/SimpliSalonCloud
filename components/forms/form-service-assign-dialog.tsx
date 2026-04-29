@@ -163,13 +163,15 @@ export function FormServiceAssignDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl border-border/80 p-0">
         <DialogHeader>
-          <DialogTitle>Przypisz formularz do uslug</DialogTitle>
-          <DialogDescription>{templateName}</DialogDescription>
+          <div className="border-b px-6 py-4">
+            <DialogTitle>Przypisz formularz do uslug</DialogTitle>
+            <DialogDescription>{templateName}</DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+        <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="space-y-3">
               <Skeleton className="h-6 w-48" />
@@ -190,10 +192,7 @@ export function FormServiceAssignDialog({
                     const subcategory = service.subcategory?.trim() || 'Bez podkategorii'
 
                     return (
-                      <div
-                        key={service.id}
-                        className="flex items-center gap-3 rounded-md border p-2"
-                      >
+                      <div key={service.id} className="flex items-center gap-3 rounded-lg border border-border/80 bg-card p-2.5">
                         <Checkbox
                           id={checkboxId}
                           checked={selectedServiceIds.has(service.id)}
@@ -213,7 +212,7 @@ export function FormServiceAssignDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t px-6 py-4">
           <Button
             type="button"
             variant="outline"

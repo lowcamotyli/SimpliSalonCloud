@@ -91,6 +91,9 @@ type BookingRow = {
   booking_time: string
   status: string
   base_price: number | null
+  client_id: string | null
+  service_id: string | null
+  employee_id: string | null
   clients: { full_name: string } | null
   services: { name: string } | null
   employees: { first_name: string; last_name: string | null } | null
@@ -247,7 +250,7 @@ export default async function BooksyDashboardPage({
       .maybeSingle(),
     adminSupabase
       .from('bookings')
-      .select('id,booking_date,booking_time,status,base_price,clients(full_name),services(name),employees(first_name,last_name)')
+      .select('id,booking_date,booking_time,status,base_price,client_id,service_id,employee_id,clients(full_name),services(name),employees(first_name,last_name)')
       .eq('salon_id', salonId)
       .eq('source', 'booksy')
       .order('created_at', { ascending: false })
@@ -285,7 +288,7 @@ export default async function BooksyDashboardPage({
   const accordionDefaultValue = ['mailboxes', 'bookings', 'queue']
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-8 sm:px-0">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 sm:px-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Booksy</h1>
@@ -303,7 +306,7 @@ export default async function BooksyDashboardPage({
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <BookOpen className="h-4 w-4" />
@@ -315,7 +318,7 @@ export default async function BooksyDashboardPage({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -327,7 +330,7 @@ export default async function BooksyDashboardPage({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4" />
@@ -359,7 +362,7 @@ export default async function BooksyDashboardPage({
       ) : null}
 
       <Accordion type="multiple" defaultValue={accordionDefaultValue} className="space-y-4">
-        <AccordionItem value="mailboxes" className="rounded-xl border bg-card px-4">
+        <AccordionItem value="mailboxes" className="rounded-2xl border border-border bg-card px-5">
           <AccordionTrigger className="py-3">
             <div className="flex items-center gap-2 text-base font-semibold">
               Skrzynki i status integracji
@@ -371,7 +374,7 @@ export default async function BooksyDashboardPage({
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="settings" className="rounded-xl border bg-card px-4">
+        <AccordionItem value="settings" className="rounded-2xl border border-border bg-card px-5">
           <AccordionTrigger className="py-3">
             <div className="flex items-center gap-2 text-base font-semibold">Ustawienia synchronizacji</div>
           </AccordionTrigger>
@@ -380,7 +383,7 @@ export default async function BooksyDashboardPage({
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="queue" id="kolejka" className="rounded-xl border bg-card px-4">
+        <AccordionItem value="queue" id="kolejka" className="rounded-2xl border border-border bg-card px-5">
           <AccordionTrigger className="py-3">
             <div className="flex items-center gap-2 text-base font-semibold">Kolejka obsługi i aktywność maili</div>
           </AccordionTrigger>
@@ -390,7 +393,7 @@ export default async function BooksyDashboardPage({
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="bookings" className="rounded-xl border bg-card px-4">
+        <AccordionItem value="bookings" className="rounded-2xl border border-border bg-card px-5">
           <AccordionTrigger className="py-3">
             <div className="flex items-center gap-2 text-base font-semibold">
               Ostatnie rezerwacje z Booksy
@@ -398,7 +401,7 @@ export default async function BooksyDashboardPage({
             </div>
           </AccordionTrigger>
           <AccordionContent className="pb-4">
-            <BooksyRecentBookingsTable bookings={bookings} />
+            <BooksyRecentBookingsTable bookings={bookings} slug={slug} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

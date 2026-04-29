@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { Clock, PlusCircle, Trash2, UserX, XCircle, Banknote, CreditCard, Tag, MoreHorizontal, ChevronDown } from 'lucide-react'
+import { Clock, PlusCircle, Trash2, UserX, XCircle, Banknote, CreditCard, Tag, MessageSquare, ListChecks, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,8 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BookingCartItem } from '@/components/calendar/booking-cart-item'
 import BookingServicesEditor from '@/components/calendar/booking-services-editor'
+import { ObjectTrigger } from '@/components/objects'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
@@ -156,6 +156,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [newClientPhone, setNewClientPhone] = useState('')
   const [noPhone, setNoPhone] = useState(false)
   const [cartItems, setCartItems] = useState<CartItemState[]>([getInitialCartItem(prefilledSlot)])
+  const [activeCartItemIndex, setActiveCartItemIndex] = useState(0)
   const [categoryFilters, setCategoryFilters] = useState<Map<number, string>>(new Map())
   const [remoteValidationResults, setRemoteValidationResults] = useState<DraftValidationResult[]>([])
   const [isCheckingDraftAvailability, setIsCheckingDraftAvailability] = useState(false)
@@ -165,6 +166,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const [smsTemplates, setSmsTemplates] = useState<SmsTemplate[]>([])
   const [smsPreview, setSmsPreview] = useState('')
   const [isSendingSms, setIsSendingSms] = useState(false)
+  const [showSmsPanel, setShowSmsPanel] = useState(false)
 
   const employees = (employeesData ?? []) as EmployeeOption[]
   const canSendSms = isOwnerOrManager()
@@ -299,6 +301,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
   const handleAddItem = () => {
     setCartItems((current) => {
       const anchorItem = current[current.length - 1] ?? getInitialCartItem(prefilledSlot)
+      setActiveCartItemIndex(current.length)
       return [
         ...current,
         {
@@ -411,6 +414,11 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
 
   const handleRemoveItem = (index: number) => {
     setCartItems((current) => current.filter((_, itemIndex) => itemIndex !== index))
+    setActiveCartItemIndex((current) => {
+      if (current === index) return Math.max(0, index - 1)
+      if (current > index) return current - 1
+      return current
+    })
     setCategoryFilters((current) => {
       const next = new Map<number, string>()
 
@@ -625,7 +633,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
         const endA = startA + (svcA?.duration ?? 0)
         const startB = timeToMinutes(b.bookingTime)
         const endB = startB + (svcB?.duration ?? 0)
-        if (startA < endB && startB < endA) {
+        if (startA < endB && startB < endA && !saveWithOverride) {
           toast.error(`Pozycje ${i + 1} i ${j + 1} nakładają się u tego samego pracownika — zmień termin jednej z nich`)
           return
         }
@@ -1149,18 +1157,94 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
     }
   }
 
+  const activeSidePanel = showSmsPanel
+    ? 'sms'
+    : showEditServices
+      ? 'services'
+      : showVoucherPanel
+        ? 'voucher'
+        : null
+  const activeCartItem = !booking && step === 'cart' ? (cartItems[activeCartItemIndex] ?? null) : null
+  const activeCartService = activeCartItem
+    ? (services.find((entry) => entry.id === activeCartItem.serviceId) ?? null)
+    : null
+  const activeCartEmployees = activeCartItem
+    ? (filteredEmployeesMap.has(activeCartItemIndex)
+        ? filteredEmployeesMap.get(activeCartItemIndex)!
+        : employees)
+    : employees
+  const activeCartCategoryId = activeCartItem ? (categoryFilters.get(activeCartItemIndex) ?? '') : ''
+  const activeCartServices = activeCartCategoryId
+    ? categories
+        .filter((category) => category.id === activeCartCategoryId)
+        .flatMap((category) =>
+          category.subcategories.flatMap((subcategory: any) =>
+            (subcategory.services ?? []).map((entry: any) => ({
+              id: entry.id,
+              name: entry.name,
+              price: Number(entry.price) || 0,
+              duration: Number(entry.duration) || 0,
+            }))
+          )
+        )
+    : services
+  const hasSidePanel = Boolean(activeSidePanel || activeCartItem)
+
+  const openSmsPanel = () => {
+    setShowSmsPanel((current) => {
+      const next = !current
+      if (next) {
+        setShowEditServices(false)
+        setShowVoucherPanel(false)
+      }
+      return next
+    })
+  }
+
+  const openServicesPanel = () => {
+    setShowEditServices((current) => {
+      const next = !current
+      if (next) {
+        setShowSmsPanel(false)
+        setShowVoucherPanel(false)
+      }
+      return next
+    })
+  }
+
+  const openVoucherPanel = () => {
+    setShowVoucherPanel((current) => {
+      const next = !current
+      if (next) {
+        setShowSmsPanel(false)
+        setShowEditServices(false)
+      } else {
+        setVoucherData(null)
+        setVoucherCode('')
+      }
+      return next
+    })
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden">
-        <DialogHeader className="shrink-0">
+      <DialogContent
+        className={cn(
+          'flex max-h-[90dvh] w-full flex-col overflow-hidden p-0 max-sm:left-0 max-sm:right-0 max-sm:top-auto max-sm:bottom-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=open]:slide-in-from-left-0 max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=closed]:slide-out-to-left-0',
+          hasSidePanel ? 'max-w-5xl' : 'max-w-2xl'
+        )}
+      >
+        <DialogHeader className="shrink-0 border-b border-[var(--v3-border)] px-6 pt-5 pb-4">
           <DialogTitle>{booking ? 'Edycja wizyty' : 'Nowa wizyta'}</DialogTitle>
         </DialogHeader>
 
         {booking ? (
-          <div className="flex-1 space-y-6 overflow-y-auto pb-4 pr-1">
-            <div className="space-y-4">
+          <>
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+            <div className="min-w-0 flex-1 overflow-y-auto px-6 py-4">
+            <div className="space-y-3">
               {booking.visit_group_id && (
-                <div className="glass rounded-lg p-3">
+                <div className="glass rounded-lg p-2.5">
                   <Label className="text-xs font-semibold uppercase text-gray-600">
                     Wizyty w grupie
                   </Label>
@@ -1185,14 +1269,25 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 </div>
               )}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="glass rounded-lg p-3">
-                  <Label className="text-xs font-semibold uppercase text-gray-600">Klient</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="glass rounded-lg p-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <Label className="text-xs font-semibold uppercase text-gray-600">Klient</Label>
+                    {salonId && (booking?.client_id ?? booking?.client?.id) ? (
+                      <ObjectTrigger
+                        type="client"
+                        id={booking.client_id ?? booking.client.id}
+                        label={booking.client.full_name}
+                        meta={formatPhoneNumber(booking.client.phone)}
+                        slug={salonId}
+                      />
+                    ) : null}
+                  </div>
                   <p className="font-bold text-gray-900">{booking.client.full_name}</p>
                   <p className="text-sm text-gray-600">{formatPhoneNumber(booking.client.phone)}</p>
                 </div>
 
-                <div className="glass rounded-lg p-3">
+                <div className="glass rounded-lg p-2.5">
                   <Label className="text-xs font-semibold uppercase text-gray-600">
                     Data i godzina
                   </Label>
@@ -1202,8 +1297,19 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 </div>
 
                 {!isGroupBooking && (
-                  <div className="glass rounded-lg p-3">
-                    <Label className="text-xs font-semibold uppercase text-gray-600">Usluga</Label>
+                  <div className="glass rounded-lg p-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <Label className="text-xs font-semibold uppercase text-gray-600">Usluga</Label>
+                      {salonId && booking.service_id ? (
+                        <ObjectTrigger
+                          type="service"
+                          id={booking.service_id}
+                          label={booking.service.name}
+                          meta={`${booking.duration} min`}
+                          slug={salonId}
+                        />
+                      ) : null}
+                    </div>
                     <p className="font-bold text-gray-900">{booking.service.name}</p>
                     <div className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                       <Clock className="h-3 w-3" />
@@ -1213,8 +1319,18 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 )}
 
                 {!isGroupBooking && (
-                  <div className="glass rounded-lg p-3">
-                    <Label className="text-xs font-semibold uppercase text-gray-600">Pracownik</Label>
+                  <div className="glass rounded-lg p-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <Label className="text-xs font-semibold uppercase text-gray-600">Pracownik</Label>
+                      {salonId && booking.employee_id ? (
+                        <ObjectTrigger
+                          type="worker"
+                          id={booking.employee_id}
+                          label={`${booking.employee.first_name} ${booking.employee.last_name ?? ''}`.trim()}
+                          slug={salonId}
+                        />
+                      ) : null}
+                    </div>
                     <p className="font-bold text-gray-900">
                       {booking.employee.first_name} {booking.employee.last_name}
                     </p>
@@ -1222,7 +1338,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                 )}
 
                 {booking.equipment_name && (
-                  <div className="glass rounded-lg p-3">
+                  <div className="glass rounded-lg p-2.5">
                     <Label className="text-xs font-semibold uppercase text-gray-600">
                       Sprzęt / Stanowisko
                     </Label>
@@ -1230,7 +1346,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   </div>
                 )}
 
-                <div className="glass rounded-lg p-3">
+                <div className="glass rounded-lg p-2.5">
                   <Label className="text-xs font-semibold uppercase text-gray-600">Status</Label>
                   <Badge
                     className="mt-1"
@@ -1246,7 +1362,7 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                   </Badge>
                 </div>
 
-                <div className="glass rounded-lg p-3">
+                <div className="glass rounded-lg p-2.5">
                   <Label className="text-xs font-semibold uppercase text-gray-600">
                     Cena koncowa
                   </Label>
@@ -1286,28 +1402,101 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               </div>
 
               {booking.notes && (
-                <div className="glass rounded-lg p-3">
+                <div className="glass rounded-lg p-2.5">
                   <Label className="text-xs font-semibold uppercase text-gray-600">Notatki</Label>
                   <p className="mt-1 text-sm text-gray-700">{booking.notes}</p>
                 </div>
               )}
 
-              {showSmsSection && (
-                <div className="space-y-3">
+              {(showSmsSection || booking?.id) && (
+                <div className="space-y-3 pt-1">
                   <Separator />
-                  <div className="space-y-3">
-                    <Label className="text-xs font-semibold uppercase text-gray-600">
-                      Wyślij SMS do klienta
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-gray-500">
+                      Dodatkowe opcje
                     </Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {showSmsSection && (
+                        <button
+                          type="button"
+                          onClick={openSmsPanel}
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                            showSmsPanel
+                              ? 'border-blue-300 bg-blue-50 text-blue-900'
+                              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                          )}
+                        >
+                          <MessageSquare className="h-4 w-4 shrink-0" />
+                          <span>
+                            <span className="block text-sm font-semibold">Wyślij SMS</span>
+                            <span className="block text-xs text-muted-foreground">Szablon i podgląd treści</span>
+                          </span>
+                        </button>
+                      )}
+                      {booking?.id && (
+                        <button
+                          type="button"
+                          onClick={openServicesPanel}
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                            showEditServices
+                              ? 'border-purple-300 bg-purple-50 text-purple-900'
+                              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                          )}
+                        >
+                          <ListChecks className="h-4 w-4 shrink-0" />
+                          <span>
+                            <span className="block text-sm font-semibold">Usługi w wizycie</span>
+                            <span className="block text-xs text-muted-foreground">Edycja usług i pracowników</span>
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              </div>
+            </div>
+            {activeSidePanel && (
+              <aside className="shrink-0 border-t bg-slate-50/80 p-4 md:w-[340px] md:overflow-y-auto md:border-l md:border-t-0">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-gray-500">Panel</p>
+                    <h3 className="text-base font-semibold text-gray-950">
+                      {activeSidePanel === 'sms' && 'Wyślij SMS'}
+                      {activeSidePanel === 'services' && 'Usługi w wizycie'}
+                      {activeSidePanel === 'voucher' && 'Voucher'}
+                    </h3>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowSmsPanel(false)
+                      setShowEditServices(false)
+                      setShowVoucherPanel(false)
+                    }}
+                    className="h-8 px-2"
+                  >
+                    Zamknij
+                  </Button>
+                </div>
+
+                {activeSidePanel === 'sms' && (
+                  <div className="space-y-3">
                     {smsTemplates.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Brak szablonów SMS</p>
+                      <p className="rounded-lg border border-dashed bg-white p-4 text-sm text-muted-foreground">
+                        Brak szablonów SMS
+                      </p>
                     ) : (
                       <>
                         <Select
                           value={selectedTemplateId ?? ''}
                           onValueChange={(value) => setSelectedTemplateId(value)}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="Wybierz szablon SMS" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1320,192 +1509,184 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
                         </Select>
 
                         {selectedTemplateId && (
-                          <Textarea readOnly rows={3} value={smsPreview} />
+                          <Textarea readOnly rows={5} value={smsPreview} className="bg-white" />
                         )}
 
                         <Button
                           type="button"
                           onClick={handleSendSms}
                           disabled={!selectedTemplateId || isSendingSms}
-                          className="w-full sm:w-auto"
+                          className="w-full"
                         >
                           {isSendingSms ? 'Wysyłanie...' : 'Wyślij SMS'}
                         </Button>
                       </>
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
-              <DialogFooter className="sticky bottom-0 flex-wrap gap-2 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-                {(booking.status === 'scheduled' || booking.status === 'confirmed') && (
-                  <>
-                    <div className="flex w-full gap-2 sm:w-auto">
+                {activeSidePanel === 'services' && booking?.id && (
+                  <BookingServicesEditor
+                    bookingId={booking.id}
+                    groupId={booking.visit_group_id ?? undefined}
+                    initialServices={
+                      groupBookings && groupBookings.length > 0
+                        ? groupBookings.map((b) => ({
+                            id: b.id,
+                            service_id: b.service_id ?? null,
+                            employee_id: b.employee_id ?? null,
+                            start_time: b.start_time ?? b.booking_time ?? '',
+                            addon_ids: [],
+                          }))
+                        : [
+                            {
+                              id: booking.id,
+                              service_id: booking.service_id ?? null,
+                              employee_id: booking.employee_id ?? null,
+                              start_time: booking.start_time ?? booking.booking_time ?? '',
+                              addon_ids: [],
+                            },
+                          ]
+                    }
+                    availableServices={services}
+                    availableEmployees={employees.map((employee) => ({
+                      ...employee,
+                      last_name: employee.last_name ?? '',
+                    }))}
+                    onSaved={() => {
+                      void queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
+                      onClose()
+                    }}
+                  />
+                )}
+
+                {activeSidePanel === 'voucher' && (
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-2">
+                      <Input
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value)}
+                        placeholder="Kod vouchera"
+                        className="bg-white"
+                      />
                       <Button
+                        type="button"
                         variant="outline"
-                        onClick={handleDeleteBooking}
-                        className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"
+                        onClick={handleValidateVoucher}
+                        disabled={voucherLoading || !voucherCode.trim()}
+                        className="bg-white"
                       >
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                        Usuń wizytę
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleNoShow}
-                        className="rounded-lg border-orange-300 text-orange-600 hover:bg-orange-50"
-                      >
-                        <UserX className="mr-1.5 h-3.5 w-3.5" />
-                        Nie przyszedł
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={handleCancelBooking}
-                        className="rounded-lg"
-                      >
-                        <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                        Anuluj wizytę
+                        {voucherLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Sprawdź
                       </Button>
                     </div>
-                    <div className="flex w-full gap-2 sm:w-auto">
-                      <Button
-                        onClick={() => handleCompleteBooking('cash')}
-                        className="gradient-button flex-1 rounded-lg"
-                      >
-                        <Banknote className="mr-1.5 h-3.5 w-3.5" />
-                        Gotówka
-                      </Button>
-                      <Button
-                        onClick={() => handleCompleteBooking('card')}
-                        className="gradient-button flex-1 rounded-lg"
-                      >
-                        <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-                        Karta
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowVoucherPanel(!showVoucherPanel)}
-                        className="rounded-lg"
-                      >
-                        <Tag className="mr-1.5 h-3.5 w-3.5" />
-                        Voucher
-                      </Button>
-                    </div>
-                    {showVoucherPanel && (
-                      <div className="glass w-full space-y-3 rounded-lg p-3">
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <Input
-                            value={voucherCode}
-                            onChange={(e) => setVoucherCode(e.target.value)}
-                            placeholder="Kod vouchera"
-                            className="glass rounded-lg"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleValidateVoucher}
-                            disabled={voucherLoading || !voucherCode.trim()}
-                            className="rounded-lg"
+
+                    {clientVouchers.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {clientVouchers.map((voucher) => (
+                          <Badge
+                            key={voucher.id}
+                            className="cursor-pointer rounded-lg px-3 py-1"
+                            variant={voucherData?.id === voucher.id ? 'default' : 'secondary'}
+                            onClick={() => {
+                              setVoucherCode(voucher.code)
+                              setVoucherData({
+                                id: voucher.id,
+                                code: voucher.code,
+                                current_balance: voucher.current_balance,
+                                status: 'active',
+                              })
+                            }}
                           >
-                            Sprawdz
-                          </Button>
-                        </div>
-
-                        {clientVouchers.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {clientVouchers.map((voucher) => (
-                              <Badge
-                                key={voucher.id}
-                                className="cursor-pointer rounded-lg px-3 py-1"
-                                variant={voucherData?.id === voucher.id ? 'default' : 'secondary'}
-                                onClick={() => {
-                                  setVoucherCode(voucher.code)
-                                  setVoucherData({
-                                    id: voucher.id,
-                                    code: voucher.code,
-                                    current_balance: voucher.current_balance,
-                                    status: 'active',
-                                  })
-                                }}
-                              >
-                                {voucher.code} ({formatPrice(voucher.current_balance)})
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        {voucherData && (
-                          <div className="space-y-2 rounded-lg border border-green-200 bg-green-50 p-3">
-                            <p className="text-sm font-semibold text-green-800">
-                              Voucher: {voucherData.code}
-                            </p>
-                            <p className="text-sm text-green-700">
-                              Saldo: {formatPrice(voucherData.current_balance)}
-                            </p>
-                            <Button
-                              type="button"
-                              onClick={handleCompleteWithVoucher}
-                              disabled={voucherLoading}
-                              className="rounded-lg bg-green-600 text-white hover:bg-green-700"
-                            >
-                              Zatwierdz
-                            </Button>
-                          </div>
-                        )}
+                            {voucher.code} ({formatPrice(voucher.current_balance)})
+                          </Badge>
+                        ))}
                       </div>
                     )}
-                  </>
-                )}
-              </DialogFooter>
 
-              {booking?.id && (
-                <div className="space-y-4">
-                  <Separator />
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between text-sm font-semibold uppercase tracking-wide text-gray-700"
-                      onClick={() => setShowEditServices((v) => !v)}
+                    {voucherData && (
+                      <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                        <div>
+                          <p className="text-sm font-semibold text-green-800">
+                            Voucher: {voucherData.code}
+                          </p>
+                          <p className="text-sm text-green-700">
+                            Saldo: {formatPrice(voucherData.current_balance)}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleCompleteWithVoucher}
+                          disabled={voucherLoading}
+                          className="w-full rounded-lg bg-green-600 text-white hover:bg-green-700"
+                        >
+                          Zatwierdź
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </aside>
+            )}
+            </div>
+            <DialogFooter className="shrink-0 border-t bg-slate-50/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+              {(booking.status === 'scheduled' || booking.status === 'confirmed') && (
+                <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-wrap gap-2 rounded-lg border border-red-100 bg-white p-1.5">
+                    <Button
+                      variant="ghost"
+                      onClick={handleDeleteBooking}
+                      className="h-10 rounded-md text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
-                      Usługi w wizycie
-                      <ChevronDown className={cn('h-4 w-4 transition-transform', showEditServices && 'rotate-180')} />
-                    </button>
-                    {showEditServices && <BookingServicesEditor
-                      bookingId={booking.id}
-                      groupId={booking.visit_group_id ?? undefined}
-                      initialServices={
-                        groupBookings && groupBookings.length > 0
-                          ? groupBookings.map((b) => ({
-                              id: b.id,
-                              service_id: b.service_id ?? null,
-                              employee_id: b.employee_id ?? null,
-                              start_time: b.start_time ?? b.booking_time ?? '',
-                              addon_ids: [],
-                            }))
-                          : [
-                              {
-                                id: booking.id,
-                                service_id: booking.service_id ?? null,
-                                employee_id: booking.employee_id ?? null,
-                                start_time: booking.start_time ?? booking.booking_time ?? '',
-                                addon_ids: [],
-                              },
-                            ]
-                      }
-                      availableServices={services}
-                      availableEmployees={employees.map((employee) => ({
-                        ...employee,
-                        last_name: employee.last_name ?? '',
-                      }))}
-                      onSaved={() => {
-                        void queryClient.invalidateQueries({ queryKey: ['bookings'], exact: false })
-                        onClose()
-                      }}
-                    />}
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                      Usuń
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleNoShow}
+                      className="h-10 rounded-md text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                    >
+                      <UserX className="mr-1.5 h-3.5 w-3.5" />
+                      Nie przyszedł
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleCancelBooking}
+                      className="h-10 rounded-md text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                      Anuluj
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 rounded-lg border border-emerald-100 bg-white p-1.5">
+                    <Button
+                      onClick={() => handleCompleteBooking('cash')}
+                      className="h-10 rounded-md bg-emerald-600 px-4 text-white hover:bg-emerald-700"
+                    >
+                      <Banknote className="mr-1.5 h-3.5 w-3.5" />
+                      Gotówka
+                    </Button>
+                    <Button
+                      onClick={() => handleCompleteBooking('card')}
+                      className="h-10 rounded-md bg-emerald-600 px-4 text-white hover:bg-emerald-700"
+                    >
+                      <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                      Karta
+                    </Button>
+                    <Button
+                      variant={showVoucherPanel ? 'default' : 'outline'}
+                      onClick={openVoucherPanel}
+                      className="h-10 rounded-md px-4"
+                    >
+                      <Tag className="mr-1.5 h-3.5 w-3.5" />
+                      Voucher
+                    </Button>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+            </DialogFooter>
+          </>
         ) : step === 'client' ? (
           <div className="space-y-6">
             <div className="space-y-2">
@@ -1600,259 +1781,383 @@ export function BookingDialog({ isOpen, onClose, booking, preloadedGroupBookings
               <Button type="button" variant="outline" onClick={onClose}>
                 Anuluj
               </Button>
-              <Button type="button" disabled={!canContinueToCart} onClick={() => setStep('cart')}>
+              <Button
+                type="button"
+                disabled={!canContinueToCart}
+                onClick={() => {
+                  setActiveCartItemIndex(0)
+                  setStep('cart')
+                }}
+              >
                 Dalej
               </Button>
             </DialogFooter>
           </div>
         ) : (
-          <div className="flex-1 space-y-6 overflow-y-auto pr-1">
-            <div className="rounded-md border bg-muted/20 p-4 text-sm">
-              <div className="font-medium">
-                {selectedClient?.full_name || newClientName || 'Nowy klient'}
-              </div>
-              <div className="text-muted-foreground">
-                {selectedClient?.phone || newClientPhone || 'Brak telefonu'}
-              </div>
-            </div>
+          <>
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+              <div className="min-w-0 flex-1 overflow-y-auto px-6 py-4">
+                <div className="space-y-4">
+                  <div className="rounded-lg border bg-muted/20 p-4 text-sm">
+                    <div className="font-medium">
+                      {selectedClient?.full_name || newClientName || 'Nowy klient'}
+                    </div>
+                    <div className="text-muted-foreground">
+                      {selectedClient?.phone || newClientPhone || 'Brak telefonu'}
+                    </div>
+                  </div>
 
-            <div className="space-y-4">
-              {cartItems.map((item, index) => {
-                const service = services.find((entry) => entry.id === item.serviceId) ?? null
-                const employee = employees.find((entry) => entry.id === item.employeeId) ?? null
-                const employeesForItem = filteredEmployeesMap.has(index) ? filteredEmployeesMap.get(index)! : employees
-                const selectedCategoryId = categoryFilters.get(index) ?? ''
-                const filteredServices = selectedCategoryId
-                  ? categories
-                      .filter((category) => category.id === selectedCategoryId)
-                      .flatMap((category) =>
-                        category.subcategories.flatMap((subcategory: any) =>
-                          (subcategory.services ?? []).map((entry: any) => ({
-                            id: entry.id,
-                            name: entry.name,
-                            price: Number(entry.price) || 0,
-                            duration: Number(entry.duration) || 0,
-                          }))
-                        )
+                  <div className="space-y-3">
+                    {cartItems.map((item, index) => {
+                      const service = services.find((entry) => entry.id === item.serviceId) ?? null
+                      const employee = employees.find((entry) => entry.id === item.employeeId) ?? null
+                      const selectedAddons = item.addons.filter((addon) =>
+                        item.selectedAddonIds.includes(addon.id)
                       )
-                  : services
+                      const addonsTotal = selectedAddons.reduce((sum, addon) => sum + addon.price_delta, 0)
+                      const addonsDuration = selectedAddons.reduce((sum, addon) => sum + addon.duration_delta, 0)
+                      const subtotal = (service?.price ?? 0) + addonsTotal
+                      const warnings = combinedValidationResults[index]?.warnings ?? []
+                      const isActive = activeCartItemIndex === index
 
-                return (
-                  <div key={index} className="space-y-3">
-                    <BookingCartItem
-                      index={index}
-                      service={service}
-                      employee={
-                        employee
-                          ? { id: employee.id, name: formatEmployeeName(employee) }
-                          : null
-                      }
-                      addons={item.addons}
-                      selectedAddonIds={item.selectedAddonIds}
-                      onAddonSelect={(addonId) => {
-                        if (!addonId) return handleItemChange(index, { selectedAddonIds: [] })
-                        const current = item.selectedAddonIds
-                        const next = current.includes(addonId)
-                          ? current.filter((id) => id !== addonId)
-                          : [...current, addonId]
-                        handleItemChange(index, { selectedAddonIds: next })
-                      }}
-                      startTime={formatCartStartTime(item)}
-                      warnings={combinedValidationResults[index]?.warnings ?? []}
-                      isCheckingAvailability={
-                        isCheckingDraftAvailability &&
-                        !!item.serviceId &&
-                        !!item.employeeId &&
-                        !!item.bookingDate &&
-                        !!item.bookingTime
-                      }
-                      onRemove={() => handleRemoveItem(index)}
-                      onChange={(updates) => handleItemChange(index, updates)}
-                    />
-
-                    <div className="grid gap-3 rounded-md border p-4 sm:grid-cols-2 lg:grid-cols-5">
-                      <div className="space-y-2">
-                        <Label htmlFor={`category-${index}`}>Kategoria</Label>
-                        <select
-                          id={`category-${index}`}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          value={selectedCategoryId}
-                          onChange={(event) => {
-                            const nextCategoryId = event.target.value
-
-                            setCategoryFilters((current) => {
-                              const next = new Map(current)
-
-                              if (nextCategoryId) {
-                                next.set(index, nextCategoryId)
-                              } else {
-                                next.delete(index)
-                              }
-
-                              return next
-                            })
-                            handleItemChange(index, { serviceId: null, selectedAddonIds: [] })
-                            void loadAddonsForCartItem(index, null)
+                      return (
+                        <div
+                          key={index}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setActiveCartItemIndex(index)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              setActiveCartItemIndex(index)
+                            }
                           }}
+                          className={cn(
+                            'w-full cursor-pointer rounded-lg border bg-white p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+                            isActive
+                              ? 'border-blue-300 bg-blue-50/60'
+                              : 'border-border hover:border-gray-300 hover:bg-gray-50'
+                          )}
                         >
-                          <option value="">Wszystkie kategorie</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold text-foreground">
+                                  {service?.name ?? 'Nie wybrano usługi'}
+                                </p>
+                                <Badge variant="secondary">Rezerwacja {index + 1}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Pracownik: {employee ? formatEmployeeName(employee) : 'Nie wybrano pracownika'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Start: {formatCartStartTime(item) || 'Nie ustawiono godziny'}
+                              </p>
+                            </div>
+                            {index > 0 ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  handleRemoveItem(index)
+                                }}
+                                className="text-destructive hover:bg-red-50 hover:text-destructive"
+                              >
+                                Usuń
+                              </Button>
+                            ) : null}
+                          </div>
 
+                          <div className="mt-3 space-y-2">
+                            <p className="text-xs font-semibold uppercase text-muted-foreground">Dodatki</p>
+                            {selectedAddons.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedAddons.map((addon) => (
+                                  <Badge key={addon.id} variant="outline">
+                                    {addon.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Brak wybranych dodatków</p>
+                            )}
+                          </div>
+
+                          {isCheckingDraftAvailability &&
+                          item.serviceId &&
+                          item.employeeId &&
+                          item.bookingDate &&
+                          item.bookingTime ? (
+                            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                              Sprawdzam dostępność terminu i sprzętu...
+                            </div>
+                          ) : null}
+
+                          {warnings.length > 0 ? (
+                            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                              {warnings.map((warning) => (
+                                <p key={warning} className="text-sm text-amber-900">
+                                  {warning}
+                                </p>
+                              ))}
+                            </div>
+                          ) : null}
+
+                          <div className="mt-3 flex items-center justify-between border-t pt-3 text-sm">
+                            <span className="text-muted-foreground">
+                              Czas: {service ? service.duration : 0}
+                              {addonsDuration >= 0 ? '+' : ''}
+                              {addonsDuration} min
+                            </span>
+                            <span className="font-semibold text-foreground">Suma: {formatPrice(subtotal)}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <Button type="button" variant="outline" className="w-full" onClick={handleAddItem}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Dodaj kolejną usługę
+                  </Button>
+
+                  {(conflictError || hasDraftWarnings) && (
+                    <Alert variant="destructive">
+                      <AlertDescription className="space-y-3">
+                        {conflictError && <p>{conflictError}</p>}
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id="force-override"
+                            checked={forceOverride}
+                            onCheckedChange={(checked) => setForceOverride(checked === true)}
+                          />
+                          <Label htmlFor="force-override" className="cursor-pointer leading-5">
+                            Akceptuję kolizję — zapisz wizytę mimo to
+                          </Label>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </div>
+
+              {activeCartItem && (
+                <aside className="shrink-0 border-t bg-slate-50/80 p-4 md:w-[340px] md:overflow-y-auto md:border-l md:border-t-0">
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold uppercase text-gray-500">Rezerwacja {activeCartItemIndex + 1}</p>
+                    <h3 className="text-base font-semibold text-gray-950">
+                      {activeCartService?.name ?? 'Wybierz usługę'}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`category-${activeCartItemIndex}`}>Kategoria</Label>
+                      <select
+                        id={`category-${activeCartItemIndex}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                        value={activeCartCategoryId}
+                        onChange={(event) => {
+                          const nextCategoryId = event.target.value
+
+                          setCategoryFilters((current) => {
+                            const next = new Map(current)
+
+                            if (nextCategoryId) {
+                              next.set(activeCartItemIndex, nextCategoryId)
+                            } else {
+                              next.delete(activeCartItemIndex)
+                            }
+
+                            return next
+                          })
+                          handleItemChange(activeCartItemIndex, { serviceId: null, selectedAddonIds: [] })
+                          void loadAddonsForCartItem(activeCartItemIndex, null)
+                        }}
+                      >
+                        <option value="">Wszystkie kategorie</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`service-${activeCartItemIndex}`}>Usługa</Label>
+                      <select
+                        id={`service-${activeCartItemIndex}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                        value={activeCartItem.serviceId ?? ''}
+                        onChange={(event) => {
+                          const nextServiceId = event.target.value || null
+
+                          handleItemChange(activeCartItemIndex, {
+                            serviceId: nextServiceId,
+                            selectedAddonIds: [],
+                          })
+                          void loadAddonsForCartItem(activeCartItemIndex, nextServiceId)
+                        }}
+                      >
+                        <option value="">Wybierz usługę</option>
+                        {activeCartServices.map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {entry.name} ({formatPrice(entry.price)} / {entry.duration} min)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`employee-${activeCartItemIndex}`}>Pracownik</Label>
+                      <select
+                        id={`employee-${activeCartItemIndex}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                        value={activeCartItem.employeeId ?? ''}
+                        onChange={(event) =>
+                          handleItemChange(activeCartItemIndex, {
+                            employeeId: event.target.value || null,
+                          })
+                        }
+                      >
+                        <option value="">Wybierz pracownika</option>
+                        {activeCartEmployees.map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {formatEmployeeName(entry)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor={`service-${index}`}>Usluga</Label>
-                        <select
-                          id={`service-${index}`}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          value={item.serviceId ?? ''}
-                          onChange={(event) => {
-                            const nextServiceId = event.target.value || null
-
-                            handleItemChange(index, {
-                              serviceId: nextServiceId,
-                              selectedAddonIds: [],
-                            })
-                            void loadAddonsForCartItem(index, nextServiceId)
-                          }}
-                        >
-                          <option value="">Wybierz usluge</option>
-                          {filteredServices.map((entry) => (
-                            <option key={entry.id} value={entry.id}>
-                              {entry.name} ({formatPrice(entry.price)} / {entry.duration} min)
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`employee-${index}`}>Pracownik</Label>
-                        <select
-                          id={`employee-${index}`}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          value={item.employeeId ?? ''}
-                          onChange={(event) =>
-                            handleItemChange(index, {
-                              employeeId: event.target.value || null,
-                            })
-                          }
-                        >
-                          <option value="">Wybierz pracownika</option>
-                          {employeesForItem.map((entry) => (
-                            <option key={entry.id} value={entry.id}>
-                              {formatEmployeeName(entry)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`date-${index}`}>Data</Label>
+                        <Label htmlFor={`date-${activeCartItemIndex}`}>Data</Label>
                         <Input
-                          id={`date-${index}`}
+                          id={`date-${activeCartItemIndex}`}
                           type="date"
-                          value={item.bookingDate}
+                          value={activeCartItem.bookingDate}
                           onChange={(event) =>
-                            handleItemChange(index, {
-                              startTime: `${event.target.value}T${item.bookingTime}`,
+                            handleItemChange(activeCartItemIndex, {
+                              startTime: `${event.target.value}T${activeCartItem.bookingTime}`,
                             })
                           }
+                          className="bg-white"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor={`time-${index}`}>Godzina</Label>
+                        <Label htmlFor={`time-${activeCartItemIndex}`}>Godzina</Label>
                         <Input
-                          id={`time-${index}`}
+                          id={`time-${activeCartItemIndex}`}
                           type="time"
-                          value={item.bookingTime}
+                          value={activeCartItem.bookingTime}
                           onChange={(event) =>
-                            handleItemChange(index, {
-                              startTime: `${item.bookingDate}T${event.target.value}`,
+                            handleItemChange(activeCartItemIndex, {
+                              startTime: `${activeCartItem.bookingDate}T${event.target.value}`,
                             })
                           }
+                          className="bg-white"
                         />
                       </div>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Dodatki</Label>
+                      {activeCartItem.addons.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {activeCartItem.addons.map((addon) => {
+                            const isSelected = activeCartItem.selectedAddonIds.includes(addon.id)
+                            const pricePreview =
+                              addon.price_delta === 0
+                                ? 'bez dopłaty'
+                                : `${addon.price_delta > 0 ? '+' : ''}${formatPrice(addon.price_delta)}`
+
+                            return (
+                              <button
+                                key={addon.id}
+                                type="button"
+                                onClick={() => {
+                                  const next = isSelected
+                                    ? activeCartItem.selectedAddonIds.filter((id) => id !== addon.id)
+                                    : [...activeCartItem.selectedAddonIds, addon.id]
+                                  handleItemChange(activeCartItemIndex, { selectedAddonIds: next })
+                                }}
+                                aria-pressed={isSelected}
+                                className={cn(
+                                  'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                                  isSelected
+                                    ? 'border-primary/40 bg-primary/10 text-primary'
+                                    : 'border-border/70 bg-white text-muted-foreground hover:bg-muted'
+                                )}
+                              >
+                                {addon.name} <span className="ml-1">{pricePreview}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className="rounded-lg border border-dashed bg-white p-3 text-sm text-muted-foreground">
+                          Brak dodatków dla wybranej usługi
+                        </p>
+                      )}
+                    </div>
                   </div>
-                )
-              })}
+                </aside>
+              )}
             </div>
 
-            <Button type="button" variant="outline" className="w-full" onClick={handleAddItem}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Dodaj kolejna usluge
-            </Button>
+            <DialogFooter className="shrink-0 border-t bg-slate-50/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1 text-sm">
+                  <div>Łączny czas: {totalDuration} min</div>
+                  <div>Łączna cena: {formatPrice(totalPrice)}</div>
+                  {hasDraftWarnings ? (
+                    <div className="text-amber-700">Popraw oznaczone konflikty przed zapisem.</div>
+                  ) : null}
+                </div>
 
-            {(conflictError || hasDraftWarnings) && (
-              <Alert variant="destructive">
-                <AlertDescription className="space-y-3">
-                  {conflictError && <p>{conflictError}</p>}
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="force-override"
-                      checked={forceOverride}
-                      onCheckedChange={(checked) => setForceOverride(checked === true)}
-                    />
-                    <Label htmlFor="force-override" className="cursor-pointer leading-5">
-                      Akceptuję kolizję — zapisz wizytę mimo to
-                    </Label>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <DialogFooter className="sticky bottom-0 flex-col items-stretch gap-4 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1 text-sm">
-                <div>Laczny czas: {totalDuration} min</div>
-                <div>Laczna cena: {formatPrice(totalPrice)}</div>
-                {hasDraftWarnings ? (
-                  <div className="text-amber-700">Popraw oznaczone konflikty przed zapisem.</div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => setStep('client')}>
-                  Wstecz
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Anuluj
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSave()}
-                  disabled={
-                    isSaving ||
-                    isCheckingDraftAvailability ||
-                    hasDraftWarnings ||
-                    createBookingMutation.isPending ||
-                    createClientMutation.isPending
-                  }
-                >
-                  {isCheckingDraftAvailability ? 'Sprawdzam...' : 'Zapisz wizyte'}
-                </Button>
-                {(conflictError || hasDraftWarnings) && (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" onClick={() => setStep('client')}>
+                    Wstecz
+                  </Button>
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Anuluj
+                  </Button>
                   <Button
                     type="button"
-                    variant="destructive"
-                    onClick={() => handleSave(true)}
+                    onClick={() => handleSave()}
                     disabled={
-                      !forceOverride ||
                       isSaving ||
+                      isCheckingDraftAvailability ||
+                      hasDraftWarnings ||
                       createBookingMutation.isPending ||
                       createClientMutation.isPending
                     }
                   >
-                    Zapisz mimo konfliktu
+                    {isCheckingDraftAvailability ? 'Sprawdzam...' : 'Zapisz wizytę'}
                   </Button>
-                )}
+                  {(conflictError || hasDraftWarnings) && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => handleSave(true)}
+                      disabled={
+                        !forceOverride ||
+                        isSaving ||
+                        createBookingMutation.isPending ||
+                        createClientMutation.isPending
+                      }
+                    >
+                      Zapisz mimo konfliktu
+                    </Button>
+                  )}
+                </div>
               </div>
             </DialogFooter>
-          </div>
+          </>
         )}
       </DialogContent>
     </Dialog>

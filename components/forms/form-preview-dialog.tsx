@@ -435,7 +435,7 @@ export function FormPreviewDialog({
                 />
                 <label
                   htmlFor={`preview-file-${field.id}`}
-                  className="group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-4 border-dashed border-gray-100 p-10 transition-all hover:border-blue-400 hover:bg-blue-50/50"
+                  className="group flex cursor-pointer flex-col items-center justify-center rounded-xl border-4 border-dashed border-gray-100 p-10 transition-all hover:border-blue-400 hover:bg-blue-50/50"
                 >
                   {answers[field.id] ? (
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-lg">
@@ -487,7 +487,7 @@ export function FormPreviewDialog({
 
             {field.type === "signature" ? (
               <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-3xl border-4 border-gray-100 bg-gray-50/50 shadow-inner">
+                <div className="relative overflow-hidden rounded-xl border-4 border-gray-100 bg-gray-50/50 shadow-inner">
                   <canvas
                     ref={canvasRef}
                     width={800}
@@ -574,7 +574,7 @@ export function FormPreviewDialog({
             </header>
 
             <main className="mx-auto mt-6 max-w-2xl p-4">
-              <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
+              <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
                 <div className="mb-10">
                   <h2 className="mb-3 text-3xl font-extrabold tracking-tight text-gray-900">
                     {previewTemplate.name}
@@ -594,7 +594,7 @@ export function FormPreviewDialog({
                   {previewTemplate.gdpr_consent_text ? (
                     <div className="space-y-5 border-t border-gray-100 pt-12">
                       <label
-                        className={`flex cursor-pointer items-start space-x-5 rounded-3xl border-2 p-6 transition-all hover:shadow-lg ${
+                        className={`flex cursor-pointer items-start space-x-5 rounded-xl border-2 p-6 transition-all hover:shadow-lg ${
                           answers.gdpr_consent
                             ? "border-blue-600 bg-blue-50/50"
                             : "border-gray-50 bg-gray-50/20"
@@ -650,7 +650,7 @@ export function FormPreviewDialog({
                   {requiresHealthConsent ? (
                     <div className="space-y-5">
                       <label
-                        className={`flex cursor-pointer items-start space-x-5 rounded-3xl border-2 p-6 transition-all hover:shadow-lg ${
+                        className={`flex cursor-pointer items-start space-x-5 rounded-xl border-2 p-6 transition-all hover:shadow-lg ${
                           answers.health_consent
                             ? "border-emerald-600 bg-emerald-50/60"
                             : "border-amber-200 bg-amber-50/50"
@@ -707,7 +707,7 @@ export function FormPreviewDialog({
                     <Button
                       type="button"
                       onClick={() => onOpenChange(false)}
-                      className="flex h-auto w-full items-center justify-center space-x-4 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 px-8 py-6 text-2xl font-black uppercase tracking-widest text-white shadow-2xl transition-all hover:from-blue-600 hover:to-blue-800 hover:shadow-blue-500/40 active:scale-[0.96]"
+                      className="flex h-auto w-full items-center justify-center space-x-4 rounded-xl bg-primary px-8 py-6 text-2xl font-black uppercase tracking-widest text-white shadow-sm transition-all hover:shadow-blue-500/40 active:scale-[0.96]"
                     >
                       <Eye className="h-7 w-7" />
                       <span>Zamknij podgląd</span>

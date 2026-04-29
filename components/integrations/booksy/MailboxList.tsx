@@ -47,7 +47,7 @@ function mapWatchStatus(status: MailboxHealth["watchStatus"]): WatchStatus | nul
 export function MailboxList({ mailboxes, health, salonSlug }: MailboxListProps): JSX.Element {
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Skrzynki Booksy</h2>
+      <h2 className="text-xl font-semibold tracking-tight">Skrzynki Booksy</h2>
       <div className="space-y-4">
         {mailboxes.map((mailbox) => {
           const watchData = health?.mailboxes.find((item) => item.accountId === mailbox.id)

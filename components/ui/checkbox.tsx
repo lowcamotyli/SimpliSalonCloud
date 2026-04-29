@@ -13,9 +13,7 @@ const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Root
         ref={ref}
         className={cn(
-            "peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-            // Add premium shadow and border effect on checked state
-            "data-[state=checked]:shadow-[0_0_0_1px_hsl(var(--primary))] border-primary",
+            "peer h-[18px] w-[18px] shrink-0 rounded-[var(--v3-r-sm)] border border-[var(--v3-border-strong)] bg-white text-white transition-all duration-200 focus-visible:outline-none focus-visible:shadow-[var(--v3-shadow-focus)] disabled:cursor-not-allowed disabled:bg-[var(--v3-bg-alt)] disabled:opacity-100 data-[state=checked]:border-[var(--v3-primary)] data-[state=checked]:bg-[var(--v3-primary)]",
             className
         )}
         {...props}

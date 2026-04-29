@@ -3,21 +3,28 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils/cn"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-[var(--v3-r-pill)] border border-transparent px-2.5 py-[3px] font-ui text-[11px] font-semibold leading-[1.4] transition-colors focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-[var(--v3-shadow-focus)]",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "bg-[var(--v3-success-bg)] text-[var(--v3-success)]",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-[var(--v3-bg-alt)] text-[var(--v3-text-secondary)] border-[var(--v3-border)]",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+          "bg-[var(--v3-error-bg)] text-[var(--v3-error)]",
+        outline:
+          "bg-[var(--v3-bg-alt)] text-[var(--v3-text-secondary)] border-[var(--v3-border)]",
         success:
-          "border-transparent bg-green-100 text-green-800 hover:bg-green-200",
+          "bg-[var(--v3-success-bg)] text-[var(--v3-success)]",
         warning:
-          "border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+          "bg-[var(--v3-warning-bg)] text-[var(--v3-warning)]",
+        info:
+          "bg-[var(--v3-info-bg)] text-[var(--v3-info)]",
+        neutral:
+          "bg-[var(--v3-bg-alt)] text-[var(--v3-text-secondary)] border-[var(--v3-border)]",
+        gold:
+          "bg-[var(--v3-gold-soft)] text-[var(--v3-gold)] border-[#E9D6A8]",
       },
     },
     defaultVariants: {
@@ -36,6 +43,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
     <div
       className={cn("theme-badge", badgeVariants({ variant }), className)}
       data-variant={resolvedVariant}
+      data-size="default"
       {...props}
     />
   )

@@ -13,7 +13,7 @@ interface ThemeSelectorProps {
 
 export function ThemeSelector({ selected, onChange }: ThemeSelectorProps) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Object.entries(THEMES).map(([key, theme]) => {
         const isSelected = selected === key
         
@@ -21,16 +21,16 @@ export function ThemeSelector({ selected, onChange }: ThemeSelectorProps) {
           <Card
             key={key}
             className={cn(
-              'group relative cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl',
-              isSelected ? 'ring-2 ring-primary ring-offset-2' : 'border-muted-foreground/20 hover:border-primary/40'
+              'group relative cursor-pointer overflow-hidden border-border/70 bg-card shadow-sm transition-all duration-300 hover:shadow-md',
+              isSelected ? 'ring-2 ring-primary/70 ring-offset-2' : 'hover:border-primary/40'
             )}
             onClick={() => onChange(key as ThemeKey)}
           >
-            <div className="p-5">
+            <div className="p-6">
               <div className="relative mb-5">
                 <div
                   className={cn(
-                    "h-32 w-full rounded-xl transition-transform duration-500 group-hover:scale-[1.02]",
+                    "h-32 w-full rounded-lg transition-transform duration-500 group-hover:scale-[1.02]",
                     key === 'auto_service' ? "border border-[#e6ddcf] shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]" : "border border-black/5"
                   )}
                   style={key === 'auto_service'
@@ -46,7 +46,7 @@ export function ThemeSelector({ selected, onChange }: ThemeSelectorProps) {
               </div>
               
               <div className="space-y-1.5 text-left">
-                <h3 className="text-xl font-medium tracking-tight text-foreground">{theme.name}</h3>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">{theme.name}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{theme.description}</p>
               </div>
               
