@@ -854,6 +854,50 @@ async function reconcileMailbox(
       missingIds,
       includeForwarded
     )
+    try {
+      const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
+      const profile = await gmail.users.getProfile({ userId: 'me' })
+      const currentHistoryId = parseHistoryId(profile.data.historyId)
+
+      if (currentHistoryId !== null) {
+        const { data: watch, error: watchFetchError } = await supabase
+          .from('booksy_gmail_watches')
+          .select('id')
+          .eq('booksy_gmail_account_id', mailbox.id)
+          .eq('salon_id', mailbox.salon_id)
+          .maybeSingle()
+
+        if (watchFetchError) {
+          throw watchFetchError
+        }
+
+        if (watch) {
+          const nowIso = new Date().toISOString()
+          const { error: watchUpdateError } = await supabase
+            .from('booksy_gmail_watches')
+            .update({
+              needs_full_sync: false,
+              last_history_id: currentHistoryId,
+              last_sync_at: nowIso,
+              last_error: null,
+              updated_at: nowIso,
+            })
+            .eq('id', watch.id)
+            .eq('salon_id', mailbox.salon_id)
+
+          if (watchUpdateError) {
+            throw watchUpdateError
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn('Booksy reconciliation: watch reset failed after mailbox reconcile', {
+        action: 'booksy_reconcile_watch_reset_warn',
+        salonId: mailbox.salon_id,
+        accountId: mailbox.id,
+        error: error instanceof Error ? error.message : 'Unknown watch reset error',
+      })
+    }
 
     logger.info('Booksy reconciliation: mailbox run completed', {
       action: 'booksy_reconcile_mailbox_completed',
